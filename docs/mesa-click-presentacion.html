@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesa CLICK — Presentación del Proyecto</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange: #E25B1A;
+    --orange-light: #FAE8D8;
+    --orange-mid: #F08040;
+    --bg: #FAFAF8;
+    --bg-card: #FFFFFF;
+    --bg-surface: #F3F2EE;
+    --text-primary: #1A1A18;
+    --text-secondary: #5A5A55;
+    --text-muted: #9A9A94;
+    --border: rgba(0,0,0,0.1);
+    --border-strong: rgba(0,0,0,0.18);
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: var(--orange); display: flex; align-items: center; justify-content: center;
+  }
+  .logo-icon svg { width: 18px; height: 18px; }
+  .logo-name { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
+  .logo-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+
+  .nav-pills { display: flex; gap: 4px; flex-wrap: wrap; }
+  .nav-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px; font-weight: 500;
+    padding: 6px 14px; border-radius: 20px;
+    border: 1px solid var(--border-strong);
+    background: transparent; color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .nav-btn:hover { background: var(--bg-surface); }
+  .nav-btn.active { background: var(--orange); color: white; border-color: var(--orange); }
+
+  .page-counter { font-size: 12px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+
+  /* MAIN */
+  .main { flex: 1; max-width: 900px; margin: 0 auto; width: 100%; padding: 40px 32px 60px; }
+
+  .slide { display: none; animation: fadeUp 0.25s ease; }
+  .slide.active { display: block; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  .slide-tag {
+    display: inline-block;
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--orange);
+    margin-bottom: 8px;
+  }
+  .slide-title { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 10px; }
+  .slide-sub { font-size: 16px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 32px; max-width: 640px; }
+
+  /* CARDS */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+  }
+  .card-accent { border-left: 3px solid var(--orange); border-radius: 0 var(--radius) var(--radius) 0; }
+  .card-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 5px; }
+  .card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
+  .card-body { font-size: 14px; color: var(--text-secondary); line-height: 1.55; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+  /* METRICS */
+  .metric { background: var(--bg-surface); border-radius: var(--radius-sm); padding: 16px 18px; }
+  .metric-label { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
+  .metric-val { font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 1.4; }
+
+  /* BADGES */
+  .badge {
+    display: inline-block; font-size: 11px; font-weight: 500;
+    padding: 3px 9px; border-radius: 20px;
+  }
+  .b-orange { background: var(--orange-light); color: #7A2E06; }
+  .b-blue { background: #E6F1FB; color: #0C447C; }
+  .b-green { background: #EAF3DE; color: #2D5A0A; }
+  .b-gray { background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-strong); }
+  .b-amber { background: #FAEEDA; color: #6B3E08; }
+  .b-purple { background: #EEEDFE; color: #3C3489; }
+  .b-pink { background: #FBEAF0; color: #72243E; }
+
+  /* PAIN ROWS */
+  .pain-list { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .pain-row {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 14px 20px; border-bottom: 1px solid var(--border);
+    background: var(--bg-card);
+  }
+  .pain-row:last-child { border-bottom: none; }
+  .pain-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--orange); flex-shrink: 0; margin-top: 6px;
+  }
+  .pain-text { font-size: 14px; color: var(--text-secondary); line-height: 1.55; }
+  .pain-text strong { color: var(--text-primary); font-weight: 600; }
+
+  /* ACTOR CARDS */
+  .actor-card {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    padding: 18px 20px; background: var(--bg-card);
+  }
+  .actor-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600; margin-bottom: 10px;
+  }
+  .actor-name { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
+  .actor-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+  .actor-tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
+
+  /* HAPPY PATH */
+  .hp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; }
+  .hp-step { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; }
+  .hp-num {
+    width: 28px; height: 28px; border-radius: 50%;
+    background: var(--orange); color: white;
+    font-size: 13px; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .hp-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
+  .hp-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+  .hp-line { height: 1px; background: var(--border); margin: 0 0 0 40px; }
+
+  /* ROADMAP */
+  .rm-row { display: flex; gap: 14px; align-items: center; margin-bottom: 10px; }
+  .rm-label { width: 88px; flex-shrink: 0; font-size: 12px; font-weight: 600; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+  .rm-block {
+    flex: 1; border-radius: 8px; padding: 9px 14px;
+    font-size: 13px; font-weight: 500;
+  }
+  .rm-s0 { background: #F3F2EE; color: #5A5A55; }
+  .rm-s1 { background: #E6F1FB; color: #185FA5; }
+  .rm-s2 { background: #EAF3DE; color: #2D5A0A; }
+  .rm-s3 { background: var(--orange-light); color: #7A2E06; }
+  .rm-s4 { background: #FAEEDA; color: #6B3E08; }
+  .rm-s5 { background: #EEEDFE; color: #3C3489; }
+  .rm-s6 { background: #FBEAF0; color: #72243E; }
+
+  .rm-note {
+    background: var(--bg-surface); border-radius: var(--radius-sm);
+    padding: 12px 16px; font-size: 13px; color: var(--text-secondary);
+    line-height: 1.55; margin-top: 14px; border-left: 3px solid var(--orange);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  }
+  .rm-note strong { color: var(--text-primary); font-weight: 600; }
+
+  /* BACKLOG */
+  .epica-wrap { margin-bottom: 10px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .epica-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 16px; background: var(--bg-surface);
+    cursor: pointer; user-select: none;
+  }
+  .epica-header:hover { background: #ECEAE4; }
+  .epica-title { font-size: 14px; font-weight: 600; color: var(--text-primary); flex: 1; }
+  .chevron { font-size: 10px; color: var(--text-muted); transition: transform 0.2s; display: inline-block; }
+  .chevron.open { transform: rotate(90deg); }
+  .epica-body.collapsed { display: none; }
+
+  .us-row {
+    display: flex; gap: 10px; align-items: flex-start;
+    padding: 10px 16px; border-top: 1px solid var(--border);
+    background: var(--bg-card);
+  }
+  .us-dev {
+    font-size: 11px; font-weight: 600; padding: 2px 8px;
+    border-radius: 4px; flex-shrink: 0; min-width: 56px; text-align: center;
+    font-family: 'DM Mono', monospace;
+  }
+  .d-back { background: #E6F1FB; color: #0C447C; }
+  .d-front { background: #EAF3DE; color: #2D5A0A; }
+  .d-int { background: #FAEEDA; color: #6B3E08; }
+  .d-all { background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-strong); }
+  .us-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* FOOTER NAV */
+  .footer-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding-top: 32px; margin-top: 32px;
+    border-top: 1px solid var(--border);
+  }
+  .fn-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 500;
+    padding: 9px 18px; border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--bg-card); color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .fn-btn:hover { background: var(--bg-surface); color: var(--text-primary); }
+  .fn-page { font-size: 13px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+
+  /* FOOTER */
+  .site-footer {
+    text-align: center; padding: 16px;
+    font-size: 12px; color: var(--text-muted);
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 640px) {
+    .header { padding: 12px 16px; flex-wrap: wrap; gap: 10px; }
+    .page-counter { display: none; }
+    .main { padding: 24px 16px 48px; }
+    .slide-title { font-size: 24px; }
+    .grid-2, .grid-3, .hp-grid { grid-template-columns: 1fr; }
+    .nav-pills { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="3" width="8" height="8" rx="2" fill="white" opacity="0.9"/>
+        <rect x="13" y="3" width="8" height="8" rx="2" fill="white" opacity="0.6"/>
+        <rect x="3" y="13" width="8" height="8" rx="2" fill="white" opacity="0.6"/>
+        <rect x="13" y="13" width="8" height="8" rx="2" fill="white" opacity="0.3"/>
+      </svg>
+    </div>
+    <div>
+      <div class="logo-name">Mesa CLICK</div>
+      <div class="logo-sub">Digitalización de pedidos en mesa</div>
+    </div>
+  </div>
+  <nav class="nav-pills" id="nav">
+    <button class="nav-btn active" onclick="goSlide(0)">Portada</button>
+    <button class="nav-btn" onclick="goSlide(1)">Problema</button>
+    <button class="nav-btn" onclick="goSlide(2)">Solución</button>
+    <button class="nav-btn" onclick="goSlide(3)">Usuarios</button>
+    <button class="nav-btn" onclick="goSlide(4)">Happy path</button>
+    <button class="nav-btn" onclick="goSlide(5)">Roadmap</button>
+    <button class="nav-btn" onclick="goSlide(6)">Backlog</button>
+  </nav>
+  <div class="page-counter" id="counter">1 / 7</div>
+</header>
+
+<main class="main">
+
+  <!-- SLIDE 0 (PORTADA) -->
+  <section class="slide active" id="s0">
+    <div style="min-height: 420px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px 0;">
+      <div style="margin-bottom: 28px;">
+        <div style="display: inline-flex; align-items: center; justify-content: center; width: 72px; height: 72px; background: var(--orange); border-radius: 18px; margin-bottom: 20px;">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="2" fill="white" opacity="0.95"/><rect x="13" y="3" width="8" height="8" rx="2" fill="white" opacity="0.65"/><rect x="3" y="13" width="8" height="8" rx="2" fill="white" opacity="0.65"/><rect x="13" y="13" width="8" height="8" rx="2" fill="white" opacity="0.35"/></svg>
+        </div>
+        <div style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.12em; color: var(--orange); margin-bottom: 10px;">Práctica Profesionalizante I</div>
+        <h1 style="font-size: 42px; font-weight: 600; letter-spacing: -0.03em; line-height: 1.1; color: var(--text-primary); margin-bottom: 10px;">Mesa CLICK</h1>
+        <p style="font-size: 18px; color: var(--text-secondary);">Digitalización de pedidos en locales gastronómicos</p>
+      </div>
+      <div style="width: 48px; height: 1px; background: var(--border-strong); margin: 8px auto 28px;"></div>
+      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 24px; min-width: 140px;">
+          <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 5px;">Alumno</div>
+          <div style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Oviedo Martín</div>
+        </div>
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 24px; min-width: 140px;">
+          <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 5px;">Alumno</div>
+          <div style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Silvestrin Mateo</div>
+        </div>
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 24px; min-width: 140px;">
+          <div style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 5px;">Alumno</div>
+          <div style="font-size: 15px; font-weight: 600; color: var(--text-primary);">Aguirre Pablo</div>
+        </div>
+      </div>
+    </div>
+    <div class="footer-nav"><span></span><span class="fn-page">1 / 7</span><button class="fn-btn" onclick="goSlide(1)">Siguiente →</button></div>
+  </section>
+
+  <!-- SLIDE 0: PROBLEMA -->
+  <section class="slide" id="s1">
+    <div class="slide-tag">Contexto</div>
+    <h1 class="slide-title">El problema en locales gastronómicos</h1>
+    <p class="slide-sub">Bares, cafeterías y restaurantes pequeños siguen operando con toma de pedidos manual, generando fricciones en toda la cadena de atención.</p>
+    <div class="pain-list">
+      <div class="pain-row"><div class="pain-dot"></div><div class="pain-text"><strong>Demoras en la atención:</strong> El cliente espera a que alguien llegue a la mesa para iniciar el pedido, incluso en momentos de poca carga.</div></div>
+      <div class="pain-row"><div class="pain-dot"></div><div class="pain-text"><strong>Dependencia del personal:</strong> En locales chicos, la misma persona atiende, toma pedidos y prepara, creando cuellos de botella constantes.</div></div>
+      <div class="pain-row"><div class="pain-dot"></div><div class="pain-text"><strong>Errores en la toma:</strong> Pedidos anotados mal, incompletos o comunicados de forma deficiente a cocina generan re-trabajo y mala experiencia.</div></div>
+      <div class="pain-row"><div class="pain-dot"></div><div class="pain-text"><strong>Sin trazabilidad:</strong> El negocio no sabe el estado de cada pedido ni tiene datos de tiempos, errores o productos más solicitados.</div></div>
+      <div class="pain-row"><div class="pain-dot"></div><div class="pain-text"><strong>Sin información para decidir:</strong> Sin datos concretos, es imposible medir tiempos, rendimiento o satisfacción del cliente.</div></div>
+    </div>
+    <div class="footer-nav">
+      <span></span>
+      <span class="fn-page">2 / 7</span>
+      <button class="fn-btn" onclick="goSlide(2)">Siguiente →</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 1: SOLUCIÓN -->
+  <section class="slide" id="s2">
+    <div class="slide-tag">Propuesta</div>
+    <h1 class="slide-title">Mesa CLICK</h1>
+    <p class="slide-sub">Una app web PWA que digitaliza la toma de pedidos en mesa sin reemplazar al personal, sino dándole mejores herramientas para operar.</p>
+    <div class="grid-2" style="margin-bottom: 14px;">
+      <div class="card card-accent">
+        <div class="card-label">Núcleo del producto</div>
+        <div class="card-title">QR por mesa</div>
+        <div class="card-body">Cada mesa tiene un QR único. El cliente lo escanea y accede a la carta digital desde su celular, sin instalar nada.</div>
+      </div>
+      <div class="card card-accent">
+        <div class="card-label">Para el negocio</div>
+        <div class="card-title">Dashboard de gestión</div>
+        <div class="card-body">El personal ve y gestiona pedidos en tiempo real. Confirma, actualiza estados y sigue la operación sin papel ni intermediarios.</div>
+      </div>
+    </div>
+    <div class="grid-3">
+      <div class="metric"><div class="metric-label">Beneficio — cliente</div><div class="metric-val">Pide cuando quiere, sin esperar al mozo</div></div>
+      <div class="metric"><div class="metric-label">Beneficio — personal</div><div class="metric-val">Menos interrupciones, operación más clara</div></div>
+      <div class="metric"><div class="metric-label">Beneficio — negocio</div><div class="metric-val">Datos reales y menor tiempo de atención</div></div>
+    </div>
+    <div class="footer-nav">
+      <button class="fn-btn" onclick="goSlide(1)">← Anterior</button>
+      <span class="fn-page">3 / 7</span>
+      <button class="fn-btn" onclick="goSlide(3)">Siguiente →</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: USUARIOS -->
+  <section class="slide" id="s3">
+    <div class="slide-tag">Usuarios / Personas</div>
+    <h1 class="slide-title">¿Quiénes lo usan?</h1>
+    <p class="slide-sub">Cuatro actores con necesidades distintas. El cliente es el único que no necesita cuenta ni login.</p>
+    <div class="grid-2">
+      <div class="actor-card">
+        <div class="actor-avatar" style="background:#E6F1FB; color:#0C447C;">AD</div>
+        <div class="actor-name">Admin principal</div>
+        <div class="actor-desc">Dueño o responsable del negocio. Configura el sistema completo: sucursales, mesas, carta y usuarios internos.</div>
+        <div class="actor-tags"><span class="badge b-blue">Multi-sucursal</span><span class="badge b-blue">Configuración global</span></div>
+      </div>
+      <div class="actor-card">
+        <div class="actor-avatar" style="background:#EAF3DE; color:#2D5A0A;">EN</div>
+        <div class="actor-name">Encargado de sucursal</div>
+        <div class="actor-desc">Gestiona mesas, carta y tiempos de demora estimados de su sucursal específica.</div>
+        <div class="actor-tags"><span class="badge b-green">Sucursal propia</span><span class="badge b-green">Configura carta</span></div>
+      </div>
+      <div class="actor-card">
+        <div class="actor-avatar" style="background:#FAE8D8; color:#7A2E06;">RE</div>
+        <div class="actor-name">Recepcionista / Mozo</div>
+        <div class="actor-desc">Recibe, confirma y actualiza el estado de los pedidos desde el dashboard. Es el operador del día a día.</div>
+        <div class="actor-tags"><span class="badge b-orange">Dashboard live</span><span class="badge b-orange">Gestión de estados</span></div>
+      </div>
+      <div class="actor-card">
+        <div class="actor-avatar" style="background:#F3F2EE; color:#5A5A55;">CL</div>
+        <div class="actor-name">Cliente / Comensal</div>
+        <div class="actor-desc">Escanea el QR, ve la carta, realiza el pedido y sigue su estado desde el celular. No necesita cuenta.</div>
+        <div class="actor-tags"><span class="badge b-gray">Sin login</span><span class="badge b-gray">Solo QR</span></div>
+      </div>
+    </div>
+    <div class="footer-nav">
+      <button class="fn-btn" onclick="goSlide(2)">← Anterior</button>
+      <span class="fn-page">4 / 7</span>
+      <button class="fn-btn" onclick="goSlide(4)">Siguiente →</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: HAPPY PATH -->
+  <section class="slide" id="s4">
+    <div class="slide-tag">Flujo mínimo</div>
+    <h1 class="slide-title">Happy path</h1>
+    <p class="slide-sub">El recorrido completo de una experiencia exitosa, desde la configuración inicial hasta el cierre del pedido.</p>
+    <div class="hp-grid">
+      <div>
+        <div class="hp-step"><div class="hp-num">1</div><div><div class="hp-title">Admin configura el sistema</div><div class="hp-desc">Crea sucursal, carga mesas y arma la carta digital con productos y variantes.</div></div></div>
+        <div class="hp-line"></div>
+        <div class="hp-step"><div class="hp-num">2</div><div><div class="hp-title">Cliente escanea el QR</div><div class="hp-desc">Desde la mesa abre la carta en su celular, selecciona productos y confirma el pedido.</div></div></div>
+        <div class="hp-line"></div>
+        <div class="hp-step"><div class="hp-num">3</div><div><div class="hp-title">Recepcionista confirma</div><div class="hp-desc">Ve el pedido en el dashboard en tiempo real y lo pasa a "Preparando".</div></div></div>
+      </div>
+      <div>
+        <div class="hp-step"><div class="hp-num">4</div><div><div class="hp-title">Cliente sigue el progreso</div><div class="hp-desc">Ve el estado actualizado y la demora estimada desde su vista de mesa.</div></div></div>
+        <div class="hp-line"></div>
+        <div class="hp-step"><div class="hp-num">5</div><div><div class="hp-title">Pedido listo</div><div class="hp-desc">Estado pasa a "Listo". El cliente puede agregar más ítems o pedir la cuenta.</div></div></div>
+        <div class="hp-line"></div>
+        <div class="hp-step"><div class="hp-num">6</div><div><div class="hp-title">Cierre del pedido</div><div class="hp-desc">El recepcionista cierra el pedido. Queda registrado para los reportes del negocio.</div></div></div>
+      </div>
+    </div>
+    <div class="footer-nav">
+      <button class="fn-btn" onclick="goSlide(3)">← Anterior</button>
+      <span class="fn-page">5 / 7</span>
+      <button class="fn-btn" onclick="goSlide(5)">Siguiente →</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: ROADMAP -->
+  <section class="slide" id="s5">
+    <div class="slide-tag">Planificación</div>
+    <h1 class="slide-title">Roadmap — 8 sprints</h1>
+    <p class="slide-sub">Cada sprint representa ~2 semanas de trabajo. El Sprint 0 es la base de todo: decisión de stack, arquitectura y organización del equipo.</p>
+    <div>
+      <div class="rm-row"><div class="rm-label">Sprint 0</div><div class="rm-block rm-s0">Definición de stack + arquitectura + setup del entorno</div></div>
+      <div class="rm-row"><div class="rm-label">Sprint 1a</div><div class="rm-block rm-s1">Configuración de negocio (tenant, sucursales)</div></div>
+      <div class="rm-row"><div class="rm-label">Sprint 1b</div><div class="rm-block rm-s1">Auth + usuarios internos (magic link email)</div></div>
+      <div class="rm-row"><div class="rm-label">Sprint 2</div><div class="rm-block rm-s2">Carta digital + mesas + generación de QR</div></div>
+      <div class="rm-row"><div class="rm-label">Sprint 3</div><div class="rm-block rm-s3">Recepción de pedidos + estados en tiempo real</div></div>
+      <div class="rm-row"><div class="rm-label">Sprint 4</div><div class="rm-block rm-s4">Acciones del cliente (agregar ítems, pedir cuenta)</div></div>
+      <div class="rm-row"><div class="rm-label">Sprint 5</div><div class="rm-block rm-s5">Reportes básicos (tiempos, productos populares)</div></div>
+      <div class="rm-row"><div class="rm-label">Sprint 6</div><div class="rm-block rm-s6">QA, polish visual, deploy a producción</div></div>
+    </div>
+    <div class="rm-note"><strong>Sprint 0 no es setup mecánico.</strong> Es donde el equipo decide framework, base de datos, estrategia de auth, estructura del monorepo y cómo se organiza el trabajo entre los 3 desarrolladores.</div>
+    <div class="footer-nav">
+      <button class="fn-btn" onclick="goSlide(4)">← Anterior</button>
+      <span class="fn-page">6 / 7</span>
+      <button class="fn-btn" onclick="goSlide(6)">Siguiente →</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: BACKLOG -->
+  <section class="slide" id="s6">
+    <div class="slide-tag">Backlog</div>
+    <h1 class="slide-title">Épicas y user stories — MVP</h1>
+    <p class="slide-sub">Hacé clic en cada épica para ver las user stories. Roles asignados: <strong>Back</strong>, <strong>Front</strong> e <strong>Int</strong> (Integración) para los 3 devs del equipo.</p>
+
+    <div class="epica-wrap">
+      <div class="epica-header" onclick="toggle(this)">
+        <span class="badge b-gray">Sprint 0</span>
+        <span class="epica-title">Definición de stack y setup del entorno</span>
+        <span class="chevron open">▶</span>
+      </div>
+      <div class="epica-body">
+        <div class="us-row"><span class="us-dev d-all">Todos</span><span class="us-text">Decisión de stack: elegir framework back, front, base de datos y estrategia de auth en base a criterios del equipo</span></div>
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Inicializar monorepo con estructura de carpetas, dependencias base y scripts compartidos</span></div>
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Configurar entorno de desarrollo: Docker / entorno local, variables de entorno, base de datos inicial</span></div>
+        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Setup del proyecto frontend: bundler, estilos base, estructura de rutas y primera pantalla funcional</span></div>
+        <div class="us-row"><span class="us-dev d-int">Int</span><span class="us-text">Definir convenciones: estructura de APIs, nombrado de branches, flujo de PRs y board de trabajo del equipo</span></div>
+      </div>
+    </div>
+
+    <div class="epica-wrap">
+      <div class="epica-header" onclick="toggle(this)">
+        <span class="badge b-blue">Sprint 1a</span>
+        <span class="epica-title">Configuración de negocio (tenant + sucursales)</span>
+        <span class="chevron open">▶</span>
+      </div>
+      <div class="epica-body">
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint para crear un tenant (negocio): nombre, slug y configuración base</span></div>
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Modelo de base de datos: Tenant + Sucursal (id, nombre, dirección, demora estimada)</span></div>
+        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Formulario de onboarding — creación del negocio con validación inline</span></div>
+        <div class="us-row"><span class="us-dev d-int">Int</span><span class="us-text">Flujo completo: obtener tenant logueado + agregar primera sucursal post-registro</span></div>
+      </div>
+    </div>
+
+    <div class="epica-wrap">
+      <div class="epica-header" onclick="toggle(this)">
+        <span class="badge b-blue">Sprint 1b</span>
+        <span class="epica-title">Auth con magic link (email)</span>
+        <span class="chevron open">▶</span>
+      </div>
+      <div class="epica-body">
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint de solicitud de magic link: recibe email, genera token único y dispara el envío del correo</span></div>
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint de verificación: valida token, crea sesión y redirige al panel del negocio</span></div>
+        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Página de login: input de email, estado "revisá tu correo" y redirect post-verificación</span></div>
+        <div class="us-row"><span class="us-dev d-int">Int</span><span class="us-text">Invitación de usuarios internos: el admin genera un magic link para invitar a un encargado o mozo</span></div>
+      </div>
+    </div>
+
+    <div class="epica-wrap">
+      <div class="epica-header" onclick="toggle(this)">
+        <span class="badge b-green">Sprint 2</span>
+        <span class="epica-title">Carta digital + mesas + QR</span>
+        <span class="chevron open">▶</span>
+      </div>
+      <div class="epica-body">
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">CRUD de productos: nombre, descripción, precio, variantes y adicionales por sucursal</span></div>
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">CRUD de mesas: por sucursal, con capacidad, número y estado activo/inactivo</span></div>
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint que genera los datos del QR con la URL pública de acceso a la mesa</span></div>
+        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Panel admin: ABM de carta con secciones y categorías de productos</span></div>
+        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Vista pública del cliente (sin login): carta digital con foto, precio y variantes</span></div>
+        <div class="us-row"><span class="us-dev d-int">Int</span><span class="us-text">Generación y descarga del QR por mesa desde el panel de administración</span></div>
+      </div>
+    </div>
+
+    <div class="epica-wrap">
+      <div class="epica-header" onclick="toggle(this)">
+        <span class="badge b-orange">Sprint 3</span>
+        <span class="epica-title">Pedidos + estados en tiempo real</span>
+        <span class="chevron open">▶</span>
+      </div>
+      <div class="epica-body">
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint para crear un pedido: mesa, lista de ítems y notas opcionales</span></div>
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint para actualizar estado: Recibido → Preparando → Listo → Cerrado</span></div>
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint de pedidos activos por sucursal para el dashboard del recepcionista</span></div>
+        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Dashboard recepcionista: tabla de pedidos con acciones de cambio de estado</span></div>
+        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Vista cliente: confirmación de pedido + seguimiento de estado con demora estimada</span></div>
+        <div class="us-row"><span class="us-dev d-int">Int</span><span class="us-text">Tiempo real: al cambiar el estado, el cliente y el recepcionista se actualizan sin recargar la página</span></div>
+      </div>
+    </div>
+
+    <div class="epica-wrap">
+      <div class="epica-header" onclick="toggle(this)">
+        <span class="badge b-amber">Sprint 4</span>
+        <span class="epica-title">Acciones del cliente post-pedido</span>
+        <span class="chevron open">▶</span>
+      </div>
+      <div class="epica-body">
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint para solicitar la cuenta: marca el pedido y notifica al recepcionista</span></div>
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint para agregar ítems adicionales a un pedido existente</span></div>
+        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Botones "Pedir cuenta" y "Agregar más" en la vista del cliente con confirmación visual</span></div>
+        <div class="us-row"><span class="us-dev d-int">Int</span><span class="us-text">Notificación en tiempo real al dashboard cuando el cliente solicita la cuenta</span></div>
+      </div>
+    </div>
+
+    <div class="epica-wrap">
+      <div class="epica-header" onclick="toggle(this)">
+        <span class="badge b-purple">Sprint 5</span>
+        <span class="epica-title">Reportes básicos</span>
+        <span class="chevron open">▶</span>
+      </div>
+      <div class="epica-body">
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint de métricas: pedidos por día, tiempo promedio de atención por sucursal</span></div>
+        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint de productos más pedidos con ranking por sucursal y rango de fechas</span></div>
+        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Panel de reportes: gráficos de pedidos diarios y tabla de productos populares</span></div>
+        <div class="us-row"><span class="us-dev d-int">Int</span><span class="us-text">Filtros de fecha y sucursal en los reportes desde el panel del admin</span></div>
+      </div>
+    </div>
+
+    <div class="footer-nav">
+      <button class="fn-btn" onclick="goSlide(5)">← Anterior</button>
+      <span class="fn-page">7 / 7</span>
+      <span></span>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  Mesa CLICK &mdash; Presentación académica &mdash; Digitalización de pedidos gastronómicos
+</footer>
+
+<script>
+  let current = 0;
+  const total = 7;
+
+  function goSlide(n) {
+    document.getElementById('s' + current).classList.remove('active');
+    document.querySelectorAll('.nav-btn')[current].classList.remove('active');
+    current = n;
+    document.getElementById('s' + current).classList.add('active');
+    document.querySelectorAll('.nav-btn')[current].classList.add('active');
+    document.getElementById('counter').textContent = (n + 1) + ' / ' + total;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function toggle(header) {
+    const body = header.nextElementSibling;
+    const chevron = header.querySelector('.chevron');
+    const isOpen = !body.classList.contains('collapsed');
+    if (isOpen) { body.classList.add('collapsed'); chevron.classList.remove('open'); }
+    else { body.classList.remove('collapsed'); chevron.classList.add('open'); }
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' && current < total - 1) goSlide(current + 1);
+    if (e.key === 'ArrowLeft' && current > 0) goSlide(current - 1);
+  });
+</script>
+</body>
+</html>
