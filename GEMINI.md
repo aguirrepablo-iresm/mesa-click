@@ -16,12 +16,15 @@
 The project is currently in the **Planning/Sprint 0** phase.
 
 ### Key Files
-- `docs/mesa-click-presentacion.html`: The central presentation of the project, including:
+- `docs/product/mesa-click-presentacion.html`: The central presentation of the project, including:
     - **Roadmap:** 8 planned sprints.
     - **User Stories:** Detailed backlog for each sprint.
     - **Roles:** Defined roles for Backend (Back), Frontend (Front), and Integration (Int) developers.
-- `docs/happy-path-admin-negocio.md`: Detailed breakdown of the business onboarding and configuration flow.
-- `docs/happy-path-cliente.md`: (Placeholder) Planned flow for the customer experience.
+- `docs/flows/happy-path-admin-negocio.md`: Detailed breakdown of the business onboarding and configuration flow.
+- `docs/flows/happy-path-cliente.md`: (Placeholder) Planned flow for the customer experience.
+
+## Monorepo Repositories
+- `repos/web`: Next.js frontend application.
 
 ## Roadmap & Sprints
 1. **Sprint 0:** Stack definition, architecture, and environment setup (Monorepo, Docker, CI/CD).
@@ -42,4 +45,4 @@ The project is currently in the **Planning/Sprint 0** phase.
     - **Int:** Bridging Back and Front, defining shared conventions, and ensuring full-flow integration.
 
 ## Usage
-This repository serves as the source of truth for the project's planning and requirements. When implementing new features, refer to the user stories in `docs/mesa-click-presentacion.html` and the flows in `docs/happy-path-*.md` files.
+This repository serves as the source of truth for the project's planning and requirements. When implementing new features, refer to the user stories in `docs/product/mesa-click-presentacion.html` and the flows in `docs/flows/happy-path-*.md` files.

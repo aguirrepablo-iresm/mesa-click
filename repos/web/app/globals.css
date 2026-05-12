@@ -1,0 +1,118 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors from repos/web/docs/DESIGN.md (Plain Style) */
+  --color-canvas-white: #ffffff;
+  --color-ghost-fog: #f3fbe9;
+  --color-vanilla-cream: #f9f6f1;
+  --color-ash-graphite: #0a2414;
+  --color-deep-forest: #283a2e;
+  --color-sage-green: #607166;
+  --color-system-black: #000000;
+  --color-plain-green: #1ad379;
+  --color-plain-green-muted: #17b267;
+  --color-alert-red: #360003;
+  --color-warm-pink: #ffbac3;
+
+  /* Primary Action and Semantic Roles */
+  --color-primary: var(--color-plain-green);
+  --color-on-primary: var(--color-ash-graphite);
+  --color-background: var(--color-canvas-white);
+  --color-on-background: var(--color-ash-graphite);
+  --color-surface: var(--color-vanilla-cream);
+  --color-on-surface: var(--color-ash-graphite);
+  --color-outline: var(--color-system-black);
+
+  /* Typography - Custom Sizes for Tailwind 4 */
+  --font-size-9: 9px;
+  --font-size-10: 10px;
+  --font-size-11: 11px;
+  --font-size-12: 12px;
+  --font-size-13: 13px;
+  --font-size-14: 14px;
+  --font-size-15: 15px;
+  --font-size-16: 16px;
+  --font-size-18: 18px;
+  --font-size-20: 20px;
+  --font-size-24: 24px;
+  --font-size-32: 32px;
+
+  /* Spacing & Sizing for Tailwind 4 */
+  --spacing-2: 2px;
+  --spacing-4: 4px;
+  --spacing-6: 6px;
+  --spacing-8: 8px;
+  --spacing-10: 10px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-28: 28px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-44: 44px;
+  --spacing-48: 48px;
+  --spacing-64: 64px;
+  --spacing-65: 65px;
+  --spacing-72: 72px;
+  --spacing-75: 75px;
+  --spacing-80: 80px;
+  --spacing-85: 85px;
+  --spacing-120: 120px;
+  --spacing-160: 160px;
+  --spacing-180: 180px;
+  --spacing-200: 200px;
+  --spacing-240: 240px;
+
+  /* Fonts */
+  --font-inter: "Inter", sans-serif;
+  --font-mono: "Geist Mono", monospace;
+
+  /* Border Radius */
+  --radius-md: 6px;
+  --radius-lg: 9px;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #0a2414;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Base Headings */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+/* Minimalist Inputs Reset */
+input, select, textarea {
+  border: 1px solid var(--color-ash-graphite);
+  border-radius: var(--radius-md);
+  outline: none;
+  transition: border-color 0.2s;
+  background-color: var(--color-canvas-white);
+  line-height: 1.2;
+}
+
+input:focus, select:focus, textarea:focus {
+  border-color: var(--color-plain-green);
+}
+
+/* Material Symbols Placeholder */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 20px;
+  line-height: 1;
+  display: inline-block;
+  white-space: nowrap;
+  -webkit-font-smoothing: antialiased;
+}
