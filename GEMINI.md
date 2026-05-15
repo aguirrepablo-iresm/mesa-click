@@ -1,48 +1,72 @@
-# Mesa CLICK - Project Context
+# Mesa CLICK — Contexto para Gemini
 
-## Project Overview
-**Mesa CLICK** is a comprehensive platform designed for the hospitality industry (restaurants, cafes, fast food, etc.) to digitize their menus and manage table orders in real-time. The system aims to streamline the ordering process by allowing customers to scan QR codes at their tables, view digital menus, and place orders directly from their mobile devices.
+> **Leer `AGENTS.md` primero.** Este archivo contiene las reglas completas del proyecto, el estado del sprint actual y los mandatos de documentación. `GEMINI.md` sólo agrega contexto específico para el modelo Gemini.
 
-### Key Features
-- **Multi-tenant Architecture:** Support for multiple businesses.
-- **Branch Management:** Configuration of sucursales with specific details (hours, contact, etc.).
-- **Table & Sector Management:** Organization of tables and chairs within different sectors of a branch.
-- **Digital Menu:** Dynamic menu management with categories, subcategories, products, and variants.
-- **QR Code Generation:** Automatic generation of unique QR codes per table.
-- **Real-time Orders:** A dashboard for the business to receive and manage orders as they change states (Received -> Preparing -> Ready -> Closed).
-- **Authentication:** Magic link based authentication for business admins and staff.
+---
 
-## Project Structure & Documentation
-The project is currently in the **Planning/Sprint 0** phase.
+## Mandato principal (no negociable)
 
-### Key Files
-- `docs/product/mesa-click-presentacion.html`: The central presentation of the project, including:
-    - **Roadmap:** 8 planned sprints.
-    - **User Stories:** Detailed backlog for each sprint.
-    - **Roles:** Defined roles for Backend (Back), Frontend (Front), and Integration (Int) developers.
-- `docs/flows/happy-path-admin-negocio.md`: Detailed breakdown of the business onboarding and configuration flow.
-- `docs/flows/happy-path-cliente.md`: (Placeholder) Planned flow for the customer experience.
+Antes de cualquier tarea — incluso antes de hacer preguntas de aclaración — leer:
 
-## Monorepo Repositories
-- `repos/web`: Next.js frontend application.
+1. `docs/product/mesa-click-presentacion.html` → slide "Backlog" para identificar las US del sprint actual.
+2. `docs/flows/happy-path-admin-negocio.md` y `docs/flows/happy-path-cliente.md` para entender el flujo esperado.
+3. `AGENTS.md` para conocer en qué fase y sprint estamos.
 
-## Roadmap & Sprints
-1. **Sprint 0:** Stack definition, architecture, and environment setup (Monorepo, Docker, CI/CD).
-2. **Sprint 1a & 1b:** Business configuration (Tenants/Branches) and Auth (Magic Link).
-3. **Sprint 2:** Digital menu, table management, and QR generation.
-4. **Sprint 3:** Real-time order management and status tracking.
-5. **Sprint 4:** Post-order customer actions (add items, request bill).
-6. **Sprint 5:** Basic reports and metrics.
-7. **Sprint 6:** QA, polishing, and production deployment.
+---
 
-## Development Guidelines (Planned)
-- **Architecture:** Monorepo structure is planned for managing both Backend and Frontend.
-- **Communication:** Real-time updates for order status using WebSockets or similar technology.
-- **Conventions:** API structures and branch naming conventions to be defined in Sprint 0.
-- **Roles:**
-    - **Back:** API development, database modeling, infrastructure.
-    - **Front:** UI/UX implementation, state management, client-side logic.
-    - **Int:** Bridging Back and Front, defining shared conventions, and ensuring full-flow integration.
+## Resumen del proyecto
 
-## Usage
-This repository serves as the source of truth for the project's planning and requirements. When implementing new features, refer to the user stories in `docs/product/mesa-click-presentacion.html` and the flows in `docs/flows/happy-path-*.md` files.
+**Mesa CLICK** es una plataforma web PWA para digitalizar pedidos en locales gastronómicos (bares, cafeterías, restaurantes). Los clientes escanean un QR por mesa, ven la carta digital y hacen el pedido desde el celular. El negocio gestiona todo desde un dashboard en tiempo real.
+
+### Actores principales
+| Actor | Acceso | Descripción |
+|---|---|---|
+| Admin de negocio | Login (magic link) | Configura sucursales, mesas, carta y usuarios |
+| Encargado | Login (magic link) | Gestiona su sucursal |
+| Recepcionista / Mozo | Login (magic link) | Dashboard de pedidos en vivo |
+| Cliente / Comensal | Sin login (QR) | Carta, pedido, seguimiento, cuenta |
+
+---
+
+## Estado actual
+
+- **Fase**: 1 — Frontend funcional sin backend
+- **Sprint en curso**: Sprint 1 (11/05 – 17/05/2025)
+- **Completado** (Sprint 0): Landing, Login, Onboarding admin, Dashboard (estructura base)
+- **En curso** (Sprint 1): Happy path Admin completo + dashboard recepcionista con datos mockeados
+- **Próximo** (Sprint 2): Happy path Cliente (carta pública, pedido, seguimiento, cuenta)
+
+Ver el roadmap completo con fechas en `docs/product/mesa-click-presentacion.html`.
+
+---
+
+## Stack tecnológico
+
+| Capa | Tecnología |
+|---|---|
+| Frontend | Next.js (v16+), React 19+, Tailwind CSS v4+, TypeScript |
+| Backend (Fase 2) | Go, PostgreSQL, slog, Sentry |
+| Auth (Fase 2) | Magic link por email |
+| Tiempo real (Fase 2) | Server-Sent Events (SSE) |
+
+---
+
+## Reglas de trabajo en Fase 1
+
+- Toda la data es **mockeada o estática**. No hay API real todavía.
+- El objetivo de Fase 1 es tener los dos happy paths completos y navegables para aprobación del docente.
+- El código del frontend vive en `repos/web/`. Respetar su estructura de carpetas.
+- No construir lógica de backend ni endpoints en esta fase.
+
+---
+
+## Referencia de documentación clave
+
+| Archivo | Contenido |
+|---|---|
+| `AGENTS.md` | Reglas completas, fases, sprints, convenciones |
+| `docs/product/mesa-click-presentacion.html` | Presentación con US, roadmap y backlog por sprint |
+| `docs/product/arquitectura-back.md` | Entidades, relaciones, servicios y auth (para Fase 2) |
+| `docs/flows/happy-path-admin-negocio.md` | Flujo del admin: registro → onboarding → carta → QR |
+| `docs/flows/happy-path-cliente.md` | Flujo del cliente: QR → carta → pedido → cuenta |
+| `repos/web/AGENTS.md` | Reglas específicas del frontend Next.js |

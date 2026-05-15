@@ -24,73 +24,31 @@
     --radius-sm: 8px;
   }
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    background: var(--bg);
-    color: var(--text-primary);
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text-primary); min-height: 100vh; display: flex; flex-direction: column; }
 
-  /* HEADER */
-  .header {
-    background: var(--bg-card);
-    border-bottom: 1px solid var(--border);
-    padding: 16px 32px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
+  .header { background: var(--bg-card); border-bottom: 1px solid var(--border); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
   .logo { display: flex; align-items: center; gap: 10px; }
-  .logo-icon {
-    width: 34px; height: 34px; border-radius: 8px;
-    background: var(--orange); display: flex; align-items: center; justify-content: center;
-  }
+  .logo-icon { width: 34px; height: 34px; border-radius: 8px; background: var(--orange); display: flex; align-items: center; justify-content: center; }
   .logo-icon svg { width: 18px; height: 18px; }
   .logo-name { font-size: 17px; font-weight: 600; letter-spacing: -0.01em; }
   .logo-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
 
   .nav-pills { display: flex; gap: 4px; flex-wrap: wrap; }
-  .nav-btn {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 12px; font-weight: 500;
-    padding: 6px 14px; border-radius: 20px;
-    border: 1px solid var(--border-strong);
-    background: transparent; color: var(--text-secondary);
-    cursor: pointer; transition: all 0.15s;
-  }
+  .nav-btn { font-family: 'DM Sans', sans-serif; font-size: 12px; font-weight: 500; padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border-strong); background: transparent; color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
   .nav-btn:hover { background: var(--bg-surface); }
   .nav-btn.active { background: var(--orange); color: white; border-color: var(--orange); }
-
   .page-counter { font-size: 12px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
 
-  /* MAIN */
   .main { flex: 1; max-width: 900px; margin: 0 auto; width: 100%; padding: 40px 32px 60px; }
-
   .slide { display: none; animation: fadeUp 0.25s ease; }
   .slide.active { display: block; }
   @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-  .slide-tag {
-    display: inline-block;
-    font-size: 11px; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.1em; color: var(--orange);
-    margin-bottom: 8px;
-  }
+  .slide-tag { display: inline-block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--orange); margin-bottom: 8px; }
   .slide-title { font-size: 32px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; margin-bottom: 10px; }
   .slide-sub { font-size: 16px; color: var(--text-secondary); line-height: 1.65; margin-bottom: 32px; max-width: 640px; }
 
-  /* CARDS */
-  .card {
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px 24px;
-  }
+  .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; }
   .card-accent { border-left: 3px solid var(--orange); border-radius: 0 var(--radius) var(--radius) 0; }
   .card-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 5px; }
   .card-title { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 6px; }
@@ -99,16 +57,11 @@
   .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
 
-  /* METRICS */
   .metric { background: var(--bg-surface); border-radius: var(--radius-sm); padding: 16px 18px; }
   .metric-label { font-size: 12px; color: var(--text-muted); margin-bottom: 5px; }
   .metric-val { font-size: 15px; font-weight: 600; color: var(--text-primary); line-height: 1.4; }
 
-  /* BADGES */
-  .badge {
-    display: inline-block; font-size: 11px; font-weight: 500;
-    padding: 3px 9px; border-radius: 20px;
-  }
+  .badge { display: inline-block; font-size: 11px; font-weight: 500; padding: 3px 9px; border-radius: 20px; }
   .b-orange { background: var(--orange-light); color: #7A2E06; }
   .b-blue { background: #E6F1FB; color: #0C447C; }
   .b-green { background: #EAF3DE; color: #2D5A0A; }
@@ -117,55 +70,61 @@
   .b-purple { background: #EEEDFE; color: #3C3489; }
   .b-pink { background: #FBEAF0; color: #72243E; }
 
-  /* PAIN ROWS */
   .pain-list { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .pain-row {
-    display: flex; gap: 14px; align-items: flex-start;
-    padding: 14px 20px; border-bottom: 1px solid var(--border);
-    background: var(--bg-card);
-  }
+  .pain-row { display: flex; gap: 14px; align-items: flex-start; padding: 14px 20px; border-bottom: 1px solid var(--border); background: var(--bg-card); }
   .pain-row:last-child { border-bottom: none; }
-  .pain-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--orange); flex-shrink: 0; margin-top: 6px;
-  }
+  .pain-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--orange); flex-shrink: 0; margin-top: 6px; }
   .pain-text { font-size: 14px; color: var(--text-secondary); line-height: 1.55; }
   .pain-text strong { color: var(--text-primary); font-weight: 600; }
 
-  /* ACTOR CARDS */
-  .actor-card {
-    border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 18px 20px; background: var(--bg-card);
-  }
-  .actor-avatar {
-    width: 42px; height: 42px; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 600; margin-bottom: 10px;
-  }
+  .actor-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; background: var(--bg-card); }
+  .actor-avatar { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; margin-bottom: 10px; }
   .actor-name { font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
   .actor-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
   .actor-tags { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
 
   /* HAPPY PATH */
+  .hp-tabs { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .hp-tab { flex: 1; padding: 11px 16px; font-size: 13px; font-weight: 600; text-align: center; cursor: pointer; border: none; background: var(--bg-surface); color: var(--text-secondary); transition: all 0.15s; font-family: 'DM Sans', sans-serif; border-right: 1px solid var(--border); }
+  .hp-tab:last-child { border-right: none; }
+  .hp-tab.active { background: var(--orange); color: white; }
+  .hp-tab:hover:not(.active) { background: #ECEAE4; }
+  .hp-panel { display: none; }
+  .hp-panel.active { display: block; }
   .hp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; }
   .hp-step { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; }
-  .hp-num {
-    width: 28px; height: 28px; border-radius: 50%;
-    background: var(--orange); color: white;
-    font-size: 13px; font-weight: 600;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  }
+  .hp-num { width: 28px; height: 28px; border-radius: 50%; background: var(--orange); color: white; font-size: 13px; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .hp-num.alt { background: #185FA5; }
   .hp-title { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 3px; }
   .hp-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
   .hp-line { height: 1px; background: var(--border); margin: 0 0 0 40px; }
 
-  /* ROADMAP */
-  .rm-row { display: flex; gap: 14px; align-items: center; margin-bottom: 10px; }
-  .rm-label { width: 88px; flex-shrink: 0; font-size: 12px; font-weight: 600; color: var(--text-muted); font-family: 'DM Mono', monospace; }
-  .rm-block {
-    flex: 1; border-radius: 8px; padding: 9px 14px;
-    font-size: 13px; font-weight: 500;
+  /* ESTADO ACTUAL */
+  .estado-section-label {
+    font-size: 11px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--text-muted); margin: 20px 0 10px;
   }
+  .estado-section-label:first-of-type { margin-top: 0; }
+  .estado-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 4px; }
+  .estado-card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); overflow: hidden; }
+  .estado-card-header { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-bottom: 1px solid var(--border); background: var(--bg-surface); }
+  .estado-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-done { background: #5AAF2A; }
+  .dot-pending { background: #C0BEB8; }
+  .dot-wip { background: var(--orange); }
+  .estado-card-title { font-size: 13px; font-weight: 600; color: var(--text-primary); flex: 1; }
+  .estado-card-badge { font-size: 11px; margin-left: auto; }
+  .estado-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 16px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--text-secondary); }
+  .estado-item:last-child { border-bottom: none; }
+  .estado-item .check { font-size: 12px; flex-shrink: 0; margin-top: 1px; }
+
+  /* ROADMAP */
+  .rm-phase { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-muted); padding: 16px 0 6px; }
+  .rm-phase:first-child { padding-top: 0; }
+  .rm-phase-divider { height: 1px; background: var(--border); margin: 4px 0 14px; }
+  .rm-row { display: flex; gap: 14px; align-items: center; margin-bottom: 8px; }
+  .rm-label { width: 88px; flex-shrink: 0; font-size: 12px; font-weight: 600; color: var(--text-muted); font-family: 'DM Mono', monospace; }
+  .rm-block { flex: 1; border-radius: 8px; padding: 9px 14px; font-size: 13px; font-weight: 500; }
   .rm-s0 { background: #F3F2EE; color: #5A5A55; }
   .rm-s1 { background: #E6F1FB; color: #185FA5; }
   .rm-s2 { background: #EAF3DE; color: #2D5A0A; }
@@ -173,74 +132,50 @@
   .rm-s4 { background: #FAEEDA; color: #6B3E08; }
   .rm-s5 { background: #EEEDFE; color: #3C3489; }
   .rm-s6 { background: #FBEAF0; color: #72243E; }
-
-  .rm-note {
-    background: var(--bg-surface); border-radius: var(--radius-sm);
-    padding: 12px 16px; font-size: 13px; color: var(--text-secondary);
-    line-height: 1.55; margin-top: 14px; border-left: 3px solid var(--orange);
-    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
-  }
+  .rm-done .rm-block { border-left: 3px solid #5AAF2A; opacity: 0.7; }
+  .rm-wip .rm-block { border-left: 3px solid var(--orange); }
+  .rm-date { font-size: 11px; font-family: 'DM Mono', monospace; opacity: 0.65; margin-top: 3px; }
+  .rm-wip-tag { font-size: 10px; font-weight: 600; background: var(--orange); color: white; padding: 1px 7px; border-radius: 10px; margin-left: 8px; vertical-align: middle; }
+  .rm-approval { display: flex; align-items: center; gap: 14px; margin: 10px 0; }
+  .rm-approval-line { flex: 1; height: 1px; background: var(--border-strong); }
+  .rm-approval-tag { font-size: 11px; font-weight: 600; padding: 4px 12px; border-radius: 20px; background: var(--orange-light); color: #7A2E06; white-space: nowrap; }
+  .rm-note { background: var(--bg-surface); padding: 12px 16px; font-size: 13px; color: var(--text-secondary); line-height: 1.55; margin-top: 14px; border-left: 3px solid var(--orange); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
   .rm-note strong { color: var(--text-primary); font-weight: 600; }
 
   /* BACKLOG */
-  .epica-wrap { margin-bottom: 10px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  .epica-header {
-    display: flex; align-items: center; gap: 10px;
-    padding: 12px 16px; background: var(--bg-surface);
-    cursor: pointer; user-select: none;
-  }
+  .bl-phase { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; padding: 20px 0 8px; color: var(--text-secondary); display: flex; align-items: center; gap: 10px; }
+  .bl-phase:first-child { padding-top: 0; }
+  .bl-phase::after { content: ''; flex: 1; height: 1px; background: var(--border-strong); }
+  .epica-wrap { margin-bottom: 8px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .epica-header { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--bg-surface); cursor: pointer; user-select: none; }
   .epica-header:hover { background: #ECEAE4; }
   .epica-title { font-size: 14px; font-weight: 600; color: var(--text-primary); flex: 1; }
   .chevron { font-size: 10px; color: var(--text-muted); transition: transform 0.2s; display: inline-block; }
   .chevron.open { transform: rotate(90deg); }
   .epica-body.collapsed { display: none; }
-
-  .us-row {
-    display: flex; gap: 10px; align-items: flex-start;
-    padding: 10px 16px; border-top: 1px solid var(--border);
-    background: var(--bg-card);
-  }
-  .us-dev {
-    font-size: 11px; font-weight: 600; padding: 2px 8px;
-    border-radius: 4px; flex-shrink: 0; min-width: 56px; text-align: center;
-    font-family: 'DM Mono', monospace;
-  }
+  .us-row { display: flex; gap: 10px; align-items: flex-start; padding: 10px 16px; border-top: 1px solid var(--border); background: var(--bg-card); }
+  .us-id { font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px; flex-shrink: 0; min-width: 48px; text-align: center; font-family: 'DM Mono', monospace; color: var(--text-muted); background: var(--bg-surface); border: 1px solid var(--border-strong); margin-top: 1px; }
+  .us-dev { font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 4px; flex-shrink: 0; min-width: 52px; text-align: center; font-family: 'DM Mono', monospace; }
   .d-back { background: #E6F1FB; color: #0C447C; }
   .d-front { background: #EAF3DE; color: #2D5A0A; }
   .d-int { background: #FAEEDA; color: #6B3E08; }
   .d-all { background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-strong); }
   .us-text { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+  .us-done .us-text { text-decoration: line-through; color: var(--text-muted); }
 
-  /* FOOTER NAV */
-  .footer-nav {
-    display: flex; justify-content: space-between; align-items: center;
-    padding-top: 32px; margin-top: 32px;
-    border-top: 1px solid var(--border);
-  }
-  .fn-btn {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 14px; font-weight: 500;
-    padding: 9px 18px; border-radius: var(--radius-sm);
-    border: 1px solid var(--border-strong);
-    background: var(--bg-card); color: var(--text-secondary);
-    cursor: pointer; transition: all 0.15s;
-  }
+  .footer-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 32px; margin-top: 32px; border-top: 1px solid var(--border); }
+  .fn-btn { font-family: 'DM Sans', sans-serif; font-size: 14px; font-weight: 500; padding: 9px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
   .fn-btn:hover { background: var(--bg-surface); color: var(--text-primary); }
   .fn-page { font-size: 13px; color: var(--text-muted); font-family: 'DM Mono', monospace; }
 
-  /* FOOTER */
-  .site-footer {
-    text-align: center; padding: 16px;
-    font-size: 12px; color: var(--text-muted);
-    border-top: 1px solid var(--border);
-  }
+  .site-footer { text-align: center; padding: 16px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); }
 
   @media (max-width: 640px) {
     .header { padding: 12px 16px; flex-wrap: wrap; gap: 10px; }
     .page-counter { display: none; }
     .main { padding: 24px 16px 48px; }
     .slide-title { font-size: 24px; }
-    .grid-2, .grid-3, .hp-grid { grid-template-columns: 1fr; }
+    .grid-2, .grid-3, .hp-grid, .estado-grid { grid-template-columns: 1fr; }
     .nav-pills { display: none; }
   }
 </style>
@@ -250,12 +185,7 @@
 <header class="header">
   <div class="logo">
     <div class="logo-icon">
-      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <rect x="3" y="3" width="8" height="8" rx="2" fill="white" opacity="0.9"/>
-        <rect x="13" y="3" width="8" height="8" rx="2" fill="white" opacity="0.6"/>
-        <rect x="3" y="13" width="8" height="8" rx="2" fill="white" opacity="0.6"/>
-        <rect x="13" y="13" width="8" height="8" rx="2" fill="white" opacity="0.3"/>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="2" fill="white" opacity="0.9"/><rect x="13" y="3" width="8" height="8" rx="2" fill="white" opacity="0.6"/><rect x="3" y="13" width="8" height="8" rx="2" fill="white" opacity="0.6"/><rect x="13" y="13" width="8" height="8" rx="2" fill="white" opacity="0.3"/></svg>
     </div>
     <div>
       <div class="logo-name">Mesa CLICK</div>
@@ -268,15 +198,16 @@
     <button class="nav-btn" onclick="goSlide(2)">Solución</button>
     <button class="nav-btn" onclick="goSlide(3)">Usuarios</button>
     <button class="nav-btn" onclick="goSlide(4)">Happy path</button>
-    <button class="nav-btn" onclick="goSlide(5)">Roadmap</button>
-    <button class="nav-btn" onclick="goSlide(6)">Backlog</button>
+    <button class="nav-btn" onclick="goSlide(5)">Estado actual</button>
+    <button class="nav-btn" onclick="goSlide(6)">Roadmap</button>
+    <button class="nav-btn" onclick="goSlide(7)">Backlog</button>
   </nav>
-  <div class="page-counter" id="counter">1 / 7</div>
+  <div class="page-counter" id="counter">1 / 8</div>
 </header>
 
 <main class="main">
 
-  <!-- SLIDE 0 (PORTADA) -->
+  <!-- SLIDE 0: PORTADA -->
   <section class="slide active" id="s0">
     <div style="min-height: 420px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px 0;">
       <div style="margin-bottom: 28px;">
@@ -303,10 +234,16 @@
         </div>
       </div>
     </div>
-    <div class="footer-nav"><span></span><span class="fn-page">1 / 7</span><button class="fn-btn" onclick="goSlide(1)">Siguiente →</button></div>
+    <div style="margin-top: 20px; display: flex; justify-content: center;">
+      <a href="https://github.com/aguirrepablo-iresm/mesa-click" target="_blank" rel="noopener" style="font-size: 13px; color: var(--text-muted); text-decoration: none; font-family: 'DM Mono', monospace; display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--bg-card); transition: all 0.15s;" onmouseover="this.style.borderColor='var(--orange)';this.style.color='var(--orange)'" onmouseout="this.style.borderColor='var(--border-strong)';this.style.color='var(--text-muted)'">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+        Acceso al repositorio
+      </a>
+    </div>
+    <div class="footer-nav"><button class="fn-btn" style="visibility:hidden">← Anterior</button><span class="fn-page">1 / 8</span><button class="fn-btn" onclick="goSlide(1)">Siguiente →</button></div>
   </section>
 
-  <!-- SLIDE 0: PROBLEMA -->
+  <!-- SLIDE 1: PROBLEMA -->
   <section class="slide" id="s1">
     <div class="slide-tag">Contexto</div>
     <h1 class="slide-title">El problema en locales gastronómicos</h1>
@@ -319,13 +256,13 @@
       <div class="pain-row"><div class="pain-dot"></div><div class="pain-text"><strong>Sin información para decidir:</strong> Sin datos concretos, es imposible medir tiempos, rendimiento o satisfacción del cliente.</div></div>
     </div>
     <div class="footer-nav">
-      <span></span>
-      <span class="fn-page">2 / 7</span>
+      <button class="fn-btn" onclick="goSlide(0)">← Anterior</button>
+      <span class="fn-page">2 / 8</span>
       <button class="fn-btn" onclick="goSlide(2)">Siguiente →</button>
     </div>
   </section>
 
-  <!-- SLIDE 1: SOLUCIÓN -->
+  <!-- SLIDE 2: SOLUCIÓN -->
   <section class="slide" id="s2">
     <div class="slide-tag">Propuesta</div>
     <h1 class="slide-title">Mesa CLICK</h1>
@@ -349,12 +286,12 @@
     </div>
     <div class="footer-nav">
       <button class="fn-btn" onclick="goSlide(1)">← Anterior</button>
-      <span class="fn-page">3 / 7</span>
+      <span class="fn-page">3 / 8</span>
       <button class="fn-btn" onclick="goSlide(3)">Siguiente →</button>
     </div>
   </section>
 
-  <!-- SLIDE 2: USUARIOS -->
+  <!-- SLIDE 3: USUARIOS -->
   <section class="slide" id="s3">
     <div class="slide-tag">Usuarios / Personas</div>
     <h1 class="slide-title">¿Quiénes lo usan?</h1>
@@ -387,175 +324,449 @@
     </div>
     <div class="footer-nav">
       <button class="fn-btn" onclick="goSlide(2)">← Anterior</button>
-      <span class="fn-page">4 / 7</span>
+      <span class="fn-page">4 / 8</span>
       <button class="fn-btn" onclick="goSlide(4)">Siguiente →</button>
     </div>
   </section>
 
-  <!-- SLIDE 3: HAPPY PATH -->
+  <!-- SLIDE 4: HAPPY PATH -->
   <section class="slide" id="s4">
-    <div class="slide-tag">Flujo mínimo</div>
-    <h1 class="slide-title">Happy path</h1>
-    <p class="slide-sub">El recorrido completo de una experiencia exitosa, desde la configuración inicial hasta el cierre del pedido.</p>
-    <div class="hp-grid">
-      <div>
-        <div class="hp-step"><div class="hp-num">1</div><div><div class="hp-title">Admin configura el sistema</div><div class="hp-desc">Crea sucursal, carga mesas y arma la carta digital con productos y variantes.</div></div></div>
-        <div class="hp-line"></div>
-        <div class="hp-step"><div class="hp-num">2</div><div><div class="hp-title">Cliente escanea el QR</div><div class="hp-desc">Desde la mesa abre la carta en su celular, selecciona productos y confirma el pedido.</div></div></div>
-        <div class="hp-line"></div>
-        <div class="hp-step"><div class="hp-num">3</div><div><div class="hp-title">Recepcionista confirma</div><div class="hp-desc">Ve el pedido en el dashboard en tiempo real y lo pasa a "Preparando".</div></div></div>
-      </div>
-      <div>
-        <div class="hp-step"><div class="hp-num">4</div><div><div class="hp-title">Cliente sigue el progreso</div><div class="hp-desc">Ve el estado actualizado y la demora estimada desde su vista de mesa.</div></div></div>
-        <div class="hp-line"></div>
-        <div class="hp-step"><div class="hp-num">5</div><div><div class="hp-title">Pedido listo</div><div class="hp-desc">Estado pasa a "Listo". El cliente puede agregar más ítems o pedir la cuenta.</div></div></div>
-        <div class="hp-line"></div>
-        <div class="hp-step"><div class="hp-num">6</div><div><div class="hp-title">Cierre del pedido</div><div class="hp-desc">El recepcionista cierra el pedido. Queda registrado para los reportes del negocio.</div></div></div>
+    <div class="slide-tag">Flujo principal</div>
+    <h1 class="slide-title">Happy paths</h1>
+    <p class="slide-sub">Dos flujos documentados: el recorrido del administrador para dar de alta el negocio, y el del cliente para hacer un pedido en mesa.</p>
+
+    <div class="hp-tabs">
+      <button class="hp-tab active" onclick="switchHp(0)">Admin de Negocio — Onboarding</button>
+      <button class="hp-tab" onclick="switchHp(1)">Cliente / Comensal — Pedido en mesa</button>
+    </div>
+
+    <div class="hp-panel active" id="hp0">
+      <div class="hp-grid">
+        <div>
+          <div class="hp-step"><div class="hp-num">1</div><div><div class="hp-title">Registro del admin</div><div class="hp-desc">El dueño ingresa email y contraseña. El sistema crea su cuenta y lo dirige al onboarding.</div></div></div>
+          <div class="hp-line"></div>
+          <div class="hp-step"><div class="hp-num">2</div><div><div class="hp-title">Datos del negocio</div><div class="hp-desc">Completa nombre del responsable, nombre del local, rubro, descripción y redes sociales.</div></div></div>
+          <div class="hp-line"></div>
+          <div class="hp-step"><div class="hp-num">3</div><div><div class="hp-title">Alta de sucursal</div><div class="hp-desc">Carga los datos de la primera sucursal: nombre, WhatsApp, email, teléfono y horarios.</div></div></div>
+          <div class="hp-line"></div>
+          <div class="hp-step"><div class="hp-num">4</div><div><div class="hp-title">Distribución de mesas</div><div class="hp-desc">Define sectores, cantidad de mesas y sillas por mesa dentro de la sucursal.</div></div></div>
+        </div>
+        <div>
+          <div class="hp-step"><div class="hp-num">5</div><div><div class="hp-title">Carga de la carta</div><div class="hp-desc">Crea categorías, productos con descripción, precio y variantes (general o por sucursal).</div></div></div>
+          <div class="hp-line"></div>
+          <div class="hp-step"><div class="hp-num">6</div><div><div class="hp-title">QR generado</div><div class="hp-desc">El sistema genera un QR único por mesa. El admin lo descarga e imprime para colocar en cada mesa.</div></div></div>
+          <div class="hp-line"></div>
+          <div class="hp-step"><div class="hp-num">7</div><div><div class="hp-title">Sistema operativo</div><div class="hp-desc">El negocio está listo. El dashboard del recepcionista queda disponible para gestionar pedidos en tiempo real.</div></div></div>
+        </div>
       </div>
     </div>
+
+    <div class="hp-panel" id="hp1">
+      <div class="hp-grid">
+        <div>
+          <div class="hp-step"><div class="hp-num alt">1</div><div><div class="hp-title">Llegada y acomodación</div><div class="hp-desc">El cliente ingresa al local y toma asiento. Puede elegir mesa libre o ser ubicado por el host.</div></div></div>
+          <div class="hp-line"></div>
+          <div class="hp-step"><div class="hp-num alt">2</div><div><div class="hp-title">Escanea el QR</div><div class="hp-desc">Abre la cámara del celular y escanea el QR de la mesa. El sistema identifica la mesa y abre la sesión. No requiere app ni cuenta.</div></div></div>
+          <div class="hp-line"></div>
+          <div class="hp-step"><div class="hp-num alt">3</div><div><div class="hp-title">Explora el menú</div><div class="hp-desc">Visualiza la carta digital por categorías con fotos, descripciones y precios desde su celular.</div></div></div>
+          <div class="hp-line"></div>
+          <div class="hp-step"><div class="hp-num alt">4</div><div><div class="hp-title">Selecciona y personaliza</div><div class="hp-desc">Agrega ítems al carrito y añade notas libres ("sin cebolla", "hielo aparte").</div></div></div>
+          <div class="hp-line"></div>
+          <div class="hp-step"><div class="hp-num alt">5</div><div><div class="hp-title">Envía el pedido</div><div class="hp-desc">Presiona "Enviar pedido". La comanda llega al dashboard del recepcionista y a cocina.</div></div></div>
+        </div>
+        <div>
+          <div class="hp-step"><div class="hp-num alt">6</div><div><div class="hp-title">Sigue el estado en tiempo real</div><div class="hp-desc">Ve el progreso: Recibido → Preparando → Listo. El tiempo de demora estimado se actualiza automáticamente.</div></div></div>
+          <div class="hp-line"></div>
+          <div class="hp-step"><div class="hp-num alt">7</div><div><div class="hp-title">Re-pedido (opcional)</div><div class="hp-desc">Puede agregar nuevos ítems en cualquier momento. Se suman a la misma cuenta activa de la mesa.</div></div></div>
+          <div class="hp-line"></div>
+          <div class="hp-step"><div class="hp-num alt">8</div><div><div class="hp-title">Solicita la cuenta</div><div class="hp-desc">Presiona "Pedir la cuenta". El mozo recibe la notificación, se acerca con el ticket y cierra la mesa en el sistema.</div></div></div>
+        </div>
+      </div>
+    </div>
+
     <div class="footer-nav">
       <button class="fn-btn" onclick="goSlide(3)">← Anterior</button>
-      <span class="fn-page">5 / 7</span>
+      <span class="fn-page">5 / 8</span>
       <button class="fn-btn" onclick="goSlide(5)">Siguiente →</button>
     </div>
   </section>
 
-  <!-- SLIDE 4: ROADMAP -->
+  <!-- SLIDE 5: ESTADO ACTUAL -->
   <section class="slide" id="s5">
-    <div class="slide-tag">Planificación</div>
-    <h1 class="slide-title">Roadmap — 8 sprints</h1>
-    <p class="slide-sub">Cada sprint representa ~2 semanas de trabajo. El Sprint 0 es la base de todo: decisión de stack, arquitectura y organización del equipo.</p>
-    <div>
-      <div class="rm-row"><div class="rm-label">Sprint 0</div><div class="rm-block rm-s0">Definición de stack + arquitectura + setup del entorno</div></div>
-      <div class="rm-row"><div class="rm-label">Sprint 1a</div><div class="rm-block rm-s1">Configuración de negocio (tenant, sucursales)</div></div>
-      <div class="rm-row"><div class="rm-label">Sprint 1b</div><div class="rm-block rm-s1">Auth + usuarios internos (magic link email)</div></div>
-      <div class="rm-row"><div class="rm-label">Sprint 2</div><div class="rm-block rm-s2">Carta digital + mesas + generación de QR</div></div>
-      <div class="rm-row"><div class="rm-label">Sprint 3</div><div class="rm-block rm-s3">Recepción de pedidos + estados en tiempo real</div></div>
-      <div class="rm-row"><div class="rm-label">Sprint 4</div><div class="rm-block rm-s4">Acciones del cliente (agregar ítems, pedir cuenta)</div></div>
-      <div class="rm-row"><div class="rm-label">Sprint 5</div><div class="rm-block rm-s5">Reportes básicos (tiempos, productos populares)</div></div>
-      <div class="rm-row"><div class="rm-label">Sprint 6</div><div class="rm-block rm-s6">QA, polish visual, deploy a producción</div></div>
+    <div class="slide-tag">Fase 1 — Frontend sin back</div>
+    <h1 class="slide-title">Estado actual</h1>
+    <p class="slide-sub">Avance de la maqueta funcional. Toda la navegación es estática — sin llamadas a API. El objetivo es tener los tres happy paths completos y aprobados antes de arrancar el back.</p>
+
+    <div class="estado-section-label">Completado — Sprint 0 &nbsp;·&nbsp; 04/05 – 10/05</div>
+    <div class="estado-grid">
+      <div class="estado-card">
+        <div class="estado-card-header">
+          <div class="estado-dot dot-done"></div>
+          <div class="estado-card-title">Landing page</div>
+          <span class="badge b-green estado-card-badge">Listo</span>
+        </div>
+        <div class="estado-item"><span class="check">✓</span>Hero con propuesta de valor y CTA</div>
+        <div class="estado-item"><span class="check">✓</span>Características del producto</div>
+      </div>
+      <div class="estado-card">
+        <div class="estado-card-header">
+          <div class="estado-dot dot-done"></div>
+          <div class="estado-card-title">Login / Registro</div>
+          <span class="badge b-green estado-card-badge">Listo</span>
+        </div>
+        <div class="estado-item"><span class="check">✓</span>Formulario email + contraseña</div>
+        <div class="estado-item"><span class="check">✓</span>Redirect al onboarding post-registro</div>
+      </div>
+      <div class="estado-card">
+        <div class="estado-card-header">
+          <div class="estado-dot dot-done"></div>
+          <div class="estado-card-title">Onboarding — Admin negocio</div>
+          <span class="badge b-green estado-card-badge">Listo</span>
+        </div>
+        <div class="estado-item"><span class="check">✓</span>Paso 1: Datos del negocio</div>
+        <div class="estado-item"><span class="check">✓</span>Paso 2: Alta de sucursal</div>
+        <div class="estado-item"><span class="check">✓</span>Paso 3: Distribución de mesas</div>
+        <div class="estado-item"><span class="check">✓</span>Paso 4: Carga de carta</div>
+      </div>
+      <div class="estado-card">
+        <div class="estado-card-header">
+          <div class="estado-dot dot-done"></div>
+          <div class="estado-card-title">Dashboard admin — estructura</div>
+          <span class="badge b-green estado-card-badge">Listo</span>
+        </div>
+        <div class="estado-item"><span class="check">✓</span>Layout y navegación del panel</div>
+        <div class="estado-item"><span class="check">✓</span>Vista general de sucursales y mesas</div>
+      </div>
     </div>
-    <div class="rm-note"><strong>Sprint 0 no es setup mecánico.</strong> Es donde el equipo decide framework, base de datos, estrategia de auth, estructura del monorepo y cómo se organiza el trabajo entre los 3 desarrolladores.</div>
+
+    <div class="estado-section-label" style="margin-top: 22px;">En curso / Pendiente — Sprints 1 y 2 &nbsp;·&nbsp; 11/05 – 24/05</div>
+    <div class="estado-grid">
+      <div class="estado-card">
+        <div class="estado-card-header">
+          <div class="estado-dot dot-pending"></div>
+          <div class="estado-card-title">Admin — happy path completo</div>
+          <span class="badge b-gray estado-card-badge">Sprint 1</span>
+        </div>
+        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Descarga de QR por mesa (UI)</div>
+        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Gestión de carta desde el dashboard (ABM)</div>
+        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Invitación de usuarios internos (encargado / mozo)</div>
+      </div>
+      <div class="estado-card">
+        <div class="estado-card-header">
+          <div class="estado-dot dot-pending"></div>
+          <div class="estado-card-title">Recepcionista — dashboard mock</div>
+          <span class="badge b-gray estado-card-badge">Sprint 1</span>
+        </div>
+        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Lista de pedidos activos (datos mockeados)</div>
+        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Cambio de estado (Recibido → Preparando → Listo)</div>
+        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Notificación de solicitud de cuenta</div>
+      </div>
+      <div class="estado-card">
+        <div class="estado-card-header">
+          <div class="estado-dot dot-pending"></div>
+          <div class="estado-card-title">Cliente — carta pública</div>
+          <span class="badge b-gray estado-card-badge">Sprint 2</span>
+        </div>
+        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Vista de carta por QR (sin login, mock data)</div>
+        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Carrito: agregar ítems y notas personalizadas</div>
+        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Confirmación y envío del pedido</div>
+      </div>
+      <div class="estado-card">
+        <div class="estado-card-header">
+          <div class="estado-dot dot-pending"></div>
+          <div class="estado-card-title">Cliente — seguimiento y cuenta</div>
+          <span class="badge b-gray estado-card-badge">Sprint 2</span>
+        </div>
+        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Estado del pedido en tiempo real (mock)</div>
+        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Agregar más ítems a la cuenta activa</div>
+        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Botón "Pedir la cuenta" con confirmación</div>
+      </div>
+    </div>
+
     <div class="footer-nav">
       <button class="fn-btn" onclick="goSlide(4)">← Anterior</button>
-      <span class="fn-page">6 / 7</span>
+      <span class="fn-page">6 / 8</span>
       <button class="fn-btn" onclick="goSlide(6)">Siguiente →</button>
     </div>
   </section>
 
-  <!-- SLIDE 5: BACKLOG -->
+  <!-- SLIDE 6: ROADMAP -->
   <section class="slide" id="s6">
+    <div class="slide-tag">Planificación</div>
+    <h1 class="slide-title">Roadmap — 3 fases</h1>
+    <p class="slide-sub">El desarrollo se organiza en tres fases secuenciales, con sprints semanales (lunes a domingo). Inicio: 04/05/2025 · Fin estimado: 12/07/2025.</p>
+
+    <div class="rm-phase">Fase 1 — Frontend funcional sin backend</div>
+    <div class="rm-phase-divider"></div>
+    <div class="rm-row rm-done">
+      <div class="rm-label">Sprint 0</div>
+      <div class="rm-block rm-s0">
+        Maqueta base: landing, login, onboarding admin, dashboard (estructura) ✓
+        <div class="rm-date">04/05 – 10/05/2025</div>
+      </div>
+    </div>
+    <div class="rm-row rm-wip">
+      <div class="rm-label">Sprint 1</div>
+      <div class="rm-block rm-s1">
+        Happy path Admin completo + dashboard recepcionista (mock) <span class="rm-wip-tag">en curso</span>
+        <div class="rm-date">11/05 – 17/05/2025</div>
+      </div>
+    </div>
+    <div class="rm-row">
+      <div class="rm-label">Sprint 2</div>
+      <div class="rm-block rm-s1">
+        Happy path Cliente completo (carta pública, pedido, seguimiento, cuenta)
+        <div class="rm-date">18/05 – 24/05/2025</div>
+      </div>
+    </div>
+
+    <div class="rm-approval">
+      <div class="rm-approval-line"></div>
+      <div class="rm-approval-tag">Revisión y aprobación docente — ~25/05</div>
+      <div class="rm-approval-line"></div>
+    </div>
+
+    <div class="rm-phase" style="margin-top:8px;">Fase 2 — Backend</div>
+    <div class="rm-phase-divider"></div>
+    <div class="rm-row">
+      <div class="rm-label">Sprint 3</div>
+      <div class="rm-block rm-s2">
+        Stack + base de datos: entidades, relaciones y migraciones
+        <div class="rm-date">25/05 – 31/05/2025</div>
+      </div>
+    </div>
+    <div class="rm-row">
+      <div class="rm-label">Sprint 4</div>
+      <div class="rm-block rm-s3">
+        Servicios core (tenant, sucursal, mesas, carta) + auth magic link
+        <div class="rm-date">01/06 – 07/06/2025</div>
+      </div>
+    </div>
+    <div class="rm-row">
+      <div class="rm-label">Sprint 5</div>
+      <div class="rm-block rm-s3">
+        Servicio de pedidos + tiempo real (SSE)
+        <div class="rm-date">08/06 – 14/06/2025</div>
+      </div>
+    </div>
+    <div class="rm-row">
+      <div class="rm-label">Sprint 6</div>
+      <div class="rm-block rm-s4">
+        Tests unitarios e integración por servicio
+        <div class="rm-date">15/06 – 21/06/2025</div>
+      </div>
+    </div>
+
+    <div class="rm-phase" style="margin-top:8px;">Fase 3 — Integración</div>
+    <div class="rm-phase-divider"></div>
+    <div class="rm-row">
+      <div class="rm-label">Sprint 7</div>
+      <div class="rm-block rm-s5">
+        Conectar front admin + auth con la API real
+        <div class="rm-date">22/06 – 28/06/2025</div>
+      </div>
+    </div>
+    <div class="rm-row">
+      <div class="rm-label">Sprint 8</div>
+      <div class="rm-block rm-s5">
+        Conectar front cliente + recepcionista + tiempo real
+        <div class="rm-date">29/06 – 05/07/2025</div>
+      </div>
+    </div>
+    <div class="rm-row">
+      <div class="rm-label">Sprint 9</div>
+      <div class="rm-block rm-s6">
+        QA end-to-end + polish visual + deploy a producción
+        <div class="rm-date">06/07 – 12/07/2025</div>
+      </div>
+    </div>
+
+    <div class="rm-note"><strong>Estrategia front-first.</strong> Al tener el frontend aprobado antes de arrancar el back, las interfaces y los contratos de API quedan definidos por el flujo real del usuario, no por suposiciones técnicas.</div>
+    <div class="footer-nav">
+      <button class="fn-btn" onclick="goSlide(5)">← Anterior</button>
+      <span class="fn-page">7 / 8</span>
+      <button class="fn-btn" onclick="goSlide(7)">Siguiente →</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: BACKLOG -->
+  <section class="slide" id="s7">
     <div class="slide-tag">Backlog</div>
     <h1 class="slide-title">Épicas y user stories — MVP</h1>
-    <p class="slide-sub">Hacé clic en cada épica para ver las user stories. Roles asignados: <strong>Back</strong>, <strong>Front</strong> e <strong>Int</strong> (Integración) para los 3 devs del equipo.</p>
+    <p class="slide-sub">Hacé clic en cada épica para ver las user stories. Roles: <strong>Front</strong>, <strong>Back</strong> e <strong>Int</strong>. US tachadas = Sprint 0 completado.</p>
+
+    <!-- FASE 1 -->
+    <div class="bl-phase">Fase 1 — Frontend sin backend</div>
 
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
-        <span class="badge b-gray">Sprint 0</span>
-        <span class="epica-title">Definición de stack y setup del entorno</span>
+        <span class="badge b-green">Sprint 0 ✓</span>
+        <span class="epica-title">Maqueta base — landing, login, onboarding, dashboard</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">04/05–10/05</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-dev d-all">Todos</span><span class="us-text">Decisión de stack: elegir framework back, front, base de datos y estrategia de auth en base a criterios del equipo</span></div>
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Inicializar monorepo con estructura de carpetas, dependencias base y scripts compartidos</span></div>
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Configurar entorno de desarrollo: Docker / entorno local, variables de entorno, base de datos inicial</span></div>
-        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Setup del proyecto frontend: bundler, estilos base, estructura de rutas y primera pantalla funcional</span></div>
-        <div class="us-row"><span class="us-dev d-int">Int</span><span class="us-text">Definir convenciones: estructura de APIs, nombrado de branches, flujo de PRs y board de trabajo del equipo</span></div>
+        <div class="us-row us-done"><span class="us-id">US-01</span><span class="us-dev d-all">Todos</span><span class="us-text">Como equipo, definimos el stack (Next.js + Go + PostgreSQL) y la estructura del monorepo</span></div>
+        <div class="us-row us-done"><span class="us-id">US-02</span><span class="us-dev d-front">Front</span><span class="us-text">Como visitante, puedo ver la landing page con propuesta de valor y CTA hacia el registro</span></div>
+        <div class="us-row us-done"><span class="us-id">US-03</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, puedo ver el formulario de login/registro con email y contraseña (flujo mockeado)</span></div>
+        <div class="us-row us-done"><span class="us-id">US-04</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, puedo navegar el onboarding paso a paso: datos del negocio, sucursal, mesas y carta</span></div>
+        <div class="us-row us-done"><span class="us-id">US-05</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, puedo ver el dashboard de gestión con su estructura y navegación general</span></div>
+        <div class="us-row us-done"><span class="us-id">US-06</span><span class="us-dev d-int">Int</span><span class="us-text">Como equipo, acordamos convenciones de branches, PRs y organización del board de trabajo</span></div>
       </div>
     </div>
 
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
-        <span class="badge b-blue">Sprint 1a</span>
-        <span class="epica-title">Configuración de negocio (tenant + sucursales)</span>
+        <span class="badge b-blue">Sprint 1</span>
+        <span class="epica-title">Happy path Admin completo + dashboard Recepcionista (mock)</span>
+        <span style="font-size:11px; color:var(--orange); font-family:'DM Mono',monospace; font-weight:600; margin-right:4px;">11/05–17/05 ●</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint para crear un tenant (negocio): nombre, slug y configuración base</span></div>
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Modelo de base de datos: Tenant + Sucursal (id, nombre, dirección, demora estimada)</span></div>
-        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Formulario de onboarding — creación del negocio con validación inline</span></div>
-        <div class="us-row"><span class="us-dev d-int">Int</span><span class="us-text">Flujo completo: obtener tenant logueado + agregar primera sucursal post-registro</span></div>
+        <div class="us-row"><span class="us-id">US-07</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, puedo ver y descargar el QR imprimible de cada mesa desde el panel de gestión</span></div>
+        <div class="us-row"><span class="us-id">US-08</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, puedo crear, editar y eliminar artículos y categorías de la carta desde el dashboard (sin API)</span></div>
+        <div class="us-row"><span class="us-id">US-09</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, puedo invitar a un encargado o mozo completando el formulario de usuario interno</span></div>
+        <div class="us-row"><span class="us-id">US-10</span><span class="us-dev d-front">Front</span><span class="us-text">Como recepcionista, veo el dashboard con todos los pedidos activos de la sucursal (datos mockeados)</span></div>
+        <div class="us-row"><span class="us-id">US-11</span><span class="us-dev d-front">Front</span><span class="us-text">Como recepcionista, puedo cambiar el estado de un pedido (Recibido → Preparando → Listo) con un clic</span></div>
+        <div class="us-row"><span class="us-id">US-12</span><span class="us-dev d-front">Front</span><span class="us-text">Como recepcionista, veo una alerta visual cuando un cliente solicita la cuenta desde su mesa</span></div>
       </div>
     </div>
 
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
-        <span class="badge b-blue">Sprint 1b</span>
-        <span class="epica-title">Auth con magic link (email)</span>
+        <span class="badge b-blue">Sprint 2</span>
+        <span class="epica-title">Happy path Cliente completo — carta, pedido y seguimiento (mock)</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">18/05–24/05</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint de solicitud de magic link: recibe email, genera token único y dispara el envío del correo</span></div>
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint de verificación: valida token, crea sesión y redirige al panel del negocio</span></div>
-        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Página de login: input de email, estado "revisá tu correo" y redirect post-verificación</span></div>
-        <div class="us-row"><span class="us-dev d-int">Int</span><span class="us-text">Invitación de usuarios internos: el admin genera un magic link para invitar a un encargado o mozo</span></div>
+        <div class="us-row"><span class="us-id">US-13</span><span class="us-dev d-front">Front</span><span class="us-text">Como cliente, al escanear el QR de la mesa accedo a la carta digital organizada por categorías (mock data)</span></div>
+        <div class="us-row"><span class="us-id">US-14</span><span class="us-dev d-front">Front</span><span class="us-text">Como cliente, puedo agregar ítems al carrito y escribir notas personalizadas por ítem</span></div>
+        <div class="us-row"><span class="us-id">US-15</span><span class="us-dev d-front">Front</span><span class="us-text">Como cliente, reviso el resumen del carrito y confirmo el pedido con el botón "Enviar pedido"</span></div>
+        <div class="us-row"><span class="us-id">US-16</span><span class="us-dev d-front">Front</span><span class="us-text">Como cliente, veo el seguimiento del estado de mi pedido (Recibido → Preparando → Listo) con demora estimada</span></div>
+        <div class="us-row"><span class="us-id">US-17</span><span class="us-dev d-front">Front</span><span class="us-text">Como cliente, puedo agregar más ítems a mi cuenta activa desde la misma vista de seguimiento</span></div>
+        <div class="us-row"><span class="us-id">US-18</span><span class="us-dev d-front">Front</span><span class="us-text">Como cliente, presiono "Pedir la cuenta" y veo la confirmación de que el mozo fue notificado</span></div>
+      </div>
+    </div>
+
+    <!-- FASE 2 -->
+    <div class="bl-phase">Fase 2 — Backend</div>
+
+    <div class="epica-wrap">
+      <div class="epica-header" onclick="toggle(this)">
+        <span class="badge b-green">Sprint 3</span>
+        <span class="epica-title">Stack + base de datos (entidades, relaciones, migraciones)</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">25/05–31/05</span>
+        <span class="chevron open">▶</span>
+      </div>
+      <div class="epica-body">
+        <div class="us-row"><span class="us-id">US-19</span><span class="us-dev d-all">Todos</span><span class="us-text">Como equipo, definimos el stack del back (Go + PostgreSQL + slog + Sentry) y la arquitectura del servicio</span></div>
+        <div class="us-row"><span class="us-id">US-20</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, tengo el esquema de base de datos con todas las entidades del MVP y sus relaciones modeladas</span></div>
+        <div class="us-row"><span class="us-id">US-21</span><span class="us-dev d-back">Back</span><span class="us-text">Como desarrollador, dispongo de migraciones versionadas para crear y evolucionar el esquema de BD</span></div>
+        <div class="us-row"><span class="us-id">US-22</span><span class="us-dev d-back">Back</span><span class="us-text">Como desarrollador, tengo el entorno de desarrollo configurado: Docker + variables de entorno + BD local</span></div>
       </div>
     </div>
 
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
-        <span class="badge b-green">Sprint 2</span>
-        <span class="epica-title">Carta digital + mesas + QR</span>
+        <span class="badge b-orange">Sprint 4</span>
+        <span class="epica-title">Servicios core + autenticación (magic link)</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">01/06–07/06</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">CRUD de productos: nombre, descripción, precio, variantes y adicionales por sucursal</span></div>
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">CRUD de mesas: por sucursal, con capacidad, número y estado activo/inactivo</span></div>
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint que genera los datos del QR con la URL pública de acceso a la mesa</span></div>
-        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Panel admin: ABM de carta con secciones y categorías de productos</span></div>
-        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Vista pública del cliente (sin login): carta digital con foto, precio y variantes</span></div>
-        <div class="us-row"><span class="us-dev d-int">Int</span><span class="us-text">Generación y descarga del QR por mesa desde el panel de administración</span></div>
+        <div class="us-row"><span class="us-id">US-23</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, creo un tenant al registrar un negocio con nombre, slug y configuración base</span></div>
+        <div class="us-row"><span class="us-id">US-24</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, gestiono el CRUD de sucursales: nombre, contacto, horarios y relación con el tenant</span></div>
+        <div class="us-row"><span class="us-id">US-25</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, gestiono el CRUD de mesas por sucursal y genero el token único para el QR de cada mesa</span></div>
+        <div class="us-row"><span class="us-id">US-26</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, gestiono el CRUD de artículos, categorías y variantes de la carta</span></div>
+        <div class="us-row"><span class="us-id">US-27</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, genero y valido magic links: creo el token, envío el email y autentico al usuario</span></div>
+        <div class="us-row"><span class="us-id">US-28</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, puedo invitar a un encargado o mozo generando un magic link desde el panel</span></div>
       </div>
     </div>
 
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
-        <span class="badge b-orange">Sprint 3</span>
-        <span class="epica-title">Pedidos + estados en tiempo real</span>
+        <span class="badge b-orange">Sprint 5</span>
+        <span class="epica-title">Servicio de pedidos + tiempo real</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">08/06–14/06</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint para crear un pedido: mesa, lista de ítems y notas opcionales</span></div>
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint para actualizar estado: Recibido → Preparando → Listo → Cerrado</span></div>
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint de pedidos activos por sucursal para el dashboard del recepcionista</span></div>
-        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Dashboard recepcionista: tabla de pedidos con acciones de cambio de estado</span></div>
-        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Vista cliente: confirmación de pedido + seguimiento de estado con demora estimada</span></div>
-        <div class="us-row"><span class="us-dev d-int">Int</span><span class="us-text">Tiempo real: al cambiar el estado, el cliente y el recepcionista se actualizan sin recargar la página</span></div>
+        <div class="us-row"><span class="us-id">US-29</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, creo un pedido con mesa, lista de ítems, notas opcionales y timestamp</span></div>
+        <div class="us-row"><span class="us-id">US-30</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, actualizo el estado de un pedido: Recibido → Preparando → Listo → Cerrado</span></div>
+        <div class="us-row"><span class="us-id">US-31</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, expongo el listado de pedidos activos por sucursal para el dashboard del recepcionista</span></div>
+        <div class="us-row"><span class="us-id">US-32</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, permito agregar ítems a un pedido activo y procesar la solicitud de cuenta</span></div>
+        <div class="us-row"><span class="us-id">US-33</span><span class="us-dev d-int">Int</span><span class="us-text">Como sistema, propago cambios de estado en tiempo real (WebSocket o SSE) al cliente y al recepcionista</span></div>
       </div>
     </div>
 
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
-        <span class="badge b-amber">Sprint 4</span>
-        <span class="epica-title">Acciones del cliente post-pedido</span>
+        <span class="badge b-amber">Sprint 6</span>
+        <span class="epica-title">Tests — unitarios e integración</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">15/06–21/06</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint para solicitar la cuenta: marca el pedido y notifica al recepcionista</span></div>
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint para agregar ítems adicionales a un pedido existente</span></div>
-        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Botones "Pedir cuenta" y "Agregar más" en la vista del cliente con confirmación visual</span></div>
-        <div class="us-row"><span class="us-dev d-int">Int</span><span class="us-text">Notificación en tiempo real al dashboard cuando el cliente solicita la cuenta</span></div>
+        <div class="us-row"><span class="us-id">US-34</span><span class="us-dev d-back">Back</span><span class="us-text">Como desarrollador, tengo tests unitarios para los servicios core (tenant, sucursal, mesa, carta)</span></div>
+        <div class="us-row"><span class="us-id">US-35</span><span class="us-dev d-back">Back</span><span class="us-text">Como desarrollador, tengo tests unitarios para el servicio de auth (generación y validación de magic link)</span></div>
+        <div class="us-row"><span class="us-id">US-36</span><span class="us-dev d-back">Back</span><span class="us-text">Como desarrollador, tengo tests de integración que validan el flujo completo de un pedido contra una BD real</span></div>
+        <div class="us-row"><span class="us-id">US-37</span><span class="us-dev d-int">Int</span><span class="us-text">Como equipo, los tests corren automáticamente en el pipeline de CI ante cada PR</span></div>
+      </div>
+    </div>
+
+    <!-- FASE 3 -->
+    <div class="bl-phase">Fase 3 — Integración</div>
+
+    <div class="epica-wrap">
+      <div class="epica-header" onclick="toggle(this)">
+        <span class="badge b-purple">Sprint 7</span>
+        <span class="epica-title">Integración — flujo admin y autenticación real</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">22/06–28/06</span>
+        <span class="chevron open">▶</span>
+      </div>
+      <div class="epica-body">
+        <div class="us-row"><span class="us-id">US-38</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, el login con magic link real reemplaza al mock y me da acceso al panel con sesión válida</span></div>
+        <div class="us-row"><span class="us-id">US-39</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, el formulario de onboarding envía los datos reales a la API y persiste el negocio y la sucursal</span></div>
+        <div class="us-row"><span class="us-id">US-40</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, la gestión de carta y mesas en el panel interactúa con la API real (CRUD funcional)</span></div>
+        <div class="us-row"><span class="us-id">US-41</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, descargo el QR de cada mesa generado con el token real del backend</span></div>
       </div>
     </div>
 
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
-        <span class="badge b-purple">Sprint 5</span>
-        <span class="epica-title">Reportes básicos</span>
+        <span class="badge b-purple">Sprint 8</span>
+        <span class="epica-title">Integración — flujo cliente y recepcionista en tiempo real</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">29/06–05/07</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint de métricas: pedidos por día, tiempo promedio de atención por sucursal</span></div>
-        <div class="us-row"><span class="us-dev d-back">Back</span><span class="us-text">Endpoint de productos más pedidos con ranking por sucursal y rango de fechas</span></div>
-        <div class="us-row"><span class="us-dev d-front">Front</span><span class="us-text">Panel de reportes: gráficos de pedidos diarios y tabla de productos populares</span></div>
-        <div class="us-row"><span class="us-dev d-int">Int</span><span class="us-text">Filtros de fecha y sucursal en los reportes desde el panel del admin</span></div>
+        <div class="us-row"><span class="us-id">US-42</span><span class="us-dev d-int">Int</span><span class="us-text">Como cliente, la carta pública se carga desde la API usando el token del QR de la mesa</span></div>
+        <div class="us-row"><span class="us-id">US-43</span><span class="us-dev d-int">Int</span><span class="us-text">Como cliente, mi pedido se crea en la base de datos real y llega al dashboard del recepcionista</span></div>
+        <div class="us-row"><span class="us-id">US-44</span><span class="us-dev d-int">Int</span><span class="us-text">Como cliente, el seguimiento de estado se actualiza en tiempo real desde el back (sin recargar la página)</span></div>
+        <div class="us-row"><span class="us-id">US-45</span><span class="us-dev d-int">Int</span><span class="us-text">Como recepcionista, el dashboard muestra los pedidos reales en vivo y los cambios de estado se propagan al cliente</span></div>
+      </div>
+    </div>
+
+    <div class="epica-wrap">
+      <div class="epica-header" onclick="toggle(this)">
+        <span class="badge b-pink">Sprint 9</span>
+        <span class="epica-title">QA end-to-end + polish + deploy</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">06/07–12/07</span>
+        <span class="chevron open">▶</span>
+      </div>
+      <div class="epica-body">
+        <div class="us-row"><span class="us-id">US-46</span><span class="us-dev d-all">Todos</span><span class="us-text">Como equipo, validamos los dos happy paths completos de punta a punta en un entorno real (staging)</span></div>
+        <div class="us-row"><span class="us-id">US-47</span><span class="us-dev d-front">Front</span><span class="us-text">Como usuario, la app funciona correctamente en mobile (diseño responsive y rendimiento aceptable)</span></div>
+        <div class="us-row"><span class="us-id">US-48</span><span class="us-dev d-back">Back</span><span class="us-text">Como equipo, el servicio está desplegado en producción con variables de entorno correctas y logs funcionales</span></div>
+        <div class="us-row"><span class="us-id">US-49</span><span class="us-dev d-int">Int</span><span class="us-text">Como equipo, el pipeline de CI/CD corre tests y despliega automáticamente ante cada merge a main</span></div>
       </div>
     </div>
 
     <div class="footer-nav">
-      <button class="fn-btn" onclick="goSlide(5)">← Anterior</button>
-      <span class="fn-page">7 / 7</span>
-      <span></span>
+      <button class="fn-btn" onclick="goSlide(6)">← Anterior</button>
+      <span class="fn-page">8 / 8</span>
+      <button class="fn-btn" style="visibility:hidden">Siguiente →</button>
     </div>
   </section>
 
@@ -563,11 +774,13 @@
 
 <footer class="site-footer">
   Mesa CLICK &mdash; Presentación académica &mdash; Digitalización de pedidos gastronómicos
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <a href="https://github.com/aguirrepablo-iresm/mesa-click" target="_blank" rel="noopener" style="color: var(--orange); text-decoration: none; font-weight: 500;">github.com/aguirrepablo-iresm/mesa-click</a>
 </footer>
 
 <script>
   let current = 0;
-  const total = 7;
+  const total = 8;
 
   function goSlide(n) {
     document.getElementById('s' + current).classList.remove('active');
@@ -585,6 +798,11 @@
     const isOpen = !body.classList.contains('collapsed');
     if (isOpen) { body.classList.add('collapsed'); chevron.classList.remove('open'); }
     else { body.classList.remove('collapsed'); chevron.classList.add('open'); }
+  }
+
+  function switchHp(idx) {
+    document.querySelectorAll('.hp-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+    document.querySelectorAll('.hp-panel').forEach((p, i) => p.classList.toggle('active', i === idx));
   }
 
   document.addEventListener('keydown', (e) => {

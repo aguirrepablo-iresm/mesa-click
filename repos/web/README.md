@@ -1,36 +1,63 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Mesa CLICK — Frontend (Next.js)
 
-## Getting Started
+Frontend web de Mesa CLICK. Permite a los admins configurar su negocio y a los clientes hacer pedidos desde la mesa escaneando un QR.
 
-First, run the development server:
+Para el contexto completo del proyecto, ver el [README raíz](../../README.md) y [AGENTS.md](../../AGENTS.md).
 
-```bash
+## Estado actual
+
+**Fase 1 — Frontend funcional sin backend.**
+Toda la data es mockeada o estática. No hay llamadas a API reales.
+
+**Sprint en curso: Sprint 1 (11/05 – 17/05/2025)**
+- Happy path Admin de Negocio completo (QR UI, gestión de carta, usuarios internos)
+- Dashboard del Recepcionista con datos mockeados
+
+Ver las user stories del sprint en `../../docs/product/mesa-click-presentacion.html`.
+
+## Levantar localmente
+
+Requisitos: Node.js 20+.
+
+```powershell
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Disponible en [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Framework**: Next.js App Router (v16+)
+- **UI**: React 19+, Tailwind CSS v4+
+- **Lenguaje**: TypeScript estricto
 
-## Learn More
+## Estructura de carpetas
 
-To learn more about Next.js, take a look at the following resources:
+```
+app/
+├── page.tsx              ← landing
+├── login/page.tsx        ← login / registro
+├── onboarding/page.tsx   ← onboarding admin (4 pasos)
+└── dashboard/page.tsx    ← panel de administración
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+components/
+├── landing/
+└── onboarding/
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Scripts disponibles
 
-## Deploy on Vercel
+| Comando | Descripción |
+|---|---|
+| `npm run dev` | Servidor de desarrollo con hot reload |
+| `npm run build` | Build de producción |
+| `npm run lint` | Verificar errores de ESLint |
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Convenciones
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- No usar `any` en TypeScript
+- No hacer llamadas a APIs externas en Fase 1 (todo es mock)
+- Componentes funcionales con hooks — sin class components
+- Estilos exclusivamente con Tailwind CSS
+- La vista del cliente es **mobile-first** (el cliente usa el celular)

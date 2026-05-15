@@ -1,65 +1,83 @@
-# Mesa CLICK - Menú Digital y Gestión de Pedidos
+# Mesa CLICK — Menú Digital y Gestión de Pedidos
 
-Mesa CLICK es una plataforma integral para el sector gastronómico que permite digitalizar menús y gestionar pedidos en tiempo real mediante códigos QR en las mesas.
+Mesa CLICK es una plataforma web PWA para el sector gastronómico que permite digitalizar menús y gestionar pedidos en tiempo real mediante códigos QR en las mesas.
 
-## 🚀 Estructura del Proyecto
+## Estado del proyecto
 
-El repositorio está organizado como un **monorepo**:
+| | |
+|---|---|
+| **Fase actual** | Fase 1 — Frontend funcional sin backend |
+| **Sprint en curso** | Sprint 1 · 11/05 – 17/05/2025 |
+| **Fin estimado** | 12/07/2025 |
 
-```text
+Ver el roadmap completo con fechas y user stories en `docs/product/mesa-click-presentacion.html`.
+
+## Estructura del monorepo
+
+```
 mesa-click/
-├── docs/               # Documentación de producto, flujos y diseño
-│   ├── flows/          # Detalle de los flujos de usuario (Admin, Cliente)
-│   └── product/        # Roadmap, User Stories y Presentación
-├── repos/              # Código fuente de las aplicaciones
-│   └── web/            # Aplicación Frontend (Next.js)
-├── AGENTS.md           # Reglas y roles para agentes de IA
-└── GEMINI.md           # Contexto y mandatos del proyecto
+├── docs/
+│   ├── product/
+│   │   ├── mesa-click-presentacion.html   ← roadmap, US y backlog por sprint
+│   │   └── arquitectura-back.md           ← entidades, servicios y auth (Fase 2)
+│   └── flows/
+│       ├── happy-path-admin-negocio.md    ← flujo del admin de negocio
+│       └── happy-path-cliente.md          ← flujo del cliente / comensal
+├── repos/
+│   └── web/                               ← frontend Next.js (activo en Fase 1)
+├── AGENTS.md                              ← reglas para todos los agentes de IA
+└── GEMINI.md                              ← contexto específico para Gemini
 ```
 
-## 🛠️ Requisitos Previos (Windows)
+## Plan de desarrollo — 3 fases
 
-Para correr el proyecto localmente, necesitas tener instalado:
+| Fase | Sprints | Período | Objetivo |
+|---|---|---|---|
+| **1 — Frontend** | 0–2 | 04/05 → 24/05 | Happy paths navegables sin backend |
+| **2 — Backend** | 3–6 | 25/05 → 21/06 | API, DB, servicios, auth, tests |
+| **3 — Integración** | 7–9 | 22/06 → 12/07 | Conectar front con back, QA, deploy |
 
-1.  **Node.js**: Versión **20.x** o superior.
-    *   Descárgalo en [nodejs.org](https://nodejs.org/).
-2.  **Git**: Para clonar el repositorio.
-3.  **Terminal**: Se recomienda usar **PowerShell** o **Windows Terminal**.
+## Levantar el frontend localmente
 
-## 💻 Instalación y Ejecución (Web)
+Requisitos: Node.js 20+, Git.
 
-Sigue estos pasos para levantar el entorno de desarrollo del frontend:
-
-### 1. Clonar el repositorio
 ```powershell
+# 1. Clonar el repo
 git clone <url-del-repo>
 cd mesa-click
-```
 
-### 2. Instalar dependencias
-Navega a la carpeta del proyecto web e instala los paquetes necesarios:
-```powershell
+# 2. Instalar dependencias del frontend
 cd repos/web
 npm install
-```
 
-### 3. Correr en modo desarrollo
-Inicia el servidor de desarrollo de Next.js:
-```powershell
+# 3. Levantar el servidor de desarrollo
 npm run dev
 ```
 
-El proyecto estará disponible en [http://localhost:3000](http://localhost:3000).
+Disponible en [http://localhost:3000](http://localhost:3000).
 
-## 📖 Documentación Útil
+## Stack tecnológico
 
-*   **Roadmap y Backlog:** Ver `docs/product/mesa-click-presentacion.html`.
-*   **Flujo de Onboarding:** Ver `docs/flows/happy-path-admin-negocio.md`.
-*   **Guía de Diseño (Maqueta):** Ver `docs/flows/maqueta/v0/admin_onboarding/mesa_click/DESIGN.md`.
+| Capa | Tecnología |
+|---|---|
+| Frontend | Next.js (v16+), React 19+, Tailwind CSS v4+, TypeScript |
+| Backend (Fase 2) | Go, PostgreSQL, slog, Sentry |
+| Auth (Fase 2) | Magic link por email |
+| Tiempo real (Fase 2) | Server-Sent Events (SSE) |
 
-## 🤖 Roles del Equipo
+## Equipo
 
-Para entender cómo contribuir, revisa el archivo `AGENTS.md` en la raíz, donde se definen los estándares para:
-*   **Backend:** Go, PostgreSQL, slog.
-*   **Frontend:** Next.js, React, Tailwind CSS.
-*   **Integración:** Contratos de API y flujos end-to-end.
+| Alumno | Rol |
+|---|---|
+| Oviedo Martín | Desarrollo |
+| Silvestrin Mateo | Desarrollo |
+| Aguirre Pablo | Desarrollo |
+
+Práctica Profesionalizante I — IRESM.
+
+## Para agentes de IA
+
+Antes de empezar cualquier tarea, leer:
+1. `AGENTS.md` — reglas, fases, sprint en curso y convenciones
+2. `docs/product/mesa-click-presentacion.html` → slide "Backlog" — US del sprint actual
+3. `docs/flows/` — happy paths de los flujos a implementar
