@@ -23,10 +23,9 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, Copilot, etc.) qu
 
 | | |
 |---|---|
-| **Fase actual** | Fase 1 — Frontend funcional sin backend |
-| **Sprint en curso** | Sprint 1 (11/05 – 17/05/2025) |
-| **Próximo sprint** | Sprint 2 (18/05 – 24/05/2025) |
-| **Checkpoint docente** | ~25/05/2025 (aprobación del front antes de arrancar el back) |
+| **Fase actual** | Fase 2 — Backend |
+| **Sprint en curso** | Sprint 3 (25/05 – 31/05/2025) |
+| **Próximo sprint** | Sprint 4 (01/06 – 07/06/2025) |
 
 ### Fases del proyecto
 ```
@@ -39,9 +38,9 @@ Fase 3 — Integración         (Sprints 7–9)   22/06 → 12/07/2025
 | Sprint | Semana | Objetivo |
 |---|---|---|
 | 0 ✓ | 04/05–10/05 | Maqueta base: landing, login, onboarding, dashboard |
-| **1 ●** | **11/05–17/05** | **Happy path Admin completo + dashboard recepcionista (mock)** |
-| 2 | 18/05–24/05 | Happy path Cliente completo (carta, pedido, seguimiento, cuenta) |
-| 3 | 25/05–31/05 | Stack + DB: entidades, relaciones, migraciones |
+| 1 ✓ | 11/05–17/05 | Happy path Admin completo + dashboard recepcionista (mock) |
+| 2 ✓ | 18/05–24/05 | Happy path Cliente completo (carta, pedido, seguimiento, cuenta) |
+| **3 ●** | **25/05–31/05** | **Stack + DB: entidades, relaciones, migraciones** |
 | 4 | 01/06–07/06 | Servicios core + auth magic link |
 | 5 | 08/06–14/06 | Servicio de pedidos + tiempo real (SSE) |
 | 6 | 15/06–21/06 | Tests unitarios e integración |

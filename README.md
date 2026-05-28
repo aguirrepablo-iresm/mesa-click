@@ -6,8 +6,8 @@ Mesa CLICK es una plataforma web PWA para el sector gastronómico que permite di
 
 | | |
 |---|---|
-| **Fase actual** | Fase 1 — Frontend funcional sin backend |
-| **Sprint en curso** | Sprint 1 · 11/05 – 17/05/2025 |
+| **Fase actual** | Fase 2 — Backend |
+| **Sprint en curso** | Sprint 3 · 25/05 – 31/05/2025 |
 | **Fin estimado** | 12/07/2025 |
 
 Ver el roadmap completo con fechas y user stories en `docs/product/mesa-click-presentacion.html`.

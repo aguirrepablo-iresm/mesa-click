@@ -15,16 +15,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ---
 
-## Fase actual: Fase 1 — Frontend sin backend
+## Fase actual: Fase 2 — Backend (arranque)
 
-Toda la lógica es estática o mockeada. No hay API real. El objetivo es tener los dos happy paths navegables y aprobados.
+**Fase 1 completada** — US-01 a US-18 implementadas. Frontend mockeado navegable y aprobado.
 
-**Sprint en curso: Sprint 1 (11/05 – 17/05/2025)**
-- Happy path Admin de Negocio completo (QR UI, gestión de carta, invitación de usuarios)
-- Dashboard del Recepcionista con datos mockeados (pedidos activos, cambio de estado)
-
-**Sprint siguiente: Sprint 2 (18/05 – 24/05/2025)**
-- Happy path Cliente (carta pública desde QR, carrito, pedido, seguimiento, cuenta)
+**Sprint en curso: Sprint 3 (25/05 – 31/05/2025)**
+- Stack backend Go + PostgreSQL + slog + Sentry
+- Esquema de BD con entidades del MVP y migraciones versionadas
+- Entorno Docker local configurado (US-19 a US-22)
 
 ---
 
@@ -32,14 +30,19 @@ Toda la lógica es estática o mockeada. No hay API real. El objetivo es tener l
 
 ```
 repos/web/
-├── app/                  ← rutas y páginas (Next.js App Router)
-│   ├── page.tsx          (landing)
+├── app/                        ← rutas y páginas (Next.js App Router)
+│   ├── page.tsx                (landing)
 │   ├── login/page.tsx
 │   ├── onboarding/page.tsx
-│   └── dashboard/page.tsx
-├── components/           ← componentes reutilizables
+│   ├── dashboard/page.tsx      (admin: sidebar con Carta, Mesas, Equipo, Recepcionista)
+│   └── mesa/[token]/page.tsx   (cliente: carta → carrito → seguimiento)
+├── components/
 │   ├── landing/
-│   └── onboarding/
+│   ├── onboarding/
+│   ├── dashboard/              (CartaSection, MesasSection, EquipoSection, RecepcionistaSection)
+│   └── menu/                   (CategoriaNav, ItemCard, CartDrawer, SeguimientoView)
+├── lib/
+│   └── mock/                   (menu.ts, mesas.ts, pedidos.ts, equipo.ts)
 └── public/
 ```
 
