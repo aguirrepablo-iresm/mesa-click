@@ -201,8 +201,9 @@
     <button class="nav-btn" onclick="goSlide(5)">Estado actual</button>
     <button class="nav-btn" onclick="goSlide(6)">Roadmap</button>
     <button class="nav-btn" onclick="goSlide(7)">Backlog</button>
+    <button class="nav-btn" onclick="goSlide(8)">Línea de tiempo</button>
   </nav>
-  <div class="page-counter" id="counter">1 / 8</div>
+  <div class="page-counter" id="counter">1 / 9</div>
 </header>
 
 <main class="main">
@@ -240,7 +241,7 @@
         Acceso al repositorio
       </a>
     </div>
-    <div class="footer-nav"><button class="fn-btn" style="visibility:hidden">← Anterior</button><span class="fn-page">1 / 8</span><button class="fn-btn" onclick="goSlide(1)">Siguiente →</button></div>
+    <div class="footer-nav"><button class="fn-btn" style="visibility:hidden">← Anterior</button><span class="fn-page">1 / 9</span><button class="fn-btn" onclick="goSlide(1)">Siguiente →</button></div>
   </section>
 
   <!-- SLIDE 1: PROBLEMA -->
@@ -779,7 +780,192 @@
 
     <div class="footer-nav">
       <button class="fn-btn" onclick="goSlide(6)">← Anterior</button>
-      <span class="fn-page">8 / 8</span>
+      <span class="fn-page">8 / 9</span>
+      <button class="fn-btn" onclick="goSlide(8)">Siguiente →</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: LÍNEA DE TIEMPO -->
+  <section class="slide" id="s8">
+    <style>
+      .tl-row { display: flex; align-items: stretch; }
+      .tl-dot-col { width: 40px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+      .tl-seg { width: 2px; flex: 1; min-height: 8px; }
+      .tl-seg-none { background: transparent; }
+      .tl-seg-done { background: #5AAF2A; }
+      .tl-seg-wip { background: var(--orange); }
+      .tl-seg-wip-fade { background: linear-gradient(to bottom, #5AAF2A, var(--orange)); }
+      .tl-seg-pending { background: repeating-linear-gradient(to bottom, var(--border-strong) 0, var(--border-strong) 3px, transparent 3px, transparent 8px); }
+      .tl-node { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+      .tl-node-done { background: #5AAF2A; color: white; }
+      .tl-node-wip { background: var(--orange); color: white; }
+      .tl-node-pending { background: var(--bg-card); border: 2px solid var(--border-strong); color: var(--text-muted); font-size: 10px; font-family: 'DM Mono', monospace; }
+      @keyframes tl-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(226,91,26,0.35); } 50% { box-shadow: 0 0 0 6px rgba(226,91,26,0); } }
+      .tl-node-wip { animation: tl-pulse 2s ease-in-out infinite; }
+      .tl-content { flex: 1; padding: 0 0 16px 14px; }
+      .tl-meta { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 3px; }
+      .tl-sid { font-size: 10px; font-weight: 700; font-family: 'DM Mono', monospace; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; }
+      .tl-date { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--text-muted); }
+      .tl-title { font-size: 13px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+      .tl-title.done { color: var(--text-secondary); }
+      .tl-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.45; }
+      .tl-desc.done { color: var(--text-muted); }
+      .tl-phase-row { display: flex; align-items: center; margin-bottom: 2px; }
+      .tl-phase-bar { width: 40px; flex-shrink: 0; display: flex; justify-content: center; }
+      .tl-phase-pill { display: inline-flex; align-items: center; gap: 10px; padding: 5px 12px; border-radius: 6px; margin-left: 14px; }
+      .tl-phase-pill.f1 { background: #E6F1FB; }
+      .tl-phase-pill.f2 { background: #EAF3DE; }
+      .tl-phase-pill.f3 { background: #EEEDFE; }
+      .tl-phase-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; }
+      .tl-phase-name.f1 { color: #0C447C; }
+      .tl-phase-name.f2 { color: #2D5A0A; }
+      .tl-phase-name.f3 { color: #3C3489; }
+      .tl-phase-range { font-size: 10px; font-family: 'DM Mono', monospace; color: var(--text-muted); }
+      .tl-ckpt-row { display: flex; align-items: center; margin-bottom: 2px; }
+      .tl-ckpt-bar { width: 40px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; }
+      .tl-ckpt-diamond { width: 10px; height: 10px; border: 2px solid var(--orange); transform: rotate(45deg); background: var(--bg); flex-shrink: 0; }
+      .tl-ckpt-tag { margin-left: 14px; font-size: 10px; font-weight: 600; padding: 2px 10px; border-radius: 20px; background: var(--orange-light); color: #7A2E06; }
+      .badge-xs { font-size: 10px; padding: 2px 8px; }
+    </style>
+
+    <div class="slide-tag">Línea de tiempo</div>
+    <h1 class="slide-title">Progreso del proyecto</h1>
+    <p class="slide-sub">Los 10 sprints semanales de mayo a julio 2025, organizados por fase.</p>
+
+    <div>
+
+      <!-- FASE 1 -->
+      <div class="tl-phase-row">
+        <div class="tl-phase-bar"><div style="width:2px;height:20px;background:transparent;"></div></div>
+        <div class="tl-phase-pill f1">
+          <span class="tl-phase-name f1">Fase 1 — Frontend sin backend</span>
+          <span class="tl-phase-range">04/05 → 24/05 · 3 sprints · completada ✓</span>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-none"></div><div class="tl-node tl-node-done">✓</div><div class="tl-seg tl-seg-done"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 0</span><span class="tl-date">04/05 – 10/05</span><span class="badge b-green badge-xs">Completado</span></div>
+          <div class="tl-title done">Maqueta base</div>
+          <div class="tl-desc done">Landing page, login/registro, onboarding del negocio y estructura del dashboard admin</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-done"></div><div class="tl-node tl-node-done">✓</div><div class="tl-seg tl-seg-done"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 1</span><span class="tl-date">11/05 – 17/05</span><span class="badge b-green badge-xs">Completado</span></div>
+          <div class="tl-title done">Happy path Admin completo</div>
+          <div class="tl-desc done">QR por mesa, gestión de carta (ABM), invitación de usuarios internos y dashboard del recepcionista</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-done"></div><div class="tl-node tl-node-done">✓</div><div class="tl-seg tl-seg-wip-fade"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 2</span><span class="tl-date">18/05 – 24/05</span><span class="badge b-green badge-xs">Completado</span></div>
+          <div class="tl-title done">Happy path Cliente completo</div>
+          <div class="tl-desc done">Carta digital por QR, carrito con notas por ítem, confirmación de pedido, seguimiento y pedir la cuenta</div>
+        </div>
+      </div>
+
+      <!-- CHECKPOINT -->
+      <div class="tl-ckpt-row">
+        <div class="tl-ckpt-bar">
+          <div style="width:2px;height:10px;background:var(--orange);"></div>
+          <div class="tl-ckpt-diamond"></div>
+          <div style="width:2px;height:10px;background:var(--orange);"></div>
+        </div>
+        <span class="tl-ckpt-tag">Checkpoint docente — ~25/05 · aprobación del frontend antes de arrancar el back</span>
+      </div>
+
+      <!-- FASE 2 -->
+      <div class="tl-phase-row">
+        <div class="tl-phase-bar"><div style="width:2px;height:20px;background:var(--orange);"></div></div>
+        <div class="tl-phase-pill f2">
+          <span class="tl-phase-name f2">Fase 2 — Backend</span>
+          <span class="tl-phase-range">25/05 → 21/06 · 4 sprints</span>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-wip"></div><div class="tl-node tl-node-wip">●</div><div class="tl-seg tl-seg-pending"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 3</span><span class="tl-date">25/05 – 31/05</span><span class="badge b-orange badge-xs">En curso</span></div>
+          <div class="tl-title">Stack + base de datos</div>
+          <div class="tl-desc">Entidades del MVP, esquema de BD, migraciones versionadas y entorno Docker local (Go + PostgreSQL)</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">4</div><div class="tl-seg tl-seg-pending"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 4</span><span class="tl-date">01/06 – 07/06</span></div>
+          <div class="tl-title">Servicios core + autenticación</div>
+          <div class="tl-desc">CRUD de tenant, sucursal, carta y mesas — auth por magic link vía email</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">5</div><div class="tl-seg tl-seg-pending"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 5</span><span class="tl-date">08/06 – 14/06</span></div>
+          <div class="tl-title">Servicio de pedidos + tiempo real</div>
+          <div class="tl-desc">Creación, estados y gestión de pedidos — propagación en tiempo real con SSE al cliente y recepcionista</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">6</div><div class="tl-seg tl-seg-pending"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 6</span><span class="tl-date">15/06 – 21/06</span></div>
+          <div class="tl-title">Tests — unitarios e integración</div>
+          <div class="tl-desc">Tests por servicio, tests de integración contra BD real y pipeline de CI ante cada PR</div>
+        </div>
+      </div>
+
+      <!-- FASE 3 -->
+      <div class="tl-phase-row">
+        <div class="tl-phase-bar"><div style="width:2px;height:20px;background:repeating-linear-gradient(to bottom,var(--border-strong) 0,var(--border-strong) 3px,transparent 3px,transparent 8px);"></div></div>
+        <div class="tl-phase-pill f3">
+          <span class="tl-phase-name f3">Fase 3 — Integración</span>
+          <span class="tl-phase-range">22/06 → 12/07 · 3 sprints</span>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">7</div><div class="tl-seg tl-seg-pending"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 7</span><span class="tl-date">22/06 – 28/06</span></div>
+          <div class="tl-title">Integración — flujo admin</div>
+          <div class="tl-desc">Login real con magic link, onboarding conectado a API, CRUD de carta y mesas en producción</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">8</div><div class="tl-seg tl-seg-pending"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 8</span><span class="tl-date">29/06 – 05/07</span></div>
+          <div class="tl-title">Integración — flujo cliente y recepcionista</div>
+          <div class="tl-desc">Carta y pedidos desde la API real, actualizaciones de estado en tiempo real sin recargar</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">9</div><div class="tl-seg tl-seg-none"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 9</span><span class="tl-date">06/07 – 12/07</span></div>
+          <div class="tl-title">QA end-to-end + polish + deploy</div>
+          <div class="tl-desc">Validación de happy paths en staging, responsive mobile, deploy a producción con CI/CD automatizado</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="footer-nav">
+      <button class="fn-btn" onclick="goSlide(7)">← Anterior</button>
+      <span class="fn-page">9 / 9</span>
       <button class="fn-btn" style="visibility:hidden">Siguiente →</button>
     </div>
   </section>
@@ -794,7 +980,7 @@
 
 <script>
   let current = 0;
-  const total = 8;
+  const total = 9;
 
   function goSlide(n) {
     document.getElementById('s' + current).classList.remove('active');
