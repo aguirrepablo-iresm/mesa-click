@@ -27,6 +27,7 @@ mesa-click/
 │   │   └── happy-path-cliente.md          ← flujo del cliente / comensal
 │   └── tasks/
 │       └── Modelo de Status Report.docx.pdf
+├── memory/                                ← notas persistentes y feedback para agentes de IA
 ├── repos/
 │   ├── api/                               ← backend Go
 │   │   ├── internal/db/                   ← conexión y migraciones
