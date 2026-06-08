@@ -7,7 +7,7 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, Copilot, etc.) qu
 ## ANTES DE ESCRIBIR CUALQUIER LÍNEA DE CÓDIGO
 
 1. **Leer las User Stories del sprint actual** en:
-   `docs/product/mesa-click-presentacion.html` → slide "Backlog"
+   `docs/presentations/mesa-click-presentacion.html` → slide "Backlog"
 
 2. **Leer el happy path correspondiente** a la tarea:
    - `docs/flows/happy-path-admin-negocio.md` — flujo del admin de negocio
@@ -24,14 +24,14 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, Copilot, etc.) qu
 | | |
 |---|---|
 | **Fase actual** | Fase 2 — Backend |
-| **Sprint en curso** | Sprint 3 (25/05 – 31/05/2025) |
-| **Próximo sprint** | Sprint 4 (01/06 – 07/06/2025) |
+| **Sprint en curso** | Sprint 4 (08/06 – 14/06/2025) |
+| **Próximo sprint** | Sprint 5 (15/06 – 21/06/2025) |
 
 ### Fases del proyecto
 ```
 Fase 1 — Frontend sin back   (Sprints 0–2)   04/05 → 24/05/2025
-Fase 2 — Backend             (Sprints 3–6)   25/05 → 21/06/2025
-Fase 3 — Integración         (Sprints 7–9)   22/06 → 12/07/2025
+Fase 2 — Backend             (Sprints 3–6)   25/05 → 28/06/2025
+Fase 3 — Integración         (Sprints 7–9)   29/06 → 19/07/2025
 ```
 
 ### Sprints detallados
@@ -40,13 +40,13 @@ Fase 3 — Integración         (Sprints 7–9)   22/06 → 12/07/2025
 | 0 ✓ | 04/05–10/05 | Maqueta base: landing, login, onboarding, dashboard |
 | 1 ✓ | 11/05–17/05 | Happy path Admin completo + dashboard recepcionista (mock) |
 | 2 ✓ | 18/05–24/05 | Happy path Cliente completo (carta, pedido, seguimiento, cuenta) |
-| **3 ●** | **25/05–31/05** | **Stack + DB: entidades, relaciones, migraciones** |
-| 4 | 01/06–07/06 | Servicios core + auth magic link |
-| 5 | 08/06–14/06 | Servicio de pedidos + tiempo real (SSE) |
-| 6 | 15/06–21/06 | Tests unitarios e integración |
-| 7 | 22/06–28/06 | Integración: flujo admin + auth real |
-| 8 | 29/06–05/07 | Integración: flujo cliente + recepcionista |
-| 9 | 06/07–12/07 | QA end-to-end + polish + deploy |
+| 3 ✓ | 25/05–31/05 | Stack + DB: entidades, relaciones, migraciones |
+| **4 ●** | **08/06–14/06** | **Servicios core + auth magic link** |
+| 5 | 15/06–21/06 | Servicio de pedidos + tiempo real (SSE) |
+| 6 | 22/06–28/06 | Tests unitarios e integración |
+| 7 | 29/06–05/07 | Integración: flujo admin + auth real |
+| 8 | 06/07–12/07 | Integración: flujo cliente + recepcionista |
+| 9 | 13/07–19/07 | QA end-to-end + polish + deploy |
 
 ---
 
@@ -57,8 +57,10 @@ mesa-click/
 ├── repos/
 │   └── web/          ← Next.js frontend (única repo activa en Fase 1)
 ├── docs/
-│   ├── product/
+│   ├── presentations/
 │   │   ├── mesa-click-presentacion.html   ← US, roadmap y backlog
+│   │   └── status-report-01.html          ← status report Sprint 3
+│   ├── product/
 │   │   └── arquitectura-back.md           ← entidades, servicios, auth (referencia para Fase 2)
 │   └── flows/
 │       ├── happy-path-admin-negocio.md

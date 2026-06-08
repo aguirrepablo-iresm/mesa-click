@@ -6,14 +6,12 @@ Para el contexto completo del proyecto, ver el [README raíz](../../README.md) y
 
 ## Estado actual
 
-**Fase 1 — Frontend funcional sin backend.**
-Toda la data es mockeada o estática. No hay llamadas a API reales.
+**Fase 1 completada** — Frontend mockeado aprobado (US-01 a US-18).
 
-**Sprint en curso: Sprint 1 (11/05 – 17/05/2025)**
-- Happy path Admin de Negocio completo (QR UI, gestión de carta, usuarios internos)
-- Dashboard del Recepcionista con datos mockeados
+**Fase 2 en curso — Sprint 4 (08/06 – 14/06/2025)**
+El backend está levantado en `repos/api/` (Go + PostgreSQL). Este repo sigue con datos mockeados hasta la Fase 3 (integración).
 
-Ver las user stories del sprint en `../../docs/product/mesa-click-presentacion.html`.
+Ver las user stories del sprint en `../../docs/presentations/mesa-click-presentacion.html`.
 
 ## Levantar localmente
 

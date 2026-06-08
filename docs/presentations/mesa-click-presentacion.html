@@ -394,9 +394,9 @@
 
   <!-- SLIDE 5: ESTADO ACTUAL -->
   <section class="slide" id="s5">
-    <div class="slide-tag">Fase 1 — Frontend sin back</div>
+    <div class="slide-tag">Fase 2 — Backend</div>
     <h1 class="slide-title">Estado actual</h1>
-    <p class="slide-sub">Avance de la maqueta funcional. Toda la navegación es estática — sin llamadas a API. El objetivo es tener los tres happy paths completos y aprobados antes de arrancar el back.</p>
+    <p class="slide-sub">Frontend aprobado. El backend arrancó con Go + PostgreSQL: estructura, entidades y migraciones completas. Sprint 4 en curso — servicios core y autenticación.</p>
 
     <div class="estado-section-label">Completado — Sprint 0 &nbsp;·&nbsp; 04/05 – 10/05</div>
     <div class="estado-grid">
@@ -484,17 +484,32 @@
       </div>
     </div>
 
-    <div class="estado-section-label" style="margin-top: 22px;">En curso — Sprint 3 &nbsp;·&nbsp; 25/05 – 31/05</div>
+    <div class="estado-section-label" style="margin-top: 22px;">Completado — Sprint 3 &nbsp;·&nbsp; 25/05 – 31/05</div>
+    <div class="estado-grid">
+      <div class="estado-card">
+        <div class="estado-card-header">
+          <div class="estado-dot dot-done"></div>
+          <div class="estado-card-title">Backend — stack y base de datos</div>
+          <span class="badge b-green estado-card-badge">Listo</span>
+        </div>
+        <div class="estado-item"><span class="check">✓</span>Stack Go + PostgreSQL + slog (net/http estándar)</div>
+        <div class="estado-item"><span class="check">✓</span>12 migraciones SQL con todas las entidades del MVP</div>
+        <div class="estado-item"><span class="check">✓</span>Migraciones versionadas + Dockerfile + entorno local</div>
+        <div class="estado-item"><span class="check">✓</span>Health check endpoint + estructura de rutas base</div>
+      </div>
+    </div>
+
+    <div class="estado-section-label" style="margin-top: 22px;">En curso — Sprint 4 &nbsp;·&nbsp; 08/06 – 14/06</div>
     <div class="estado-grid">
       <div class="estado-card">
         <div class="estado-card-header">
           <div class="estado-dot dot-wip"></div>
-          <div class="estado-card-title">Backend — stack y base de datos</div>
-          <span class="badge b-orange estado-card-badge">Sprint 3</span>
+          <div class="estado-card-title">Servicios core + autenticación</div>
+          <span class="badge b-orange estado-card-badge">Sprint 4</span>
         </div>
-        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Stack Go + PostgreSQL + slog + Sentry</div>
-        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Esquema de BD con todas las entidades del MVP</div>
-        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Migraciones versionadas + entorno Docker local</div>
+        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>CRUD de tenant, sucursal, mesas y carta</div>
+        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Auth por magic link (generación, envío y verificación)</div>
+        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Invitación de usuarios internos (encargado / mozo)</div>
       </div>
     </div>
 
@@ -543,32 +558,32 @@
 
     <div class="rm-phase" style="margin-top:8px;">Fase 2 — Backend</div>
     <div class="rm-phase-divider"></div>
-    <div class="rm-row rm-wip">
+    <div class="rm-row rm-done">
       <div class="rm-label">Sprint 3</div>
       <div class="rm-block rm-s2">
-        Stack + base de datos: entidades, relaciones y migraciones <span class="rm-wip-tag">en curso</span>
+        Stack + base de datos: entidades, relaciones y migraciones ✓
         <div class="rm-date">25/05 – 31/05/2025</div>
       </div>
     </div>
-    <div class="rm-row">
+    <div class="rm-row rm-wip">
       <div class="rm-label">Sprint 4</div>
       <div class="rm-block rm-s3">
-        Servicios core (tenant, sucursal, mesas, carta) + auth magic link
-        <div class="rm-date">01/06 – 07/06/2025</div>
+        Servicios core (tenant, sucursal, mesas, carta) + auth magic link <span class="rm-wip-tag">en curso</span>
+        <div class="rm-date">08/06 – 14/06/2025</div>
       </div>
     </div>
     <div class="rm-row">
       <div class="rm-label">Sprint 5</div>
       <div class="rm-block rm-s3">
         Servicio de pedidos + tiempo real (SSE)
-        <div class="rm-date">08/06 – 14/06/2025</div>
+        <div class="rm-date">15/06 – 21/06/2025</div>
       </div>
     </div>
     <div class="rm-row">
       <div class="rm-label">Sprint 6</div>
       <div class="rm-block rm-s4">
         Tests unitarios e integración por servicio
-        <div class="rm-date">15/06 – 21/06/2025</div>
+        <div class="rm-date">22/06 – 28/06/2025</div>
       </div>
     </div>
 
@@ -578,21 +593,21 @@
       <div class="rm-label">Sprint 7</div>
       <div class="rm-block rm-s5">
         Conectar front admin + auth con la API real
-        <div class="rm-date">22/06 – 28/06/2025</div>
+        <div class="rm-date">29/06 – 05/07/2025</div>
       </div>
     </div>
     <div class="rm-row">
       <div class="rm-label">Sprint 8</div>
       <div class="rm-block rm-s5">
         Conectar front cliente + recepcionista + tiempo real
-        <div class="rm-date">29/06 – 05/07/2025</div>
+        <div class="rm-date">06/07 – 12/07/2025</div>
       </div>
     </div>
     <div class="rm-row">
       <div class="rm-label">Sprint 9</div>
       <div class="rm-block rm-s6">
         QA end-to-end + polish visual + deploy a producción
-        <div class="rm-date">06/07 – 12/07/2025</div>
+        <div class="rm-date">13/07 – 19/07/2025</div>
       </div>
     </div>
 
@@ -669,24 +684,24 @@
 
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
-        <span class="badge b-green">Sprint 3</span>
+        <span class="badge b-green">Sprint 3 ✓</span>
         <span class="epica-title">Stack + base de datos (entidades, relaciones, migraciones)</span>
-        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">25/05–31/05</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">25/05–31/05 ✓</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-id">US-19</span><span class="us-dev d-all">Todos</span><span class="us-text">Como equipo, definimos el stack del back (Go + PostgreSQL + slog + Sentry) y la arquitectura del servicio</span></div>
-        <div class="us-row"><span class="us-id">US-20</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, tengo el esquema de base de datos con todas las entidades del MVP y sus relaciones modeladas</span></div>
-        <div class="us-row"><span class="us-id">US-21</span><span class="us-dev d-back">Back</span><span class="us-text">Como desarrollador, dispongo de migraciones versionadas para crear y evolucionar el esquema de BD</span></div>
-        <div class="us-row"><span class="us-id">US-22</span><span class="us-dev d-back">Back</span><span class="us-text">Como desarrollador, tengo el entorno de desarrollo configurado: Docker + variables de entorno + BD local</span></div>
+        <div class="us-row us-done"><span class="us-id">US-19</span><span class="us-dev d-all">Todos</span><span class="us-text">Como equipo, definimos el stack del back (Go + PostgreSQL + slog, net/http estándar) y la arquitectura del servicio</span></div>
+        <div class="us-row us-done"><span class="us-id">US-20</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, tengo el esquema de base de datos con todas las entidades del MVP y sus relaciones modeladas (12 migraciones SQL)</span></div>
+        <div class="us-row us-done"><span class="us-id">US-21</span><span class="us-dev d-back">Back</span><span class="us-text">Como desarrollador, dispongo de migraciones versionadas para crear y evolucionar el esquema de BD</span></div>
+        <div class="us-row us-done"><span class="us-id">US-22</span><span class="us-dev d-back">Back</span><span class="us-text">Como desarrollador, tengo el entorno de desarrollo configurado: Dockerfile + variables de entorno + BD local + health check</span></div>
       </div>
     </div>
 
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
-        <span class="badge b-orange">Sprint 4</span>
+        <span class="badge b-orange">Sprint 4 ●</span>
         <span class="epica-title">Servicios core + autenticación (magic link)</span>
-        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">01/06–07/06</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">08/06–14/06 · en curso</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
@@ -830,7 +845,7 @@
 
     <div class="slide-tag">Línea de tiempo</div>
     <h1 class="slide-title">Progreso del proyecto</h1>
-    <p class="slide-sub">Los 10 sprints semanales de mayo a julio 2025, organizados por fase.</p>
+    <p class="slide-sub">Los 10 sprints semanales de mayo a julio 2025, organizados por fase. Sprints 0–3 completados, Sprint 4 en curso.</p>
 
     <div>
 
@@ -885,23 +900,23 @@
         <div class="tl-phase-bar"><div style="width:2px;height:20px;background:var(--orange);"></div></div>
         <div class="tl-phase-pill f2">
           <span class="tl-phase-name f2">Fase 2 — Backend</span>
-          <span class="tl-phase-range">25/05 → 21/06 · 4 sprints</span>
+          <span class="tl-phase-range">25/05 → 28/06 · 4 sprints · sprint 3 ✓ · sprint 4 en curso</span>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-done"></div><div class="tl-node tl-node-done">✓</div><div class="tl-seg tl-seg-wip-fade"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 3</span><span class="tl-date">25/05 – 31/05</span><span class="badge b-green badge-xs">Completado</span></div>
+          <div class="tl-title done">Stack + base de datos</div>
+          <div class="tl-desc done">12 migraciones SQL, esquema de BD, Dockerfile, health check y estructura de rutas (Go + PostgreSQL)</div>
         </div>
       </div>
 
       <div class="tl-row">
         <div class="tl-dot-col"><div class="tl-seg tl-seg-wip"></div><div class="tl-node tl-node-wip">●</div><div class="tl-seg tl-seg-pending"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 3</span><span class="tl-date">25/05 – 31/05</span><span class="badge b-orange badge-xs">En curso</span></div>
-          <div class="tl-title">Stack + base de datos</div>
-          <div class="tl-desc">Entidades del MVP, esquema de BD, migraciones versionadas y entorno Docker local (Go + PostgreSQL)</div>
-        </div>
-      </div>
-
-      <div class="tl-row">
-        <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">4</div><div class="tl-seg tl-seg-pending"></div></div>
-        <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 4</span><span class="tl-date">01/06 – 07/06</span></div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 4</span><span class="tl-date">08/06 – 14/06</span><span class="badge b-orange badge-xs">En curso</span></div>
           <div class="tl-title">Servicios core + autenticación</div>
           <div class="tl-desc">CRUD de tenant, sucursal, carta y mesas — auth por magic link vía email</div>
         </div>
@@ -910,7 +925,7 @@
       <div class="tl-row">
         <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">5</div><div class="tl-seg tl-seg-pending"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 5</span><span class="tl-date">08/06 – 14/06</span></div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 5</span><span class="tl-date">15/06 – 21/06</span></div>
           <div class="tl-title">Servicio de pedidos + tiempo real</div>
           <div class="tl-desc">Creación, estados y gestión de pedidos — propagación en tiempo real con SSE al cliente y recepcionista</div>
         </div>
@@ -919,7 +934,7 @@
       <div class="tl-row">
         <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">6</div><div class="tl-seg tl-seg-pending"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 6</span><span class="tl-date">15/06 – 21/06</span></div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 6</span><span class="tl-date">22/06 – 28/06</span></div>
           <div class="tl-title">Tests — unitarios e integración</div>
           <div class="tl-desc">Tests por servicio, tests de integración contra BD real y pipeline de CI ante cada PR</div>
         </div>
@@ -937,7 +952,7 @@
       <div class="tl-row">
         <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">7</div><div class="tl-seg tl-seg-pending"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 7</span><span class="tl-date">22/06 – 28/06</span></div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 7</span><span class="tl-date">29/06 – 05/07</span></div>
           <div class="tl-title">Integración — flujo admin</div>
           <div class="tl-desc">Login real con magic link, onboarding conectado a API, CRUD de carta y mesas en producción</div>
         </div>
@@ -946,7 +961,7 @@
       <div class="tl-row">
         <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">8</div><div class="tl-seg tl-seg-pending"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 8</span><span class="tl-date">29/06 – 05/07</span></div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 8</span><span class="tl-date">06/07 – 12/07</span></div>
           <div class="tl-title">Integración — flujo cliente y recepcionista</div>
           <div class="tl-desc">Carta y pedidos desde la API real, actualizaciones de estado en tiempo real sin recargar</div>
         </div>
@@ -955,7 +970,7 @@
       <div class="tl-row">
         <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">9</div><div class="tl-seg tl-seg-none"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 9</span><span class="tl-date">06/07 – 12/07</span></div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 9</span><span class="tl-date">13/07 – 19/07</span></div>
           <div class="tl-title">QA end-to-end + polish + deploy</div>
           <div class="tl-desc">Validación de happy paths en staging, responsive mobile, deploy a producción con CI/CD automatizado</div>
         </div>

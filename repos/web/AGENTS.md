@@ -9,7 +9,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 # Contexto del proyecto — Mesa CLICK (Frontend)
 
 > **Leer antes de empezar**: Las User Stories del sprint actual están en
-> `../../docs/product/mesa-click-presentacion.html` → slide "Backlog".
+> `../../docs/presentations/mesa-click-presentacion.html` → slide "Backlog".
 > Los happy paths están en `../../docs/flows/`.
 > Las reglas generales del proyecto están en `../../AGENTS.md`.
 
@@ -19,10 +19,10 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 **Fase 1 completada** — US-01 a US-18 implementadas. Frontend mockeado navegable y aprobado.
 
-**Sprint en curso: Sprint 3 (25/05 – 31/05/2025)**
-- Stack backend Go + PostgreSQL + slog + Sentry
-- Esquema de BD con entidades del MVP y migraciones versionadas
-- Entorno Docker local configurado (US-19 a US-22)
+**Sprint en curso: Sprint 4 (08/06 – 14/06/2025)**
+- CRUD de tenants, sucursales, mesas y carta
+- Auth por magic link (generación, envío y verificación)
+- Invitación de usuarios internos — encargado / mozo (US-23 a US-28)
 
 ---
 

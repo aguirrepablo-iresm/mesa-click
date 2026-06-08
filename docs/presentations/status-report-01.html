@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Status Report #1 — Mesa CLICK</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange:   #E25B1A;
+    --orange-l: #FAE8D8;
+    --green:    #16A34A;
+    --green-l:  #DCFCE7;
+    --amber:    #D97706;
+    --amber-l:  #FEF3C7;
+    --slate:    #64748B;
+    --slate-l:  #F1F5F9;
+    --text:     #111827;
+    --text2:    #374151;
+    --text3:    #6B7280;
+    --bg:       #F4F2EC;
+    --card:     #FFFFFF;
+    --border:   #E5E7EB;
+    --border2:  #D1D5DB;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 28px 20px 60px;
+    min-height: 100vh;
+  }
+
+  /* ── Wrapper ─────────────────────── */
+  .wrap { max-width: 1100px; margin: 0 auto; }
+
+  /* ── Top header ──────────────────── */
+  .top-bar {
+    background: var(--card);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--orange);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .logo-name { font-size: 17px; font-weight: 600; letter-spacing: -.01em; line-height: 1.2; }
+  .logo-sub  { font-size: 11px; color: var(--text3); }
+  .report-title { text-align: right; }
+  .report-title h1 { font-size: 18px; font-weight: 600; }
+  .report-title .sub { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; margin-top: 3px; }
+
+  /* ── Meta strip ──────────────────── */
+  .meta-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .meta-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .meta-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); margin-bottom: 5px; }
+  .meta-val   { font-size: 14px; font-weight: 600; color: var(--text); }
+  .meta-val.small { font-size: 12px; font-weight: 500; color: var(--text2); }
+
+  /* ── RAG row ─────────────────────── */
+  .rag-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .rag-card {
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .rag-card.amber { background: var(--amber-l); border-color: #FDE68A; }
+  .rag-card.green { background: var(--green-l); border-color: #86EFAC; }
+  .rag-dot {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 16px; color: white;
+    flex-shrink: 0; margin-top: 2px;
+  }
+  .rag-dot.amber { background: var(--amber); }
+  .rag-dot.green { background: var(--green); }
+  .rag-info {}
+  .rag-dim  { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .07em; color: var(--text3); margin-bottom: 3px; }
+  .rag-status { font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+  .rag-status.amber { color: #92400E; }
+  .rag-status.green { color: #166534; }
+  .rag-note { font-size: 12px; color: var(--text2); line-height: 1.5; }
+
+  /* ── Section heading ─────────────── */
+  .sec-label {
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .1em;
+    color: var(--text3);
+    margin: 0 0 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .sec-label::after { content: ''; flex: 1; height: 1px; background: var(--border2); }
+
+  /* ── Content cards ───────────────── */
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .content-grid.full { grid-template-columns: 1fr; }
+  .c-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .c-card-head {
+    background: #1C1917;
+    color: white;
+    font-size: 11px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .07em;
+    padding: 10px 16px;
+  }
+  .c-card-body {
+    padding: 14px 16px;
+    font-size: 13px; color: var(--text2);
+    line-height: 1.65;
+  }
+  .c-card-body strong { color: var(--text); font-weight: 600; }
+  .c-card-body .sprint-tag {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; font-weight: 600;
+    background: var(--orange-l); color: #7A2E06;
+    padding: 2px 8px; border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .c-card-body ul {
+    list-style: none;
+    margin-top: 8px;
+  }
+  .c-card-body ul li {
+    padding: 4px 0;
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border);
+  }
+  .c-card-body ul li:last-child { border-bottom: none; }
+  .c-card-body ul li .dot {
+    color: var(--orange);
+    flex-shrink: 0;
+    margin-top: 3px;
+    font-size: 10px;
+  }
+  .chip {
+    display: inline-block;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    background: #F3F4F6;
+    border: 1px solid var(--border2);
+    padding: 1px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  /* issues */
+  .issue {
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+  .issue:last-child { margin-bottom: 0; }
+  .issue.risk { background: var(--amber-l); border-left: 3px solid var(--amber); }
+  .issue.block { background: #FEF2F2; border-left: 3px solid #F87171; }
+  .issue-tag {
+    display: inline-block;
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .06em;
+    margin-bottom: 5px;
+  }
+  .issue.risk  .issue-tag { color: #92400E; }
+  .issue.block .issue-tag { color: #991B1B; }
+  .issue p { color: var(--text2); }
+  .issue strong { color: var(--text); }
+
+  .first-report {
+    padding: 14px 16px;
+    font-size: 13px; color: var(--text3);
+    font-style: italic;
+  }
+
+  /* ── Gantt ───────────────────────── */
+  .gantt-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 10px;
+  }
+  .gantt {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    table-layout: fixed;
+  }
+  .gantt td, .gantt th { border: 1px solid var(--border); padding: 0; }
+
+  .g-lbl-col { width: 210px; }
+  .g-lbl {
+    font-size: 12px; font-weight: 500; color: var(--text2);
+    padding: 0 12px;
+    background: #F9FAFB;
+    border-right: 2px solid var(--border2);
+    height: 36px;
+    vertical-align: middle;
+    width: 210px;
+    overflow: hidden;
+  }
+  .g-lbl.header {
+    background: #111827; color: #6B7280;
+    font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .07em;
+    height: auto; padding: 8px 12px;
+  }
+
+  .gth {
+    background: #1C1917; color: white;
+    text-align: center; vertical-align: middle;
+    padding: 8px 2px;
+    font-family: 'DM Mono', monospace;
+    border-right: 1px solid #374151;
+  }
+  .gth.today { background: #7A2E06; }
+  .gth .sn { display: block; font-size: 12px; font-weight: 700; }
+  .gth .sd { display: block; font-size: 9px; opacity: .55; }
+  .gth .today-arrow {
+    display: block; font-size: 8px; font-weight: 700;
+    color: #FCA772; margin-top: 1px; letter-spacing: .04em;
+  }
+
+  .g-phase td {
+    padding: 5px 12px;
+    font-size: 10px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .08em;
+    border-top: 2px solid var(--border2);
+  }
+  .ph1 { background: #EBF4FE; color: #1E40AF; }
+  .ph2 { background: #EAF3DE; color: #166534; }
+  .ph3 { background: #EEEDFE; color: #3730A3; }
+
+  .g-cell { text-align: center; vertical-align: middle; height: 36px; }
+  .bar-done  { background: var(--green-l);  border-left: 3px solid var(--green);  color: var(--green);  font-weight: 700; font-size: 13px; }
+  .bar-wip   { background: var(--orange-l); border-left: 3px solid var(--orange); color: var(--orange); font-weight: 700; font-size: 15px; }
+  .bar-plan  { background: var(--slate-l);  border-left: 3px solid var(--border2); }
+  .bar-empty { background: #fff; }
+
+  .g-ckpt td {
+    background: #FFF7F0; color: var(--orange);
+    font-size: 10px; font-weight: 600; text-align: center;
+    border-top: 1px dashed #FCA772; border-bottom: 1px dashed #FCA772;
+    padding: 3px 0;
+  }
+  .g-ckpt .g-lbl { background: #FFF7F0; color: var(--orange); border-right-color: #FCA772; }
+
+  /* Legend */
+  .legend {
+    display: flex; gap: 18px; flex-wrap: wrap; align-items: center;
+    padding: 8px 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 11px; color: var(--text3);
+  }
+  .li { display: flex; align-items: center; gap: 6px; }
+  .sq { width: 11px; height: 11px; border-radius: 2px; flex-shrink: 0; }
+  .sq-done { background: var(--green); }
+  .sq-wip  { background: var(--orange); }
+  .sq-plan { background: var(--border2); }
+  .hoy-badge {
+    margin-left: auto;
+    background: var(--orange-l); color: #7A2E06;
+    font-size: 10px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px;
+    border: 1px solid #FCA772;
+    letter-spacing: .04em;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <rect x="3"  y="3"  width="8" height="8" rx="2" fill="white" opacity=".95"/>
+          <rect x="13" y="3"  width="8" height="8" rx="2" fill="white" opacity=".65"/>
+          <rect x="3"  y="13" width="8" height="8" rx="2" fill="white" opacity=".65"/>
+          <rect x="13" y="13" width="8" height="8" rx="2" fill="white" opacity=".35"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-name">Mesa CLICK</div>
+        <div class="logo-sub">Práctica Profesionalizante I · IRESM</div>
+      </div>
+    </div>
+    <div class="report-title">
+      <h1>Project Status Report #1</h1>
+      <div class="sub">Sprint 3 completado · Sprint 4 en curso · 08/06/2026</div>
+    </div>
+  </div>
+
+  <!-- Meta strip -->
+  <div class="meta-strip">
+    <div class="meta-card">
+      <div class="meta-label">Project Name</div>
+      <div class="meta-val" style="font-size:13px;">Mesa CLICK — Digitalización de pedidos gastronómicos</div>
+    </div>
+    <div class="meta-card">
+      <div class="meta-label">Date</div>
+      <div class="meta-val">08 de junio de 2026</div>
+    </div>
+    <div class="meta-card">
+      <div class="meta-label">Created By</div>
+      <div class="meta-val small">Aguirre Pablo · Oviedo Martín · Silvestrin Mateo</div>
+    </div>
+  </div>
+
+  <!-- RAG -->
+  <div class="sec-label">Status RAG</div>
+  <div class="rag-row">
+    <div class="rag-card amber">
+      <div class="rag-dot amber">●</div>
+      <div class="rag-info">
+        <div class="rag-dim">Time</div>
+        <div class="rag-status amber">Ámbar</div>
+        <div class="rag-note">Sprint 3 tuvo ~1 semana de desfase (entregado el 06/06 en vez del 31/05). El cronograma fue ajustado y Sprint 4 arrancó en tiempo.</div>
+      </div>
+    </div>
+    <div class="rag-card green">
+      <div class="rag-dot green">●</div>
+      <div class="rag-info">
+        <div class="rag-dim">Alcance (Scope)</div>
+        <div class="rag-status green">Verde</div>
+        <div class="rag-note">MVP definido y estable. Fase 1 entregada completa. Sin modificaciones al alcance original.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress + To Do -->
+  <div class="sec-label" style="margin-top:16px;">Avance y plan</div>
+  <div class="content-grid">
+
+    <div class="c-card">
+      <div class="c-card-head">Progress Last Week</div>
+      <div class="c-card-body">
+        <div class="sprint-tag">Sprint 3 — merge PR #1 el 06/06/2026</div>
+        <ul>
+          <li><span class="dot">▸</span><span>Stack definido: Go (net/http estándar), PostgreSQL, slog para logging estructurado.</span></li>
+          <li><span class="dot">▸</span><span>12 migraciones SQL con todas las entidades del MVP: tenants, usuarios, magic_tokens, sucursales, sectores, mesas, categorias, articulos, variantes, pedidos, pedido_items, pedido_item_variantes.</span></li>
+          <li><span class="dot">▸</span><span>Servidor HTTP con health check operativo (<span class="chip">GET /health</span>) y estructura de rutas base.</span></li>
+          <li><span class="dot">▸</span><span>Dockerfile para entorno local. Variables documentadas en <span class="chip">.env.example</span>.</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="c-card">
+      <div class="c-card-head">To Do This Week</div>
+      <div class="c-card-body">
+        <div class="sprint-tag">Sprint 4 — 08/06 al 14/06/2026</div>
+        <ul>
+          <li><span class="dot">▸</span><span>CRUD de tenants: registro de negocio con nombre, slug y configuración base.</span></li>
+          <li><span class="dot">▸</span><span>CRUD de sucursales: nombre, contacto, horarios y relación con el tenant.</span></li>
+          <li><span class="dot">▸</span><span>CRUD de mesas por sucursal y generación de token único para el QR.</span></li>
+          <li><span class="dot">▸</span><span>CRUD de artículos, categorías y variantes de carta.</span></li>
+          <li><span class="dot">▸</span><span>Auth magic link: generación, envío por email y verificación del token.</span></li>
+          <li><span class="dot">▸</span><span>Endpoint de invitación de usuarios internos (encargado / mozo).</span></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Issues -->
+  <div class="sec-label" style="margin-top:4px;">Issues, Risks, Blockers</div>
+  <div class="content-grid">
+
+    <div class="c-card">
+      <div class="c-card-head">New Issues, Risks, Blockers</div>
+      <div class="c-card-body" style="padding:12px 14px;">
+        <div class="issue risk">
+          <div class="issue-tag">⚠ Riesgo controlado — Cronograma</div>
+          <p>Sprint 3 finalizó el 06/06 en lugar del 31/05 (≈1 semana de diferencia). El roadmap fue ajustado corriendo los sprints restantes sin cambiar el alcance ni la fecha de entrega estimada del MVP.</p>
+        </div>
+        <div class="issue block">
+          <div class="issue-tag">⊘ Decisión pendiente — Email provider</div>
+          <p>Para implementar el magic link del Sprint 4 se necesita definir el servicio de envío de emails (Resend, SendGrid u otro). La decisión debe tomarse antes del <strong>miércoles 11/06</strong> para no bloquear la implementación.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="c-card">
+      <div class="c-card-head">Update on Issues raised Last Week</div>
+      <div class="first-report">Primer status report del proyecto. No hay issues previos registrados.</div>
+    </div>
+
+  </div>
+
+  <!-- Gantt -->
+  <div class="sec-label" style="margin-top:16px;">Timeline — Épicas por Sprint</div>
+  <div class="gantt-wrap">
+    <table class="gantt">
+      <colgroup>
+        <col class="g-lbl-col">
+        <col><col><col><col><col><col><col><col><col><col>
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="g-lbl header">Épica</th>
+          <th class="gth"><span class="sn">S0</span><span class="sd">04/05</span></th>
+          <th class="gth"><span class="sn">S1</span><span class="sd">11/05</span></th>
+          <th class="gth"><span class="sn">S2</span><span class="sd">18/05</span></th>
+          <th class="gth"><span class="sn">S3</span><span class="sd">25/05</span></th>
+          <th class="gth today">
+            <span class="sn">S4</span>
+            <span class="sd">08/06</span>
+            <span class="today-arrow">▲ HOY</span>
+          </th>
+          <th class="gth"><span class="sn">S5</span><span class="sd">15/06</span></th>
+          <th class="gth"><span class="sn">S6</span><span class="sd">22/06</span></th>
+          <th class="gth"><span class="sn">S7</span><span class="sd">29/06</span></th>
+          <th class="gth"><span class="sn">S8</span><span class="sd">06/07</span></th>
+          <th class="gth"><span class="sn">S9</span><span class="sd">13/07</span></th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- FASE 1 -->
+        <tr class="g-phase"><td class="ph1" colspan="11">Fase 1 — Frontend sin backend · completada ✓</td></tr>
+        <tr>
+          <td class="g-lbl">Maqueta base</td>
+          <td class="g-cell bar-done">✓</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Happy path Admin + Recepcionista</td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-done">✓</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Happy path Cliente</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-done">✓</td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+
+        <!-- Checkpoint -->
+        <tr class="g-ckpt">
+          <td class="g-lbl" style="font-size:10px;font-weight:600;">Checkpoint docente</td>
+          <td></td><td></td>
+          <td style="font-size:14px;">◆</td>
+          <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+
+        <!-- FASE 2 -->
+        <tr class="g-phase"><td class="ph2" colspan="11">Fase 2 — Backend · en curso</td></tr>
+        <tr>
+          <td class="g-lbl">Stack + Base de datos</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-done">✓</td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Servicios core + Auth magic link</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-wip">●</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Pedidos + Tiempo real (SSE)</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan"></td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Tests unitarios e integración</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan"></td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+
+        <!-- FASE 3 -->
+        <tr class="g-phase"><td class="ph3" colspan="11">Fase 3 — Integración · pendiente</td></tr>
+        <tr>
+          <td class="g-lbl">Integración flujo Admin</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan"></td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Integración Cliente + Recepcionista</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan"></td>
+          <td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">QA end-to-end + deploy</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan"></td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="li"><div class="sq sq-done"></div>Completado</div>
+    <div class="li"><div class="sq sq-wip"></div>En curso</div>
+    <div class="li"><div class="sq sq-plan"></div>Planificado</div>
+    <div class="li"><span style="color:var(--orange);">◆</span>&nbsp;Checkpoint docente (~24/05)</div>
+    <div class="hoy-badge">▲ HOY = inicio Sprint 4</div>
+  </div>
+
+</div>
+</body>
+</html>

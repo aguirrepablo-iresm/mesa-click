@@ -7,23 +7,34 @@ Mesa CLICK es una plataforma web PWA para el sector gastronómico que permite di
 | | |
 |---|---|
 | **Fase actual** | Fase 2 — Backend |
-| **Sprint en curso** | Sprint 3 · 25/05 – 31/05/2025 |
-| **Fin estimado** | 12/07/2025 |
+| **Sprint en curso** | Sprint 4 · 08/06 – 14/06/2025 |
+| **Fin estimado** | 19/07/2025 |
 
-Ver el roadmap completo con fechas y user stories en `docs/product/mesa-click-presentacion.html`.
+Ver el roadmap completo en `docs/presentations/mesa-click-presentacion.html`.
 
 ## Estructura del monorepo
 
 ```
 mesa-click/
 ├── docs/
-│   ├── product/
+│   ├── presentations/
 │   │   ├── mesa-click-presentacion.html   ← roadmap, US, backlog y línea de tiempo
+│   │   └── status-report-01.html          ← status report #1 (Sprint 3 completado)
+│   ├── product/
 │   │   └── arquitectura-back.md           ← entidades, servicios y auth (Fase 2)
-│   └── flows/
-│       ├── happy-path-admin-negocio.md    ← flujo del admin de negocio
-│       └── happy-path-cliente.md          ← flujo del cliente / comensal
+│   ├── flows/
+│   │   ├── happy-path-admin-negocio.md    ← flujo del admin de negocio
+│   │   └── happy-path-cliente.md          ← flujo del cliente / comensal
+│   └── tasks/
+│       └── Modelo de Status Report.docx.pdf
 ├── repos/
+│   ├── api/                               ← backend Go
+│   │   ├── internal/db/                   ← conexión y migraciones
+│   │   ├── migrations/                    ← 12 archivos SQL (001 → 012)
+│   │   ├── main.go                        ← punto de entrada del servidor
+│   │   ├── rutas.go                       ← registro de endpoints
+│   │   ├── go.mod / go.sum
+│   │   └── .env.example                   ← plantilla de variables de entorno
 │   └── web/                               ← frontend Next.js
 │       ├── app/
 │       │   ├── page.tsx                   ← landing
@@ -44,23 +55,107 @@ mesa-click/
 | Fase | Sprints | Período | Objetivo | Estado |
 |---|---|---|---|---|
 | **1 — Frontend** | 0–2 | 04/05 → 24/05 | Happy paths navegables sin backend | ✅ Completa |
-| **2 — Backend** | 3–6 | 25/05 → 21/06 | API, DB, servicios, auth, tests | 🔄 En curso |
-| **3 — Integración** | 7–9 | 22/06 → 12/07 | Conectar front con back, QA, deploy | ⏳ Pendiente |
+| **2 — Backend** | 3–6 | 25/05 → 28/06 | API, DB, servicios, auth, tests | 🔄 En curso |
+| **3 — Integración** | 7–9 | 29/06 → 19/07 | Conectar front con back, QA, deploy | ⏳ Pendiente |
+
+---
+
+## Levantar la API (backend Go)
+
+### Requisitos
+
+- Go 1.22+
+- PostgreSQL corriendo (local o Docker)
+
+### 1. Configurar variables de entorno
+
+```powershell
+cd repos/api
+cp .env.example .env
+```
+
+Editá `.env` con tus datos locales:
+
+```env
+DATABASE_URL=postgresql://postgres:tu_password@localhost:5432/mesa_click
+PORT=8080
+JWT_SECRET=cambiar_esto_por_algo_muy_secreto
+APP_ENV=development
+```
+
+> **Importante:** no uses `?schema=public` al final de la URL — ese parámetro es de Prisma y pgx no lo reconoce.
+
+### 2. Crear la base de datos (si no existe)
+
+```sql
+CREATE DATABASE mesa_click;
+```
+
+O con Docker (si no tenés Postgres instalado):
+
+```powershell
+docker run -d --name mesa-click-db \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres_password \
+  -e POSTGRES_DB=mesa_click \
+  -p 5432:5432 \
+  postgres:16-alpine
+```
+
+### 3. Levantar el servidor
+
+```powershell
+cd repos/api
+go run .
+```
+
+Al arrancar, el servidor:
+1. Conecta a PostgreSQL
+2. Ejecuta automáticamente las migraciones pendientes (la primera vez crea las 12 tablas)
+3. Escucha en `http://localhost:8080`
+
+Las migraciones son idempotentes: si ya corrieron, el servidor las saltea en los arranques siguientes.
+
+### 4. Verificar que funciona
+
+```powershell
+curl http://localhost:8080/health
+# → {"estado":"ok","timestamp":"..."}
+```
+
+### Estructura del paquete
+
+```
+repos/api/
+├── main.go          ← carga .env, conecta DB, corre migraciones, levanta HTTP
+├── rutas.go         ← registra los endpoints (GET /health + próximas rutas del Sprint 4)
+├── internal/db/
+│   ├── db.go        ← pool de conexiones pgx (Conectar / Cerrar)
+│   └── migraciones.go ← ejecuta archivos .sql en orden, registra en _migraciones
+└── migrations/
+    ├── 001_create_tenants.sql
+    ├── 002_create_usuarios.sql
+    ├── 003_create_magic_tokens.sql
+    ├── 004_create_sucursales.sql
+    ├── 005_create_sectores.sql
+    ├── 006_create_mesas.sql
+    ├── 007_create_categorias.sql
+    ├── 008_create_articulos.sql
+    ├── 009_create_variantes.sql
+    ├── 010_create_pedidos.sql
+    ├── 011_create_pedido_items.sql
+    └── 012_create_pedido_item_variantes.sql
+```
+
+---
 
 ## Levantar el frontend localmente
 
-Requisitos: Node.js 20+, Git.
+Requisitos: Node.js 20+.
 
 ```powershell
-# 1. Clonar el repo
-git clone <url-del-repo>
-cd mesa-click
-
-# 2. Instalar dependencias del frontend
 cd repos/web
 npm install
-
-# 3. Levantar el servidor de desarrollo
 npm run dev
 ```
 
@@ -77,7 +172,6 @@ Todo funciona con datos mockeados — sin backend, sin base de datos. Solo neces
 Navegá con la barra lateral izquierda. Hacé clic en el ícono de hamburguesa (☰) para expandir las etiquetas.
 
 #### 📋 Carta
-Gestión del menú del restaurante.
 
 | Acción | Cómo probarlo |
 |---|---|
@@ -89,7 +183,6 @@ Gestión del menú del restaurante.
 | Eliminar categoría | Botón **"Eliminar cat."** — pide confirmación |
 
 #### 🪑 Mesas & QR
-Vista de las 8 mesas con sus códigos QR.
 
 | Acción | Cómo probarlo |
 |---|---|
@@ -99,7 +192,6 @@ Vista de las 8 mesas con sus códigos QR.
 | Probar el QR | Escanearlo con el celular (si estás en la misma red) o abrir la URL directamente |
 
 #### 👥 Equipo
-Lista de usuarios del negocio e invitación.
 
 | Acción | Cómo probarlo |
 |---|---|
@@ -109,7 +201,6 @@ Lista de usuarios del negocio e invitación.
 | Confirmar éxito | Al invitar correctamente aparece "✓ Invitación enviada" por 3 segundos |
 
 #### 🧾 Recepcionista
-Dashboard de pedidos activos con cambio de estado.
 
 | Acción | Cómo probarlo |
 |---|---|
@@ -123,16 +214,13 @@ Dashboard de pedidos activos con cambio de estado.
 
 ### Vista del cliente (comensal) — `http://localhost:3000/mesa/[token]`
 
-Simulá la experiencia del cliente que escaneó el QR de su mesa. Las URLs disponibles son:
+Simulá la experiencia del cliente que escaneó el QR de su mesa:
 
 ```
-http://localhost:3000/mesa/mesa-token-1   ← Mesa 1 (libre)
-http://localhost:3000/mesa/mesa-token-2   ← Mesa 2 (ocupada)
-http://localhost:3000/mesa/mesa-token-3   ← Mesa 3 (libre)
+http://localhost:3000/mesa/mesa-token-1   ← Mesa 1
+http://localhost:3000/mesa/mesa-token-2   ← Mesa 2
 ...hasta mesa-token-8
 ```
-
-**Flujo completo a probar:**
 
 | Paso | Acción | Resultado esperado |
 |---|---|---|
@@ -149,28 +237,28 @@ http://localhost:3000/mesa/mesa-token-3   ← Mesa 3 (libre)
 
 > **Nota:** Los ítems marcados como "No disponible" en la sección Carta del admin no aparecen en la carta del cliente.
 
-**URL inválida:** `http://localhost:3000/mesa/token-inexistente` → muestra "Mesa no encontrada".
-
 ---
 
-### Presentación del proyecto
-
-Para ver el roadmap, backlog, línea de tiempo y estado del proyecto, abrí directamente en el browser:
+### Presentaciones del proyecto
 
 ```
-docs/product/mesa-click-presentacion.html
+docs/presentations/mesa-click-presentacion.html   ← roadmap, backlog y línea de tiempo
+docs/presentations/status-report-01.html          ← status report #1
 ```
 
-Navegá con las flechas del teclado (← →) o con los botones de la barra superior. La última slide **"Línea de tiempo"** muestra el progreso cronológico de todos los sprints.
+Abrí los archivos directamente en el browser. La presentación principal se navega con ← → o con la barra superior.
+
+---
 
 ## Stack tecnológico
 
 | Capa | Tecnología |
 |---|---|
 | Frontend | Next.js (v16+), React 19+, Tailwind CSS v4+, TypeScript |
-| Backend (Fase 2) | Go, PostgreSQL, slog, Sentry |
-| Auth (Fase 2) | Magic link por email |
-| Tiempo real (Fase 2) | Server-Sent Events (SSE) |
+| Backend | Go 1.22, net/http estándar, slog |
+| Base de datos | PostgreSQL 16+ |
+| Auth (Sprint 4) | Magic link por email |
+| Tiempo real (Sprint 5) | Server-Sent Events (SSE) |
 
 ## Equipo
 
@@ -186,5 +274,5 @@ Práctica Profesionalizante I — IRESM.
 
 Antes de empezar cualquier tarea, leer:
 1. `AGENTS.md` — reglas, fases, sprint en curso y convenciones
-2. `docs/product/mesa-click-presentacion.html` → slide "Backlog" — US del sprint actual
+2. `docs/presentations/mesa-click-presentacion.html` → slide "Backlog" — US del sprint actual
 3. `docs/flows/` — happy paths de los flujos a implementar
