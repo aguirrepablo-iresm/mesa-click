@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/auth"
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/carta"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/tenant"
 )
 
@@ -37,6 +38,20 @@ func registrarRutas(mux *http.ServeMux) {
 	tenantH := tenant.NuevosHandlers(tenantSvc)
 	mux.Handle("POST /tenants", http.HandlerFunc(tenantH.Crear))
 	mux.Handle("GET /tenants/me", auth.Requerir(http.HandlerFunc(tenantH.ObtenerMe)))
+
+	// --- Carta ---
+	cartaStore := carta.NuevoStore()
+	cartaSvc := carta.NuevoService(cartaStore)
+	cartaH := carta.NuevosHandlers(cartaSvc)
+
+	mux.Handle("GET /carta/categorias",         auth.Requerir(http.HandlerFunc(cartaH.ListarCategorias)))
+	mux.Handle("POST /carta/categorias",        auth.Requerir(http.HandlerFunc(cartaH.CrearCategoria)))
+	mux.Handle("DELETE /carta/categorias/{id}", auth.Requerir(http.HandlerFunc(cartaH.EliminarCategoria)))
+	mux.Handle("GET /carta/articulos",          auth.Requerir(http.HandlerFunc(cartaH.ListarArticulos)))
+	mux.Handle("POST /carta/articulos",         auth.Requerir(http.HandlerFunc(cartaH.CrearArticulo)))
+	mux.Handle("PATCH /carta/articulos/{id}",   auth.Requerir(http.HandlerFunc(cartaH.ActualizarArticulo)))
+	mux.Handle("DELETE /carta/articulos/{id}",  auth.Requerir(http.HandlerFunc(cartaH.EliminarArticulo)))
+	mux.HandleFunc("GET /publica/{sucursal_id}/carta", cartaH.CartaPublica)
 }
 
 // handlerHealth responde con el estado del servidor.
