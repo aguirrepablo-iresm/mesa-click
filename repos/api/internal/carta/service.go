@@ -2,7 +2,7 @@ package carta
 
 import (
 	"context"
-	"errors"
+	"fmt"
 )
 
 type Service struct {
@@ -17,7 +17,7 @@ func (svc *Service) ListarCategorias(ctx context.Context, tenantID string) ([]Ca
 
 func (svc *Service) CrearCategoria(ctx context.Context, tenantID string, input CategoriaInput) (*Categoria, error) {
 	if input.Nombre == "" {
-		return nil, errors.New("nombre requerido")
+		return nil, fmt.Errorf("nombre requerido: %w", ErrValidation)
 	}
 	return svc.store.CrearCategoria(ctx, tenantID, input)
 }
@@ -32,20 +32,20 @@ func (svc *Service) ListarArticulos(ctx context.Context, tenantID string) ([]Art
 
 func (svc *Service) CrearArticulo(ctx context.Context, tenantID string, input ArticuloInput) (*Articulo, error) {
 	if input.Nombre == "" {
-		return nil, errors.New("nombre requerido")
+		return nil, fmt.Errorf("nombre requerido: %w", ErrValidation)
 	}
 	if input.Precio < 0 {
-		return nil, errors.New("precio no puede ser negativo")
+		return nil, fmt.Errorf("precio no puede ser negativo: %w", ErrValidation)
 	}
 	if input.CategoriaID == "" {
-		return nil, errors.New("categoria_id requerido")
+		return nil, fmt.Errorf("categoria_id requerido: %w", ErrValidation)
 	}
 	return svc.store.CrearArticulo(ctx, tenantID, input)
 }
 
 func (svc *Service) ActualizarArticulo(ctx context.Context, id, tenantID string, u ArticuloUpdate) (*Articulo, error) {
 	if u.Precio != nil && *u.Precio < 0 {
-		return nil, errors.New("precio no puede ser negativo")
+		return nil, fmt.Errorf("precio no puede ser negativo: %w", ErrValidation)
 	}
 	return svc.store.ActualizarArticulo(ctx, id, tenantID, u)
 }
