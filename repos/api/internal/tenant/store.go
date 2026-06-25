@@ -2,9 +2,11 @@ package tenant
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/db"
+	"github.com/jackc/pgx/v5"
 )
 
 type Store interface {
@@ -64,7 +66,10 @@ func (s *pgStore) ObtenerPorID(ctx context.Context, id string) (*Tenant, error) 
 		 FROM tenants WHERE id = $1`, id,
 	).Scan(&t.ID, &t.Nombre, &t.NombreFantasia, &t.Rubro, &t.Slug, &t.CreatedAt)
 	if err != nil {
-		return nil, fmt.Errorf("tenant no encontrado: %w", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("error obteniendo tenant: %w", err)
 	}
 	return t, nil
 }

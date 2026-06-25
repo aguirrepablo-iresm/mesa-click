@@ -1,5 +1,12 @@
 package tenant
 
+import "errors"
+
+var (
+	ErrNotFound  = errors.New("tenant no encontrado")
+	ErrValidation = errors.New("error de validación")
+)
+
 type Tenant struct {
 	ID             string `json:"id"`
 	Nombre         string `json:"nombre"`

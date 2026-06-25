@@ -2,7 +2,7 @@ package tenant
 
 import (
 	"context"
-	"errors"
+	"fmt"
 )
 
 type Service struct {
@@ -13,10 +13,10 @@ func NuevoService(s Store) *Service { return &Service{store: s} }
 
 func (svc *Service) Crear(ctx context.Context, input OnboardingInput) (*Tenant, error) {
 	if input.Slug == "" {
-		return nil, errors.New("slug requerido")
+		return nil, fmt.Errorf("%w: slug requerido", ErrValidation)
 	}
 	if input.EmailAdmin == "" {
-		return nil, errors.New("email del admin requerido")
+		return nil, fmt.Errorf("%w: email del admin requerido", ErrValidation)
 	}
 	return svc.store.Crear(ctx, input)
 }
