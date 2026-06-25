@@ -12,7 +12,7 @@ type mockStore struct{}
 func (m *mockStore) Crear(ctx context.Context, input pedido.NuevoPedidoInput, sucursalID string) (*pedido.Pedido, error) {
 	return &pedido.Pedido{ID: "p-1", MesaID: input.MesaID, Estado: "recibido"}, nil
 }
-func (m *mockStore) ListarActivos(ctx context.Context, sucursalID string) ([]pedido.Pedido, error) {
+func (m *mockStore) ListarActivos(ctx context.Context, sucursalID, tenantID string) ([]pedido.Pedido, error) {
 	return []pedido.Pedido{}, nil
 }
 func (m *mockStore) CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado string) (*pedido.Pedido, error) {

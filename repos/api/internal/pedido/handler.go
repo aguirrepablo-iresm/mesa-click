@@ -37,15 +37,16 @@ func (h *Handlers) Crear(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handlers) ListarActivos(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
 	sucursalID := r.URL.Query().Get("sucursal_id")
 	if sucursalID == "" {
-		jsonError(w, "sucursal_id requerido como query param", http.StatusBadRequest)
+		jsonError(w, "sucursal_id requerido", http.StatusBadRequest)
 		return
 	}
-	pedidos, err := h.svc.ListarActivos(r.Context(), sucursalID)
+	pedidos, err := h.svc.ListarActivos(r.Context(), sucursalID, claims.TenantID)
 	if err != nil {
-		slog.ErrorContext(r.Context(), "error listando pedidos", "error", err)
-		jsonError(w, "error listando pedidos", http.StatusInternalServerError)
+		slog.ErrorContext(r.Context(), "error listando pedidos", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
 		return
 	}
 	jsonOK(w, pedidos)

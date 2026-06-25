@@ -31,8 +31,8 @@ func (svc *Service) Crear(ctx context.Context, input NuevoPedidoInput) (*Pedido,
 	return svc.store.Crear(ctx, input, sucursalID)
 }
 
-func (svc *Service) ListarActivos(ctx context.Context, sucursalID string) ([]Pedido, error) {
-	return svc.store.ListarActivos(ctx, sucursalID)
+func (svc *Service) ListarActivos(ctx context.Context, sucursalID, tenantID string) ([]Pedido, error) {
+	return svc.store.ListarActivos(ctx, sucursalID, tenantID)
 }
 
 func (svc *Service) CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado string) (*Pedido, error) {

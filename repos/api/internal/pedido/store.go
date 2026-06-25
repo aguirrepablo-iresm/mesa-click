@@ -11,7 +11,7 @@ import (
 
 type Store interface {
 	Crear(ctx context.Context, input NuevoPedidoInput, sucursalID string) (*Pedido, error)
-	ListarActivos(ctx context.Context, sucursalID string) ([]Pedido, error)
+	ListarActivos(ctx context.Context, sucursalID, tenantID string) ([]Pedido, error)
 	CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado string) (*Pedido, error)
 	ObtenerSucursalPorMesa(ctx context.Context, mesaID string) (string, error)
 }
@@ -52,16 +52,25 @@ func (s *pgStore) Crear(ctx context.Context, input NuevoPedidoInput, sucursalID 
 		return nil, fmt.Errorf("error creando pedido: %w", err)
 	}
 
+	var tenantID string
+	err = tx.QueryRow(ctx,
+		`SELECT tenant_id FROM sucursales WHERE id = $1`, sucursalID,
+	).Scan(&tenantID)
+	if err != nil {
+		return nil, fmt.Errorf("sucursal no encontrada: %w", ErrNotFound)
+	}
+
 	for _, item := range input.Items {
 		var precioUnitario float64
-		err := tx.QueryRow(ctx,
-			`SELECT precio FROM articulos WHERE id = $1`, item.ArticuloID,
+		err = tx.QueryRow(ctx,
+			`SELECT precio FROM articulos WHERE id = $1 AND tenant_id = $2 AND activo = true`,
+			item.ArticuloID, tenantID,
 		).Scan(&precioUnitario)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
-				return nil, fmt.Errorf("artículo %s no encontrado: %w", item.ArticuloID, ErrNotFound)
+				return nil, fmt.Errorf("artículo %s no disponible: %w", item.ArticuloID, ErrValidation)
 			}
-			return nil, fmt.Errorf("error buscando artículo %s: %w", item.ArticuloID, err)
+			return nil, fmt.Errorf("error obteniendo artículo: %w", err)
 		}
 
 		var itemID string
@@ -90,12 +99,16 @@ func (s *pgStore) Crear(ctx context.Context, input NuevoPedidoInput, sucursalID 
 	return p, nil
 }
 
-func (s *pgStore) ListarActivos(ctx context.Context, sucursalID string) ([]Pedido, error) {
+func (s *pgStore) ListarActivos(ctx context.Context, sucursalID, tenantID string) ([]Pedido, error) {
 	rows, err := db.Pool.Query(ctx,
-		`SELECT id, mesa_id, sucursal_id, estado, created_at, updated_at
-		 FROM pedidos
-		 WHERE sucursal_id = $1 AND estado != 'cerrado'
-		 ORDER BY created_at`, sucursalID)
+		`SELECT p.id, p.mesa_id, p.sucursal_id, p.estado, p.created_at, p.updated_at
+		 FROM pedidos p
+		 JOIN sucursales su ON su.id = p.sucursal_id
+		 WHERE p.sucursal_id = $1
+		   AND su.tenant_id = $2
+		   AND p.estado != 'cerrado'
+		 ORDER BY p.created_at`,
+		sucursalID, tenantID)
 	if err != nil {
 		return nil, err
 	}
