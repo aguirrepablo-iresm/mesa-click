@@ -12,6 +12,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"time"
+
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/auth"
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/tenant"
 )
 
 func registrarRutas(mux *http.ServeMux) {
@@ -21,25 +24,19 @@ func registrarRutas(mux *http.ServeMux) {
 	// Útil para monitoreo y para que el equipo confirme que todo anda.
 	mux.HandleFunc("GET /health", handlerHealth)
 
-	// --- Próximas rutas (se agregan en sprints siguientes) ---
-	//
-	// Sprint 4 — Auth:
-	//   mux.HandleFunc("POST /auth/magic-link", auth.HandlerSolicitarLink)
-	//   mux.HandleFunc("GET  /auth/verify",      auth.HandlerVerificarToken)
-	//
-	// Sprint 4 — Tenants:
-	//   mux.HandleFunc("POST /tenants", tenant.HandlerCrear)
-	//
-	// Sprint 5 — Carta:
-	//   mux.HandleFunc("GET  /articulos",     carta.HandlerListar)
-	//   mux.HandleFunc("POST /articulos",     carta.HandlerCrear)
-	//
-	// Sprint 5 — Pedidos:
-	//   mux.HandleFunc("POST /pedidos",              pedido.HandlerCrear)
-	//   mux.HandleFunc("PATCH /pedidos/{id}/estado", pedido.HandlerCambiarEstado)
-	//
-	// Sprint 5 — Menú público (cliente via QR):
-	//   mux.HandleFunc("GET /mesa/{token}", mesa.HandlerCartaPublica)
+	// --- Auth ---
+	authStore := auth.NuevoStore()
+	authSvc := auth.NuevoService(authStore)
+	authH := auth.NuevosHandlers(authSvc)
+	mux.HandleFunc("POST /auth/magic-link", authH.SolicitarLink)
+	mux.HandleFunc("GET /auth/verify", authH.VerificarToken)
+
+	// --- Tenants ---
+	tenantStore := tenant.NuevoStore()
+	tenantSvc := tenant.NuevoService(tenantStore)
+	tenantH := tenant.NuevosHandlers(tenantSvc)
+	mux.Handle("POST /tenants", http.HandlerFunc(tenantH.Crear))
+	mux.Handle("GET /tenants/me", auth.Requerir(http.HandlerFunc(tenantH.ObtenerMe)))
 }
 
 // handlerHealth responde con el estado del servidor.
