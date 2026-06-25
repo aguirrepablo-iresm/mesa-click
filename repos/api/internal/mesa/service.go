@@ -28,7 +28,7 @@ func (svc *Service) Crear(ctx context.Context, tenantID string, input MesaInput)
 	if err != nil {
 		return nil, fmt.Errorf("error generando QR token: %w", err)
 	}
-	return svc.store.Crear(ctx, input, qrToken)
+	return svc.store.Crear(ctx, tenantID, input, qrToken)
 }
 
 func (svc *Service) Actualizar(ctx context.Context, id, tenantID string, u MesaUpdate) (*Mesa, error) {

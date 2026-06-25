@@ -11,7 +11,7 @@ import (
 // Store define las operaciones de persistencia del módulo mesa.
 type Store interface {
 	Listar(ctx context.Context, tenantID string) ([]Mesa, error)
-	Crear(ctx context.Context, input MesaInput, qrToken string) (*Mesa, error)
+	Crear(ctx context.Context, tenantID string, input MesaInput, qrToken string) (*Mesa, error)
 	Actualizar(ctx context.Context, id, tenantID string, u MesaUpdate) (*Mesa, error)
 	Eliminar(ctx context.Context, id, tenantID string) error
 	ObtenerPorQRToken(ctx context.Context, token string) (*MesaPublica, error)
@@ -46,15 +46,23 @@ func (s *pgStore) Listar(ctx context.Context, tenantID string) ([]Mesa, error) {
 	return mesas, nil
 }
 
-func (s *pgStore) Crear(ctx context.Context, input MesaInput, qrToken string) (*Mesa, error) {
+func (s *pgStore) Crear(ctx context.Context, tenantID string, input MesaInput, qrToken string) (*Mesa, error) {
 	m := &Mesa{}
 	err := db.Pool.QueryRow(ctx,
 		`INSERT INTO mesas (sucursal_id, numero, capacidad, qr_token, estado)
-		 VALUES ($1, $2, $3, $4, 'activa')
+		 SELECT $1, $2, $3, $4, 'activa'
+		 FROM sucursales
+		 WHERE id = $1 AND tenant_id = $5
 		 RETURNING id, sucursal_id, COALESCE(sector_id::text,''), numero, capacidad, qr_token, estado`,
-		input.SucursalID, input.Numero, input.Capacidad, qrToken,
+		input.SucursalID, input.Numero, input.Capacidad, qrToken, tenantID,
 	).Scan(&m.ID, &m.SucursalID, &m.SectorID, &m.Numero, &m.Capacidad, &m.QRToken, &m.Estado)
-	return m, err
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return m, nil
 }
 
 func (s *pgStore) Actualizar(ctx context.Context, id, tenantID string, u MesaUpdate) (*Mesa, error) {

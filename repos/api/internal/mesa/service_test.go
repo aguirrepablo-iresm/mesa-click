@@ -14,7 +14,7 @@ type mockStore struct {
 func (m *mockStore) Listar(ctx context.Context, tenantID string) ([]mesa.Mesa, error) {
 	return m.mesas, nil
 }
-func (m *mockStore) Crear(ctx context.Context, input mesa.MesaInput, qrToken string) (*mesa.Mesa, error) {
+func (m *mockStore) Crear(ctx context.Context, tenantID string, input mesa.MesaInput, qrToken string) (*mesa.Mesa, error) {
 	return &mesa.Mesa{ID: "m-1", Numero: input.Numero, QRToken: qrToken, Estado: "activa"}, nil
 }
 func (m *mockStore) Actualizar(ctx context.Context, id, tenantID string, u mesa.MesaUpdate) (*mesa.Mesa, error) {
