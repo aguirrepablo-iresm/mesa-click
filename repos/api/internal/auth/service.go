@@ -42,7 +42,7 @@ func (svc *Service) SolicitarLink(ctx context.Context, email string) error {
 		appURL = "http://localhost:3000"
 	}
 	link := fmt.Sprintf("%s/auth/verify?token=%s", appURL, token)
-	slog.Info("magic link generado", "email", email, "link", link)
+	slog.Info("magic link", "url", link)
 	return nil
 }
 
@@ -87,10 +87,16 @@ func ValidarJWT(tokenStr, secreto string) (*Claims, error) {
 	if !ok {
 		return nil, errors.New("claims inválidos")
 	}
+	usuarioID, ok1 := mc["usuario_id"].(string)
+	tenantID, ok2 := mc["tenant_id"].(string)
+	rol, ok3 := mc["rol"].(string)
+	if !ok1 || !ok2 || !ok3 {
+		return nil, errors.New("claims inválidos o incompletos")
+	}
 	return &Claims{
-		UsuarioID: mc["usuario_id"].(string),
-		TenantID:  mc["tenant_id"].(string),
-		Rol:       mc["rol"].(string),
+		UsuarioID: usuarioID,
+		TenantID:  tenantID,
+		Rol:       rol,
 	}, nil
 }
 

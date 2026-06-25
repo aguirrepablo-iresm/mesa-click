@@ -2,6 +2,9 @@ package auth_test
 
 import (
 	"testing"
+	"time"
+
+	jwtlib "github.com/golang-jwt/jwt/v5"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/auth"
 )
@@ -41,5 +44,17 @@ func TestValidarJWT_TokenInvalido(t *testing.T) {
 	_, err := auth.ValidarJWT("token.invalido.firma", "secreto")
 	if err == nil {
 		t.Fatal("esperaba error con token inválido")
+	}
+}
+
+func TestValidarJWT_ClaimsIncompletos(t *testing.T) {
+	secreto := "test-secreto"
+	tok, _ := jwtlib.NewWithClaims(jwtlib.SigningMethodHS256, jwtlib.MapClaims{
+		"exp": time.Now().Add(time.Hour).Unix(),
+		// sin usuario_id, tenant_id, rol
+	}).SignedString([]byte(secreto))
+	_, err := auth.ValidarJWT(tok, secreto)
+	if err == nil {
+		t.Fatal("esperaba error por claims incompletos")
 	}
 }

@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+	"log/slog"
 	"net/http"
 	"os"
 	"strings"
@@ -10,6 +11,13 @@ import (
 func Requerir(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		secreto := os.Getenv("JWT_SECRET")
+		if secreto == "" {
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusInternalServerError)
+			w.Write([]byte(`{"error":"servidor mal configurado"}`))
+			slog.Error("JWT_SECRET no configurado")
+			return
+		}
 
 		var tokenStr string
 
