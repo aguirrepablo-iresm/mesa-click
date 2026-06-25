@@ -2,9 +2,10 @@ package carta
 
 import (
 	"context"
-	"fmt"
+	"errors"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/db"
+	"github.com/jackc/pgx/v5"
 )
 
 // Store define las operaciones de persistencia del módulo carta.
@@ -37,6 +38,9 @@ func (s *pgStore) ListarCategorias(ctx context.Context, tenantID string) ([]Cate
 			return nil, err
 		}
 		cats = append(cats, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 	return cats, nil
 }
@@ -79,6 +83,9 @@ func (s *pgStore) ListarArticulos(ctx context.Context, tenantID string) ([]Artic
 		}
 		arts = append(arts, a)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	return arts, nil
 }
 
@@ -105,7 +112,10 @@ func (s *pgStore) ActualizarArticulo(ctx context.Context, id, tenantID string, u
 		id, tenantID, u.Nombre, u.Precio, u.Activo,
 	).Scan(&a.ID, &a.TenantID, &a.CategoriaID, &a.Nombre, &a.Descripcion, &a.Precio, &a.FotoURL, &a.Activo)
 	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrNotFound, err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
 	}
 	return a, nil
 }
@@ -161,6 +171,9 @@ func (s *pgStore) ObtenerCartaPublica(ctx context.Context, sucursalID string) (*
 		catMap[catID].Articulos = append(catMap[catID].Articulos, art)
 	}
 
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
 	resultado := &CartaPublica{}
 	for _, id := range orden {
 		resultado.Categorias = append(resultado.Categorias, *catMap[id])

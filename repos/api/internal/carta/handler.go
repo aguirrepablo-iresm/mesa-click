@@ -2,6 +2,7 @@ package carta
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -34,7 +35,12 @@ func (h *Handlers) CrearCategoria(w http.ResponseWriter, r *http.Request) {
 	}
 	cat, err := h.svc.CrearCategoria(r.Context(), claims.TenantID, input)
 	if err != nil {
-		jsonError(w, err.Error(), http.StatusBadRequest)
+		if errors.Is(err, ErrValidation) {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error en store", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -46,7 +52,12 @@ func (h *Handlers) EliminarCategoria(w http.ResponseWriter, r *http.Request) {
 	claims := auth.ClaimsFromContext(r.Context())
 	id := r.PathValue("id")
 	if err := h.svc.EliminarCategoria(r.Context(), id, claims.TenantID); err != nil {
-		jsonError(w, "categoría no encontrada", http.StatusNotFound)
+		if errors.Is(err, ErrNotFound) {
+			jsonError(w, "categoría no encontrada", http.StatusNotFound)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error eliminando categoría", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -72,7 +83,12 @@ func (h *Handlers) CrearArticulo(w http.ResponseWriter, r *http.Request) {
 	}
 	art, err := h.svc.CrearArticulo(r.Context(), claims.TenantID, input)
 	if err != nil {
-		jsonError(w, err.Error(), http.StatusBadRequest)
+		if errors.Is(err, ErrValidation) {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error en store", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
 		return
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -90,7 +106,16 @@ func (h *Handlers) ActualizarArticulo(w http.ResponseWriter, r *http.Request) {
 	}
 	art, err := h.svc.ActualizarArticulo(r.Context(), id, claims.TenantID, u)
 	if err != nil {
-		jsonError(w, "artículo no encontrado", http.StatusNotFound)
+		if errors.Is(err, ErrNotFound) {
+			jsonError(w, "artículo no encontrado", http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, ErrValidation) {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error actualizando artículo", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
 		return
 	}
 	jsonOK(w, art)
@@ -100,7 +125,12 @@ func (h *Handlers) EliminarArticulo(w http.ResponseWriter, r *http.Request) {
 	claims := auth.ClaimsFromContext(r.Context())
 	id := r.PathValue("id")
 	if err := h.svc.EliminarArticulo(r.Context(), id, claims.TenantID); err != nil {
-		jsonError(w, "artículo no encontrado", http.StatusNotFound)
+		if errors.Is(err, ErrNotFound) {
+			jsonError(w, "artículo no encontrado", http.StatusNotFound)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error eliminando artículo", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -110,7 +140,12 @@ func (h *Handlers) CartaPublica(w http.ResponseWriter, r *http.Request) {
 	sucursalID := r.PathValue("sucursal_id")
 	c, err := h.svc.ObtenerCartaPublica(r.Context(), sucursalID)
 	if err != nil {
-		jsonError(w, "carta no disponible", http.StatusNotFound)
+		if errors.Is(err, ErrNotFound) {
+			jsonError(w, "carta no disponible", http.StatusNotFound)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error obteniendo carta pública", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
 		return
 	}
 	jsonOK(w, c)
