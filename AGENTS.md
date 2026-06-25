@@ -38,9 +38,9 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
 
 | | |
 |---|---|
-| **Fase actual** | Fase 2 — Backend |
-| **Sprint en curso** | **Sprint 4 ● (08/06 – 14/06/2026)** |
-| **Objetivo Sprint 4** | Servicios core (CRUDs) + auth magic link |
+| **Fase actual** | Fase 3 — Integración |
+| **Sprint en curso** | **Sprint 7 (Integración flujo admin y autenticación real)** |
+| **Objetivo Sprint 7** | Conectar front admin + auth con la API real |
 
 ### Sprints detallados
 | Sprint | Objetivo | Estado |
@@ -49,9 +49,9 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
 | 1 | Happy path Admin completo + dashboard recepcionista (mock) | ✓ Completado |
 | 2 | Happy path Cliente completo (carta, pedido, seguimiento, cuenta) | ✓ Completado |
 | 3 | Stack + DB: entidades, relaciones, migraciones | ✓ Completado |
-| **4** | **Servicios core (tenant, sucursal, mesa, carta) + auth magic link** | **● EN CURSO** |
-| 5 | Servicio de pedidos + tiempo real (SSE) | Pendiente |
-| 6 | Tests unitarios e integración | Pendiente |
+| 4 | Servicios core (tenant, sucursal, mesa, carta) + auth magic link | ✓ Completado |
+| 5 | Servicio de pedidos + tiempo real (SSE) | ✓ Completado |
+| 6 | Tests unitarios e integración | ✓ Completado |
 
 ---
 

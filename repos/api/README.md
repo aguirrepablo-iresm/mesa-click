@@ -2,9 +2,9 @@
 
 Servicio backend desarrollado en **Go** para la gestión de pedidos, carta digital y administración de negocios gastronómicos.
 
-## Estado del desarrollo: Fase 2
+## Estado del desarrollo: Fase 2 Completada
 
-Estamos actualmente en el **Sprint 4 ● (Servicios core + Auth)**. El backend utiliza una arquitectura basada en servicios internos y comunicación en tiempo real mediante SSE.
+La **Fase 2 (Backend)** está 100% completada y testeada (Sprints 3, 4, 5 y 6). El backend utiliza una arquitectura basada en servicios internos, comunicación en tiempo real mediante SSE y cuenta con su suite de pruebas unitarias e integración en CI.
 
 ## Stack Tecnológico
 
@@ -23,12 +23,13 @@ repos/api/
 ├── rutas.go           ← Definición centralizada de endpoints
 ├── internal/
 │   ├── db/            ← Gestión del pool de conexiones y lógica de migraciones
-│   ├── auth/          ← (Sprint 4) Lógica de Magic Link y JWT
-│   ├── tenant/        ← (Sprint 4) CRUD de negocios
-│   ├── sucursal/      ← (Sprint 4) CRUD de sucursales y sectores
-│   ├── mesa/          ← (Sprint 4) CRUD de mesas y generación de QR tokens
-│   ├── carta/         ← (Sprint 4) CRUD de categorías, artículos y variantes
-│   └── pedido/        ← (Sprint 5) Gestión de pedidos y estados
+│   ├── auth/          ← Lógica de Magic Link y JWT
+│   ├── tenant/        ← CRUD de negocios
+│   ├── sucursal/      ← CRUD de sucursales y sectores
+│   ├── mesa/          ← CRUD de mesas y generación de QR tokens
+│   ├── carta/         ← CRUD de categorías, artículos y variantes
+│   ├── pedido/        ← Gestión de pedidos y estados
+│   └── notificacion/  ← Broker SSE y comunicación en tiempo real
 ├── migrations/        ← Archivos .sql numerados (001 → 012)
 ├── .env.example       ← Plantilla de configuración
 └── Dockerfile         ← Imagen para despliegue y desarrollo local

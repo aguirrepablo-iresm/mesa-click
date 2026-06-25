@@ -15,14 +15,14 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ---
 
-## Fase actual: Fase 2 — Backend (arranque)
+## Fase actual: Fase 3 — Integración
 
-**Fase 1 completada** — US-01 a US-18 implementadas. Frontend mockeado navegable y aprobado.
+**Fase 2 completada** — US-19 a US-37 implementadas. Backend Go + PostgreSQL + SSE + Tests completo y aprobado.
 
-**Sprint en curso: Sprint 4 (08/06 – 14/06/2025)**
-- CRUD de tenants, sucursales, mesas y carta
-- Auth por magic link (generación, envío y verificación)
-- Invitación de usuarios internos — encargado / mozo (US-23 a US-28)
+**Sprint en curso: Sprint 7 (10/07 – 16/07/2026)**
+- Conectar front admin + auth con la API real
+- Reemplazar login y onboarding mockeados con llamadas reales a la API
+- Conectar la gestión de carta y distribución de mesas con la base de datos real (US-38 a US-41)
 
 ---
 

@@ -15,9 +15,10 @@ import (
 
 type Service struct {
 	store Store
+	email EmailSender
 }
 
-func NuevoService(s Store) *Service { return &Service{store: s} }
+func NuevoService(s Store, e EmailSender) *Service { return &Service{store: s, email: e} }
 
 func (svc *Service) SolicitarLink(ctx context.Context, email string) error {
 	usuario, err := svc.store.ObtenerUsuarioPorEmail(ctx, email)
@@ -42,7 +43,12 @@ func (svc *Service) SolicitarLink(ctx context.Context, email string) error {
 		appURL = "http://localhost:3000"
 	}
 	link := fmt.Sprintf("%s/auth/verify?token=%s", appURL, token)
-	slog.Info("magic link", "url", link)
+	
+	if err := svc.email.EnviarMagicLink(ctx, email, link); err != nil {
+		slog.ErrorContext(ctx, "error enviando magic link", "email", email, "err", err)
+		return fmt.Errorf("error enviando email: %w", err)
+	}
+
 	return nil
 }
 

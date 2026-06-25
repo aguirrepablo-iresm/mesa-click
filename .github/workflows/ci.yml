@@ -1,0 +1,45 @@
+name: Mesa CLICK — Backend CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres_pass
+          POSTGRES_DB: mesa_click_test
+        ports:
+          - 5432:5432
+        # Esperar a que postgres esté listo
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.22'
+
+      - name: Build and run tests
+        env:
+          DATABASE_URL: postgres://postgres:postgres_pass@localhost:5432/mesa_click_test?sslmode=disable
+          JWT_SECRET: test_jwt_secret_for_ci_pipeline_env
+          APP_ENV: testing
+        run: |
+          cd repos/api
+          go test -v ./...

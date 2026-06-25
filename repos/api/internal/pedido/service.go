@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/notificacion"
 )
 
 type Service struct {
@@ -28,7 +30,15 @@ func (svc *Service) Crear(ctx context.Context, input NuevoPedidoInput) (*Pedido,
 	if err != nil {
 		return nil, fmt.Errorf("mesa no encontrada: %w", ErrNotFound)
 	}
-	return svc.store.Crear(ctx, input, sucursalID)
+	p, err := svc.store.Crear(ctx, input, sucursalID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Notificar en tiempo real al recepcionista de la sucursal
+	notificacion.Instancia.Publicar(fmt.Sprintf("sucursal:%s", p.SucursalID), "pedido_creado", p)
+
+	return p, nil
 }
 
 func (svc *Service) ListarActivos(ctx context.Context, sucursalID, tenantID string) ([]Pedido, error) {
@@ -46,6 +56,11 @@ func (svc *Service) CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado
 		}
 		return nil, fmt.Errorf("error cambiando estado: %w", err)
 	}
+
+	// Notificar en tiempo real al comensal (pedido) y al recepcionista (sucursal)
+	notificacion.Instancia.Publicar(fmt.Sprintf("pedido:%s", p.ID), "pedido_actualizado", p)
+	notificacion.Instancia.Publicar(fmt.Sprintf("sucursal:%s", p.SucursalID), "pedido_actualizado", p)
+
 	return p, nil
 }
 

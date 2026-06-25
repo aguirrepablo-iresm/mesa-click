@@ -6,9 +6,9 @@ Mesa CLICK es una plataforma web PWA para el sector gastronómico que permite di
 
 | | |
 |---|---|
-| **Fase actual** | Fase 2 — Backend |
-| **Sprint en curso** | Sprint 4 · 08/06 – 14/06/2025 |
-| **Fin estimado** | 19/07/2025 |
+| **Fase actual** | Fase 3 — Integración |
+| **Sprint en curso** | Sprint 7 · 10/07 – 16/07/2026 |
+| **Fin estimado** | 30/07/2026 |
 
 Ver el roadmap completo en `docs/presentations/mesa-click-presentacion.html`.
 
@@ -19,7 +19,8 @@ mesa-click/
 ├── docs/
 │   ├── presentations/
 │   │   ├── mesa-click-presentacion.html   ← roadmap, US, backlog y línea de tiempo
-│   │   └── status-report-01.html          ← status report #1 (Sprint 3 completado)
+│   │   ├── status-report-01.html          ← status report #1 (Sprint 3 completado)
+│   │   └── status-report-02.html          ← status report #2 (Fase 2 Backend completada)
 │   ├── product/
 │   │   └── arquitectura-back.md           ← entidades, servicios y auth (Fase 2)
 │   ├── flows/
@@ -56,8 +57,8 @@ mesa-click/
 | Fase | Sprints | Período | Objetivo | Estado |
 |---|---|---|---|---|
 | **1 — Frontend** | 0–2 | 04/05 → 24/05 | Happy paths navegables sin backend | ✅ Completa |
-| **2 — Backend** | 3–6 | 25/05 → 28/06 | API, DB, servicios, auth, tests | 🔄 En curso |
-| **3 — Integración** | 7–9 | 29/06 → 19/07 | Conectar front con back, QA, deploy | ⏳ Pendiente |
+| **2 — Backend** | 3–6 | 25/05 → 25/06 | API, DB, servicios, auth, tests | ✅ Completa |
+| **3 — Integración** | 7–9 | 26/06 → 30/07 | Conectar front con back, QA, deploy | 🔄 En curso |
 
 ---
 
@@ -244,7 +245,8 @@ http://localhost:3000/mesa/mesa-token-2   ← Mesa 2
 
 ```
 docs/presentations/mesa-click-presentacion.html   ← roadmap, backlog y línea de tiempo
-docs/presentations/status-report-01.html          ← status report #1
+docs/presentations/status-report-01.html          ← status report #1 (Sprint 3 completado)
+docs/presentations/status-report-02.html          ← status report #2 (Fase 2 Backend completada)
 ```
 
 Abrí los archivos directamente en el browser. La presentación principal se navega con ← → o con la barra superior.

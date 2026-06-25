@@ -6,10 +6,10 @@ Para el contexto completo del proyecto, ver el [README raíz](../../README.md) y
 
 ## Estado actual
 
-**Fase 1 completada** — Frontend mockeado aprobado (US-01 a US-18).
+**Fase 2 completada** — Backend Go + PostgreSQL + SSE + Tests completo (US-19 a US-37).
 
-**Fase 2 en curso — Sprint 4 (08/06 – 14/06/2025)**
-El backend está levantado en `repos/api/` (Go + PostgreSQL). Este repo sigue con datos mockeados hasta la Fase 3 (integración).
+**Fase 3 en curso — Sprint 7 (10/07 – 16/07/2026)**
+La Fase 3 se enfoca en integrar el frontend Next.js con el backend real Go en `repos/api/` (reemplazando mocks por llamadas de API).
 
 Ver las user stories del sprint en `../../docs/presentations/mesa-click-presentacion.html`.
 

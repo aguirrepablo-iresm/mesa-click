@@ -499,17 +499,37 @@
       </div>
     </div>
 
-    <div class="estado-section-label" style="margin-top: 22px;">En curso — Sprint 4 &nbsp;·&nbsp; 08/06 – 14/06</div>
+    <div class="estado-section-label" style="margin-top: 22px;">Últimos avances y foco actual — Sprints 4, 5 y 6</div>
     <div class="estado-grid">
       <div class="estado-card">
         <div class="estado-card-header">
-          <div class="estado-dot dot-wip"></div>
+          <div class="estado-dot dot-done"></div>
           <div class="estado-card-title">Servicios core + autenticación</div>
-          <span class="badge b-orange estado-card-badge">Sprint 4</span>
+          <span class="badge b-green estado-card-badge">Listo (25/06)</span>
         </div>
-        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>CRUD de tenant, sucursal, mesas y carta</div>
-        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Auth por magic link (generación, envío y verificación)</div>
-        <div class="estado-item"><span class="check" style="color:#C0BEB8;">○</span>Invitación de usuarios internos (encargado / mozo)</div>
+        <div class="estado-item"><span class="check">✓</span>CRUD de tenant, sucursal, mesas y carta</div>
+        <div class="estado-item"><span class="check">✓</span>Auth por magic link (token, cookie JWT, log/Resend)</div>
+        <div class="estado-item"><span class="check">✓</span>Invitación de usuarios internos (encargado / mozo)</div>
+      </div>
+      <div class="estado-card">
+        <div class="estado-card-header">
+          <div class="estado-dot dot-done"></div>
+          <div class="estado-card-title">Servicios de Pedidos + SSE</div>
+          <span class="badge b-green estado-card-badge">Listo (25/06)</span>
+        </div>
+        <div class="estado-item"><span class="check">✓</span>Crear pedido (mesa, ítems, notas y timestamp)</div>
+        <div class="estado-item"><span class="check">✓</span>Gestión y estados del pedido (Dashboard recepcionista)</div>
+        <div class="estado-item"><span class="check">✓</span>Propagación en tiempo real de cambios vía SSE</div>
+      </div>
+      <div class="estado-card">
+        <div class="estado-card-header">
+          <div class="estado-dot dot-done"></div>
+          <div class="estado-card-title">Tests e Integración del Back</div>
+          <span class="badge b-green estado-card-badge">Listo (25/06)</span>
+        </div>
+        <div class="estado-item"><span class="check">✓</span>Tests unitarios completos de los servicios core y auth</div>
+        <div class="estado-item"><span class="check">✓</span>Tests de integración (flujo de pedido contra base real)</div>
+        <div class="estado-item"><span class="check">✓</span>Automatización de tests en pipeline de CI</div>
       </div>
     </div>
 
@@ -524,7 +544,7 @@
   <section class="slide" id="s6">
     <div class="slide-tag">Planificación</div>
     <h1 class="slide-title">Roadmap — 3 fases</h1>
-    <p class="slide-sub">El desarrollo se organiza en tres fases secuenciales, con sprints semanales (lunes a domingo). Inicio: 04/05/2025 · Fin estimado: 12/07/2025.</p>
+    <p class="slide-sub">El desarrollo se organiza en tres fases secuenciales. Inicio: 04/05/2026 · Fin estimado original: 12/07/2026 · Fin estimado actual (con desvíos): 30/07/2026.</p>
 
     <div class="rm-phase">Fase 1 — Frontend funcional sin backend</div>
     <div class="rm-phase-divider"></div>
@@ -532,21 +552,21 @@
       <div class="rm-label">Sprint 0</div>
       <div class="rm-block rm-s0">
         Maqueta base: landing, login, onboarding admin, dashboard (estructura) ✓
-        <div class="rm-date">04/05 – 10/05/2025</div>
+        <div class="rm-date">04/05 – 10/05/2026</div>
       </div>
     </div>
     <div class="rm-row rm-done">
       <div class="rm-label">Sprint 1</div>
       <div class="rm-block rm-s1">
         Happy path Admin completo + dashboard recepcionista (mock) ✓
-        <div class="rm-date">11/05 – 17/05/2025</div>
+        <div class="rm-date">11/05 – 17/05/2026</div>
       </div>
     </div>
     <div class="rm-row rm-done">
       <div class="rm-label">Sprint 2</div>
       <div class="rm-block rm-s1">
         Happy path Cliente completo (carta pública, pedido, seguimiento, cuenta) ✓
-        <div class="rm-date">18/05 – 24/05/2025</div>
+        <div class="rm-date">18/05 – 24/05/2026</div>
       </div>
     </div>
 
@@ -562,28 +582,28 @@
       <div class="rm-label">Sprint 3</div>
       <div class="rm-block rm-s2">
         Stack + base de datos: entidades, relaciones y migraciones ✓
-        <div class="rm-date">25/05 – 31/05/2025</div>
+        <div class="rm-date">25/05 – 06/06/2026 (con desvío)</div>
       </div>
     </div>
-    <div class="rm-row rm-wip">
+    <div class="rm-row rm-done">
       <div class="rm-label">Sprint 4</div>
       <div class="rm-block rm-s3">
-        Servicios core (tenant, sucursal, mesas, carta) + auth magic link <span class="rm-wip-tag">en curso</span>
-        <div class="rm-date">08/06 – 14/06/2025</div>
+        Servicios core (tenant, sucursal, mesas, carta) + auth magic link ✓
+        <div class="rm-date">08/06 – 25/06/2026 (con desvío)</div>
       </div>
     </div>
-    <div class="rm-row">
+    <div class="rm-row rm-done">
       <div class="rm-label">Sprint 5</div>
       <div class="rm-block rm-s3">
-        Servicio de pedidos + tiempo real (SSE)
-        <div class="rm-date">15/06 – 21/06/2025</div>
+        Servicio de pedidos + tiempo real (SSE) ✓
+        <div class="rm-date">26/06 – 02/07/2026 (completado el 25/06)</div>
       </div>
     </div>
-    <div class="rm-row">
+    <div class="rm-row rm-done">
       <div class="rm-label">Sprint 6</div>
       <div class="rm-block rm-s4">
-        Tests unitarios e integración por servicio
-        <div class="rm-date">22/06 – 28/06/2025</div>
+        Tests unitarios e integración por servicio ✓
+        <div class="rm-date">03/07 – 09/07/2026 (completado el 25/06)</div>
       </div>
     </div>
 
@@ -593,21 +613,21 @@
       <div class="rm-label">Sprint 7</div>
       <div class="rm-block rm-s5">
         Conectar front admin + auth con la API real
-        <div class="rm-date">29/06 – 05/07/2025</div>
+        <div class="rm-date">10/07 – 16/07/2026 (estimado)</div>
       </div>
     </div>
     <div class="rm-row">
       <div class="rm-label">Sprint 8</div>
       <div class="rm-block rm-s5">
         Conectar front cliente + recepcionista + tiempo real
-        <div class="rm-date">06/07 – 12/07/2025</div>
+        <div class="rm-date">17/07 – 23/07/2026 (estimado)</div>
       </div>
     </div>
     <div class="rm-row">
       <div class="rm-label">Sprint 9</div>
       <div class="rm-block rm-s6">
         QA end-to-end + polish visual + deploy a producción
-        <div class="rm-date">13/07 – 19/07/2025</div>
+        <div class="rm-date">24/07 – 30/07/2026 (estimado)</div>
       </div>
     </div>
 
@@ -699,49 +719,49 @@
 
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
-        <span class="badge b-orange">Sprint 4 ●</span>
+        <span class="badge b-green">Sprint 4 ✓</span>
         <span class="epica-title">Servicios core + autenticación (magic link)</span>
-        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">08/06–14/06 · en curso</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">08/06–25/06 ✓</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-id">US-23</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, creo un tenant al registrar un negocio con nombre, slug y configuración base</span></div>
-        <div class="us-row"><span class="us-id">US-24</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, gestiono el CRUD de sucursales: nombre, contacto, horarios y relación con el tenant</span></div>
-        <div class="us-row"><span class="us-id">US-25</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, gestiono el CRUD de mesas por sucursal y genero el token único para el QR de cada mesa</span></div>
-        <div class="us-row"><span class="us-id">US-26</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, gestiono el CRUD de artículos, categorías y variantes de la carta</span></div>
-        <div class="us-row"><span class="us-id">US-27</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, genero y valido magic links: creo el token, envío el email y autentico al usuario</span></div>
-        <div class="us-row"><span class="us-id">US-28</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, puedo invitar a un encargado o mozo generando un magic link desde el panel</span></div>
+        <div class="us-row us-done"><span class="us-id">US-23</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, creo un tenant al registrar un negocio con nombre, slug y configuración base</span></div>
+        <div class="us-row us-done"><span class="us-id">US-24</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, gestiono el CRUD de sucursales: nombre, contacto, horarios y relación con el tenant</span></div>
+        <div class="us-row us-done"><span class="us-id">US-25</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, gestiono el CRUD de mesas por sucursal y genero el token único para el QR de cada mesa</span></div>
+        <div class="us-row us-done"><span class="us-id">US-26</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, gestiono el CRUD de artículos, categorías y variantes de la carta</span></div>
+        <div class="us-row us-done"><span class="us-id">US-27</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, genero y valido magic links: creo el token, envío el email y autentico al usuario</span></div>
+        <div class="us-row us-done"><span class="us-id">US-28</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, puedo invitar a un encargado o mozo generando un magic link desde el panel</span></div>
       </div>
     </div>
 
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
-        <span class="badge b-orange">Sprint 5</span>
+        <span class="badge b-green">Sprint 5 ✓</span>
         <span class="epica-title">Servicio de pedidos + tiempo real</span>
-        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">08/06–14/06</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">26/06–02/07 ✓</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-id">US-29</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, creo un pedido con mesa, lista de ítems, notas opcionales y timestamp</span></div>
-        <div class="us-row"><span class="us-id">US-30</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, actualizo el estado de un pedido: Recibido → Preparando → Listo → Cerrado</span></div>
-        <div class="us-row"><span class="us-id">US-31</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, expongo el listado de pedidos activos por sucursal para el dashboard del recepcionista</span></div>
-        <div class="us-row"><span class="us-id">US-32</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, permito agregar ítems a un pedido activo y procesar la solicitud de cuenta</span></div>
-        <div class="us-row"><span class="us-id">US-33</span><span class="us-dev d-int">Int</span><span class="us-text">Como sistema, propago cambios de estado en tiempo real (WebSocket o SSE) al cliente y al recepcionista</span></div>
+        <div class="us-row us-done"><span class="us-id">US-29</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, creo un pedido con mesa, lista de ítems, notas opcionales y timestamp</span></div>
+        <div class="us-row us-done"><span class="us-id">US-30</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, actualizo el estado de un pedido: Recibido → Preparando → Listo → Cerrado</span></div>
+        <div class="us-row us-done"><span class="us-id">US-31</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, expongo el listado de pedidos activos por sucursal para el dashboard del recepcionista</span></div>
+        <div class="us-row us-done"><span class="us-id">US-32</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, permito agregar ítems a un pedido activo y procesar la solicitud de cuenta</span></div>
+        <div class="us-row us-done"><span class="us-id">US-33</span><span class="us-dev d-int">Int</span><span class="us-text">Como sistema, propago cambios de estado en tiempo real (WebSocket o SSE) al cliente y al recepcionista</span></div>
       </div>
     </div>
 
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
-        <span class="badge b-amber">Sprint 6</span>
+        <span class="badge b-green">Sprint 6 ✓</span>
         <span class="epica-title">Tests — unitarios e integración</span>
-        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">15/06–21/06</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">03/07–09/07 ✓</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-id">US-34</span><span class="us-dev d-back">Back</span><span class="us-text">Como desarrollador, tengo tests unitarios para los servicios core (tenant, sucursal, mesa, carta)</span></div>
-        <div class="us-row"><span class="us-id">US-35</span><span class="us-dev d-back">Back</span><span class="us-text">Como desarrollador, tengo tests unitarios para el servicio de auth (generación y validación de magic link)</span></div>
-        <div class="us-row"><span class="us-id">US-36</span><span class="us-dev d-back">Back</span><span class="us-text">Como desarrollador, tengo tests de integración que validan el flujo completo de un pedido contra una BD real</span></div>
-        <div class="us-row"><span class="us-id">US-37</span><span class="us-dev d-int">Int</span><span class="us-text">Como equipo, los tests corren automáticamente en el pipeline de CI ante cada PR</span></div>
+        <div class="us-row us-done"><span class="us-id">US-34</span><span class="us-dev d-back">Back</span><span class="us-text">Como desarrollador, tengo tests unitarios para los servicios core (tenant, sucursal, mesa, carta)</span></div>
+        <div class="us-row us-done"><span class="us-id">US-35</span><span class="us-dev d-back">Back</span><span class="us-text">Como desarrollador, tengo tests unitarios para el servicio de auth (generación y validación de magic link)</span></div>
+        <div class="us-row us-done"><span class="us-id">US-36</span><span class="us-dev d-back">Back</span><span class="us-text">Como desarrollador, tengo tests de integración que validan el flujo completo de un pedido contra una BD real</span></div>
+        <div class="us-row us-done"><span class="us-id">US-37</span><span class="us-dev d-int">Int</span><span class="us-text">Como equipo, los tests corren automáticamente en el pipeline de CI ante cada PR</span></div>
       </div>
     </div>
 
@@ -752,7 +772,7 @@
       <div class="epica-header" onclick="toggle(this)">
         <span class="badge b-purple">Sprint 7</span>
         <span class="epica-title">Integración — flujo admin y autenticación real</span>
-        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">22/06–28/06</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">10/07–16/07</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
@@ -767,7 +787,7 @@
       <div class="epica-header" onclick="toggle(this)">
         <span class="badge b-purple">Sprint 8</span>
         <span class="epica-title">Integración — flujo cliente y recepcionista en tiempo real</span>
-        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">29/06–05/07</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">17/07–23/07</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
@@ -782,7 +802,7 @@
       <div class="epica-header" onclick="toggle(this)">
         <span class="badge b-pink">Sprint 9</span>
         <span class="epica-title">QA end-to-end + polish + deploy</span>
-        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">06/07–12/07</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">24/07–30/07</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
@@ -845,7 +865,7 @@
 
     <div class="slide-tag">Línea de tiempo</div>
     <h1 class="slide-title">Progreso del proyecto</h1>
-    <p class="slide-sub">Los 10 sprints semanales de mayo a julio 2025, organizados por fase. Sprints 0–3 completados, Sprint 4 en curso.</p>
+    <p class="slide-sub">Los 10 sprints semanales de mayo a julio 2026, organizados por fase. Sprints 0–6 completados. Fase 3 (Integración) por comenzar.</p>
 
     <div>
 
@@ -872,12 +892,12 @@
         <div class="tl-content">
           <div class="tl-meta"><span class="tl-sid">Sprint 1</span><span class="tl-date">11/05 – 17/05</span><span class="badge b-green badge-xs">Completado</span></div>
           <div class="tl-title done">Happy path Admin completo</div>
-          <div class="tl-desc done">QR por mesa, gestión de carta (ABM), invitación de usuarios internos y dashboard del recepcionista</div>
+          <div class="tl-desc done">QR por mesa, gestión de carta (ABM), invitation de usuarios internos y dashboard del recepcionista</div>
         </div>
       </div>
 
       <div class="tl-row">
-        <div class="tl-dot-col"><div class="tl-seg tl-seg-done"></div><div class="tl-node tl-node-done">✓</div><div class="tl-seg tl-seg-wip-fade"></div></div>
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-done"></div><div class="tl-node tl-node-done">✓</div><div class="tl-seg tl-seg-done"></div></div>
         <div class="tl-content">
           <div class="tl-meta"><span class="tl-sid">Sprint 2</span><span class="tl-date">18/05 – 24/05</span><span class="badge b-green badge-xs">Completado</span></div>
           <div class="tl-title done">Happy path Cliente completo</div>
@@ -900,43 +920,43 @@
         <div class="tl-phase-bar"><div style="width:2px;height:20px;background:var(--orange);"></div></div>
         <div class="tl-phase-pill f2">
           <span class="tl-phase-name f2">Fase 2 — Backend</span>
-          <span class="tl-phase-range">25/05 → 28/06 · 4 sprints · sprint 3 ✓ · sprint 4 en curso</span>
+          <span class="tl-phase-range">25/05 → 09/07 · 4 sprints · Completada (Sprints 3, 4, 5 y 6 ✓)</span>
         </div>
       </div>
 
       <div class="tl-row">
-        <div class="tl-dot-col"><div class="tl-seg tl-seg-done"></div><div class="tl-node tl-node-done">✓</div><div class="tl-seg tl-seg-wip-fade"></div></div>
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-done"></div><div class="tl-node tl-node-done">✓</div><div class="tl-seg tl-seg-done"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 3</span><span class="tl-date">25/05 – 31/05</span><span class="badge b-green badge-xs">Completado</span></div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 3</span><span class="tl-date">25/05 – 06/06</span><span class="badge b-green badge-xs">Completado</span></div>
           <div class="tl-title done">Stack + base de datos</div>
           <div class="tl-desc done">12 migraciones SQL, esquema de BD, Dockerfile, health check y estructura de rutas (Go + PostgreSQL)</div>
         </div>
       </div>
 
       <div class="tl-row">
-        <div class="tl-dot-col"><div class="tl-seg tl-seg-wip"></div><div class="tl-node tl-node-wip">●</div><div class="tl-seg tl-seg-pending"></div></div>
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-done"></div><div class="tl-node tl-node-done">✓</div><div class="tl-seg tl-seg-done"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 4</span><span class="tl-date">08/06 – 14/06</span><span class="badge b-orange badge-xs">En curso</span></div>
-          <div class="tl-title">Servicios core + autenticación</div>
-          <div class="tl-desc">CRUD de tenant, sucursal, carta y mesas — auth por magic link vía email</div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 4</span><span class="tl-date">08/06 – 25/06</span><span class="badge b-green badge-xs">Completado</span></div>
+          <div class="tl-title done">Servicios core + autenticación</div>
+          <div class="tl-desc done">CRUD de tenant, sucursal, carta y mesas — auth por magic link vía email (Log/Resend)</div>
         </div>
       </div>
 
       <div class="tl-row">
-        <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">5</div><div class="tl-seg tl-seg-pending"></div></div>
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-done"></div><div class="tl-node tl-node-done">✓</div><div class="tl-seg tl-seg-done"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 5</span><span class="tl-date">15/06 – 21/06</span></div>
-          <div class="tl-title">Servicio de pedidos + tiempo real</div>
-          <div class="tl-desc">Creación, estados y gestión de pedidos — propagación en tiempo real con SSE al cliente y recepcionista</div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 5</span><span class="tl-date">26/06 – 02/07</span><span class="badge b-green badge-xs">Completado</span></div>
+          <div class="tl-title done">Servicio de pedidos + tiempo real</div>
+          <div class="tl-desc done">Creación, estados y gestión de pedidos — propagación en tiempo real con SSE al cliente y recepcionista</div>
         </div>
       </div>
 
       <div class="tl-row">
-        <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">6</div><div class="tl-seg tl-seg-pending"></div></div>
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-done"></div><div class="tl-node tl-node-done">✓</div><div class="tl-seg tl-seg-pending"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 6</span><span class="tl-date">22/06 – 28/06</span></div>
-          <div class="tl-title">Tests — unitarios e integración</div>
-          <div class="tl-desc">Tests por servicio, tests de integración contra BD real y pipeline de CI ante cada PR</div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 6</span><span class="tl-date">03/07 – 09/07</span><span class="badge b-green badge-xs">Completado</span></div>
+          <div class="tl-title done">Tests — unitarios e integración</div>
+          <div class="tl-desc done">Tests por servicio, tests de integración contra BD real y pipeline de CI ante cada PR</div>
         </div>
       </div>
 
@@ -945,14 +965,14 @@
         <div class="tl-phase-bar"><div style="width:2px;height:20px;background:repeating-linear-gradient(to bottom,var(--border-strong) 0,var(--border-strong) 3px,transparent 3px,transparent 8px);"></div></div>
         <div class="tl-phase-pill f3">
           <span class="tl-phase-name f3">Fase 3 — Integración</span>
-          <span class="tl-phase-range">22/06 → 12/07 · 3 sprints</span>
+          <span class="tl-phase-range">10/07 → 30/07 · 3 sprints</span>
         </div>
       </div>
 
       <div class="tl-row">
         <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">7</div><div class="tl-seg tl-seg-pending"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 7</span><span class="tl-date">29/06 – 05/07</span></div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 7</span><span class="tl-date">10/07 – 16/07</span></div>
           <div class="tl-title">Integración — flujo admin</div>
           <div class="tl-desc">Login real con magic link, onboarding conectado a API, CRUD de carta y mesas en producción</div>
         </div>
@@ -961,7 +981,7 @@
       <div class="tl-row">
         <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">8</div><div class="tl-seg tl-seg-pending"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 8</span><span class="tl-date">06/07 – 12/07</span></div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 8</span><span class="tl-date">17/07 – 23/07</span></div>
           <div class="tl-title">Integración — flujo cliente y recepcionista</div>
           <div class="tl-desc">Carta y pedidos desde la API real, actualizaciones de estado en tiempo real sin recargar</div>
         </div>
@@ -970,7 +990,7 @@
       <div class="tl-row">
         <div class="tl-dot-col"><div class="tl-seg tl-seg-pending"></div><div class="tl-node tl-node-pending">9</div><div class="tl-seg tl-seg-none"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 9</span><span class="tl-date">13/07 – 19/07</span></div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 9</span><span class="tl-date">24/07 – 30/07</span></div>
           <div class="tl-title">QA end-to-end + polish + deploy</div>
           <div class="tl-desc">Validación de happy paths en staging, responsive mobile, deploy a producción con CI/CD automatizado</div>
         </div>
