@@ -15,6 +15,7 @@ import (
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/auth"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/carta"
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/mesa"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/tenant"
 )
 
@@ -52,6 +53,17 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.Handle("PATCH /carta/articulos/{id}",   auth.Requerir(http.HandlerFunc(cartaH.ActualizarArticulo)))
 	mux.Handle("DELETE /carta/articulos/{id}",  auth.Requerir(http.HandlerFunc(cartaH.EliminarArticulo)))
 	mux.HandleFunc("GET /publica/{sucursal_id}/carta", cartaH.CartaPublica)
+
+	// --- Mesas ---
+	mesaStore := mesa.NuevoStore()
+	mesaSvc := mesa.NuevoService(mesaStore)
+	mesaH := mesa.NuevosHandlers(mesaSvc)
+
+	mux.Handle("GET /mesas",         auth.Requerir(http.HandlerFunc(mesaH.Listar)))
+	mux.Handle("POST /mesas",        auth.Requerir(http.HandlerFunc(mesaH.Crear)))
+	mux.Handle("PATCH /mesas/{id}",  auth.Requerir(http.HandlerFunc(mesaH.Actualizar)))
+	mux.Handle("DELETE /mesas/{id}", auth.Requerir(http.HandlerFunc(mesaH.Eliminar)))
+	mux.HandleFunc("GET /publica/mesa/{qr_token}", mesaH.MesaPorQR)
 }
 
 // handlerHealth responde con el estado del servidor.
