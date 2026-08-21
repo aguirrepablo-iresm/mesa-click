@@ -97,8 +97,8 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.HandleFunc("GET /pedidos/{id}/eventos", notificacionH.EventosPedido)
 
 	// Públicos (sin auth — cliente con QR)
-	mux.HandleFunc("GET /publica/{sucursal_id}/carta", cartaH.CartaPublica)
-	mux.HandleFunc("GET /publica/mesa/{qr_token}", mesaH.MesaPorQR)
+	mux.HandleFunc("GET /publica/sucursales/{sucursal_id}/carta", cartaH.CartaPublica)
+	mux.HandleFunc("GET /publica/mesas/{qr_token}", mesaH.MesaPorQR)
 }
 
 func handlerHealth(w http.ResponseWriter, r *http.Request) {

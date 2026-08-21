@@ -15,12 +15,14 @@ const PASO_LABELS: Record<EstadoPedido, string> = {
   recibido: 'Pedido recibido',
   preparando: 'En preparación',
   listo: '¡Listo para retirar!',
+  cerrado: 'Pedido finalizado',
 };
 
 const DEMORA_LABELS: Record<EstadoPedido, string> = {
   recibido: 'Estimado: ~15 min',
   preparando: 'Estimado: ~8 min',
   listo: '¡Tu pedido está listo!',
+  cerrado: 'Mesa cerrada',
 };
 
 export default function SeguimientoView({

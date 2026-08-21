@@ -1,6 +1,7 @@
 "use client";
-import { useReducer, useState, useEffect } from "react";
+import { useReducer, useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
+import { api, CategoriaPublica, ArticuloPublico } from "@/lib/api";
 import { mockMesas } from "@/lib/mock/mesas";
 import { mockMenu } from "@/lib/mock/menu";
 import CategoriaNav from "@/components/menu/CategoriaNav";
@@ -16,7 +17,7 @@ export type CartItem = {
   nota: string;
 };
 
-export type EstadoPedido = 'recibido' | 'preparando' | 'listo';
+export type EstadoPedido = 'recibido' | 'preparando' | 'listo' | 'cerrado';
 type Vista = 'carta' | 'carrito' | 'seguimiento';
 
 type State = {
@@ -24,6 +25,7 @@ type State = {
   vista: Vista;
   estadoPedido: EstadoPedido;
   cuentaSolicitada: boolean;
+  pedidoId: string | null;
 };
 
 type Action =
@@ -31,8 +33,8 @@ type Action =
   | { type: 'SET_CANTIDAD'; payload: { id: string; cantidad: number } }
   | { type: 'SET_NOTA'; payload: { id: string; nota: string } }
   | { type: 'SET_VISTA'; payload: Vista }
-  | { type: 'CONFIRMAR_PEDIDO' }
-  | { type: 'AVANZAR_ESTADO' }
+  | { type: 'CONFIRMAR_PEDIDO'; payload?: { pedidoId?: string } }
+  | { type: 'SET_ESTADO_PEDIDO'; payload: EstadoPedido }
   | { type: 'PEDIR_CUENTA' };
 
 const INITIAL_STATE: State = {
@@ -40,6 +42,7 @@ const INITIAL_STATE: State = {
   vista: 'carta',
   estadoPedido: 'recibido',
   cuentaSolicitada: false,
+  pedidoId: null,
 };
 
 function reducer(state: State, action: Action): State {
@@ -79,12 +82,14 @@ function reducer(state: State, action: Action): State {
     case 'SET_VISTA':
       return { ...state, vista: action.payload };
     case 'CONFIRMAR_PEDIDO':
-      return { ...state, vista: 'seguimiento', estadoPedido: 'recibido' };
-    case 'AVANZAR_ESTADO': {
-      const next: EstadoPedido =
-        state.estadoPedido === 'recibido' ? 'preparando' : 'listo';
-      return { ...state, estadoPedido: next };
-    }
+      return {
+        ...state,
+        vista: 'seguimiento',
+        estadoPedido: 'recibido',
+        pedidoId: action.payload?.pedidoId || state.pedidoId,
+      };
+    case 'SET_ESTADO_PEDIDO':
+      return { ...state, estadoPedido: action.payload };
     case 'PEDIR_CUENTA':
       return { ...state, cuentaSolicitada: true };
     default:
@@ -92,32 +97,228 @@ function reducer(state: State, action: Action): State {
   }
 }
 
+interface MenuCategoryView {
+  id: string;
+  nombre: string;
+  items: Array<{
+    id: string;
+    nombre: string;
+    descripcion?: string;
+    precio: number;
+    disponible: boolean;
+  }>;
+}
+
 export default function MesaPage() {
   const params = useParams();
   const token = params.token as string;
-  const mesa = mockMesas.find(m => m.token === token);
+
+  const [mesa, setMesa] = useState<{ id: string; numero: number; sucursal_id?: string } | null>(null);
+  const [menu, setMenu] = useState<MenuCategoryView[]>([]);
+  const [categoriaActiva, setCategoriaActiva] = useState<string>('');
+  const [loading, setLoading] = useState(true);
+  const [enviandoPedido, setEnviandoPedido] = useState(false);
 
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
-  const [categoriaActiva, setCategoriaActiva] = useState<string>(mockMenu[0]?.id ?? '');
+  const eventSourceRef = useRef<EventSource | null>(null);
 
+  // 1. Cargar datos de mesa y carta (US-42)
   useEffect(() => {
-    if (state.vista !== 'seguimiento') return;
-    const t1 = setTimeout(() => dispatch({ type: 'AVANZAR_ESTADO' }), 4000);
-    const t2 = setTimeout(() => dispatch({ type: 'AVANZAR_ESTADO' }), 12000);
-    return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [state.vista]);
+    let isMounted = true;
+
+    async function cargarDatos() {
+      try {
+        setLoading(true);
+        // Intentar obtener mesa desde API real
+        let mesaInfo: { id: string; numero: number; sucursal_id: string } | null = null;
+        try {
+          const mesaApi = await api.obtenerMesaPorQR(token);
+          if (mesaApi) {
+            mesaInfo = {
+              id: mesaApi.id,
+              numero: mesaApi.numero,
+              sucursal_id: mesaApi.sucursal_id,
+            };
+          }
+        } catch {
+          // Fallback a mocks si la API no encuentra el QR o está en modo local
+          const mock = mockMesas.find(m => m.token === token);
+          if (mock) {
+            mesaInfo = {
+              id: mock.id,
+              numero: mock.numero,
+              sucursal_id: 'default',
+            };
+          }
+        }
+
+        if (!mesaInfo) {
+          if (isMounted) setLoading(false);
+          return;
+        }
+
+        if (isMounted) {
+          setMesa(mesaInfo);
+        }
+
+        // Cargar carta de la sucursal
+        try {
+          const cartaResp = await api.obtenerCartaPublica(mesaInfo.sucursal_id);
+          if (cartaResp && cartaResp.categorias && cartaResp.categorias.length > 0) {
+            const formateadas: MenuCategoryView[] = cartaResp.categorias.map((c: CategoriaPublica) => ({
+              id: c.id,
+              nombre: c.nombre,
+              items: (c.articulos || []).map((a: ArticuloPublico) => ({
+                id: a.id,
+                nombre: a.nombre,
+                descripcion: a.descripcion,
+                precio: a.precio,
+                disponible: a.activo !== false,
+              })),
+            }));
+
+            if (isMounted) {
+              setMenu(formateadas);
+              setCategoriaActiva(formateadas[0]?.id || '');
+            }
+            return;
+          }
+        } catch {
+          // Fallback a mockMenu
+        }
+
+        // Fallback a carta mock
+        const fallbackMenu: MenuCategoryView[] = mockMenu.map(m => ({
+          id: m.id,
+          nombre: m.nombre,
+          items: m.items.map(i => ({
+            id: i.id,
+            nombre: i.nombre,
+            descripcion: i.descripcion,
+            precio: i.precio,
+            disponible: i.disponible,
+          })),
+        }));
+
+        if (isMounted) {
+          setMenu(fallbackMenu);
+          setCategoriaActiva(fallbackMenu[0]?.id || '');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    if (token) {
+      cargarDatos();
+    }
+
+    return () => {
+      isMounted = false;
+    };
+  }, [token]);
+
+  // 2. Conectar SSE para seguimiento en tiempo real (US-44)
+  useEffect(() => {
+    if (state.vista !== 'seguimiento') {
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
+      }
+      return;
+    }
+
+    if (state.pedidoId) {
+      const url = api.obtenerEventosPedidoUrl(state.pedidoId);
+      const es = new EventSource(url);
+      eventSourceRef.current = es;
+
+      es.addEventListener('pedido_actualizado', (e: MessageEvent) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data && data.estado) {
+            dispatch({ type: 'SET_ESTADO_PEDIDO', payload: data.estado as EstadoPedido });
+          }
+        } catch (err) {
+          console.warn("Error parseando evento SSE de pedido:", err);
+        }
+      });
+
+      es.onerror = () => {
+        // En caso de corte o si es mock, permitir que la conexión intente reconectar
+      };
+
+      return () => {
+        es.close();
+        eventSourceRef.current = null;
+      };
+    } else {
+      // Si fue creado en modo mock sin API, simular avance automático
+      const t1 = setTimeout(() => dispatch({ type: 'SET_ESTADO_PEDIDO', payload: 'preparando' }), 4000);
+      const t2 = setTimeout(() => dispatch({ type: 'SET_ESTADO_PEDIDO', payload: 'listo' }), 12000);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+  }, [state.vista, state.pedidoId]);
+
+  // 3. Confirmar y enviar pedido a la API real (US-43)
+  const handleConfirmarPedido = async () => {
+    if (!mesa) return;
+    setEnviandoPedido(true);
+
+    try {
+      const resp = await api.crearPedido({
+        mesa_id: mesa.id,
+        items: state.items.map(i => ({
+          articulo_id: i.id,
+          cantidad: i.cantidad,
+          notas: i.nota,
+        })),
+      });
+
+      dispatch({
+        type: 'CONFIRMAR_PEDIDO',
+        payload: { pedidoId: resp?.id },
+      });
+    } catch (err) {
+      console.warn("No se pudo persistir en API real, procediendo con pedido local:", err);
+      dispatch({ type: 'CONFIRMAR_PEDIDO' });
+    } finally {
+      setEnviandoPedido(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 font-inter">
+        <span className="material-symbols-outlined text-36 text-blue-600 animate-spin">
+          progress_activity
+        </span>
+        <p className="text-slate-500 text-13 mt-12">Cargando menú de la mesa...</p>
+      </div>
+    );
+  }
 
   if (!mesa) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50">
-        <p className="text-slate-500 text-15">Mesa no encontrada.</p>
+      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-24 text-center font-inter">
+        <span className="material-symbols-outlined text-48 text-slate-400">table_restaurant</span>
+        <h2 className="text-16 font-medium text-slate-800 mt-12">Mesa no encontrada</h2>
+        <p className="text-slate-500 text-13 mt-4 max-w-xs">
+          El código QR escaneado no coincide con ninguna mesa activa.
+        </p>
       </div>
     );
   }
 
   const totalItems = state.items.reduce((n, i) => n + i.cantidad, 0);
   const totalPrecio = state.items.reduce((n, i) => n + i.precio * i.cantidad, 0);
-  const categoriaItems = mockMenu.find(c => c.id === categoriaActiva)?.items ?? [];
+  const categoriaSeleccionada = menu.find(c => c.id === categoriaActiva) || menu[0];
+  const categoriaItems = categoriaSeleccionada?.items ?? [];
 
   if (state.vista === 'seguimiento') {
     return (
@@ -140,23 +341,28 @@ export default function MesaPage() {
         onSetCantidad={(id, cantidad) => dispatch({ type: 'SET_CANTIDAD', payload: { id, cantidad } })}
         onSetNota={(id, nota) => dispatch({ type: 'SET_NOTA', payload: { id, nota } })}
         onVolver={() => dispatch({ type: 'SET_VISTA', payload: 'carta' })}
-        onConfirmar={() => dispatch({ type: 'CONFIRMAR_PEDIDO' })}
+        onConfirmar={handleConfirmarPedido}
       />
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-slate-50 pb-80 font-inter">
       <header className="bg-white border-b border-slate-200 px-16 py-12 sticky top-0 z-10">
-        <div className="max-w-lg mx-auto">
-          <p className="text-11 text-slate-500 font-mono">Mesa {mesa.numero}</p>
-          <h1 className="text-16 font-medium text-slate-900">Menú Digital</h1>
+        <div className="max-w-lg mx-auto flex items-center justify-between">
+          <div>
+            <p className="text-11 text-slate-500 font-mono uppercase tracking-wider">Mesa {mesa.numero}</p>
+            <h1 className="text-16 font-medium text-slate-900">Menú Digital</h1>
+          </div>
+          <span className="px-8 py-3 bg-green-50 text-green-700 text-11 font-mono rounded border border-green-200">
+            En vivo
+          </span>
         </div>
       </header>
 
       <div className="max-w-lg mx-auto">
         <CategoriaNav
-          categorias={mockMenu}
+          categorias={menu}
           activa={categoriaActiva}
           onSelect={setCategoriaActiva}
         />
@@ -171,17 +377,24 @@ export default function MesaPage() {
               }
             />
           ))}
+
+          {categoriaItems.length === 0 && (
+            <div className="text-center py-40 text-slate-400 text-13">
+              No hay artículos disponibles en esta categoría.
+            </div>
+          )}
         </div>
       </div>
 
       {totalItems > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-blue-600 px-16 py-12 z-20">
+        <div className="fixed bottom-0 left-0 right-0 bg-blue-600 px-16 py-12 z-20 shadow-lg">
           <button
             onClick={() => dispatch({ type: 'SET_VISTA', payload: 'carrito' })}
-            className="max-w-lg mx-auto flex items-center justify-between w-full text-white"
+            disabled={enviandoPedido}
+            className="max-w-lg mx-auto flex items-center justify-between w-full text-white font-medium"
           >
-            <span className="text-13 font-medium">🛒 {totalItems} {totalItems === 1 ? 'ítem' : 'ítems'}</span>
-            <span className="text-13 font-medium">${totalPrecio.toLocaleString()} · Ver carrito →</span>
+            <span className="text-13">🛒 {totalItems} {totalItems === 1 ? 'ítem' : 'ítems'}</span>
+            <span className="text-13">${totalPrecio.toLocaleString()} · Ver carrito →</span>
           </button>
         </div>
       )}

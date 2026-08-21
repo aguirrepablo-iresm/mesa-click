@@ -1,9 +1,11 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import CartaSection from "@/components/dashboard/CartaSection";
 import MesasSection from "@/components/dashboard/MesasSection";
 import EquipoSection from "@/components/dashboard/EquipoSection";
 import RecepcionistaSection from "@/components/dashboard/RecepcionistaSection";
+import { api, cerrarSesion, estaAutenticado, Tenant } from "@/lib/api";
 
 type Section = 'carta' | 'mesas' | 'equipo' | 'recepcionista';
 
@@ -24,9 +26,30 @@ function renderSection(section: Section) {
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState<Section>('carta');
   const [isExpanded, setIsExpanded] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [tenant, setTenant] = useState<Tenant | null>(null);
+
+  useEffect(() => {
+    async function loadTenant() {
+      if (estaAutenticado()) {
+        try {
+          const t = await api.obtenerMiTenant();
+          setTenant(t);
+        } catch (err) {
+          console.warn("No se pudo cargar tenant:", err);
+        }
+      }
+    }
+    loadTenant();
+  }, []);
+
+  const handleLogout = () => {
+    cerrarSesion();
+    router.push("/login");
+  };
 
   return (
     <div className="h-screen flex flex-col bg-canvas-white font-inter overflow-hidden">
@@ -40,8 +63,13 @@ export default function DashboardPage() {
           </button>
           <h1 className="text-15 font-medium tracking-tight">Mesa CLICK</h1>
           <span className="text-11 font-mono text-sage-green uppercase tracking-wider border-l border-ghost-fog pl-8">
-            Admin
+            {tenant ? tenant.nombre : "Admin"}
           </span>
+          {tenant && (
+            <span className="hidden sm:inline-block px-6 py-1 bg-ghost-fog border border-ash-graphite/20 text-10 font-mono text-sage-green rounded">
+              /{tenant.slug}
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-16">
           <button className="material-symbols-outlined text-ash-graphite hover:text-plain-green transition-colors text-20">
@@ -59,12 +87,14 @@ export default function DashboardPage() {
                 <div className="fixed inset-0 z-10" onClick={() => setIsUserMenuOpen(false)} />
                 <div className="absolute right-0 mt-8 w-90 bg-canvas-white border border-system-black rounded-md shadow-sm z-20 py-8 overflow-hidden">
                   <div className="px-16 py-8 border-b border-ghost-fog mb-4">
-                    <p className="text-11 font-medium text-ash-graphite">Administrador</p>
-                    <p className="text-11 font-mono text-sage-green truncate">admin@mesaclick.com</p>
+                    <p className="text-11 font-medium text-ash-graphite">{tenant ? tenant.nombre : "Administrador"}</p>
+                    <p className="text-11 font-mono text-sage-green truncate">Sesión activa</p>
                   </div>
                   <UserMenuItem icon="account_circle" label="Perfil" />
                   <div className="mt-8 pt-8 border-t border-ghost-fog">
-                    <UserMenuItem icon="logout" label="Salir" isDanger />
+                    <div onClick={handleLogout}>
+                      <UserMenuItem icon="logout" label="Salir" isDanger />
+                    </div>
                   </div>
                 </div>
               </>

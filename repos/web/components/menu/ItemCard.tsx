@@ -1,7 +1,14 @@
-import { MenuItem } from "@/lib/mock/menu";
+export interface ItemCardData {
+  id: string;
+  nombre: string;
+  precio: number;
+  descripcion?: string;
+  disponible?: boolean;
+  activo?: boolean;
+}
 
 interface Props {
-  item: MenuItem;
+  item: ItemCardData;
   cantidad: number;
   onAgregar: () => void;
 }

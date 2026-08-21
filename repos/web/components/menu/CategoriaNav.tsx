@@ -1,7 +1,10 @@
-import { Categoria } from "@/lib/mock/menu";
+export interface CategoriaItemNav {
+  id: string;
+  nombre: string;
+}
 
 interface Props {
-  categorias: Categoria[];
+  categorias: CategoriaItemNav[];
   activa: string;
   onSelect: (id: string) => void;
 }

@@ -29,6 +29,11 @@ func Requerir(next http.Handler) http.Handler {
 				tokenStr = c.Value
 			}
 		}
+		if tokenStr == "" {
+			if q := r.URL.Query().Get("token"); q != "" {
+				tokenStr = q
+			}
+		}
 
 		if tokenStr == "" {
 			w.Header().Set("Content-Type", "application/json")

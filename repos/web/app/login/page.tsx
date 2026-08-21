@@ -2,28 +2,32 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { api } from "@/lib/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const router = useRouter();
+  const [enviado, setEnviado] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSolicitarLink = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!email.trim() || !email.includes("@")) {
+      setError("Por favor ingresa un email válido.");
+      return;
+    }
+
     setLoading(true);
-    
-    // Simulación de autenticación
-    setTimeout(() => {
-      // Credenciales de prueba
-      if (email === "admin@mesaclick.com" && password === "admin123") {
-        router.push("/dashboard");
-      } else {
-        alert("Credenciales incorrectas (Usa admin@mesaclick.com / admin123 para probar)");
-        setLoading(false);
-      }
-    }, 1000);
+    setError("");
+
+    try {
+      await api.solicitarMagicLink(email.trim());
+      setEnviado(true);
+    } catch (err: any) {
+      setError(err.message || "Error al solicitar el enlace de acceso.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -42,81 +46,87 @@ export default function LoginPage() {
 
         {/* Login Card */}
         <div className="bg-vanilla-cream p-32 rounded-xl border border-system-black shadow-sm space-y-24">
-          <form onSubmit={handleSubmit} className="space-y-20">
-            <div className="space-y-8">
-              <label 
-                htmlFor="email" 
-                className="text-11 font-mono text-sage-green uppercase tracking-widest px-4"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@mesaclick.com"
-                className="w-full h-40 px-12 bg-canvas-white border border-ash-graphite rounded-md focus:border-plain-green transition-all text-14 outline-none"
-              />
-            </div>
-
-            <div className="space-y-8">
-              <div className="flex items-center justify-between px-4">
-                <label 
-                  htmlFor="password" 
-                  className="text-11 font-mono text-sage-green uppercase tracking-widest"
+          {enviado ? (
+            <div className="text-center space-y-16 py-8">
+              <span className="material-symbols-outlined text-44 text-plain-green">
+                mark_email_read
+              </span>
+              <div className="space-y-4">
+                <h3 className="text-16 font-medium text-ash-graphite">
+                  ¡Enlace de acceso enviado!
+                </h3>
+                <p className="text-13 text-sage-green leading-relaxed">
+                  Revisá tu casilla de correo en <span className="font-mono text-ash-graphite font-medium">{email}</span> y hacé clic en el enlace para ingresar al panel.
+                </p>
+              </div>
+              <div className="pt-8">
+                <button
+                  onClick={() => setEnviado(false)}
+                  className="text-12 font-medium text-plain-green hover:underline"
                 >
-                  Contraseña
-                </label>
-                <button type="button" className="text-10 font-medium text-plain-green hover:underline uppercase tracking-tighter">
-                  Olvidé mi clave
+                  Intentar con otro email
                 </button>
               </div>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full h-40 px-12 bg-canvas-white border border-ash-graphite rounded-md focus:border-plain-green transition-all text-14 outline-none"
-              />
             </div>
+          ) : (
+            <form onSubmit={handleSolicitarLink} className="space-y-20">
+              <div className="space-y-8">
+                <label 
+                  htmlFor="email" 
+                  className="text-11 font-mono text-sage-green uppercase tracking-widest px-4"
+                >
+                  Email del Negocio o Usuario
+                </label>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="admin@mibar.com"
+                  className="w-full h-40 px-12 bg-canvas-white border border-ash-graphite rounded-md focus:border-plain-green transition-all text-14 outline-none"
+                />
+              </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full h-44 bg-plain-green text-ash-graphite font-bold rounded-md hover:bg-plain-green-muted active:scale-95 transition-all shadow-lg shadow-plain-green/10 flex items-center justify-center gap-8 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <span className="animate-spin material-symbols-outlined">progress_activity</span>
-              ) : (
-                <>
-                  Entrar al Panel
-                  <span className="material-symbols-outlined text-18">login</span>
-                </>
+              {error && (
+                <div className="p-8 bg-red-50 border border-alert-red/30 rounded text-12 text-alert-red">
+                  {error}
+                </div>
               )}
-            </button>
-          </form>
 
-          <div className="flex items-center py-8">
-            <div className="flex-grow border-t border-ghost-fog"></div>
-            <span className="px-12 text-11 font-mono text-sage-green">O</span>
-            <div className="flex-grow border-t border-ghost-fog"></div>
-          </div>
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full h-44 bg-plain-green text-ash-graphite font-bold rounded-md hover:bg-plain-green-muted active:scale-95 transition-all shadow-lg shadow-plain-green/10 flex items-center justify-center gap-8 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <span className="animate-spin material-symbols-outlined text-20">progress_activity</span>
+                ) : (
+                  <>
+                    Enviar Magic Link
+                    <span className="material-symbols-outlined text-18">send</span>
+                  </>
+                )}
+              </button>
 
-          <button className="w-full h-40 bg-ghost-fog border border-ash-graphite/10 text-ash-graphite text-13 font-medium rounded-md hover:bg-plain-green/5 transition-all flex items-center justify-center gap-8">
-            <span className="material-symbols-outlined text-18">auto_fix</span>
-            Entrar con Magic Link
-          </button>
+              <div className="p-12 bg-ghost-fog rounded-md border border-ghost-fog text-12 text-sage-green space-y-4">
+                <div className="flex items-center gap-6 font-medium text-ash-graphite">
+                  <span className="material-symbols-outlined text-16 text-plain-green">auto_fix</span>
+                  <span>Sin contraseñas</span>
+                </div>
+                <p className="text-11 leading-normal">
+                  Recibirás un enlace seguro de un solo uso en tu correo electrónico para acceder sin necesidad de recordar contraseñas.
+                </p>
+              </div>
+            </form>
+          )}
         </div>
 
         {/* Footer Link */}
         <p className="text-center text-13 text-sage-green">
-          ¿No tienes una cuenta?{" "}
+          ¿No tienes un negocio registrado?{" "}
           <Link href="/onboarding" className="text-plain-green font-semibold hover:underline">
-            Regístrate ahora
+            Registrar mi negocio
           </Link>
         </p>
       </div>
