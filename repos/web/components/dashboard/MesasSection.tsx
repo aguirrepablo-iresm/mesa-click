@@ -11,7 +11,7 @@ function QRCanvas({ token }: { token: string }) {
     if (!canvasRef.current) return;
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const url = `${origin}/mesa/${token}`;
-    QRCode.toCanvas(canvasRef.current, url, { width: 150, margin: 1 });
+    QRCode.toCanvas(canvasRef.current, url, { width: 140, margin: 1 });
   }, [token]);
 
   const handleDownload = () => {
@@ -24,11 +24,13 @@ function QRCanvas({ token }: { token: string }) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-8">
-      <canvas ref={canvasRef} className="rounded-md" />
+    <div className="flex flex-col items-center gap-8 w-full">
+      <div className="bg-canvas-white p-4 rounded-md border border-ghost-fog flex items-center justify-center">
+        <canvas ref={canvasRef} className="max-w-full h-auto rounded" />
+      </div>
       <button
         onClick={handleDownload}
-        className="w-full px-10 py-6 text-12 font-medium text-plain-green-muted border border-plain-green-muted rounded-md hover:bg-ghost-fog transition-colors flex items-center justify-center gap-4"
+        className="w-full px-8 py-6 text-12 font-medium text-plain-green-muted border border-plain-green-muted rounded-md hover:bg-ghost-fog transition-colors flex items-center justify-center gap-4"
       >
         <span className="material-symbols-outlined text-16">download</span>
         Descargar QR
@@ -174,8 +176,8 @@ export default function MesasSection() {
       )}
 
       {mostrarFormMesa && (
-        <form onSubmit={handleCrearMesa} className="p-16 border border-plain-green rounded-md bg-ghost-fog flex items-center gap-12 flex-wrap">
-          <div className="space-y-4">
+        <form onSubmit={handleCrearMesa} className="p-16 border border-plain-green rounded-md bg-ghost-fog flex flex-col sm:flex-row items-stretch sm:items-end gap-12">
+          <div className="space-y-4 flex-1">
             <label className="text-11 font-mono text-sage-green uppercase">Número de Mesa</label>
             <input
               type="number"
@@ -184,10 +186,10 @@ export default function MesasSection() {
               placeholder="Ej: 1"
               value={nuevoNumero}
               onChange={e => setNuevoNumero(e.target.value)}
-              className="w-120 px-12 py-8 text-13 bg-canvas-white rounded-md border border-ash-graphite"
+              className="w-full px-12 py-8 text-13 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
             />
           </div>
-          <div className="space-y-4">
+          <div className="space-y-4 flex-1">
             <label className="text-11 font-mono text-sage-green uppercase">Capacidad (Sillas)</label>
             <input
               type="number"
@@ -195,15 +197,15 @@ export default function MesasSection() {
               placeholder="4"
               value={nuevaCapacidad}
               onChange={e => setNuevaCapacidad(e.target.value)}
-              className="w-100 px-12 py-8 text-13 bg-canvas-white rounded-md border border-ash-graphite"
+              className="w-full px-12 py-8 text-13 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
             />
           </div>
-          <div className="flex items-center gap-8 self-end pt-16">
+          <div className="flex items-center gap-8 pt-4 sm:pt-0">
             <button
               type="submit"
-              className="px-16 py-8 bg-plain-green text-ash-graphite text-13 font-medium rounded-md"
+              className="flex-1 sm:flex-initial px-16 py-8 bg-plain-green text-ash-graphite text-13 font-medium rounded-md hover:opacity-90 transition-opacity"
             >
-              Guardar Mesa
+              Guardar
             </button>
             <button
               type="button"
@@ -216,21 +218,21 @@ export default function MesasSection() {
         </form>
       )}
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-16">
+      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-16">
         {mesas.map(mesa => (
-          <div key={mesa.id} className="border border-ash-graphite rounded-lg p-16 space-y-12 bg-canvas-white">
-            <div className="flex items-center justify-between">
+          <div key={mesa.id} className="border border-ash-graphite rounded-lg p-16 space-y-12 bg-canvas-white flex flex-col items-center">
+            <div className="flex items-center justify-between w-full">
               <span className="text-15 font-medium text-ash-graphite">Mesa {mesa.numero}</span>
               <button
                 onClick={() => handleEliminarMesa(mesa.id)}
                 title="Eliminar mesa"
-                className="text-12 text-alert-red hover:opacity-70"
+                className="p-4 text-12 text-alert-red hover:opacity-70"
               >
                 ✕
               </button>
             </div>
             <QRCanvas token={mesa.qr_token} />
-            <div className="space-y-2">
+            <div className="space-y-2 w-full">
               <p className="text-9 font-mono text-sage-green text-center break-all truncate">
                 {mesa.qr_token}
               </p>

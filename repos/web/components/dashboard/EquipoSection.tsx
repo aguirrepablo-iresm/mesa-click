@@ -162,7 +162,7 @@ export default function EquipoSection() {
         <div className="px-20 py-10 bg-vanilla-cream border-b border-ash-graphite">
           <p className="text-11 font-mono text-sage-green uppercase tracking-wider">Invitar nuevo miembro</p>
         </div>
-        <form onSubmit={handleInvitar} className="p-20 space-y-12">
+        <form onSubmit={handleInvitar} className="p-16 sm:p-20 space-y-12">
           <div className="flex flex-col sm:flex-row gap-12">
             <input
               className="flex-1 px-12 py-8 text-13 rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-plain-green"
@@ -178,9 +178,9 @@ export default function EquipoSection() {
               onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
             />
           </div>
-          <div className="flex items-center gap-12 flex-wrap">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-12">
             <select
-              className="px-12 py-8 text-13 rounded-md bg-canvas-white border border-ash-graphite outline-none focus:border-plain-green"
+              className="w-full sm:w-auto px-12 py-8 text-13 rounded-md bg-canvas-white border border-ash-graphite outline-none focus:border-plain-green"
               value={form.rol}
               onChange={e => setForm(p => ({ ...p, rol: e.target.value as RolInvitable }))}
             >
@@ -189,7 +189,7 @@ export default function EquipoSection() {
             </select>
             <button
               type="submit"
-              className="px-16 py-8 bg-plain-green text-ash-graphite text-13 font-medium rounded-md hover:opacity-90 transition-opacity"
+              className="w-full sm:w-auto px-16 py-8 bg-plain-green text-ash-graphite text-13 font-medium rounded-md hover:opacity-90 transition-opacity text-center"
             >
               Generar Magic Link de Invitación
             </button>
@@ -198,7 +198,7 @@ export default function EquipoSection() {
           {invitacionLink && (
             <div className="p-12 bg-ghost-fog border border-plain-green rounded-md space-y-8">
               <p className="text-12 text-plain-green font-medium">✓ Invitación generada correctamente:</p>
-              <div className="flex items-center gap-8">
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-8">
                 <input
                   type="text"
                   readOnly
@@ -208,7 +208,7 @@ export default function EquipoSection() {
                 <button
                   type="button"
                   onClick={handleCopiarLink}
-                  className="px-12 py-6 text-12 font-medium bg-plain-green text-ash-graphite rounded hover:opacity-90"
+                  className="px-16 py-6 text-12 font-medium bg-plain-green text-ash-graphite rounded hover:opacity-90 text-center"
                 >
                   {copiado ? "¡Copiado!" : "Copiar Link"}
                 </button>

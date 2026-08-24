@@ -387,15 +387,20 @@ export default function MesaPage() {
       </div>
 
       {totalItems > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 bg-blue-600 px-16 py-12 z-20 shadow-lg">
-          <button
-            onClick={() => dispatch({ type: 'SET_VISTA', payload: 'carrito' })}
-            disabled={enviandoPedido}
-            className="max-w-lg mx-auto flex items-center justify-between w-full text-white font-medium"
-          >
-            <span className="text-13">🛒 {totalItems} {totalItems === 1 ? 'ítem' : 'ítems'}</span>
-            <span className="text-13">${totalPrecio.toLocaleString()} · Ver carrito →</span>
-          </button>
+        <div className="fixed bottom-0 left-0 right-0 p-16 z-20 pointer-events-none">
+          <div className="max-w-lg mx-auto pointer-events-auto">
+            <button
+              onClick={() => dispatch({ type: 'SET_VISTA', payload: 'carrito' })}
+              disabled={enviandoPedido}
+              className="w-full bg-blue-600 hover:bg-blue-700 active:scale-98 text-white px-20 py-14 rounded-xl shadow-xl flex items-center justify-between font-medium transition-all"
+            >
+              <div className="flex items-center gap-8">
+                <span className="text-16">🛒</span>
+                <span className="text-14 font-semibold">{totalItems} {totalItems === 1 ? 'ítem' : 'ítems'}</span>
+              </div>
+              <span className="text-14 font-mono font-semibold">${totalPrecio.toLocaleString()} · Ver carrito →</span>
+            </button>
+          </div>
         </div>
       )}
     </div>

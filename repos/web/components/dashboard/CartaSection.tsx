@@ -241,7 +241,7 @@ export default function CartaSection() {
       )}
 
       {mostrarFormCat && (
-        <div className="flex items-center gap-8 p-16 border border-plain-green rounded-md bg-ghost-fog">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-8 p-16 border border-plain-green rounded-md bg-ghost-fog">
           <input
             className="flex-1 px-12 py-8 text-13 bg-canvas-white rounded-md border border-ash-graphite focus:border-plain-green outline-none"
             placeholder="Nombre de la categoría"
@@ -250,50 +250,52 @@ export default function CartaSection() {
             onKeyDown={e => e.key === 'Enter' && agregarCategoria()}
             autoFocus
           />
-          <button
-            onClick={agregarCategoria}
-            className="px-12 py-8 bg-plain-green text-ash-graphite text-13 font-medium rounded-md"
-          >
-            Agregar
-          </button>
-          <button
-            onClick={() => setMostrarFormCat(false)}
-            className="px-12 py-8 text-sage-green text-13 hover:text-ash-graphite"
-          >
-            Cancelar
-          </button>
+          <div className="flex items-center gap-8 justify-end">
+            <button
+              onClick={agregarCategoria}
+              className="flex-1 sm:flex-initial px-16 py-8 bg-plain-green text-ash-graphite text-13 font-medium rounded-md hover:opacity-90"
+            >
+              Agregar
+            </button>
+            <button
+              onClick={() => setMostrarFormCat(false)}
+              className="px-12 py-8 text-sage-green text-13 hover:text-ash-graphite"
+            >
+              Cancelar
+            </button>
+          </div>
         </div>
       )}
 
       <div className="space-y-16">
         {categorias.map(cat => (
-          <div key={cat.id} className="border border-ash-graphite rounded-lg overflow-hidden">
-            <div className="flex items-center justify-between px-20 py-12 bg-vanilla-cream border-b border-ash-graphite">
-              <h3 className="text-15 font-medium text-ash-graphite">{cat.nombre}</h3>
-              <div className="flex items-center gap-8">
+          <div key={cat.id} className="border border-ash-graphite rounded-lg overflow-hidden bg-canvas-white">
+            <div className="flex items-center justify-between px-16 sm:px-20 py-12 bg-vanilla-cream border-b border-ash-graphite">
+              <h3 className="text-15 font-medium text-ash-graphite truncate pr-8">{cat.nombre}</h3>
+              <div className="flex items-center gap-8 shrink-0">
                 <button
                   onClick={() => {
                     setMostrarFormItem(cat.id);
                     setNuevoItem({ nombre: '', descripcion: '', precio: '' });
                   }}
-                  className="px-10 py-4 text-12 font-medium text-plain-green-muted border border-plain-green-muted rounded-md hover:bg-ghost-fog"
+                  className="px-10 py-4 text-12 font-medium text-plain-green-muted border border-plain-green-muted rounded-md hover:bg-ghost-fog transition-colors"
                 >
                   + Ítem
                 </button>
                 <button
                   onClick={() => eliminarCategoria(cat.id)}
-                  className="px-10 py-4 text-12 font-medium text-alert-red border border-alert-red rounded-md hover:bg-red-50"
+                  className="px-10 py-4 text-12 font-medium text-alert-red border border-alert-red rounded-md hover:bg-red-50 transition-colors"
                 >
-                  Eliminar cat.
+                  Eliminar
                 </button>
               </div>
             </div>
 
             <div className="divide-y divide-ghost-fog">
               {cat.items.map(item => (
-                <div key={item.id} className="flex items-center gap-16 px-20 py-12">
+                <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-10 px-16 sm:px-20 py-12">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-8 flex-wrap">
                       <span className="text-13 font-medium text-ash-graphite">{item.nombre}</span>
                       {!item.disponible && (
                         <span className="px-6 py-1 text-10 font-medium bg-vanilla-cream text-sage-green rounded-md border border-ghost-fog">
@@ -302,24 +304,29 @@ export default function CartaSection() {
                       )}
                     </div>
                     {item.descripcion && (
-                      <p className="text-12 text-sage-green truncate">{item.descripcion}</p>
+                      <p className="text-12 text-sage-green line-clamp-2 mt-2">{item.descripcion}</p>
                     )}
                   </div>
-                  <span className="text-13 font-medium text-ash-graphite font-mono">
-                    ${item.precio.toLocaleString()}
-                  </span>
-                  <button
-                    onClick={() => toggleDisponible(cat.id, item)}
-                    className="text-12 font-medium text-sage-green hover:text-ash-graphite underline"
-                  >
-                    {item.disponible ? 'Ocultar' : 'Mostrar'}
-                  </button>
-                  <button
-                    onClick={() => eliminarItem(cat.id, item.id)}
-                    className="text-12 text-alert-red hover:opacity-70 font-medium"
-                  >
-                    ✕
-                  </button>
+                  <div className="flex items-center justify-between sm:justify-end gap-16 shrink-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-ghost-fog/60">
+                    <span className="text-13 font-medium text-ash-graphite font-mono">
+                      ${item.precio.toLocaleString()}
+                    </span>
+                    <div className="flex items-center gap-12">
+                      <button
+                        onClick={() => toggleDisponible(cat.id, item)}
+                        className="text-12 font-medium text-sage-green hover:text-ash-graphite underline"
+                      >
+                        {item.disponible ? 'Ocultar' : 'Mostrar'}
+                      </button>
+                      <button
+                        onClick={() => eliminarItem(cat.id, item.id)}
+                        className="p-4 text-12 text-alert-red hover:opacity-70 font-medium"
+                        title="Eliminar artículo"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </div>
                 </div>
               ))}
 
@@ -328,10 +335,10 @@ export default function CartaSection() {
               )}
 
               {mostrarFormItem === cat.id && (
-                <div className="px-20 py-16 bg-ghost-fog space-y-8">
-                  <div className="flex gap-8">
+                <div className="px-16 sm:px-20 py-16 bg-ghost-fog space-y-10">
+                  <div className="flex flex-col sm:flex-row gap-8">
                     <input
-                      className="flex-1 px-10 py-6 text-13 bg-canvas-white rounded-md border border-ash-graphite"
+                      className="flex-1 px-10 py-6 text-13 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
                       placeholder="Nombre del ítem *"
                       value={nuevoItem.nombre}
                       onChange={e => setNuevoItem(p => ({ ...p, nombre: e.target.value }))}
@@ -339,22 +346,22 @@ export default function CartaSection() {
                     />
                     <input
                       type="number"
-                      className="w-100 px-10 py-6 text-13 bg-canvas-white rounded-md border border-ash-graphite"
+                      className="w-full sm:w-120 px-10 py-6 text-13 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
                       placeholder="Precio *"
                       value={nuevoItem.precio}
                       onChange={e => setNuevoItem(p => ({ ...p, precio: e.target.value }))}
                     />
                   </div>
                   <input
-                    className="w-full px-10 py-6 text-13 bg-canvas-white rounded-md border border-ash-graphite"
+                    className="w-full px-10 py-6 text-13 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
                     placeholder="Descripción (opcional)"
                     value={nuevoItem.descripcion}
                     onChange={e => setNuevoItem(p => ({ ...p, descripcion: e.target.value }))}
                   />
-                  <div className="flex gap-8">
+                  <div className="flex items-center gap-8 pt-4">
                     <button
                       onClick={() => agregarItem(cat.id)}
-                      className="px-12 py-6 bg-plain-green text-ash-graphite text-13 font-medium rounded-md"
+                      className="px-14 py-6 bg-plain-green text-ash-graphite text-13 font-medium rounded-md hover:opacity-90"
                     >
                       Agregar ítem
                     </button>

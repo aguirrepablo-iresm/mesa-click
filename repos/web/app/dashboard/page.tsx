@@ -103,7 +103,55 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
+        {/* Mobile Backdrop */}
+        {isExpanded && (
+          <div 
+            className="fixed inset-0 bg-system-black/40 z-40 md:hidden backdrop-blur-xs transition-opacity"
+            onClick={() => setIsExpanded(false)}
+          />
+        )}
+
+        {/* Mobile Drawer (Slide-out) */}
+        <aside
+          className={`fixed inset-y-0 left-0 z-50 w-240 bg-canvas-white border-r border-system-black flex flex-col py-16 transition-transform duration-300 ease-in-out md:hidden ${
+            isExpanded ? "translate-x-0" : "-translate-x-full"
+          }`}
+        >
+          <div className="px-16 pb-16 flex items-center justify-between border-b border-ghost-fog mb-8">
+            <div className="flex items-center gap-8">
+              <span className="material-symbols-outlined text-plain-green text-24">restaurant</span>
+              <span className="font-medium text-14 text-ash-graphite">Menú Principal</span>
+            </div>
+            <button 
+              onClick={() => setIsExpanded(false)}
+              className="material-symbols-outlined text-ash-graphite p-4 hover:text-plain-green"
+            >
+              close
+            </button>
+          </div>
+          <nav className="space-y-4 flex-1 px-8">
+            {SECTIONS.map((s) => (
+              <NavItem
+                key={s.id}
+                icon={s.icon}
+                label={s.label}
+                active={activeSection === s.id}
+                expanded={true}
+                onClick={() => {
+                  setActiveSection(s.id);
+                  setIsExpanded(false);
+                }}
+              />
+            ))}
+          </nav>
+          <div className="pt-16 border-t border-ghost-fog space-y-4 px-8">
+            <NavItem icon="settings" label="Configuración" expanded={true} />
+            <NavItem icon="help_outline" label="Ayuda" expanded={true} />
+          </div>
+        </aside>
+
+        {/* Desktop Sidebar */}
         <aside
           className={`${
             isExpanded ? "w-200" : "w-64"

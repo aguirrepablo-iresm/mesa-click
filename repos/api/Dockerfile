@@ -1,36 +1,36 @@
-# Dockerfile
-#
-# Construye el servidor Mesa CLICK en dos etapas:
-# 1. "builder" compila el código Go en un binario
-# 2. La imagen final solo contiene ese binario (sin el compilador)
-# Resultado: imagen muy liviana (~20MB)
-
 # --- Etapa 1: compilación ---
 FROM golang:1.22-alpine AS builder
 
 WORKDIR /app
 
-# Copiamos los archivos de dependencias primero
-# (Docker los cachea si no cambian, acelerando builds futuros)
-COPY go.mod ./
+# Instalar dependencias de compilación y certificados
+RUN apk add --no-cache git ca-certificates tzdata
+
+# Copiar dependencias de Go para aprovechar cache de Docker
+COPY go.mod go.sum ./
 RUN go mod download
 
-# Copiamos el resto del código
+# Copiar código fuente
 COPY . .
 
-# Compilamos el binario
-RUN CGO_ENABLED=0 go build -o servidor ./cmd/server
+# Compilar binario estático optimizado
+RUN CGO_ENABLED=0 GOOS=linux go build -ldflags="-w -s" -o servidor .
 
-# --- Etapa 2: imagen final ---
+# --- Etapa 2: imagen final de producción ---
 FROM alpine:3.19
 
 WORKDIR /app
 
-# Copiamos solo el binario compilado
-COPY --from=builder /app/servidor .
+# Instalar certificados SSL y zona horaria
+RUN apk add --no-cache ca-certificates tzdata
 
-# Copiamos las migraciones (el servidor las necesita al arrancar)
+# Copiar el binario compilado y las migraciones SQL
+COPY --from=builder /app/servidor .
 COPY --from=builder /app/migrations ./migrations
+
+# Variables de entorno por defecto
+ENV PORT=8080
+ENV APP_ENV=production
 
 EXPOSE 8080
 

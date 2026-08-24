@@ -43,25 +43,25 @@ function PedidoCard({
   return (
     <div className={`border rounded-lg overflow-hidden bg-canvas-white ${esAlerta ? 'border-alert-red shadow-sm' : 'border-ash-graphite'}`}>
       <div
-        className={`flex items-center justify-between px-20 py-10 border-b ${
+        className={`flex items-center justify-between px-16 sm:px-20 py-10 border-b ${
           esAlerta ? 'bg-red-50 border-alert-red' : 'bg-vanilla-cream border-ash-graphite'
         }`}
       >
-        <div className="flex items-center gap-12">
+        <div className="flex items-center gap-8 sm:gap-12 flex-wrap">
           <span className="text-15 font-medium text-ash-graphite">Mesa {pedido.mesa}</span>
           {esAlerta && (
-            <span className="text-12 font-medium text-alert-red flex items-center gap-4">
-              ⚠️ Pide la cuenta
+            <span className="text-11 sm:text-12 font-medium text-alert-red flex items-center gap-4 bg-red-100/60 px-6 py-1 rounded">
+              ⚠️ Pide cuenta
             </span>
           )}
-          <span className="text-12 font-mono text-sage-green">{pedido.timestamp}</span>
+          <span className="text-11 sm:text-12 font-mono text-sage-green">{pedido.timestamp}</span>
         </div>
-        <span className={`px-10 py-3 text-11 font-medium rounded-md border ${ESTADO_STYLES[pedido.estado]}`}>
+        <span className={`px-10 py-3 text-11 font-medium rounded-md border shrink-0 ${ESTADO_STYLES[pedido.estado]}`}>
           {ESTADO_LABELS[pedido.estado]}
         </span>
       </div>
 
-      <div className="px-20 py-12 space-y-6">
+      <div className="px-16 sm:px-20 py-12 space-y-6">
         {pedido.items.map(item => (
           <div key={item.id} className="flex items-center justify-between text-13">
             <span className="text-ash-graphite">{item.cantidad}× {item.nombre}</span>
@@ -69,16 +69,16 @@ function PedidoCard({
           </div>
         ))}
         <div className="flex items-center justify-between text-13 font-medium border-t border-ghost-fog pt-8 mt-4">
-          <span className="text-ash-graphite">Total</span>
-          <span className="font-mono text-ash-graphite">${total.toLocaleString()}</span>
+          <span className="text-ash-graphite font-semibold">Total</span>
+          <span className="font-mono text-ash-graphite font-semibold">${total.toLocaleString()}</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-8 px-20 py-12 border-t border-ghost-fog bg-canvas-white">
+      <div className="flex items-center gap-8 px-16 sm:px-20 py-12 border-t border-ghost-fog bg-canvas-white">
         {pedido.estado !== 'listo' && (
           <button
             onClick={() => onAvanzar(pedido.id)}
-            className="px-12 py-6 bg-plain-green text-ash-graphite text-12 font-medium rounded-md hover:opacity-90 transition-opacity"
+            className="flex-1 sm:flex-initial px-16 py-8 bg-plain-green text-ash-graphite text-12 font-semibold rounded-md hover:opacity-90 active:scale-98 transition-all text-center"
           >
             {pedido.estado === 'recibido' ? '→ Preparando' : '→ Listo'}
           </button>
@@ -86,7 +86,7 @@ function PedidoCard({
         {pedido.estado === 'listo' && (
           <button
             onClick={() => onCerrar(pedido.id)}
-            className="px-12 py-6 bg-ash-graphite text-canvas-white text-12 font-medium rounded-md hover:opacity-90 transition-opacity"
+            className="flex-1 sm:flex-initial px-16 py-8 bg-ash-graphite text-canvas-white text-12 font-semibold rounded-md hover:opacity-90 active:scale-98 transition-all text-center"
           >
             Cerrar pedido
           </button>
@@ -273,20 +273,20 @@ export default function RecepcionistaSection() {
   const sinAlerta = pedidos.filter(p => !p.cuentaSolicitada);
 
   return (
-    <div className="p-24 md:p-32 space-y-24 font-inter">
-      <div className="flex items-center justify-between">
+    <div className="p-16 sm:p-24 md:p-32 space-y-24 font-inter">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-12">
         <div>
           <h2 className="text-20 font-medium text-ash-graphite">Panel Recepcionista</h2>
-          <p className="text-13 text-sage-green mt-4">
-            {pedidos.length} pedidos activos {loading && "(cargando...)"}
+          <p className="text-13 text-sage-green mt-2">
+            {pedidos.length} {pedidos.length === 1 ? 'pedido activo' : 'pedidos activos'} {loading && "(cargando...)"}
           </p>
         </div>
-        <div className="flex items-center gap-8">
+        <div className="flex items-center gap-8 self-start sm:self-auto bg-ghost-fog px-12 py-6 rounded-full border border-ash-graphite/10">
           <span
             className={`w-8 h-8 rounded-full ${sseConectado ? 'bg-plain-green animate-pulse' : 'bg-sage-green'}`}
           />
-          <span className="text-11 font-mono text-sage-green uppercase">
-            {sseConectado ? 'En vivo (SSE)' : 'Conectando tiempo real...'}
+          <span className="text-11 font-mono text-sage-green uppercase tracking-wide">
+            {sseConectado ? 'En vivo (SSE)' : 'Conectando...'}
           </span>
         </div>
       </div>
