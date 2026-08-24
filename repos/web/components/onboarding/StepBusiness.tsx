@@ -88,15 +88,15 @@ export default function StepBusiness({ data, onChange, onNext }: StepBusinessPro
                 Rubro Principal
               </label>
               <select 
-                value={data.rubro || "Cafetería"}
+                value={data.rubro || "cafeteria"}
                 onChange={(e) => onChange({ rubro: e.target.value })}
                 className="w-full h-40 px-12 bg-canvas-white border border-ash-graphite rounded-md focus:border-plain-green outline-none transition-all text-14"
               >
-                <option value="Cafetería">Cafetería</option>
-                <option value="Restaurante">Restaurante</option>
-                <option value="Bar / Pub">Bar / Pub</option>
-                <option value="Cervecería">Cervecería</option>
-                <option value="Comida Rápida">Comida Rápida</option>
+                <option value="cafeteria">Cafetería</option>
+                <option value="restaurante">Restaurante</option>
+                <option value="bar">Bar / Pub / Cervecería</option>
+                <option value="comida_rapida">Comida Rápida</option>
+                <option value="otro">Otro</option>
               </select>
             </div>
           </div>

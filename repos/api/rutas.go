@@ -8,6 +8,7 @@ import (
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/auth"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/carta"
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/db"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/mesa"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/notificacion"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/pedido"
@@ -19,11 +20,27 @@ import (
 func registrarRutas(mux *http.ServeMux) {
 	mux.HandleFunc("GET /health", handlerHealth)
 
-	// Auth
+	// Auth & Email Provider
 	var emailSender auth.EmailSender = &auth.LogEmailSender{}
-	resendAPIKey := os.Getenv("RESEND_API_KEY")
-	fromEmail := os.Getenv("FROM_EMAIL")
-	if resendAPIKey != "" && fromEmail != "" {
+
+	smtpHost := os.Getenv("SMTP_HOST")
+	if smtpHost != "" {
+		smtpPort := os.Getenv("SMTP_PORT")
+		smtpUser := os.Getenv("SMTP_USER")
+		smtpPass := os.Getenv("SMTP_PASS")
+		if smtpPass == "" {
+			smtpPass = os.Getenv("SMTP_PASSWORD")
+		}
+		smtpFrom := os.Getenv("SMTP_FROM")
+		if smtpFrom == "" {
+			smtpFrom = os.Getenv("FROM_EMAIL")
+		}
+		emailSender = auth.NuevoSMTPEmailSender(smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom)
+	} else if resendAPIKey := os.Getenv("RESEND_API_KEY"); resendAPIKey != "" {
+		fromEmail := os.Getenv("FROM_EMAIL")
+		if fromEmail == "" {
+			fromEmail = "onboarding@resend.dev"
+		}
 		emailSender = auth.NuevoResendEmailSender(resendAPIKey, fromEmail)
 	}
 
@@ -103,8 +120,24 @@ func registrarRutas(mux *http.ServeMux) {
 
 func handlerHealth(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
+	dbEstado := "ok"
+	status := http.StatusOK
+
+	if db.Pool != nil {
+		if err := db.Pool.Ping(r.Context()); err != nil {
+			dbEstado = "error: " + err.Error()
+			status = http.StatusServiceUnavailable
+		}
+	} else {
+		dbEstado = "desconectado"
+	}
+
+	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(map[string]any{
+		"servicio":  "mesa-click-api",
 		"estado":    "ok",
+		"database":  dbEstado,
 		"timestamp": time.Now().Format(time.RFC3339),
 	})
 }

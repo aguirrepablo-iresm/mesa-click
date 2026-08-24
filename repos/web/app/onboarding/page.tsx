@@ -22,7 +22,7 @@ export default function OnboardingPage() {
     nombreNegocio: "",
     nombreFantasia: "",
     slug: "",
-    rubro: "Cafetería",
+    rubro: "cafeteria",
     descripcion: "",
     sucursalNombre: "Casa central",
     whatsapp: "",
