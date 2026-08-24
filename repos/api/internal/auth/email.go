@@ -7,10 +7,15 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
+	"net/mail"
 	"net/smtp"
 	"time"
 )
+
+// smtpTimeout acota cada intento de envío para no bloquear el request HTTP.
+const smtpTimeout = 20 * time.Second
 
 type EmailSender interface {
 	EnviarMagicLink(ctx context.Context, email, link string) error
@@ -50,8 +55,15 @@ func NuevoSMTPEmailSender(host, port, user, password, from string) *SMTPEmailSen
 }
 
 func (s *SMTPEmailSender) EnviarMagicLink(ctx context.Context, toEmail, link string) error {
-	addr := fmt.Sprintf("%s:%s", s.host, s.port)
+	addr := net.JoinHostPort(s.host, s.port)
 	subject := "Tu enlace de acceso a Mesa CLICK"
+
+	// SMTP_FROM puede venir como "Nombre <a@b.com>" o como "a@b.com".
+	// La cabecera From: acepta las dos formas; el comando MAIL FROM solo la pelada.
+	remitente := s.from
+	if dir, err := mail.ParseAddress(s.from); err == nil {
+		remitente = dir.Address
+	}
 
 	htmlContent := fmt.Sprintf(`<!DOCTYPE html>
 <html lang="es">
@@ -101,55 +113,87 @@ func (s *SMTPEmailSender) EnviarMagicLink(ctx context.Context, toEmail, link str
 		auth = smtp.PlainAuth("", s.user, s.password, s.host)
 	}
 
-	// Manejo especial para puerto 465 (SSL directo)
-	if s.port == "465" {
-		tlsConfig := &tls.Config{
-			ServerName: s.host,
-		}
-		conn, err := tls.Dial("tcp", addr, tlsConfig)
-		if err != nil {
-			return fmt.Errorf("error conectando SSL/TLS al servidor SMTP: %w", err)
-		}
-		defer conn.Close()
+	client, err := s.conectar(addr)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
 
-		client, err := smtp.NewClient(conn, s.host)
-		if err != nil {
-			return fmt.Errorf("error creando cliente SMTP: %w", err)
+	if auth != nil {
+		if err := client.Auth(auth); err != nil {
+			return fmt.Errorf("error autenticando SMTP como %s: %w", s.user, err)
 		}
-		defer client.Quit()
+	}
 
-		if auth != nil {
-			if err := client.Auth(auth); err != nil {
-				return fmt.Errorf("error autenticando SMTP: %w", err)
-			}
-		}
+	// El envelope sender debe ser la dirección pelada: "Nombre <a@b.com>" solo
+	// vale en la cabecera From:. Zoho lo tolera, otros servidores lo rechazan.
+	if err := client.Mail(remitente); err != nil {
+		return fmt.Errorf("servidor SMTP rechazó el remitente %s: %w", remitente, err)
+	}
+	if err := client.Rcpt(toEmail); err != nil {
+		return fmt.Errorf("servidor SMTP rechazó el destinatario %s: %w", toEmail, err)
+	}
 
-		if err := client.Mail(s.from); err != nil {
-			return err
-		}
-		if err := client.Rcpt(toEmail); err != nil {
-			return err
-		}
-
-		w, err := client.Data()
-		if err != nil {
-			return err
-		}
-		if _, err := w.Write(msg); err != nil {
-			return err
-		}
-		if err := w.Close(); err != nil {
-			return err
-		}
-	} else {
-		// Puerto 587 / 25 con STARTTLS automático
-		if err := smtp.SendMail(addr, auth, s.from, []string{toEmail}, msg); err != nil {
-			return fmt.Errorf("error enviando email por SMTP (%s:%s): %w", s.host, s.port, err)
-		}
+	w, err := client.Data()
+	if err != nil {
+		return err
+	}
+	if _, err := w.Write(msg); err != nil {
+		return err
+	}
+	if err := w.Close(); err != nil {
+		return fmt.Errorf("error entregando el mensaje: %w", err)
+	}
+	if err := client.Quit(); err != nil {
+		return fmt.Errorf("error cerrando la sesión SMTP: %w", err)
 	}
 
 	slog.InfoContext(ctx, "magic link enviado con éxito vía SMTP", "email", toEmail, "smtp_host", s.host)
 	return nil
+}
+
+// conectar abre la sesión SMTP con timeout explícito. Sin esto, un puerto
+// filtrado por el firewall o el proveedor deja el request colgado hasta el
+// timeout del sistema operativo (~21s en Windows) en lugar de fallar rápido.
+func (s *SMTPEmailSender) conectar(addr string) (*smtp.Client, error) {
+	conn, err := net.DialTimeout("tcp", addr, smtpTimeout)
+	if err != nil {
+		return nil, fmt.Errorf("no se pudo conectar al servidor SMTP %s: %w "+
+			"(si es un timeout, probá SMTP_PORT=587 o revisá si el proveedor bloquea el puerto)", addr, err)
+	}
+	// Cubre handshake, AUTH y entrega del mensaje.
+	_ = conn.SetDeadline(time.Now().Add(smtpTimeout))
+
+	tlsConfig := &tls.Config{ServerName: s.host}
+
+	if s.port == "465" {
+		// Puerto 465: TLS implícito, la sesión arranca cifrada.
+		tlsConn := tls.Client(conn, tlsConfig)
+		if err := tlsConn.Handshake(); err != nil {
+			conn.Close()
+			return nil, fmt.Errorf("error en el handshake TLS con %s: %w", addr, err)
+		}
+		client, err := smtp.NewClient(tlsConn, s.host)
+		if err != nil {
+			tlsConn.Close()
+			return nil, fmt.Errorf("error creando cliente SMTP: %w", err)
+		}
+		return client, nil
+	}
+
+	// Puertos 587 / 25: sesión en claro y se promueve con STARTTLS.
+	client, err := smtp.NewClient(conn, s.host)
+	if err != nil {
+		conn.Close()
+		return nil, fmt.Errorf("error creando cliente SMTP: %w", err)
+	}
+	if ok, _ := client.Extension("STARTTLS"); ok {
+		if err := client.StartTLS(tlsConfig); err != nil {
+			client.Close()
+			return nil, fmt.Errorf("error en STARTTLS con %s: %w", addr, err)
+		}
+	}
+	return client, nil
 }
 
 // ResendEmailSender envía correos a través de la API REST de Resend.
