@@ -23,7 +23,8 @@ func NuevoStore() Store { return &pgStore{} }
 func (s *pgStore) ObtenerUsuarioPorEmail(ctx context.Context, email string) (*UsuarioAuth, error) {
 	u := &UsuarioAuth{}
 	err := db.Pool.QueryRow(ctx,
-		`SELECT id, tenant_id, email, rol FROM usuarios WHERE email = $1`, email,
+		// lower() para que emails cargados con mayúsculas sigan matcheando.
+		`SELECT id, tenant_id, email, rol FROM usuarios WHERE lower(email) = lower($1)`, email,
 	).Scan(&u.ID, &u.TenantID, &u.Email, &u.Rol)
 	if err != nil {
 		return nil, fmt.Errorf("usuario no encontrado: %w", err)

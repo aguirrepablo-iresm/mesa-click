@@ -9,6 +9,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState("");
+  const [linkDev, setLinkDev] = useState("");
 
   const handleSolicitarLink = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,7 +22,8 @@ export default function LoginPage() {
     setError("");
 
     try {
-      await api.solicitarMagicLink(email.trim());
+      const res = await api.solicitarMagicLink(email);
+      setLinkDev(res?.magic_link_dev || "");
       setEnviado(true);
     } catch (err: any) {
       setError(err.message || "Error al solicitar el enlace de acceso.");
@@ -59,9 +61,21 @@ export default function LoginPage() {
                   Revisá tu casilla de correo en <span className="font-mono text-ash-graphite font-medium">{email}</span> y hacé clic en el enlace para ingresar al panel.
                 </p>
               </div>
+              {linkDev && (
+                <div className="p-12 bg-canvas-white border border-dashed border-ash-graphite/30 rounded-lg text-left space-y-6">
+                  <div className="flex items-center gap-6 text-11 font-mono uppercase tracking-wider text-sage-green">
+                    <span className="material-symbols-outlined text-16">construction</span>
+                    <span>Modo desarrollo — sin email configurado</span>
+                  </div>
+                  <a href={linkDev} className="block text-11 font-mono text-plain-green break-all hover:underline">
+                    {linkDev}
+                  </a>
+                </div>
+              )}
+
               <div className="pt-8">
                 <button
-                  onClick={() => setEnviado(false)}
+                  onClick={() => { setEnviado(false); setLinkDev(""); }}
                   className="text-12 font-medium text-plain-green hover:underline"
                 >
                   Intentar con otro email

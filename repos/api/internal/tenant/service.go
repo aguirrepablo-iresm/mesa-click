@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 	"strings"
+
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/auth"
 )
 
 type Service struct {
@@ -20,6 +22,9 @@ func (svc *Service) Crear(ctx context.Context, input OnboardingInput) (*Tenant, 
 		return nil, fmt.Errorf("%w: email del admin requerido", ErrValidation)
 	}
 	input.Rubro = normalizarRubro(input.Rubro)
+	// El login por magic link busca al usuario por email; guardarlo siempre en
+	// minúsculas evita que un registro con mayúsculas quede inaccesible.
+	input.EmailAdmin = auth.NormalizarEmail(input.EmailAdmin)
 	return svc.store.Crear(ctx, input)
 }
 

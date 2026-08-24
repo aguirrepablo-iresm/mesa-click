@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -20,36 +21,52 @@ type Service struct {
 
 func NuevoService(s Store, e EmailSender) *Service { return &Service{store: s, email: e} }
 
-func (svc *Service) SolicitarLink(ctx context.Context, email string) error {
+// SolicitarLink genera el magic link y lo envía por email.
+// Devuelve el link generado para que el handler pueda exponerlo en entornos de
+// desarrollo sin proveedor de email. Si el email no está registrado devuelve
+// ("", nil): no revelamos si la cuenta existe.
+func (svc *Service) SolicitarLink(ctx context.Context, email string) (string, error) {
+	email = NormalizarEmail(email)
+
 	usuario, err := svc.store.ObtenerUsuarioPorEmail(ctx, email)
 	if err != nil {
 		// No revelamos si el email existe o no — siempre respondemos OK
 		slog.Warn("magic link solicitado para email no registrado", "email", email)
-		return nil
+		return "", nil
 	}
 
 	token, err := generarTokenAleatorio()
 	if err != nil {
-		return fmt.Errorf("error generando token: %w", err)
+		return "", fmt.Errorf("error generando token: %w", err)
 	}
 
 	expiresAt := time.Now().Add(15 * time.Minute)
 	if _, err := svc.store.GuardarToken(ctx, usuario.ID, token, expiresAt); err != nil {
-		return err
+		return "", err
 	}
 
+	link := ConstruirLinkVerificacion(token)
+
+	if err := svc.email.EnviarMagicLink(ctx, email, link); err != nil {
+		slog.ErrorContext(ctx, "error enviando magic link", "email", email, "err", err)
+		return "", fmt.Errorf("error enviando email: %w", err)
+	}
+
+	return link, nil
+}
+
+// NormalizarEmail deja los emails en una forma canónica (minúsculas, sin espacios)
+// para que "Admin@Bar.com" y "admin@bar.com " sean la misma cuenta.
+func NormalizarEmail(email string) string {
+	return strings.ToLower(strings.TrimSpace(email))
+}
+
+func ConstruirLinkVerificacion(token string) string {
 	appURL := os.Getenv("APP_URL")
 	if appURL == "" {
 		appURL = "http://localhost:3000"
 	}
-	link := fmt.Sprintf("%s/auth/verify?token=%s", appURL, token)
-	
-	if err := svc.email.EnviarMagicLink(ctx, email, link); err != nil {
-		slog.ErrorContext(ctx, "error enviando magic link", "email", email, "err", err)
-		return fmt.Errorf("error enviando email: %w", err)
-	}
-
-	return nil
+	return fmt.Sprintf("%s/auth/verify?token=%s", strings.TrimRight(appURL, "/"), token)
 }
 
 func (svc *Service) VerificarToken(ctx context.Context, token string) (*UsuarioAuth, error) {

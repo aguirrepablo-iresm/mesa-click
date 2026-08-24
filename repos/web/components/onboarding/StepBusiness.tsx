@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useEffect, useState } from "react";
 
 interface StepBusinessProps {
   data: {
@@ -19,6 +21,15 @@ interface StepBusinessProps {
 }
 
 export default function StepBusiness({ data, onChange, onNext }: StepBusinessProps) {
+  // El prefijo del slug tiene que ser el dominio donde realmente corre la app
+  // (localhost:3000, el dominio de Render, etc.), no un dominio fijo de ejemplo.
+  // Se resuelve después del montaje porque `window` no existe en el render del servidor.
+  const [host, setHost] = useState("");
+
+  useEffect(() => {
+    setHost(window.location.host);
+  }, []);
+
   const handleNombreChange = (val: string) => {
     const autoSlug = val
       .toLowerCase()
@@ -69,8 +80,8 @@ export default function StepBusiness({ data, onChange, onNext }: StepBusinessPro
                 Identificador URL (Slug)
               </label>
               <div className="flex items-center">
-                <span className="h-40 px-12 bg-ghost-fog border border-r-0 border-ash-graphite rounded-l-md text-12 font-mono text-sage-green flex items-center">
-                  mesaclick.com/
+                <span className="h-40 px-12 bg-ghost-fog border border-r-0 border-ash-graphite rounded-l-md text-12 font-mono text-sage-green flex items-center whitespace-nowrap">
+                  {host ? `${host}/` : " "}
                 </span>
                 <input
                   type="text"

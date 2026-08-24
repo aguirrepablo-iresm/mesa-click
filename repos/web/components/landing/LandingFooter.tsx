@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 
 export default function LandingFooter() {
   return (
@@ -22,6 +23,7 @@ export default function LandingFooter() {
               <li><a href="#" className="text-14 text-sage-green hover:text-plain-green transition-colors">Menú Digital</a></li>
               <li><a href="#" className="text-14 text-sage-green hover:text-plain-green transition-colors">Gestión QR</a></li>
               <li><a href="#" className="text-14 text-sage-green hover:text-plain-green transition-colors">Pedidos</a></li>
+              <li><Link href="/login" className="text-14 text-sage-green hover:text-plain-green transition-colors">Iniciar sesión</Link></li>
             </ul>
           </div>
 

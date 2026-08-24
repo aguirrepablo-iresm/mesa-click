@@ -1,6 +1,9 @@
 package pedido
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 var (
 	ErrNotFound  = errors.New("pedido no encontrado")
@@ -15,8 +18,8 @@ type Pedido struct {
 	SucursalID string       `json:"sucursal_id"`
 	Estado     string       `json:"estado"`
 	Items      []PedidoItem `json:"items,omitempty"`
-	CreatedAt  string       `json:"created_at"`
-	UpdatedAt  string       `json:"updated_at"`
+	CreatedAt  time.Time    `json:"created_at"`
+	UpdatedAt  time.Time    `json:"updated_at"`
 }
 
 type PedidoItem struct {

@@ -229,10 +229,13 @@ export const api = {
   getBaseUrl: () => API_BASE_URL,
 
   // 1. Auth (US-38)
+  // El backend busca al usuario por email, así que lo mandamos normalizado
+  // (igual que como lo guarda el onboarding) para que siempre matchee.
+  // `magic_link_dev` solo viene en entornos sin proveedor de email configurado.
   solicitarMagicLink: async (email: string) => {
-    return apiFetch<{ mensaje: string }>('/auth/magic-link', {
+    return apiFetch<{ mensaje: string; magic_link_dev?: string }>('/auth/magic-link', {
       method: 'POST',
-      body: JSON.stringify({ email }),
+      body: JSON.stringify({ email: email.trim().toLowerCase() }),
     });
   },
 
@@ -248,7 +251,7 @@ export const api = {
   crearTenant: async (data: OnboardingInput) => {
     return apiFetch<Tenant>('/tenants', {
       method: 'POST',
-      body: JSON.stringify(data),
+      body: JSON.stringify({ ...data, email_admin: data.email_admin.trim().toLowerCase() }),
     });
   },
 

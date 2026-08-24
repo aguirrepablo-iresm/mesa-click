@@ -1,6 +1,9 @@
 package usuario
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 var (
 	ErrNotFound       = errors.New("usuario no encontrado")
@@ -9,12 +12,12 @@ var (
 )
 
 type Usuario struct {
-	ID        string `json:"id"`
-	TenantID  string `json:"tenant_id"`
-	Email     string `json:"email"`
-	Nombre    string `json:"nombre"`
-	Rol       string `json:"rol"` // 'admin', 'encargado', 'mozo'
-	CreatedAt string `json:"created_at"`
+	ID        string    `json:"id"`
+	TenantID  string    `json:"tenant_id"`
+	Email     string    `json:"email"`
+	Nombre    string    `json:"nombre"`
+	Rol       string    `json:"rol"` // 'admin', 'encargado', 'mozo'
+	CreatedAt time.Time `json:"created_at"`
 }
 
 type UsuarioInput struct {

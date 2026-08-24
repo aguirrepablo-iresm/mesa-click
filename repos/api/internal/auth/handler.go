@@ -8,9 +8,15 @@ import (
 
 type Handlers struct {
 	svc *Service
+	// exponerLink habilita devolver el magic link en la respuesta HTTP.
+	// Solo se activa fuera de producción y sin proveedor de email real, para
+	// poder probar el login sin casilla de correo.
+	exponerLink bool
 }
 
-func NuevosHandlers(svc *Service) *Handlers { return &Handlers{svc: svc} }
+func NuevosHandlers(svc *Service, exponerLink bool) *Handlers {
+	return &Handlers{svc: svc, exponerLink: exponerLink}
+}
 
 func (h *Handlers) SolicitarLink(w http.ResponseWriter, r *http.Request) {
 	var body struct {
@@ -21,14 +27,20 @@ func (h *Handlers) SolicitarLink(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.svc.SolicitarLink(r.Context(), body.Email); err != nil {
+	link, err := h.svc.SolicitarLink(r.Context(), body.Email)
+	if err != nil {
 		jsonError(w, "error interno", http.StatusInternalServerError)
 		return
 	}
 
+	resp := map[string]string{"mensaje": "si el email existe, recibirás un link"}
+	if h.exponerLink && link != "" {
+		resp["magic_link_dev"] = link
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(map[string]string{"mensaje": "si el email existe, recibirás un link"})
+	json.NewEncoder(w).Encode(resp)
 }
 
 func (h *Handlers) VerificarToken(w http.ResponseWriter, r *http.Request) {

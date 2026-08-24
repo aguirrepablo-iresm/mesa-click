@@ -15,6 +15,10 @@ export default function OnboardingPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [completado, setCompletado] = useState(false);
+  // Resultado real del envío del magic link de primer acceso: si falla no
+  // podemos afirmar "revisá tu casilla".
+  const [linkEnviado, setLinkEnviado] = useState(false);
+  const [linkDev, setLinkDev] = useState("");
 
   const [formData, setFormData] = useState({
     nombreAdmin: "",
@@ -63,9 +67,12 @@ export default function OnboardingPage() {
 
       // 2. Solicitar automáticamente el magic link de primer acceso
       try {
-        await api.solicitarMagicLink(formData.emailAdmin);
+        const res = await api.solicitarMagicLink(formData.emailAdmin);
+        setLinkEnviado(true);
+        if (res?.magic_link_dev) setLinkDev(res.magic_link_dev);
       } catch (linkErr) {
         console.warn("No se pudo enviar magic link automático:", linkErr);
+        setLinkEnviado(false);
       }
 
       setCompletado(true);
@@ -90,15 +97,42 @@ export default function OnboardingPage() {
             <p className="text-13 text-sage-green leading-relaxed">
               Registramos <strong className="text-ash-graphite">{formData.nombreNegocio}</strong> en Mesa CLICK.
             </p>
-            <div className="p-16 bg-ghost-fog border border-ghost-fog rounded-lg text-left text-12 text-ash-graphite space-y-6">
-              <div className="flex items-center gap-6 text-plain-green font-medium">
-                <span className="material-symbols-outlined text-18">mark_email_unread</span>
-                <span>Revisá tu casilla de correo</span>
+            {linkEnviado ? (
+              <div className="p-16 bg-ghost-fog border border-ghost-fog rounded-lg text-left text-12 text-ash-graphite space-y-6">
+                <div className="flex items-center gap-6 text-plain-green font-medium">
+                  <span className="material-symbols-outlined text-18">mark_email_unread</span>
+                  <span>Revisá tu casilla de correo</span>
+                </div>
+                <p className="text-sage-green text-11">
+                  Enviamos un Magic Link de acceso a <strong className="font-mono text-ash-graphite">{formData.emailAdmin}</strong> para que ingreses directamente al panel de control sin contraseñas.
+                </p>
               </div>
-              <p className="text-sage-green text-11">
-                Enviamos un Magic Link de acceso a <strong className="font-mono text-ash-graphite">{formData.emailAdmin}</strong> para que ingreses directamente al panel de control sin contraseñas.
-              </p>
-            </div>
+            ) : (
+              <div className="p-16 bg-red-50 border border-alert-red/30 rounded-lg text-left text-12 space-y-6">
+                <div className="flex items-center gap-6 text-alert-red font-medium">
+                  <span className="material-symbols-outlined text-18">report</span>
+                  <span>No pudimos enviar el enlace de acceso</span>
+                </div>
+                <p className="text-sage-green text-11">
+                  Tu negocio quedó registrado. Entrá a <strong className="text-ash-graphite">Iniciar Sesión</strong> y pedí el Magic Link de nuevo con <strong className="font-mono text-ash-graphite">{formData.emailAdmin}</strong>.
+                </p>
+              </div>
+            )}
+
+            {linkDev && (
+              <div className="p-16 bg-vanilla-cream border border-dashed border-ash-graphite/30 rounded-lg text-left space-y-6">
+                <div className="flex items-center gap-6 text-11 font-mono uppercase tracking-wider text-sage-green">
+                  <span className="material-symbols-outlined text-16">construction</span>
+                  <span>Modo desarrollo — sin email configurado</span>
+                </div>
+                <a
+                  href={linkDev}
+                  className="block text-11 font-mono text-plain-green break-all hover:underline"
+                >
+                  {linkDev}
+                </a>
+              </div>
+            )}
           </div>
           <div className="pt-8 flex flex-col gap-12">
             <Link

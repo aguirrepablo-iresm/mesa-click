@@ -1,6 +1,9 @@
 package sucursal
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 var (
 	ErrNotFound       = errors.New("sucursal no encontrada")
@@ -16,7 +19,7 @@ type Sucursal struct {
 	Email     *string        `json:"email,omitempty"`
 	Telefono  *string        `json:"telefono,omitempty"`
 	Horarios  map[string]any `json:"horarios"`
-	CreatedAt string         `json:"created_at"`
+	CreatedAt time.Time      `json:"created_at"`
 }
 
 type SucursalInput struct {

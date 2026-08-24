@@ -1,6 +1,9 @@
 package tenant
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
 
 var (
 	ErrNotFound  = errors.New("tenant no encontrado")
@@ -8,12 +11,12 @@ var (
 )
 
 type Tenant struct {
-	ID             string `json:"id"`
-	Nombre         string `json:"nombre"`
-	NombreFantasia string `json:"nombre_fantasia,omitempty"`
-	Rubro          string `json:"rubro"`
-	Slug           string `json:"slug"`
-	CreatedAt      string `json:"created_at"`
+	ID             string    `json:"id"`
+	Nombre         string    `json:"nombre"`
+	NombreFantasia string    `json:"nombre_fantasia,omitempty"`
+	Rubro          string    `json:"rubro"`
+	Slug           string    `json:"slug"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 type OnboardingInput struct {

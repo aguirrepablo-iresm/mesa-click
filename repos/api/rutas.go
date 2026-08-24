@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -21,6 +22,10 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.HandleFunc("GET /health", handlerHealth)
 
 	// Auth & Email Provider
+	// proveedorReal indica si hay un canal de email de verdad configurado.
+	// Si no lo hay, el magic link solo se loguea, así que fuera de producción
+	// lo devolvemos en la respuesta del endpoint para poder probar el login.
+	proveedorReal := false
 	var emailSender auth.EmailSender = &auth.LogEmailSender{}
 
 	smtpHost := os.Getenv("SMTP_HOST")
@@ -36,17 +41,25 @@ func registrarRutas(mux *http.ServeMux) {
 			smtpFrom = os.Getenv("FROM_EMAIL")
 		}
 		emailSender = auth.NuevoSMTPEmailSender(smtpHost, smtpPort, smtpUser, smtpPass, smtpFrom)
+		proveedorReal = true
 	} else if resendAPIKey := os.Getenv("RESEND_API_KEY"); resendAPIKey != "" {
 		fromEmail := os.Getenv("FROM_EMAIL")
 		if fromEmail == "" {
 			fromEmail = "onboarding@resend.dev"
 		}
 		emailSender = auth.NuevoResendEmailSender(resendAPIKey, fromEmail)
+		proveedorReal = true
+	}
+
+	esProduccion := os.Getenv("APP_ENV") == "production"
+	if !proveedorReal {
+		slog.Warn("sin proveedor de email configurado: el magic link solo se escribe en el log",
+			"produccion", esProduccion)
 	}
 
 	authStore := auth.NuevoStore()
 	authSvc := auth.NuevoService(authStore, emailSender)
-	authH := auth.NuevosHandlers(authSvc)
+	authH := auth.NuevosHandlers(authSvc, !proveedorReal && !esProduccion)
 	mux.HandleFunc("POST /auth/magic-link", authH.SolicitarLink)
 	mux.HandleFunc("GET /auth/verify", authH.VerificarToken)
 

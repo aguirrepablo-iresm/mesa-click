@@ -39,6 +39,13 @@ export default function LandingHero() {
               Ver cómo funciona
             </Link>
           </div>
+
+          <p className="text-14 text-sage-green text-center md:text-left">
+            ¿Ya tenés cuenta?{" "}
+            <Link href="/login" className="text-plain-green font-semibold hover:underline">
+              Iniciá sesión con tu email
+            </Link>
+          </p>
         </div>
 
         <div className="flex-1 relative w-full max-w-md md:max-w-none">

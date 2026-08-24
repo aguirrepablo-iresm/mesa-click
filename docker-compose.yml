@@ -31,6 +31,18 @@ services:
       DATABASE_URL: "postgres://postgres:postgres_password@postgres:5432/mesa_click?sslmode=disable"
       JWT_SECRET: "super_secret_jwt_key_mesa_click_prod_2026"
       APP_ENV: "production"
+      # URL del frontend: es la base de los magic links que salen por email.
+      # Sin esto los enlaces apuntan a localhost y no sirven fuera de la máquina.
+      APP_URL: "${APP_URL:-http://localhost:3000}"
+      # Proveedor de email. Sin SMTP_HOST ni RESEND_API_KEY el magic link
+      # solo se escribe en el log del contenedor y nadie lo recibe.
+      SMTP_HOST: "${SMTP_HOST:-}"
+      SMTP_PORT: "${SMTP_PORT:-587}"
+      SMTP_USER: "${SMTP_USER:-}"
+      SMTP_PASS: "${SMTP_PASS:-}"
+      SMTP_FROM: "${SMTP_FROM:-}"
+      RESEND_API_KEY: "${RESEND_API_KEY:-}"
+      FROM_EMAIL: "${FROM_EMAIL:-}"
     ports:
       - "8080:8080"
     restart: unless-stopped

@@ -113,9 +113,12 @@ func TestSolicitarLink_Exitoso(t *testing.T) {
 	}
 
 	svc := auth.NuevoService(store, emailMock)
-	err := svc.SolicitarLink(context.Background(), "admin@mibar.com")
+	link, err := svc.SolicitarLink(context.Background(), "admin@mibar.com")
 	if err != nil {
 		t.Fatalf("error inesperado: %v", err)
+	}
+	if link == "" {
+		t.Error("se esperaba que SolicitarLink devolviera el link generado")
 	}
 
 	if emailEnviado != "admin@mibar.com" {
@@ -136,9 +139,38 @@ func TestSolicitarLink_UsuarioNoEncontrado_Silencioso(t *testing.T) {
 
 	svc := auth.NuevoService(store, emailMock)
 	// Para seguridad y evitar enumerar correos, SolicitarLink retorna nil (exitoso) aunque no exista el usuario.
-	err := svc.SolicitarLink(context.Background(), "no-existe@mibar.com")
+	link, err := svc.SolicitarLink(context.Background(), "no-existe@mibar.com")
 	if err != nil {
 		t.Fatalf("error inesperado: %v", err)
+	}
+	if link != "" {
+		t.Errorf("no se debe generar link para un email inexistente, obtenido: %q", link)
+	}
+}
+
+func TestSolicitarLink_NormalizaEmail(t *testing.T) {
+	var emailConsultado string
+
+	store := &mockStore{
+		obtenerUsuarioPorEmailFn: func(ctx context.Context, email string) (*auth.UsuarioAuth, error) {
+			emailConsultado = email
+			return &auth.UsuarioAuth{ID: "usr-1", TenantID: "ten-1", Email: email, Rol: "admin"}, nil
+		},
+		guardarTokenFn: func(ctx context.Context, usuarioID, token string, expiresAt time.Time) (string, error) {
+			return "tok-id-1", nil
+		},
+	}
+	emailMock := &mockEmailSender{
+		enviarMagicLinkFn: func(ctx context.Context, email, link string) error { return nil },
+	}
+
+	svc := auth.NuevoService(store, emailMock)
+	if _, err := svc.SolicitarLink(context.Background(), "  Admin@MiBar.COM "); err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+
+	if emailConsultado != "admin@mibar.com" {
+		t.Errorf("email no normalizado: got %q, want %q", emailConsultado, "admin@mibar.com")
 	}
 }
 

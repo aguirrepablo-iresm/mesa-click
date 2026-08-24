@@ -17,7 +17,12 @@ export default function LandingHeader() {
         <nav className="hidden md:flex items-center gap-32">
           <Link href="#features" className="text-14 font-medium text-sage-green hover:text-ash-graphite transition-colors">Características</Link>
           <Link href="#pricing" className="text-14 font-medium text-sage-green hover:text-ash-graphite transition-colors">Planes</Link>
-          <Link href="/login" className="text-14 font-medium text-ash-graphite hover:text-plain-green transition-colors">Iniciar Sesión</Link>
+          <Link
+            href="/login"
+            className="px-16 py-8 border border-ash-graphite/20 text-14 font-medium text-ash-graphite rounded-md hover:border-ash-graphite hover:text-plain-green transition-all"
+          >
+            Iniciar Sesión
+          </Link>
           <Link 
             href="/onboarding" 
             className="px-16 py-8 bg-plain-green text-ash-graphite text-14 font-semibold rounded-md hover:bg-plain-green-muted transition-all shadow-sm"
@@ -56,7 +61,7 @@ export default function LandingHeader() {
             <Link 
               href="/login" 
               onClick={() => setMobileMenuOpen(false)}
-              className="text-14 font-medium text-ash-graphite hover:text-plain-green py-4"
+              className="w-full text-center px-16 py-10 border border-ash-graphite/20 text-14 font-medium text-ash-graphite rounded-md hover:border-ash-graphite hover:text-plain-green transition-all block"
             >
               Iniciar Sesión
             </Link>

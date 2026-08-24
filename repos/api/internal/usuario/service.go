@@ -4,7 +4,8 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"os"
+
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/auth"
 )
 
 type Service struct {
@@ -24,6 +25,9 @@ func (svc *Service) Invitar(ctx context.Context, tenantID string, input UsuarioI
 		return nil, fmt.Errorf("%w: rol inválido (debe ser admin, encargado o mozo)", ErrValidation)
 	}
 
+	// Mismo criterio que en onboarding: el email es la clave de login.
+	input.Email = auth.NormalizarEmail(input.Email)
+
 	u, err := svc.store.Crear(ctx, tenantID, input)
 	if err != nil {
 		return nil, err
@@ -36,11 +40,7 @@ func (svc *Service) Invitar(ctx context.Context, tenantID string, input UsuarioI
 		return &UsuarioInvitacionResponse{Usuario: u}, nil
 	}
 
-	appURL := os.Getenv("APP_URL")
-	if appURL == "" {
-		appURL = "http://localhost:3000"
-	}
-	link := fmt.Sprintf("%s/auth/verify?token=%s", appURL, token)
+	link := auth.ConstruirLinkVerificacion(token)
 	slog.InfoContext(ctx, "magic link de invitacion generado", "usuario", u.Email, "url", link)
 
 	return &UsuarioInvitacionResponse{
