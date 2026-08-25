@@ -28,8 +28,18 @@ func registrarRutas(mux *http.ServeMux) {
 	proveedorReal := false
 	var emailSender auth.EmailSender = &auth.LogEmailSender{}
 
-	smtpHost := os.Getenv("SMTP_HOST")
-	if smtpHost != "" {
+	if brevoAPIKey := os.Getenv("BREVO_API_KEY"); brevoAPIKey != "" {
+		senderEmail := os.Getenv("BREVO_FROM_EMAIL")
+		if senderEmail == "" {
+			senderEmail = os.Getenv("FROM_EMAIL")
+		}
+		senderName := os.Getenv("BREVO_SENDER_NAME")
+		if senderName == "" {
+			senderName = "Mesa CLICK"
+		}
+		emailSender = auth.NuevoBrevoEmailSender(brevoAPIKey, senderName, senderEmail)
+		proveedorReal = true
+	} else if smtpHost := os.Getenv("SMTP_HOST"); smtpHost != "" {
 		smtpPort := os.Getenv("SMTP_PORT")
 		smtpUser := os.Getenv("SMTP_USER")
 		smtpPass := os.Getenv("SMTP_PASS")

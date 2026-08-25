@@ -2,7 +2,6 @@
 import { useState, useEffect, useRef } from "react";
 import QRCode from "qrcode";
 import { api, MesaAPI, Sucursal } from "@/lib/api";
-import { mockMesas } from "@/lib/mock/mesas";
 
 function QRCanvas({ token }: { token: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -51,6 +50,7 @@ export default function MesasSection() {
   const cargarMesas = async () => {
     try {
       setLoading(true);
+      setErrorMsg('');
       const [mesasList, sucursalesList] = await Promise.all([
         api.listarMesas(),
         api.listarSucursales(),
@@ -58,39 +58,19 @@ export default function MesasSection() {
 
       if (sucursalesList && sucursalesList.length > 0) {
         setSucursales(sucursalesList);
+      } else {
+        setSucursales([]);
       }
 
       if (mesasList && mesasList.length > 0) {
         setMesas(mesasList);
       } else {
-        // Fallback a mocks
-        const fallback: MesaAPI[] = mockMesas.map(m => ({
-          id: m.id,
-          tenant_id: 'default',
-          sucursal_id: 'default',
-          numero: m.numero,
-          capacidad: 4,
-          qr_token: m.token,
-          activa: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }));
-        setMesas(fallback);
+        setMesas([]);
       }
-    } catch (err) {
-      console.warn("API de mesas no disponible, usando mocks:", err);
-      const fallback: MesaAPI[] = mockMesas.map(m => ({
-        id: m.id,
-        tenant_id: 'default',
-        sucursal_id: 'default',
-        numero: m.numero,
-        capacidad: 4,
-        qr_token: m.token,
-        activa: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }));
-      setMesas(fallback);
+    } catch (err: any) {
+      console.error("Error al cargar mesas desde la API:", err);
+      setMesas([]);
+      setErrorMsg(err.message || 'Error al conectar con la API de mesas.');
     } finally {
       setLoading(false);
     }
@@ -110,8 +90,13 @@ export default function MesasSection() {
       return;
     }
 
+    if (sucursales.length === 0) {
+      setErrorMsg('No hay una sucursal registrada para crear mesas.');
+      return;
+    }
+
     setErrorMsg('');
-    const sucursalId = sucursales.length > 0 ? sucursales[0].id : 'default';
+    const sucursalId = sucursales[0].id;
 
     try {
       const creada = await api.crearMesa({
@@ -120,35 +105,23 @@ export default function MesasSection() {
         capacidad: cap,
       });
       setMesas(prev => [...prev, creada]);
+      setNuevoNumero('');
+      setNuevaCapacidad('4');
+      setMostrarFormMesa(false);
     } catch (err: any) {
-      // Fallback local si falla la conexión
-      const mesaLocal: MesaAPI = {
-        id: crypto.randomUUID(),
-        tenant_id: 'local',
-        sucursal_id: sucursalId,
-        numero: num,
-        capacidad: cap,
-        qr_token: `token-mesa-${num}-${Date.now().toString(36)}`,
-        activa: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setMesas(prev => [...prev, mesaLocal]);
+      setErrorMsg(err.message || 'Error al crear la mesa.');
     }
-
-    setNuevoNumero('');
-    setNuevaCapacidad('4');
-    setMostrarFormMesa(false);
   };
 
   const handleEliminarMesa = async (id: string) => {
     if (!confirm('¿Seguro que deseas eliminar esta mesa?')) return;
     try {
       await api.eliminarMesa(id);
-    } catch (err) {
-      console.warn("No se pudo eliminar mesa en back:", err);
+      setMesas(prev => prev.filter(m => m.id !== id));
+    } catch (err: any) {
+      console.error("No se pudo eliminar mesa:", err);
+      setErrorMsg(err.message || 'Error al eliminar la mesa.');
     }
-    setMesas(prev => prev.filter(m => m.id !== id));
   };
 
   return (

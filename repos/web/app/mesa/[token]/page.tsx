@@ -2,8 +2,6 @@
 import { useReducer, useState, useEffect, useRef } from "react";
 import { useParams } from "next/navigation";
 import { api, CategoriaPublica, ArticuloPublico } from "@/lib/api";
-import { mockMesas } from "@/lib/mock/mesas";
-import { mockMenu } from "@/lib/mock/menu";
 import CategoriaNav from "@/components/menu/CategoriaNav";
 import ItemCard from "@/components/menu/ItemCard";
 import CartDrawer from "@/components/menu/CartDrawer";
@@ -129,7 +127,6 @@ export default function MesaPage() {
     async function cargarDatos() {
       try {
         setLoading(true);
-        // Intentar obtener mesa desde API real
         let mesaInfo: { id: string; numero: number; sucursal_id: string } | null = null;
         try {
           const mesaApi = await api.obtenerMesaPorQR(token);
@@ -140,20 +137,15 @@ export default function MesaPage() {
               sucursal_id: mesaApi.sucursal_id,
             };
           }
-        } catch {
-          // Fallback a mocks si la API no encuentra el QR o está en modo local
-          const mock = mockMesas.find(m => m.token === token);
-          if (mock) {
-            mesaInfo = {
-              id: mock.id,
-              numero: mock.numero,
-              sucursal_id: 'default',
-            };
-          }
+        } catch (err) {
+          console.error("Error cargando mesa por QR:", err);
         }
 
         if (!mesaInfo) {
-          if (isMounted) setLoading(false);
+          if (isMounted) {
+            setMesa(null);
+            setLoading(false);
+          }
           return;
         }
 
@@ -183,26 +175,12 @@ export default function MesaPage() {
             }
             return;
           }
-        } catch {
-          // Fallback a mockMenu
+        } catch (err) {
+          console.error("Error cargando carta pública:", err);
         }
 
-        // Fallback a carta mock
-        const fallbackMenu: MenuCategoryView[] = mockMenu.map(m => ({
-          id: m.id,
-          nombre: m.nombre,
-          items: m.items.map(i => ({
-            id: i.id,
-            nombre: i.nombre,
-            descripcion: i.descripcion,
-            precio: i.precio,
-            disponible: i.disponible,
-          })),
-        }));
-
         if (isMounted) {
-          setMenu(fallbackMenu);
-          setCategoriaActiva(fallbackMenu[0]?.id || '');
+          setMenu([]);
         }
       } finally {
         if (isMounted) {
@@ -222,7 +200,7 @@ export default function MesaPage() {
 
   // 2. Conectar SSE para seguimiento en tiempo real (US-44)
   useEffect(() => {
-    if (state.vista !== 'seguimiento') {
+    if (state.vista !== 'seguimiento' || !state.pedidoId) {
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
         eventSourceRef.current = null;
@@ -230,39 +208,29 @@ export default function MesaPage() {
       return;
     }
 
-    if (state.pedidoId) {
-      const url = api.obtenerEventosPedidoUrl(state.pedidoId);
-      const es = new EventSource(url);
-      eventSourceRef.current = es;
+    const url = api.obtenerEventosPedidoUrl(state.pedidoId);
+    const es = new EventSource(url);
+    eventSourceRef.current = es;
 
-      es.addEventListener('pedido_actualizado', (e: MessageEvent) => {
-        try {
-          const data = JSON.parse(e.data);
-          if (data && data.estado) {
-            dispatch({ type: 'SET_ESTADO_PEDIDO', payload: data.estado as EstadoPedido });
-          }
-        } catch (err) {
-          console.warn("Error parseando evento SSE de pedido:", err);
+    es.addEventListener('pedido_actualizado', (e: MessageEvent) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data && data.estado) {
+          dispatch({ type: 'SET_ESTADO_PEDIDO', payload: data.estado as EstadoPedido });
         }
-      });
+      } catch (err) {
+        console.warn("Error parseando evento SSE de pedido:", err);
+      }
+    });
 
-      es.onerror = () => {
-        // En caso de corte o si es mock, permitir que la conexión intente reconectar
-      };
+    es.onerror = () => {
+      // Reconexión automática del navegador
+    };
 
-      return () => {
-        es.close();
-        eventSourceRef.current = null;
-      };
-    } else {
-      // Si fue creado en modo mock sin API, simular avance automático
-      const t1 = setTimeout(() => dispatch({ type: 'SET_ESTADO_PEDIDO', payload: 'preparando' }), 4000);
-      const t2 = setTimeout(() => dispatch({ type: 'SET_ESTADO_PEDIDO', payload: 'listo' }), 12000);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-      };
-    }
+    return () => {
+      es.close();
+      eventSourceRef.current = null;
+    };
   }, [state.vista, state.pedidoId]);
 
   // 3. Confirmar y enviar pedido a la API real (US-43)
@@ -285,8 +253,8 @@ export default function MesaPage() {
         payload: { pedidoId: resp?.id },
       });
     } catch (err) {
-      console.warn("No se pudo persistir en API real, procediendo con pedido local:", err);
-      dispatch({ type: 'CONFIRMAR_PEDIDO' });
+      console.error("No se pudo enviar el pedido a la API:", err);
+      alert("Error al enviar el pedido. Por favor intenta nuevamente.");
     } finally {
       setEnviandoPedido(false);
     }

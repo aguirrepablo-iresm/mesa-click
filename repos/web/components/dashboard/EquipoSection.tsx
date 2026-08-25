@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { api, UsuarioAPI } from "@/lib/api";
-import { mockEquipo } from "@/lib/mock/equipo";
 
 type RolInvitable = 'encargado' | 'mozo';
 type FormState = { nombre: string; email: string; rol: RolInvitable };
@@ -23,36 +22,17 @@ export default function EquipoSection() {
   const cargarEquipo = async () => {
     try {
       setLoading(true);
+      setError('');
       const res = await api.listarUsuarios();
       if (res && res.length > 0) {
         setEquipo(res);
       } else {
-        // Fallback mock
-        const fallback: UsuarioAPI[] = mockEquipo.map(m => ({
-          id: m.id,
-          tenant_id: 'default',
-          nombre: m.nombre,
-          email: m.email,
-          rol: m.rol,
-          activo: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        }));
-        setEquipo(fallback);
+        setEquipo([]);
       }
-    } catch (err) {
-      console.warn("API de usuarios no disponible, usando mocks:", err);
-      const fallback: UsuarioAPI[] = mockEquipo.map(m => ({
-        id: m.id,
-        tenant_id: 'default',
-        nombre: m.nombre,
-        email: m.email,
-        rol: m.rol,
-        activo: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      }));
-      setEquipo(fallback);
+    } catch (err: any) {
+      console.error("Error al cargar usuarios desde la API:", err);
+      setEquipo([]);
+      setError(err.message || 'Error al conectar con la API de usuarios.');
     } finally {
       setLoading(false);
     }
@@ -86,19 +66,7 @@ export default function EquipoSection() {
       }
       setForm({ nombre: '', email: '', rol: 'mozo' });
     } catch (err: any) {
-      // Fallback local
-      const uLocal: UsuarioAPI = {
-        id: crypto.randomUUID(),
-        tenant_id: 'local',
-        nombre: form.nombre.trim(),
-        email: form.email.trim(),
-        rol: form.rol,
-        activo: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setEquipo(prev => [...prev, uLocal]);
-      setForm({ nombre: '', email: '', rol: 'mozo' });
+      setError(err.message || 'Error al invitar al usuario.');
     }
   };
 

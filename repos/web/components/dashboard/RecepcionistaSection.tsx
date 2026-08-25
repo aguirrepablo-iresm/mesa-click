@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { api, PedidoAPI, Sucursal, MesaAPI } from "@/lib/api";
-import { mockPedidos, Pedido } from "@/lib/mock/pedidos";
 
 export interface PedidoVista {
   id: string;
@@ -151,32 +150,15 @@ export default function RecepcionistaSection() {
             setPedidos(formateados);
             return;
           }
-        } catch {
-          // Fallback a mocks
+        } catch (err) {
+          console.error("Error al obtener pedidos activos:", err);
         }
       }
 
-      // Fallback mocks si no hay backend activo
-      const fallback: PedidoVista[] = mockPedidos.map(p => ({
-        id: p.id,
-        mesa: p.mesa,
-        timestamp: p.timestamp,
-        estado: p.estado,
-        items: p.items,
-        cuentaSolicitada: p.cuentaSolicitada,
-      }));
-      setPedidos(fallback);
+      setPedidos([]);
     } catch (err) {
-      console.warn("Error cargando pedidos para recepcionista, usando mocks:", err);
-      const fallback: PedidoVista[] = mockPedidos.map(p => ({
-        id: p.id,
-        mesa: p.mesa,
-        timestamp: p.timestamp,
-        estado: p.estado,
-        items: p.items,
-        cuentaSolicitada: p.cuentaSolicitada,
-      }));
-      setPedidos(fallback);
+      console.error("Error cargando pedidos para recepcionista:", err);
+      setPedidos([]);
     } finally {
       setLoading(false);
     }
@@ -186,7 +168,6 @@ export default function RecepcionistaSection() {
     cargarDatos();
   }, []);
 
-  // SSE en tiempo real para recepcionista (US-45)
   useEffect(() => {
     if (!sucursal) return;
 
@@ -252,11 +233,8 @@ export default function RecepcionistaSection() {
       setPedidos(prev =>
         prev.map(p => (p.id === pedidoId ? { ...p, estado: nextEstado } : p))
       );
-    } catch {
-      // Fallback local
-      setPedidos(prev =>
-        prev.map(p => (p.id === pedidoId ? { ...p, estado: nextEstado } : p))
-      );
+    } catch (err) {
+      console.error("Error al cambiar estado del pedido:", err);
     }
   };
 
@@ -264,8 +242,8 @@ export default function RecepcionistaSection() {
     try {
       await api.cambiarEstadoPedido(pedidoId, 'cerrado');
       setPedidos(prev => prev.filter(p => p.id !== pedidoId));
-    } catch {
-      setPedidos(prev => prev.filter(p => p.id !== pedidoId));
+    } catch (err) {
+      console.error("Error al cerrar pedido:", err);
     }
   };
 

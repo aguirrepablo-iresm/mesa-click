@@ -29,6 +29,59 @@ func (s *LogEmailSender) EnviarMagicLink(ctx context.Context, email, link string
 	return nil
 }
 
+// BrevoEmailSender envía correos transaccionales mediante la API HTTP de Brevo.
+type BrevoEmailSender struct {
+	apiKey      string
+	senderName  string
+	senderEmail string
+}
+
+func NuevoBrevoEmailSender(apiKey, senderName, senderEmail string) *BrevoEmailSender {
+	return &BrevoEmailSender{
+		apiKey:      apiKey,
+		senderName:  senderName,
+		senderEmail: senderEmail,
+	}
+}
+
+func (s *BrevoEmailSender) EnviarMagicLink(ctx context.Context, toEmail, link string) error {
+	body := map[string]any{
+		"sender": map[string]string{
+			"name":  s.senderName,
+			"email": s.senderEmail,
+		},
+		"to":          []map[string]string{{"email": toEmail}},
+		"subject":     "Tu enlace de acceso a Mesa CLICK",
+		"htmlContent": fmt.Sprintf("<p>Hola,</p><p>Hacé clic en el siguiente enlace para ingresar a tu cuenta de Mesa CLICK. Expira en 15 minutos:</p><p><a href=\"%s\">Ingresar a Mesa CLICK</a></p><p>Si no solicitaste este enlace, podés ignorar este correo.</p>", link),
+	}
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return fmt.Errorf("error serializando request de email: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.brevo.com/v3/smtp/email", bytes.NewReader(jsonBody))
+	if err != nil {
+		return fmt.Errorf("error creando request a Brevo: %w", err)
+	}
+	req.Header.Set("api-key", s.apiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("error enviando request a Brevo: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
+		return fmt.Errorf("error de Brevo: status %d", resp.StatusCode)
+	}
+
+	slog.InfoContext(ctx, "magic link enviado con éxito por Brevo", "email", toEmail)
+	return nil
+}
+
 // SMTPEmailSender envía correos a través de cualquier servidor SMTP estándar (Gmail, Outlook, Brevo, SendGrid, etc.).
 type SMTPEmailSender struct {
 	host     string

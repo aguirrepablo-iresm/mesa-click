@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/carta"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/db"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/mesa"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/pedido"
@@ -49,6 +50,9 @@ func TestIntegracion_FlujoCompletoPedido(t *testing.T) {
 
 	mesaStore := mesa.NuevoStore()
 	mesaSvc := mesa.NuevoService(mesaStore)
+
+	cartaStore := carta.NuevoStore()
+	cartaSvc := carta.NuevoService(cartaStore)
 
 	pedidoStore := pedido.NuevoStore()
 	pedidoSvc := pedido.NuevoService(pedidoStore)
@@ -114,13 +118,33 @@ func TestIntegracion_FlujoCompletoPedido(t *testing.T) {
 		t.Fatalf("error asignando sector a mesa: %v", err)
 	}
 
-	// E. CREAR PEDIDO (Simula la acción del cliente comensal)
+	// E. CREAR CATEGORÍA Y ARTÍCULO
+	t.Log("Creando categoría y artículo de prueba...")
+	createdCat, err := cartaSvc.CrearCategoria(ctx, createdTenant.ID, carta.CategoriaInput{
+		Nombre: "Bebidas",
+		Orden:  0,
+	})
+	if err != nil {
+		t.Fatalf("error creando categoría: %v", err)
+	}
+
+	createdArt, err := cartaSvc.CrearArticulo(ctx, createdTenant.ID, carta.ArticuloInput{
+		CategoriaID: createdCat.ID,
+		Nombre:      "Agua Mineral",
+		Descripcion: "500ml",
+		Precio:      250,
+	})
+	if err != nil {
+		t.Fatalf("error creando artículo: %v", err)
+	}
+
+	// F. CREAR PEDIDO (Simula la acción del cliente comensal)
 	t.Log("Creando pedido desde el cliente...")
 	itemsInput := []pedido.NuevoItemInput{
 		{
-			ArticuloID: "00000000-0000-0000-0000-000000000000", // No tenemos artículos reales insertados, pero el servicio de pedidos acepta cualquier UUID para testing
+			ArticuloID: createdArt.ID,
 			Cantidad:   2,
-			Notas:      "sin cebolla",
+			Notas:      "sin gas",
 		},
 	}
 	createdPedido, err := pedidoSvc.Crear(ctx, pedido.NuevoPedidoInput{
@@ -140,7 +164,7 @@ func TestIntegracion_FlujoCompletoPedido(t *testing.T) {
 
 	// F. CAMBIAR ESTADO DEL PEDIDO (Simula la acción del recepcionista / mozo)
 	t.Log("Cambiando estado del pedido a 'preparando'...")
-	updatedPedido, err := pedidoSvc.CambiarEstado(ctx, createdPedido.ID, "preparando", createdTenant.ID)
+	updatedPedido, err := pedidoSvc.CambiarEstado(ctx, createdPedido.ID, createdTenant.ID, "preparando")
 	if err != nil {
 		t.Fatalf("error actualizando estado del pedido: %v", err)
 	}

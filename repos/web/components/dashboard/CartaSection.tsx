@@ -1,7 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { api, CategoriaAPI, ArticuloAPI } from "@/lib/api";
-import { mockMenu } from "@/lib/mock/menu";
 
 export interface CategoriaConItems extends CategoriaAPI {
   items: ArticuloAPI[];
@@ -21,6 +20,7 @@ export default function CartaSection() {
   const cargarCarta = async () => {
     try {
       setLoading(true);
+      setErrorMsg('');
       const [cats, arts] = await Promise.all([
         api.listarCategorias(),
         api.listarArticulos(),
@@ -33,57 +33,12 @@ export default function CartaSection() {
         }));
         setCategorias(combinadas);
       } else {
-        // Fallback a estructura inicial si aún no hay en backend
-        const fallback: CategoriaConItems[] = mockMenu.map(m => ({
-          id: m.id,
-          tenant_id: 'default',
-          nombre: m.nombre,
-          orden: 0,
-          activa: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          items: m.items.map(i => ({
-            id: i.id,
-            tenant_id: 'default',
-            categoria_id: m.id,
-            nombre: i.nombre,
-            descripcion: i.descripcion,
-            precio: i.precio,
-            imagen_url: '',
-            disponible: i.disponible,
-            orden: 0,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          })),
-        }));
-        setCategorias(fallback);
+        setCategorias([]);
       }
     } catch (err: any) {
-      console.warn("API de carta no disponible, usando mocks:", err);
-      // Usar mocks como fallback
-      const fallback: CategoriaConItems[] = mockMenu.map(m => ({
-        id: m.id,
-        tenant_id: 'default',
-        nombre: m.nombre,
-        orden: 0,
-        activa: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        items: m.items.map(i => ({
-          id: i.id,
-          tenant_id: 'default',
-          categoria_id: m.id,
-          nombre: i.nombre,
-          descripcion: i.descripcion,
-          precio: i.precio,
-          imagen_url: '',
-          disponible: i.disponible,
-          orden: 0,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })),
-      }));
-      setCategorias(fallback);
+      console.error("Error al cargar la carta desde la API:", err);
+      setCategorias([]);
+      setErrorMsg(err.message || 'Error al conectar con la API de carta.');
     } finally {
       setLoading(false);
     }
@@ -106,22 +61,7 @@ export default function CartaSection() {
       setNuevaCatNombre('');
       setMostrarFormCat(false);
     } catch (err: any) {
-      // Si no hay API conectada, mantener fallback local
-      setCategorias(prev => [
-        ...prev,
-        {
-          id: crypto.randomUUID(),
-          tenant_id: 'local',
-          nombre: nuevaCatNombre.trim(),
-          orden: prev.length,
-          activa: true,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          items: [],
-        },
-      ]);
-      setNuevaCatNombre('');
-      setMostrarFormCat(false);
+      setErrorMsg(err.message || 'Error al crear la categoría.');
     }
   };
 
@@ -129,10 +69,11 @@ export default function CartaSection() {
     if (!confirm('¿Eliminar esta categoría y todos sus ítems?')) return;
     try {
       await api.eliminarCategoria(catId);
-    } catch (err) {
-      console.warn("No se pudo eliminar categoría en back:", err);
+      setCategorias(prev => prev.filter(c => c.id !== catId));
+    } catch (err: any) {
+      console.error("No se pudo eliminar categoría:", err);
+      setErrorMsg(err.message || 'Error al eliminar categoría.');
     }
-    setCategorias(prev => prev.filter(c => c.id !== catId));
   };
 
   const agregarItem = async (catId: string) => {
@@ -156,63 +97,48 @@ export default function CartaSection() {
       setCategorias(prev =>
         prev.map(c => c.id === catId ? { ...c, items: [...c.items, creado] } : c)
       );
-    } catch (err) {
-      // Fallback local
-      const itemLocal: ArticuloAPI = {
-        id: crypto.randomUUID(),
-        tenant_id: 'local',
-        categoria_id: catId,
-        nombre: nuevoItem.nombre.trim(),
-        descripcion: nuevoItem.descripcion.trim(),
-        precio: precioNum,
-        imagen_url: '',
-        disponible: true,
-        orden: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
-      setCategorias(prev =>
-        prev.map(c => c.id === catId ? { ...c, items: [...c.items, itemLocal] } : c)
-      );
+      setNuevoItem({ nombre: '', descripcion: '', precio: '' });
+      setMostrarFormItem(null);
+    } catch (err: any) {
+      setErrorMsg(err.message || 'Error al crear el artículo.');
     }
-
-    setNuevoItem({ nombre: '', descripcion: '', precio: '' });
-    setMostrarFormItem(null);
   };
 
   const eliminarItem = async (catId: string, itemId: string) => {
     if (!confirm('¿Eliminar este ítem?')) return;
     try {
       await api.eliminarArticulo(itemId);
-    } catch (err) {
-      console.warn("No se pudo eliminar artículo en back:", err);
+      setCategorias(prev =>
+        prev.map(c =>
+          c.id === catId ? { ...c, items: c.items.filter(i => i.id !== itemId) } : c
+        )
+      );
+    } catch (err: any) {
+      console.error("No se pudo eliminar artículo:", err);
+      setErrorMsg(err.message || 'Error al eliminar artículo.');
     }
-    setCategorias(prev =>
-      prev.map(c =>
-        c.id === catId ? { ...c, items: c.items.filter(i => i.id !== itemId) } : c
-      )
-    );
   };
 
   const toggleDisponible = async (catId: string, item: ArticuloAPI) => {
     const nuevoEstado = !item.disponible;
     try {
       await api.actualizarArticulo(item.id, { disponible: nuevoEstado });
-    } catch (err) {
-      console.warn("No se pudo actualizar disponibilidad en back:", err);
+      setCategorias(prev =>
+        prev.map(c =>
+          c.id === catId
+            ? {
+                ...c,
+                items: c.items.map(i =>
+                  i.id === item.id ? { ...i, disponible: nuevoEstado } : i
+                ),
+              }
+            : c
+        )
+      );
+    } catch (err: any) {
+      console.error("No se pudo actualizar disponibilidad:", err);
+      setErrorMsg(err.message || 'Error al actualizar disponibilidad.');
     }
-    setCategorias(prev =>
-      prev.map(c =>
-        c.id === catId
-          ? {
-              ...c,
-              items: c.items.map(i =>
-                i.id === item.id ? { ...i, disponible: nuevoEstado } : i
-              ),
-            }
-          : c
-      )
-    );
   };
 
   const totalItems = categorias.reduce((n, c) => n + c.items.length, 0);
