@@ -48,8 +48,7 @@ mesa-click/
 │       │   ├── dashboard/                 ← CartaSection, MesasSection, EquipoSection, RecepcionistaSection
 │       │   └── menu/                      ← CategoriaNav, ItemCard, CartDrawer, SeguimientoView
 │       └── lib/mock/                      ← datos mockeados (menu, mesas, pedidos, equipo)
-├── AGENTS.md                              ← reglas para todos los agentes de IA
-└── GEMINI.md                              ← contexto específico para Gemini
+└── AGENTS.md                              ← reglas para todos los agentes de IA
 ```
 
 ## Plan de desarrollo — 3 fases
@@ -262,6 +261,21 @@ Abrí los archivos directamente en el browser. La presentación principal se nav
 | Base de datos | PostgreSQL 16+ |
 | Auth (Sprint 4) | Magic link por email |
 | Tiempo real (Sprint 5) | Server-Sent Events (SSE) |
+
+## Flujo de Trabajo y Entornos de Despliegue
+
+### Ramas y Ambientes
+- **`main` (Producción):**
+  - **Backend (`repos/api`)**: Desplegado en **Render**.
+  - **Frontend (`repos/web`)**: Desplegado en **Vercel**.
+- **`qa` (QA / Staging):** Rama de integración y pruebas de calidad previa a producción.
+
+### Flujo de Desarrollo (Git)
+1. **Partir siempre desde `qa`:** Todo nuevo desarrollo (`feat/US-XX-descripcion` o `fix/descripcion`) se crea a partir de la rama `qa`.
+2. **Pull Request a `qa`:** Al terminar el desarrollo, se hace merge a `qa` para pruebas integrales y validación del sprint.
+3. **Merge a `main`:** Tras aprobar el control de calidad en `qa`, se mergea hacia `main`, disparando el despliegue a producción en Render y Vercel.
+
+---
 
 ## Equipo
 

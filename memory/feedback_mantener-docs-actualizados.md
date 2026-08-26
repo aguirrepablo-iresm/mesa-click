@@ -1,14 +1,13 @@
 ---
 name: mantener-docs-actualizados
-description: El agente es responsable de mantener siempre actualizados AGENTS.md, GEMINI.md, CLAUDE.md y todos los README del repo ante cualquier cambio de fase, sprint, US o decisión de arquitectura.
+description: El agente es responsable de mantener siempre actualizados AGENTS.md, CLAUDE.md y todos los README del repo ante cualquier cambio de fase, sprint, US o decisión de arquitectura.
 metadata:
   type: feedback
 ---
 
 Soy el encargado de mantener actualizados los siguientes archivos ante cualquier cambio relevante en el proyecto:
 
-- `AGENTS.md` (raíz) — reglas generales, fases, sprints, fechas
-- `GEMINI.md` — contexto para Gemini, siempre alineado con AGENTS.md
+- `AGENTS.md` (raíz) — reglas generales, fases, sprints, fechas (fuente de verdad principal)
 - `repos/web/AGENTS.md` — reglas del frontend, sprint en curso
 - `repos/web/CLAUDE.md` — apunta a AGENTS.md, actualizar si cambia la estructura
 - `README.md` (raíz y sub-repos) — documentación pública del proyecto

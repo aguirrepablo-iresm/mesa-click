@@ -85,8 +85,7 @@ mesa-click/
 │   └── flows/
 │       ├── happy-path-admin-negocio.md
 │       └── happy-path-cliente.md
-├── AGENTS.md    ← este archivo (fuente de verdad principal)
-└── GEMINI.md    ← instrucciones específicas para Gemini CLI
+└── AGENTS.md    ← este archivo (fuente de verdad principal)
 ```
 
 ---
@@ -105,7 +104,25 @@ mesa-click/
 
 ---
 
+## Estrategia de Ramas y Despliegue (Git Workflow)
+
+### Ramas Principales y Entornos
+- **`main` (Producción)**: Código productivo y estable.
+  - **Backend (`repos/api`)**: Desplegado y corriendo en **Render**.
+  - **Frontend (`repos/web`)**: Desplegado y corriendo en **Vercel**.
+- **`qa` (QA / Staging)**: Rama base para integración continua y pruebas de calidad.
+
+### Flujo de Desarrollo
+1. **Creación de ramas**: Todo nuevo desarrollo (feature o corrección de bug) **debe crearse a partir de `qa`**:
+   - `git checkout qa && git pull`
+   - `git checkout -b feat/US-XX-descripcion` (features)
+   - `git checkout -b fix/descripcion` (correcciones de bugs)
+2. **Integración en QA**: Al finalizar, abrir PR / merge hacia **`qa`** para validación y testing.
+3. **Pase a Producción**: Una vez testeado y validado en `qa`, se mergea hacia **`main`**, actualizando automáticamente los servicios en Render y Vercel.
+
+---
+
 ## Convenciones generales
-- **Branches**: `feat/US-XX-descripcion` o `fix/descripcion`.
+- **Branches**: `feat/US-XX-descripcion` o `fix/descripcion` (creadas siempre a partir de `qa`).
 - **Commits**: Explicar el "por qué" en lugar del "qué".
 - **No duplicar lógica**: Si algo ya está en el backend, el frontend solo lo consume.

@@ -59,6 +59,7 @@ repos/web/
 
 ## Reglas de código
 
+- **Git workflow**: Crear ramas (`feat/*`, `fix/*`) siempre a partir de `qa`. Al validar en QA, mergear a `main` (desplegado en **Vercel**).
 - No crear llamadas a `fetch` ni a APIs externas en Fase 1
 - No instalar librerías sin justificación explícita en la US
 - Mantener diseño responsive — la vista del cliente es mobile-first (el cliente usa su celular)

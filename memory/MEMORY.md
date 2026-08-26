@@ -7,4 +7,8 @@
   * Implementado el almacenamiento y flujo del servicio de pedidos en `internal/pedido`.
   * Diseñado un broker de Server-Sent Events (SSE) concurrente seguro en `internal/notificacion` y expuestos endpoints SSE (con y sin autenticación) en `rutas.go`.
   * Desarrollada una suite robusta de tests unitarios e integración en `internal/notificacion/broker_test.go` para validar suscripción, publicación, desuscripción y stream de red, asegurando la compilación exitosa (`go test ./...` pasa al 100%).
-
+- **Estrategia Git y Ambientes de Despliegue:**
+  * Ramas principales: `main` (Producción) y `qa` (Testing).
+  * Todo desarrollo de nueva feature o corrección de bug inicia a partir de `qa` (`feat/*`, `fix/*`).
+  * Al validar en `qa`, se mergea hacia `main`.
+  * `main` corre en **Render** para la API backend (`repos/api`) y en **Vercel** para el frontend (`repos/web`).

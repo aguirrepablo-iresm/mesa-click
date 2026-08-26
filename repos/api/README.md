@@ -64,6 +64,7 @@ El servidor correrá automáticamente las migraciones pendientes al iniciar.
 2. **Errores:** Seguir el patrón de retorno de errores estándar de Go. En handlers, usar `http.Error` o responder con JSON estructurado.
 3. **Migraciones:** No modificar archivos `.sql` existentes en `migrations/`. Si se requiere un cambio en el esquema, crear un nuevo archivo numerado.
 4. **Contexto:** Respetar los tiempos de expiración y el manejo de contextos en las queries a la base de datos.
+5. **Git Workflow y Despliegue:** Ramas (`feat/*`, `fix/*`) creadas siempre desde `qa`. Al validar en QA, mergear a `main` (desplegado y en ejecución en **Render**).
 
 ---
 Mesa CLICK — Práctica Profesionalizante I.
