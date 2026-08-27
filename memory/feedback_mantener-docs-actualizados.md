@@ -9,7 +9,8 @@ Soy el encargado de mantener actualizados los siguientes archivos ante cualquier
 
 - `AGENTS.md` (raíz) — reglas generales, fases, sprints, fechas (fuente de verdad principal)
 - `repos/web/AGENTS.md` — reglas del frontend, sprint en curso
-- `repos/web/CLAUDE.md` — apunta a AGENTS.md, actualizar si cambia la estructura
+- `CLAUDE.md` / `CODEX.md` / `repos/web/CLAUDE.md` / `repos/web/CODEX.md` — apuntan a AGENTS.md
+- `.github/copilot-instructions.md` — instrucciones para Copilot/Codex
 - `README.md` (raíz y sub-repos) — documentación pública del proyecto
 
 **Why:** El repo se comparte con múltiples personas y agentes de IA. Si estos archivos están desactualizados, los colaboradores arrancan con contexto incorrecto.

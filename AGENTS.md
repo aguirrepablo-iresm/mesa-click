@@ -108,8 +108,8 @@ mesa-click/
 
 ### Ramas Principales y Entornos
 - **`main` (Producción)**: Código productivo y estable.
-  - **Backend (`repos/api`)**: Desplegado y corriendo en **Render**.
-  - **Frontend (`repos/web`)**: Desplegado y corriendo en **Vercel**.
+  - **Backend (`repos/api`)**: Desplegado y corriendo en **Render** (Servicio Free, Docker, Región: Ohio, Servicio: `mesa-click-api`).
+  - **Frontend (`repos/web`)**: Desplegado y corriendo en **Render** (Servicio Free, Docker, Región: Ohio, Servicio: `mesa-click-web`).
 - **`qa` (QA / Staging)**: Rama base para integración continua y pruebas de calidad.
 
 ### Flujo de Desarrollo
@@ -118,11 +118,12 @@ mesa-click/
    - `git checkout -b feat/US-XX-descripcion` (features)
    - `git checkout -b fix/descripcion` (correcciones de bugs)
 2. **Integración en QA**: Al finalizar, abrir PR / merge hacia **`qa`** para validación y testing.
-3. **Pase a Producción**: Una vez testeado y validado en `qa`, se mergea hacia **`main`**, actualizando automáticamente los servicios en Render y Vercel.
+3. **Pase a Producción**: Una vez testeado y validado en `qa`, se mergea hacia **`main`**, actualizando automáticamente ambos servicios (`mesa-click-api` y `mesa-click-web`) en Render mediante Docker.
 
 ---
 
 ## Convenciones generales
-- **Branches**: `feat/US-XX-descripcion` o `fix/descripcion` (creadas siempre a partir de `qa`).
+- **Branches**: `feat/US-XX-descripcion` o `fix/descripcion` (creadas **siempre y sin excepción** a partir de `qa`). **Nunca commitear directo en `main`**.
 - **Commits**: Explicar el "por qué" en lugar del "qué".
+- **Variables de entorno (`.env`)**: Solicitar credenciales y `.env` para la API directamente a **Pablo Aguirre**.
 - **No duplicar lógica**: Si algo ya está en el backend, el frontend solo lo consume.

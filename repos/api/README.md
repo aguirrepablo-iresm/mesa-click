@@ -42,7 +42,8 @@ repos/api/
 - Instancia de PostgreSQL activa.
 
 ### 2. Configuración
-Copia el archivo de ejemplo y configura tus credenciales:
+> 💡 **Para el equipo (Mateo y Martín):** Pedir el archivo `.env` configurado directamente a **Pablo Aguirre**, o crearlo copiando la plantilla:
+
 ```bash
 cp .env.example .env
 ```
@@ -58,13 +59,18 @@ El servidor correrá automáticamente las migraciones pendientes al iniciar.
 - **Health Check:** `GET /health`
   Retorna el estado del servidor y la base de datos.
 
-## Convenciones de Desarrollo
+## Convenciones de Desarrollo y Git Workflow
 
 1. **Logs:** Usar `slog.Info`, `slog.Error`, etc. con atributos para logging estructurado.
 2. **Errores:** Seguir el patrón de retorno de errores estándar de Go. En handlers, usar `http.Error` o responder con JSON estructurado.
 3. **Migraciones:** No modificar archivos `.sql` existentes en `migrations/`. Si se requiere un cambio en el esquema, crear un nuevo archivo numerado.
 4. **Contexto:** Respetar los tiempos de expiración y el manejo de contextos en las queries a la base de datos.
-5. **Git Workflow y Despliegue:** Ramas (`feat/*`, `fix/*`) creadas siempre desde `qa`. Al validar en QA, mergear a `main` (desplegado y en ejecución en **Render**).
+5. **Git Workflow Obligatorio:**
+   - Todo trabajo arranca desde `qa`: `git checkout qa && git pull origin qa`
+   - Crear rama de trabajo: `git checkout -b feat/US-XX-descripcion` o `git checkout -b fix/descripcion`
+   - Probar y verificar tests (`go test ./...`)
+   - PR y validación en `qa`
+   - Una vez aprobado en `qa`, merge a `main` (despliegue automático en **Render** como `mesa-click-api` con Docker en Ohio, servicio Free Web Service).
 
 ---
 Mesa CLICK — Práctica Profesionalizante I.

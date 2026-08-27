@@ -59,7 +59,7 @@ repos/web/
 
 ## Reglas de código
 
-- **Git workflow**: Crear ramas (`feat/*`, `fix/*`) siempre a partir de `qa`. Al validar en QA, mergear a `main` (desplegado en **Vercel**).
+- **Git workflow**: Crear ramas (`feat/*`, `fix/*`) siempre a partir de `qa`. Al validar en QA, mergear a `main` (desplegado en **Render** como `mesa-click-web` con Docker en región Ohio, servicio Free Web Service).
 - No crear llamadas a `fetch` ni a APIs externas en Fase 1
 - No instalar librerías sin justificación explícita en la US
 - Mantener diseño responsive — la vista del cliente es mobile-first (el cliente usa su celular)

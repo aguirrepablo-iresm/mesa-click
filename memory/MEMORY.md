@@ -11,4 +11,4 @@
   * Ramas principales: `main` (Producción) y `qa` (Testing).
   * Todo desarrollo de nueva feature o corrección de bug inicia a partir de `qa` (`feat/*`, `fix/*`).
   * Al validar en `qa`, se mergea hacia `main`.
-  * `main` corre en **Render** para la API backend (`repos/api`) y en **Vercel** para el frontend (`repos/web`).
+  * `main` corre en **Render** (servicio Free, Docker, región Ohio) tanto para la API backend (`repos/api` → `mesa-click-api`) como para el frontend (`repos/web` → `mesa-click-web`).

@@ -52,10 +52,10 @@ components/
 | `npm run build` | Build de producción |
 | `npm run lint` | Verificar errores de ESLint |
 
-## Convenciones
+## Convenciones y Despliegue
 
-- No usar `any` en TypeScript
-- No hacer llamadas a APIs externas en Fase 1 (todo es mock)
-- Componentes funcionales con hooks — sin class components
-- Estilos exclusivamente con Tailwind CSS
-- La vista del cliente es **mobile-first** (el cliente usa el celular)
+- **TypeScript**: No usar `any`
+- **Componentes**: Funcionales con hooks — sin class components
+- **Estilos**: Exclusivamente con Tailwind CSS
+- **Mobile-first**: La vista del cliente es optimizada para celulares
+- **Git Workflow y Despliegue**: Ramas (`feat/*`, `fix/*`) creadas siempre desde `qa`. Al validar en QA, mergear a `main` (desplegado en **Render** como `mesa-click-web` con Docker en región Ohio, servicio Free Web Service).

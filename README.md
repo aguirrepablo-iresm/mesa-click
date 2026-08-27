@@ -70,6 +70,8 @@ mesa-click/
 
 ### 1. Configurar variables de entorno
 
+> 💡 **Para el equipo de desarrollo (Mateo y Martín):** Pedir el archivo `.env` con las credenciales y configuración directamente a **Pablo Aguirre**, o crear uno propio copiando el `.env.example`:
+
 ```powershell
 cd repos/api
 cp .env.example .env
@@ -266,14 +268,31 @@ Abrí los archivos directamente en el browser. La presentación principal se nav
 
 ### Ramas y Ambientes
 - **`main` (Producción):**
-  - **Backend (`repos/api`)**: Desplegado en **Render**.
-  - **Frontend (`repos/web`)**: Desplegado en **Vercel**.
-- **`qa` (QA / Staging):** Rama de integración y pruebas de calidad previa a producción.
+  - **Backend (`repos/api`)**: Desplegado en **Render** (Free Web Service / Docker, región Ohio, servicio: `mesa-click-api`).
+  - **Frontend (`repos/web`)**: Desplegado en **Render** (Free Web Service / Docker, región Ohio, servicio: `mesa-click-web`).
+- **`qa` (QA / Staging):** Rama base de integración y pruebas de calidad previa a producción.
 
-### Flujo de Desarrollo (Git)
-1. **Partir siempre desde `qa`:** Todo nuevo desarrollo (`feat/US-XX-descripcion` o `fix/descripcion`) se crea a partir de la rama `qa`.
-2. **Pull Request a `qa`:** Al terminar el desarrollo, se hace merge a `qa` para pruebas integrales y validación del sprint.
-3. **Merge a `main`:** Tras aprobar el control de calidad en `qa`, se mergea hacia `main`, disparando el despliegue a producción en Render y Vercel.
+### Flujo de Desarrollo (Git Workflow)
+> ⚠️ **Regla fundamental:** Nunca se trabaja ni se commitea directamente en `main`. Todo nuevo feature o corrección debe partir obligatoriamente de `qa`.
+
+1. **Partir siempre desde `qa` actualizado:**
+   ```powershell
+   git checkout qa
+   git pull origin qa
+   ```
+2. **Crear una rama descriptiva:**
+   ```powershell
+   git checkout -b feat/US-XX-descripcion   # Para nuevas funcionalidades
+   # o bien:
+   git checkout -b fix/descripcion-del-bug # Para correcciones
+   ```
+3. **Desarrollar y probar localmente.**
+4. **Subir la rama y crear Pull Request hacia `qa`:**
+   ```powershell
+   git push origin feat/US-XX-descripcion
+   ```
+5. **Validación en QA:** Se revisa, testea e integra en la rama `qa`.
+6. **Pase a Producción (`main`):** Cuando todo está aprobado y validado en `qa`, se mergea hacia `main`. Esto dispara de forma automática el despliegue a producción en Render (`mesa-click-api` y `mesa-click-web`) mediante Docker.
 
 ---
 
