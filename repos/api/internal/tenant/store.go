@@ -8,6 +8,7 @@ import (
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/db"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type Store interface {
@@ -33,6 +34,9 @@ func (s *pgStore) Crear(ctx context.Context, input OnboardingInput) (*Tenant, er
 		input.Nombre, input.NombreFantasia, input.Rubro, input.Slug,
 	).Scan(&t.ID, &t.Nombre, &t.NombreFantasia, &t.Rubro, &t.Slug, &t.CreatedAt)
 	if err != nil {
+		if isUniqueConstraint(err, "tenants_slug_key") {
+			return nil, ErrSlugConflict
+		}
 		return nil, fmt.Errorf("error creando tenant: %w", err)
 	}
 
@@ -42,6 +46,9 @@ func (s *pgStore) Crear(ctx context.Context, input OnboardingInput) (*Tenant, er
 		t.ID, input.EmailAdmin, input.NombreAdmin,
 	)
 	if err != nil {
+		if isUniqueConstraint(err, "usuarios_email_key") || isUniqueConstraint(err, "idx_usuarios_email_lower") {
+			return nil, ErrEmailAdminConflict
+		}
 		return nil, fmt.Errorf("error creando usuario admin: %w", err)
 	}
 
@@ -70,6 +77,11 @@ func optionalString(value string) *string {
 		return nil
 	}
 	return &value
+}
+
+func isUniqueConstraint(err error, constraintName string) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ConstraintName == constraintName
 }
 
 func (s *pgStore) ObtenerPorID(ctx context.Context, id string) (*Tenant, error) {

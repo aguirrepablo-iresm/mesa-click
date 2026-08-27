@@ -5,11 +5,12 @@ interface StepAccountProps {
     nombreAdmin: string;
     emailAdmin: string;
   };
+  errors?: Partial<Record<"nombreAdmin" | "emailAdmin", string>>;
   onChange: (fields: Partial<{ nombreAdmin: string; emailAdmin: string }>) => void;
   onNext: () => void;
 }
 
-export default function StepAccount({ data, onChange, onNext }: StepAccountProps) {
+export default function StepAccount({ data, errors = {}, onChange, onNext }: StepAccountProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!data.emailAdmin.trim() || !data.nombreAdmin.trim()) return;
@@ -33,8 +34,14 @@ export default function StepAccount({ data, onChange, onNext }: StepAccountProps
             value={data.nombreAdmin}
             onChange={(e) => onChange({ nombreAdmin: e.target.value })}
             placeholder="Ej: Pablo Aguirre"
-            className="w-full h-40 px-12 bg-canvas-white border border-ash-graphite rounded-md focus:border-plain-green outline-none transition-all text-14"
+            aria-invalid={Boolean(errors.nombreAdmin)}
+            className={`w-full h-40 px-12 bg-canvas-white border rounded-md focus:border-plain-green outline-none transition-all text-14 ${
+              errors.nombreAdmin ? "border-alert-red" : "border-ash-graphite"
+            }`}
           />
+          {errors.nombreAdmin && (
+            <p className="text-11 text-alert-red px-1">{errors.nombreAdmin}</p>
+          )}
         </div>
 
         <div className="space-y-8">
@@ -51,8 +58,14 @@ export default function StepAccount({ data, onChange, onNext }: StepAccountProps
             value={data.emailAdmin}
             onChange={(e) => onChange({ emailAdmin: e.target.value })}
             placeholder="admin@minegocio.com"
-            className="w-full h-40 px-12 bg-canvas-white border border-ash-graphite rounded-md focus:border-plain-green outline-none transition-all text-14"
+            aria-invalid={Boolean(errors.emailAdmin)}
+            className={`w-full h-40 px-12 bg-canvas-white border rounded-md focus:border-plain-green outline-none transition-all text-14 ${
+              errors.emailAdmin ? "border-alert-red" : "border-ash-graphite"
+            }`}
           />
+          {errors.emailAdmin && (
+            <p className="text-11 text-alert-red px-1">{errors.emailAdmin}</p>
+          )}
         </div>
 
         <div className="p-12 bg-ghost-fog rounded-md border border-ghost-fog text-12 text-sage-green space-y-4">

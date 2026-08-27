@@ -6,8 +6,10 @@ import (
 )
 
 var (
-	ErrNotFound  = errors.New("tenant no encontrado")
-	ErrValidation = errors.New("error de validación")
+	ErrNotFound           = errors.New("tenant no encontrado")
+	ErrValidation         = errors.New("error de validación")
+	ErrSlugConflict       = errors.New("nombre de url ya utilizado")
+	ErrEmailAdminConflict = errors.New("correo de acceso ya registrado")
 )
 
 type Tenant struct {

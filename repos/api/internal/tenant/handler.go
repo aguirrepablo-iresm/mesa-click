@@ -7,7 +7,6 @@ import (
 	"net/http"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/auth"
-	"github.com/jackc/pgx/v5/pgconn"
 )
 
 type Handlers struct {
@@ -30,13 +29,17 @@ func (h *Handlers) Crear(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		// DB errors (including slug conflict) are sanitized
-		slog.ErrorContext(r.Context(), "error creando tenant", "err", err)
-		if isSlugConflict(err) {
-			jsonError(w, "el slug ya está en uso", http.StatusConflict)
-		} else {
-			jsonError(w, "error creando negocio", http.StatusInternalServerError)
+		if errors.Is(err, ErrSlugConflict) {
+			jsonError(w, "Ese nombre en URL ya está en uso. Probá con otro.", http.StatusConflict)
+			return
 		}
+		if errors.Is(err, ErrEmailAdminConflict) {
+			jsonError(w, "Ese correo de acceso ya está registrado. Iniciá sesión o usá otro correo.", http.StatusConflict)
+			return
+		}
+
+		slog.ErrorContext(r.Context(), "error creando tenant", "err", err)
+		jsonError(w, "error creando negocio", http.StatusInternalServerError)
 		return
 	}
 
@@ -71,13 +74,4 @@ func jsonError(w http.ResponseWriter, msg string, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(map[string]string{"error": msg})
-}
-
-// isSlugConflict detects a PostgreSQL unique-constraint violation (code 23505).
-func isSlugConflict(err error) bool {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		return pgErr.Code == "23505"
-	}
-	return false
 }

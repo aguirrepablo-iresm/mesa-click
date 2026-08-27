@@ -19,17 +19,54 @@ const HORARIOS_DEFAULT = JSON.stringify({
   domingo: { abierto: true, tramos: [{ apertura: "08:00", cierre: "00:00" }] },
 });
 
+type OnboardingFormData = {
+  nombreAdmin: string;
+  emailAdmin: string;
+  nombreNegocio: string;
+  nombreFantasia: string;
+  slug: string;
+  rubro: string;
+  descripcion: string;
+  sucursalNombre: string;
+  whatsapp: string;
+  emailSucursal: string;
+  horarios: string;
+};
+
+type FieldErrors = Partial<Record<keyof OnboardingFormData, string>>;
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+function emailValido(email: string) {
+  return EMAIL_RE.test(email.trim());
+}
+
+function pasoParaCampo(campo: keyof OnboardingFormData) {
+  if (campo === "nombreAdmin" || campo === "emailAdmin") return 1;
+  if (
+    campo === "nombreNegocio" ||
+    campo === "nombreFantasia" ||
+    campo === "slug" ||
+    campo === "rubro" ||
+    campo === "descripcion"
+  ) {
+    return 2;
+  }
+  return 3;
+}
+
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [completado, setCompletado] = useState(false);
   // Resultado real del envío del magic link de primer acceso: si falla no
   // podemos afirmar "revisá tu casilla".
   const [linkEnviado, setLinkEnviado] = useState(false);
   const [linkDev, setLinkDev] = useState("");
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<OnboardingFormData>({
     nombreAdmin: "",
     emailAdmin: "",
     nombreNegocio: "",
@@ -43,8 +80,16 @@ export default function OnboardingPage() {
     horarios: HORARIOS_DEFAULT,
   });
 
-  const handleUpdate = (fields: Partial<typeof formData>) => {
+  const handleUpdate = (fields: Partial<OnboardingFormData>) => {
     setFormData((prev) => ({ ...prev, ...fields }));
+    setFieldErrors((prev) => {
+      const next = { ...prev };
+      (Object.keys(fields) as Array<keyof OnboardingFormData>).forEach((field) => {
+        delete next[field];
+      });
+      return next;
+    });
+    if (error) setError("");
   };
 
   const handleNext = () => {
@@ -57,7 +102,64 @@ export default function OnboardingPage() {
     setStep((s) => Math.max(s - 1, 1));
   };
 
+  const validarFormulario = () => {
+    const errors: FieldErrors = {};
+
+    if (!formData.nombreAdmin.trim()) {
+      errors.nombreAdmin = "Ingresá el nombre del responsable.";
+    }
+    if (!formData.emailAdmin.trim()) {
+      errors.emailAdmin = "Ingresá el correo de acceso.";
+    } else if (!emailValido(formData.emailAdmin)) {
+      errors.emailAdmin = "Ingresá un correo de acceso válido.";
+    }
+    if (!formData.nombreNegocio.trim()) {
+      errors.nombreNegocio = "Ingresá el nombre del negocio.";
+    }
+    if (!formData.slug.trim()) {
+      errors.slug = "Elegí el nombre que va a aparecer en la URL.";
+    }
+    if (!formData.sucursalNombre.trim()) {
+      errors.sucursalNombre = "Ingresá el nombre de la sucursal.";
+    }
+    if (formData.emailSucursal.trim() && !emailValido(formData.emailSucursal)) {
+      errors.emailSucursal = "Ingresá un correo de sucursal válido.";
+    }
+
+    const primerCampo = (Object.keys(errors) as Array<keyof OnboardingFormData>)[0];
+    if (!primerCampo) return true;
+
+    setFieldErrors(errors);
+    setStep(pasoParaCampo(primerCampo));
+    setError("Revisá los campos marcados para continuar.");
+    return false;
+  };
+
+  const mostrarErrorDeCreacion = (err: unknown) => {
+    const mensaje = getErrorMessage(
+      err,
+      "No pudimos crear el negocio. Revisá los datos e intentá nuevamente.",
+    );
+    const normalizado = mensaje.toLowerCase();
+    const errors: FieldErrors = {};
+    let nextStep = step;
+
+    if (normalizado.includes("correo de acceso")) {
+      errors.emailAdmin = mensaje;
+      nextStep = 1;
+    } else if (normalizado.includes("nombre en url")) {
+      errors.slug = mensaje;
+      nextStep = 2;
+    }
+
+    setFieldErrors((prev) => ({ ...prev, ...errors }));
+    setStep(nextStep);
+    setError(mensaje);
+  };
+
   const handleComplete = async () => {
+    if (!validarFormulario()) return;
+
     setLoading(true);
     setError("");
 
@@ -88,7 +190,7 @@ export default function OnboardingPage() {
 
       setCompletado(true);
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Error al crear el negocio. Por favor verifica los datos."));
+      mostrarErrorDeCreacion(err);
     } finally {
       setLoading(false);
     }
@@ -168,6 +270,10 @@ export default function OnboardingPage() {
               nombreAdmin: formData.nombreAdmin,
               emailAdmin: formData.emailAdmin,
             }}
+            errors={{
+              nombreAdmin: fieldErrors.nombreAdmin,
+              emailAdmin: fieldErrors.emailAdmin,
+            }}
             onChange={handleUpdate}
             onNext={handleNext}
           />
@@ -182,6 +288,11 @@ export default function OnboardingPage() {
               rubro: formData.rubro,
               descripcion: formData.descripcion,
             }}
+            errors={{
+              nombreNegocio: fieldErrors.nombreNegocio,
+              slug: fieldErrors.slug,
+              rubro: fieldErrors.rubro,
+            }}
             onChange={handleUpdate}
             onNext={handleNext}
           />
@@ -194,6 +305,10 @@ export default function OnboardingPage() {
               whatsapp: formData.whatsapp,
               emailSucursal: formData.emailSucursal,
               horarios: formData.horarios,
+            }}
+            errors={{
+              sucursalNombre: fieldErrors.sucursalNombre,
+              emailSucursal: fieldErrors.emailSucursal,
             }}
             loading={loading}
             error={error}
@@ -238,6 +353,11 @@ export default function OnboardingPage() {
       subtitle={metadata.subtitle}
       onBack={step > 1 ? handleBack : undefined}
     >
+      {error && step !== 3 && (
+        <div className="mb-16 p-12 bg-red-50 border border-alert-red/30 rounded text-12 text-alert-red">
+          {error}
+        </div>
+      )}
       {renderStep()}
     </OnboardingLayout>
   );

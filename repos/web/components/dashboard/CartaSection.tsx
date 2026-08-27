@@ -296,7 +296,7 @@ export default function CartaSection() {
 
               {mostrarFormItem === cat.id && (
                 <div className="px-16 sm:px-20 py-16 bg-ghost-fog space-y-10">
-                  <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_120px] gap-8">
+                  <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,3fr)_minmax(150px,1fr)] gap-8">
                     <div className="space-y-4">
                       <input
                         className={`w-full px-10 py-6 text-13 bg-canvas-white rounded-md border outline-none focus:border-plain-green ${
@@ -320,7 +320,7 @@ export default function CartaSection() {
                         type="number"
                         min="0.01"
                         step="0.01"
-                        className={`w-full px-10 py-6 text-13 bg-canvas-white rounded-md border outline-none focus:border-plain-green ${
+                        className={`w-full px-12 py-6 text-14 bg-canvas-white rounded-md border outline-none focus:border-plain-green ${
                           nuevoItemErrors.precio ? "border-alert-red" : "border-ash-graphite"
                         }`}
                         placeholder="Precio *"

@@ -28,7 +28,45 @@ function getApiErrorMessage(data: unknown, fallback: string) {
 }
 
 export function getErrorMessage(error: unknown, fallback: string) {
-  return error instanceof Error && error.message ? error.message : fallback;
+  const message = error instanceof Error && error.message ? error.message : fallback;
+  return toUserMessage(message, fallback);
+}
+
+function toUserMessage(message: string, fallback: string) {
+  const normalized = message.trim().toLowerCase();
+
+  if (!normalized) return fallback;
+  if (normalized === 'failed to fetch' || normalized.includes('networkerror')) {
+    return 'No pudimos conectar con el servidor. Revisá tu conexión e intentá nuevamente.';
+  }
+  if (normalized.includes('slug') || normalized.includes('nombre de url')) {
+    return 'Ese nombre en URL ya está en uso. Probá con otro.';
+  }
+  if (
+    normalized.includes('correo de acceso ya') ||
+    normalized.includes('email ya') ||
+    normalized.includes('email conflict') ||
+    normalized.includes('correo ya')
+  ) {
+    return 'Ese correo de acceso ya está registrado. Iniciá sesión o usá otro correo.';
+  }
+  if (normalized === 'body inválido' || normalized === 'body invalido') {
+    return 'No pudimos leer los datos enviados. Revisá el formulario e intentá nuevamente.';
+  }
+  if (normalized === 'email requerido') {
+    return 'Ingresá un correo electrónico.';
+  }
+  if (normalized === 'error interno' || normalized.startsWith('error http 500')) {
+    return 'Ocurrió un problema en el servidor. Intentá nuevamente en unos minutos.';
+  }
+  if (normalized.startsWith('error http 401') || normalized.includes('no autorizado')) {
+    return 'Tu sesión no está activa. Volvé a iniciar sesión.';
+  }
+  if (normalized.startsWith('error http 403')) {
+    return 'No tenés permisos para realizar esta acción.';
+  }
+
+  return message;
 }
 
 function parseJsonField(value: unknown) {

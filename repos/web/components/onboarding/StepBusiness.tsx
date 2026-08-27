@@ -10,6 +10,7 @@ interface StepBusinessProps {
     rubro: string;
     descripcion: string;
   };
+  errors?: Partial<Record<"nombreNegocio" | "slug" | "rubro", string>>;
   onChange: (fields: Partial<{
     nombreNegocio: string;
     nombreFantasia: string;
@@ -30,7 +31,7 @@ function slugify(value: string) {
     .replace(/^-+|-+$/g, "");
 }
 
-export default function StepBusiness({ data, onChange, onNext }: StepBusinessProps) {
+export default function StepBusiness({ data, errors = {}, onChange, onNext }: StepBusinessProps) {
   // El prefijo del slug tiene que ser el dominio donde realmente corre la app
   // (localhost:3000, el dominio de Render, etc.), no un dominio fijo de ejemplo.
   // Se resuelve después del montaje porque `window` no existe en el render del servidor.
@@ -87,8 +88,14 @@ export default function StepBusiness({ data, onChange, onNext }: StepBusinessPro
                 value={data.nombreNegocio}
                 onChange={(e) => handleNombreChange(e.target.value)}
                 placeholder="Ej: Café Bar Central"
-                className="w-full h-40 px-12 bg-canvas-white border border-ash-graphite rounded-md focus:border-plain-green outline-none transition-all text-14"
+                aria-invalid={Boolean(errors.nombreNegocio)}
+                className={`w-full h-40 px-12 bg-canvas-white border rounded-md focus:border-plain-green outline-none transition-all text-14 ${
+                  errors.nombreNegocio ? "border-alert-red" : "border-ash-graphite"
+                }`}
               />
+              {errors.nombreNegocio && (
+                <p className="text-11 text-alert-red px-1">{errors.nombreNegocio}</p>
+              )}
             </div>
 
             <div className="space-y-6">
@@ -114,8 +121,14 @@ export default function StepBusiness({ data, onChange, onNext }: StepBusinessPro
                     value={data.slug}
                     onChange={(e) => handleSlugChange(e.target.value)}
                     placeholder={slugify(data.nombreNegocio) || "tu-negocio"}
-                    className="w-full h-40 px-12 bg-canvas-white border border-ash-graphite rounded-md focus:border-plain-green outline-none transition-all text-14 font-mono"
+                    aria-invalid={Boolean(errors.slug)}
+                    className={`w-full h-40 px-12 bg-canvas-white border rounded-md focus:border-plain-green outline-none transition-all text-14 font-mono ${
+                      errors.slug ? "border-alert-red" : "border-ash-graphite"
+                    }`}
                   />
+                  {errors.slug && (
+                    <p className="text-11 text-alert-red px-1 mt-4">{errors.slug}</p>
+                  )}
                 </div>
               </div>
               <p className="text-11 text-sage-green font-mono break-all px-1">
@@ -130,7 +143,10 @@ export default function StepBusiness({ data, onChange, onNext }: StepBusinessPro
               <select 
                 value={data.rubro || "cafeteria"}
                 onChange={(e) => onChange({ rubro: e.target.value })}
-                className="w-full h-40 px-12 bg-canvas-white border border-ash-graphite rounded-md focus:border-plain-green outline-none transition-all text-14"
+                aria-invalid={Boolean(errors.rubro)}
+                className={`w-full h-40 px-12 bg-canvas-white border rounded-md focus:border-plain-green outline-none transition-all text-14 ${
+                  errors.rubro ? "border-alert-red" : "border-ash-graphite"
+                }`}
               >
                 <option value="cafeteria">Cafetería</option>
                 <option value="restaurante">Restaurante</option>
@@ -138,6 +154,9 @@ export default function StepBusiness({ data, onChange, onNext }: StepBusinessPro
                 <option value="comida_rapida">Comida Rápida</option>
                 <option value="otro">Otro</option>
               </select>
+              {errors.rubro && (
+                <p className="text-11 text-alert-red px-1">{errors.rubro}</p>
+              )}
             </div>
           </div>
         </div>
