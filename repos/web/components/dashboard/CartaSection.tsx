@@ -1,12 +1,13 @@
 "use client";
-import { useState, useEffect } from "react";
-import { api, CategoriaAPI, ArticuloAPI } from "@/lib/api";
+import { useState, useEffect, useCallback } from "react";
+import { api, CategoriaAPI, ArticuloAPI, getErrorMessage } from "@/lib/api";
 
 export interface CategoriaConItems extends CategoriaAPI {
   items: ArticuloAPI[];
 }
 
 type NuevoItemForm = { nombre: string; descripcion: string; precio: string };
+type NuevoItemErrors = Partial<Record<"nombre" | "precio", string>>;
 
 export default function CartaSection() {
   const [categorias, setCategorias] = useState<CategoriaConItems[]>([]);
@@ -15,9 +16,10 @@ export default function CartaSection() {
   const [mostrarFormCat, setMostrarFormCat] = useState(false);
   const [mostrarFormItem, setMostrarFormItem] = useState<string | null>(null);
   const [nuevoItem, setNuevoItem] = useState<NuevoItemForm>({ nombre: '', descripcion: '', precio: '' });
+  const [nuevoItemErrors, setNuevoItemErrors] = useState<NuevoItemErrors>({});
   const [errorMsg, setErrorMsg] = useState('');
 
-  const cargarCarta = async () => {
+  const cargarCarta = useCallback(async () => {
     try {
       setLoading(true);
       setErrorMsg('');
@@ -35,18 +37,22 @@ export default function CartaSection() {
       } else {
         setCategorias([]);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error al cargar la carta desde la API:", err);
       setCategorias([]);
-      setErrorMsg(err.message || 'Error al conectar con la API de carta.');
+      setErrorMsg(getErrorMessage(err, 'Error al conectar con la API de carta.'));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    cargarCarta();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void cargarCarta();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [cargarCarta]);
 
   const agregarCategoria = async () => {
     if (!nuevaCatNombre.trim()) return;
@@ -60,8 +66,8 @@ export default function CartaSection() {
       ]);
       setNuevaCatNombre('');
       setMostrarFormCat(false);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error al crear la categoría.');
+    } catch (err: unknown) {
+      setErrorMsg(getErrorMessage(err, 'Error al crear la categoría.'));
     }
   };
 
@@ -70,19 +76,34 @@ export default function CartaSection() {
     try {
       await api.eliminarCategoria(catId);
       setCategorias(prev => prev.filter(c => c.id !== catId));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("No se pudo eliminar categoría:", err);
-      setErrorMsg(err.message || 'Error al eliminar categoría.');
+      setErrorMsg(getErrorMessage(err, 'Error al eliminar categoría.'));
     }
   };
 
   const agregarItem = async (catId: string) => {
-    if (!nuevoItem.nombre.trim() || !nuevoItem.precio) return;
-    const precioNum = parseFloat(nuevoItem.precio);
-    if (isNaN(precioNum) || precioNum <= 0) {
-      setErrorMsg('Ingresa un precio válido.');
+    const errores: NuevoItemErrors = {};
+    if (!nuevoItem.nombre.trim()) {
+      errores.nombre = 'Falta completar el nombre del ítem.';
+    }
+    if (!nuevoItem.precio.trim()) {
+      errores.precio = 'Falta completar el precio del ítem.';
+    }
+
+    if (Object.keys(errores).length > 0) {
+      setNuevoItemErrors(errores);
+      setErrorMsg('');
       return;
     }
+
+    const precioNum = parseFloat(nuevoItem.precio);
+    if (isNaN(precioNum) || precioNum <= 0) {
+      setNuevoItemErrors({ precio: 'Ingresa un precio válido mayor a 0.' });
+      setErrorMsg('');
+      return;
+    }
+    setNuevoItemErrors({});
     setErrorMsg('');
 
     try {
@@ -91,7 +112,7 @@ export default function CartaSection() {
         nombre: nuevoItem.nombre.trim(),
         descripcion: nuevoItem.descripcion.trim(),
         precio: precioNum,
-        disponible: true,
+        activo: true,
       });
 
       setCategorias(prev =>
@@ -99,8 +120,8 @@ export default function CartaSection() {
       );
       setNuevoItem({ nombre: '', descripcion: '', precio: '' });
       setMostrarFormItem(null);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error al crear el artículo.');
+    } catch (err: unknown) {
+      setErrorMsg(getErrorMessage(err, 'Error al crear el artículo.'));
     }
   };
 
@@ -113,31 +134,31 @@ export default function CartaSection() {
           c.id === catId ? { ...c, items: c.items.filter(i => i.id !== itemId) } : c
         )
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("No se pudo eliminar artículo:", err);
-      setErrorMsg(err.message || 'Error al eliminar artículo.');
+      setErrorMsg(getErrorMessage(err, 'Error al eliminar artículo.'));
     }
   };
 
   const toggleDisponible = async (catId: string, item: ArticuloAPI) => {
-    const nuevoEstado = !item.disponible;
+    const nuevoEstado = !(item.activo !== false);
     try {
-      await api.actualizarArticulo(item.id, { disponible: nuevoEstado });
+      await api.actualizarArticulo(item.id, { activo: nuevoEstado });
       setCategorias(prev =>
         prev.map(c =>
           c.id === catId
             ? {
                 ...c,
                 items: c.items.map(i =>
-                  i.id === item.id ? { ...i, disponible: nuevoEstado } : i
+                  i.id === item.id ? { ...i, activo: nuevoEstado } : i
                 ),
               }
             : c
         )
       );
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("No se pudo actualizar disponibilidad:", err);
-      setErrorMsg(err.message || 'Error al actualizar disponibilidad.');
+      setErrorMsg(getErrorMessage(err, 'Error al actualizar disponibilidad.'));
     }
   };
 
@@ -203,6 +224,7 @@ export default function CartaSection() {
                   onClick={() => {
                     setMostrarFormItem(cat.id);
                     setNuevoItem({ nombre: '', descripcion: '', precio: '' });
+                    setNuevoItemErrors({});
                   }}
                   className="px-10 py-4 text-12 font-medium text-plain-green-muted border border-plain-green-muted rounded-md hover:bg-ghost-fog transition-colors"
                 >
@@ -218,12 +240,15 @@ export default function CartaSection() {
             </div>
 
             <div className="divide-y divide-ghost-fog">
-              {cat.items.map(item => (
+              {cat.items.map(item => {
+                const visible = item.activo !== false;
+
+                return (
                 <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-10 px-16 sm:px-20 py-12">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-8 flex-wrap">
                       <span className="text-13 font-medium text-ash-graphite">{item.nombre}</span>
-                      {!item.disponible && (
+                      {!visible && (
                         <span className="px-6 py-1 text-10 font-medium bg-vanilla-cream text-sage-green rounded-md border border-ghost-fog">
                           No disponible
                         </span>
@@ -240,9 +265,17 @@ export default function CartaSection() {
                     <div className="flex items-center gap-12">
                       <button
                         onClick={() => toggleDisponible(cat.id, item)}
-                        className="text-12 font-medium text-sage-green hover:text-ash-graphite underline"
+                        className={`inline-flex items-center gap-4 px-8 py-4 text-11 font-medium rounded-md border transition-colors ${
+                          visible
+                            ? "text-plain-green-muted border-plain-green-muted bg-ghost-fog hover:bg-canvas-white"
+                            : "text-sage-green border-ghost-fog bg-vanilla-cream hover:bg-ghost-fog"
+                        }`}
+                        title={visible ? "Ocultar del menú público" : "Mostrar en el menú público"}
                       >
-                        {item.disponible ? 'Ocultar' : 'Mostrar'}
+                        <span className="material-symbols-outlined text-16">
+                          {visible ? "visibility" : "visibility_off"}
+                        </span>
+                        {visible ? 'Visible en menú' : 'Oculto en menú'}
                       </button>
                       <button
                         onClick={() => eliminarItem(cat.id, item.id)}
@@ -254,7 +287,8 @@ export default function CartaSection() {
                     </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
 
               {cat.items.length === 0 && mostrarFormItem !== cat.id && (
                 <p className="px-20 py-12 text-13 text-sage-green italic">Sin ítems aún.</p>
@@ -262,21 +296,45 @@ export default function CartaSection() {
 
               {mostrarFormItem === cat.id && (
                 <div className="px-16 sm:px-20 py-16 bg-ghost-fog space-y-10">
-                  <div className="flex flex-col sm:flex-row gap-8">
-                    <input
-                      className="flex-1 px-10 py-6 text-13 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
-                      placeholder="Nombre del ítem *"
-                      value={nuevoItem.nombre}
-                      onChange={e => setNuevoItem(p => ({ ...p, nombre: e.target.value }))}
-                      autoFocus
-                    />
-                    <input
-                      type="number"
-                      className="w-full sm:w-120 px-10 py-6 text-13 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
-                      placeholder="Precio *"
-                      value={nuevoItem.precio}
-                      onChange={e => setNuevoItem(p => ({ ...p, precio: e.target.value }))}
-                    />
+                  <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_120px] gap-8">
+                    <div className="space-y-4">
+                      <input
+                        className={`w-full px-10 py-6 text-13 bg-canvas-white rounded-md border outline-none focus:border-plain-green ${
+                          nuevoItemErrors.nombre ? "border-alert-red" : "border-ash-graphite"
+                        }`}
+                        placeholder="Nombre del ítem *"
+                        value={nuevoItem.nombre}
+                        onChange={e => {
+                          setNuevoItem(p => ({ ...p, nombre: e.target.value }));
+                          setNuevoItemErrors(p => ({ ...p, nombre: undefined }));
+                        }}
+                        aria-invalid={Boolean(nuevoItemErrors.nombre)}
+                        autoFocus
+                      />
+                      {nuevoItemErrors.nombre && (
+                        <p className="text-11 text-alert-red">{nuevoItemErrors.nombre}</p>
+                      )}
+                    </div>
+                    <div className="space-y-4">
+                      <input
+                        type="number"
+                        min="0.01"
+                        step="0.01"
+                        className={`w-full px-10 py-6 text-13 bg-canvas-white rounded-md border outline-none focus:border-plain-green ${
+                          nuevoItemErrors.precio ? "border-alert-red" : "border-ash-graphite"
+                        }`}
+                        placeholder="Precio *"
+                        value={nuevoItem.precio}
+                        onChange={e => {
+                          setNuevoItem(p => ({ ...p, precio: e.target.value }));
+                          setNuevoItemErrors(p => ({ ...p, precio: undefined }));
+                        }}
+                        aria-invalid={Boolean(nuevoItemErrors.precio)}
+                      />
+                      {nuevoItemErrors.precio && (
+                        <p className="text-11 text-alert-red">{nuevoItemErrors.precio}</p>
+                      )}
+                    </div>
                   </div>
                   <input
                     className="w-full px-10 py-6 text-13 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
@@ -286,13 +344,18 @@ export default function CartaSection() {
                   />
                   <div className="flex items-center gap-8 pt-4">
                     <button
+                      type="button"
                       onClick={() => agregarItem(cat.id)}
-                      className="px-14 py-6 bg-plain-green text-ash-graphite text-13 font-medium rounded-md hover:opacity-90"
+                      className="px-14 py-6 bg-plain-green text-ash-graphite text-13 font-medium rounded-md hover:opacity-90 whitespace-nowrap"
                     >
                       Agregar ítem
                     </button>
                     <button
-                      onClick={() => setMostrarFormItem(null)}
+                      type="button"
+                      onClick={() => {
+                        setMostrarFormItem(null);
+                        setNuevoItemErrors({});
+                      }}
                       className="px-12 py-6 text-sage-green text-13 hover:text-ash-graphite"
                     >
                       Cancelar

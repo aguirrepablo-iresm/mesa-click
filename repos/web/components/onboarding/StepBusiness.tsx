@@ -20,6 +20,16 @@ interface StepBusinessProps {
   onNext: () => void;
 }
 
+function slugify(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export default function StepBusiness({ data, onChange, onNext }: StepBusinessProps) {
   // El prefijo del slug tiene que ser el dominio donde realmente corre la app
   // (localhost:3000, el dominio de Render, etc.), no un dominio fijo de ejemplo.
@@ -27,20 +37,26 @@ export default function StepBusiness({ data, onChange, onNext }: StepBusinessPro
   const [host, setHost] = useState("");
 
   useEffect(() => {
-    setHost(window.location.host);
+    const timeoutId = window.setTimeout(() => {
+      setHost(window.location.host);
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   const handleNombreChange = (val: string) => {
-    const autoSlug = val
-      .toLowerCase()
-      .trim()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "");
-    
+    const slugActualSugerido = slugify(data.nombreNegocio);
+    const nuevoSlugSugerido = slugify(val);
+    const usuarioEditoSlug = data.slug !== "" && data.slug !== slugActualSugerido;
+
     onChange({
       nombreNegocio: val,
-      slug: data.slug && data.slug !== autoSlug ? data.slug : autoSlug,
+      slug: usuarioEditoSlug ? data.slug : nuevoSlugSugerido,
     });
+  };
+
+  const handleSlugChange = (val: string) => {
+    onChange({ slug: slugify(val) });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -77,21 +93,34 @@ export default function StepBusiness({ data, onChange, onNext }: StepBusinessPro
 
             <div className="space-y-6">
               <label className="text-11 font-mono text-sage-green uppercase tracking-wider px-1">
-                Identificador URL (Slug)
+                Link público del negocio
               </label>
-              <div className="flex items-center">
-                <span className="h-40 px-12 bg-ghost-fog border border-r-0 border-ash-graphite rounded-l-md text-12 font-mono text-sage-green flex items-center whitespace-nowrap">
-                  {host ? `${host}/` : " "}
-                </span>
-                <input
-                  type="text"
-                  required
-                  value={data.slug}
-                  onChange={(e) => onChange({ slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
-                  placeholder="cafe-bar-central"
-                  className="flex-1 h-40 px-12 bg-canvas-white border border-ash-graphite rounded-r-md focus:border-plain-green outline-none transition-all text-14 font-mono"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(160px,220px)] gap-8 min-w-0">
+                <div className="min-w-0">
+                  <span className="block text-10 font-mono text-sage-green uppercase tracking-wider px-1 mb-4">
+                    Dominio
+                  </span>
+                  <div className="h-40 px-12 bg-ghost-fog border border-ash-graphite rounded-md text-12 font-mono text-sage-green flex items-center min-w-0">
+                    <span className="truncate">{host ? `${host}/` : "mesa-click/"}</span>
+                  </div>
+                </div>
+                <div>
+                  <span className="block text-10 font-mono text-sage-green uppercase tracking-wider px-1 mb-4">
+                    Nombre en URL
+                  </span>
+                  <input
+                    type="text"
+                    required
+                    value={data.slug}
+                    onChange={(e) => handleSlugChange(e.target.value)}
+                    placeholder={slugify(data.nombreNegocio) || "tu-negocio"}
+                    className="w-full h-40 px-12 bg-canvas-white border border-ash-graphite rounded-md focus:border-plain-green outline-none transition-all text-14 font-mono"
+                  />
+                </div>
               </div>
+              <p className="text-11 text-sage-green font-mono break-all px-1">
+                {host ? `${host}/${data.slug || "tu-negocio"}` : data.slug || "tu-negocio"}
+              </p>
             </div>
 
             <div className="space-y-6">

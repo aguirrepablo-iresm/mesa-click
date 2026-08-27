@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { api, PedidoAPI, Sucursal, MesaAPI } from "@/lib/api";
 
 export interface PedidoVista {
@@ -12,8 +12,6 @@ export interface PedidoVista {
   items: Array<{ id: string; nombre: string; cantidad: number; precio: number }>;
   cuentaSolicitada?: boolean;
 }
-
-const ESTADOS: Array<'recibido' | 'preparando' | 'listo'> = ['recibido', 'preparando', 'listo'];
 
 const ESTADO_LABELS: Record<'recibido' | 'preparando' | 'listo', string> = {
   recibido: 'Recibido',
@@ -103,7 +101,7 @@ export default function RecepcionistaSection() {
   const [sseConectado, setSseConectado] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
 
-  const transformarPedidoApi = (p: PedidoAPI, mesasMap: Record<string, MesaAPI>): PedidoVista => {
+  const transformarPedidoApi = useCallback((p: PedidoAPI, mesasMap: Record<string, MesaAPI>): PedidoVista => {
     const numMesa = mesasMap[p.mesa_id]?.numero || 1;
     const est = (p.estado === 'cerrado' ? 'listo' : p.estado) as 'recibido' | 'preparando' | 'listo';
     return {
@@ -121,9 +119,9 @@ export default function RecepcionistaSection() {
       })),
       cuentaSolicitada: false,
     };
-  };
+  }, []);
 
-  const cargarDatos = async () => {
+  const cargarDatos = useCallback(async () => {
     try {
       setLoading(true);
       const [sucursalesList, mesasList] = await Promise.all([
@@ -162,11 +160,15 @@ export default function RecepcionistaSection() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [transformarPedidoApi]);
 
   useEffect(() => {
-    cargarDatos();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void cargarDatos();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [cargarDatos]);
 
   useEffect(() => {
     if (!sucursal) return;
@@ -220,7 +222,7 @@ export default function RecepcionistaSection() {
       es.close();
       eventSourceRef.current = null;
     };
-  }, [sucursal, mesas]);
+  }, [sucursal, mesas, transformarPedidoApi]);
 
   const avanzarEstado = async (pedidoId: string) => {
     const target = pedidos.find(p => p.id === pedidoId);

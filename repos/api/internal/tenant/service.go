@@ -25,6 +25,15 @@ func (svc *Service) Crear(ctx context.Context, input OnboardingInput) (*Tenant, 
 	// El login por magic link busca al usuario por email; guardarlo siempre en
 	// minúsculas evita que un registro con mayúsculas quede inaccesible.
 	input.EmailAdmin = auth.NormalizarEmail(input.EmailAdmin)
+	input.EmailSucursal = auth.NormalizarEmail(input.EmailSucursal)
+	input.SucursalNombre = strings.TrimSpace(input.SucursalNombre)
+	input.Whatsapp = strings.TrimSpace(input.Whatsapp)
+	if input.SucursalNombre == "" {
+		input.SucursalNombre = "Casa central"
+	}
+	if input.Horarios == nil {
+		input.Horarios = make(map[string]any)
+	}
 	return svc.store.Crear(ctx, input)
 }
 

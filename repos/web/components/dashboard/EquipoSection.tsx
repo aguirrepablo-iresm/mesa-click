@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from "react";
-import { api, UsuarioAPI } from "@/lib/api";
+import { useState, useEffect, useCallback } from "react";
+import { api, UsuarioAPI, getErrorMessage } from "@/lib/api";
 
 type RolInvitable = 'encargado' | 'mozo';
 type FormState = { nombre: string; email: string; rol: RolInvitable };
@@ -11,6 +11,11 @@ const ROL_LABELS: Record<string, string> = {
   mozo: 'Mozo',
 };
 
+const ROL_DESCRIPTIONS: Record<RolInvitable, string> = {
+  encargado: 'Puede gestionar la operación de una sucursal: carta, mesas y pedidos activos.',
+  mozo: 'Puede ver pedidos en vivo, avanzar estados y atender solicitudes de cuenta.',
+};
+
 export default function EquipoSection() {
   const [equipo, setEquipo] = useState<UsuarioAPI[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +24,7 @@ export default function EquipoSection() {
   const [invitacionLink, setInvitacionLink] = useState('');
   const [copiado, setCopiado] = useState(false);
 
-  const cargarEquipo = async () => {
+  const cargarEquipo = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
@@ -29,18 +34,22 @@ export default function EquipoSection() {
       } else {
         setEquipo([]);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error al cargar usuarios desde la API:", err);
       setEquipo([]);
-      setError(err.message || 'Error al conectar con la API de usuarios.');
+      setError(getErrorMessage(err, 'Error al conectar con la API de usuarios.'));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    cargarEquipo();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void cargarEquipo();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [cargarEquipo]);
 
   const handleInvitar = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,12 +70,13 @@ export default function EquipoSection() {
       if (resp.usuario) {
         setEquipo(prev => [...prev, resp.usuario]);
       }
-      if (resp.url_invitacion) {
-        setInvitacionLink(resp.url_invitacion);
+      const linkInvitacion = resp.magic_link || resp.url_invitacion;
+      if (linkInvitacion) {
+        setInvitacionLink(linkInvitacion);
       }
       setForm({ nombre: '', email: '', rol: 'mozo' });
-    } catch (err: any) {
-      setError(err.message || 'Error al invitar al usuario.');
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, 'Error al invitar al usuario.'));
     }
   };
 
@@ -74,8 +84,8 @@ export default function EquipoSection() {
     if (!confirm('¿Seguro que deseas eliminar a este miembro del equipo?')) return;
     try {
       await api.eliminarUsuario(id);
-    } catch (err: any) {
-      alert(err.message || 'No se pudo eliminar el usuario.');
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'No se pudo eliminar el usuario.'));
     }
     setEquipo(prev => prev.filter(u => u.id !== id));
   };
@@ -131,6 +141,9 @@ export default function EquipoSection() {
           <p className="text-11 font-mono text-sage-green uppercase tracking-wider">Invitar nuevo miembro</p>
         </div>
         <form onSubmit={handleInvitar} className="p-16 sm:p-20 space-y-12">
+          <div className="p-12 bg-ghost-fog border border-ghost-fog rounded-md text-12 text-sage-green leading-normal">
+            Invitá a quienes atienden la sucursal para que entren con su propio magic link. El rol define qué tareas puede realizar cada persona.
+          </div>
           <div className="flex flex-col sm:flex-row gap-12">
             <input
               className="flex-1 px-12 py-8 text-13 rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-plain-green"
@@ -162,6 +175,9 @@ export default function EquipoSection() {
               Generar Magic Link de Invitación
             </button>
           </div>
+          <p className="text-12 text-sage-green leading-normal">
+            {ROL_DESCRIPTIONS[form.rol]}
+          </p>
           {error && <p className="text-12 text-alert-red">{error}</p>}
           {invitacionLink && (
             <div className="p-12 bg-ghost-fog border border-plain-green rounded-md space-y-8">

@@ -6,9 +6,18 @@ import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import StepAccount from "@/components/onboarding/StepAccount";
 import StepBusiness from "@/components/onboarding/StepBusiness";
 import StepBranch from "@/components/onboarding/StepBranch";
-import { api } from "@/lib/api";
+import { api, getErrorMessage } from "@/lib/api";
 
 const TOTAL_STEPS = 3;
+const HORARIOS_DEFAULT = JSON.stringify({
+  lunes: { abierto: true, tramos: [{ apertura: "08:00", cierre: "00:00" }] },
+  martes: { abierto: true, tramos: [{ apertura: "08:00", cierre: "00:00" }] },
+  miercoles: { abierto: true, tramos: [{ apertura: "08:00", cierre: "00:00" }] },
+  jueves: { abierto: true, tramos: [{ apertura: "08:00", cierre: "00:00" }] },
+  viernes: { abierto: true, tramos: [{ apertura: "08:00", cierre: "00:00" }] },
+  sabado: { abierto: true, tramos: [{ apertura: "08:00", cierre: "00:00" }] },
+  domingo: { abierto: true, tramos: [{ apertura: "08:00", cierre: "00:00" }] },
+});
 
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);
@@ -31,7 +40,7 @@ export default function OnboardingPage() {
     sucursalNombre: "Casa central",
     whatsapp: "",
     emailSucursal: "",
-    horarios: "Lun a Dom: 08:00 a 00:00",
+    horarios: HORARIOS_DEFAULT,
   });
 
   const handleUpdate = (fields: Partial<typeof formData>) => {
@@ -61,6 +70,8 @@ export default function OnboardingPage() {
         rubro: formData.rubro,
         email_admin: formData.emailAdmin,
         nombre_admin: formData.nombreAdmin,
+        sucursal_nombre: formData.sucursalNombre,
+        email_sucursal: formData.emailSucursal,
         whatsapp: formData.whatsapp,
         horarios: formData.horarios,
       });
@@ -76,8 +87,8 @@ export default function OnboardingPage() {
       }
 
       setCompletado(true);
-    } catch (err: any) {
-      setError(err.message || "Error al crear el negocio. Por favor verifica los datos.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Error al crear el negocio. Por favor verifica los datos."));
     } finally {
       setLoading(false);
     }

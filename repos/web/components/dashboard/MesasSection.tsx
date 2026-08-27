@@ -1,7 +1,7 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import QRCode from "qrcode";
-import { api, MesaAPI, Sucursal } from "@/lib/api";
+import { api, MesaAPI, Sucursal, getErrorMessage } from "@/lib/api";
 
 function QRCanvas({ token }: { token: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -47,7 +47,7 @@ export default function MesasSection() {
   const [nuevaCapacidad, setNuevaCapacidad] = useState('4');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const cargarMesas = async () => {
+  const cargarMesas = useCallback(async () => {
     try {
       setLoading(true);
       setErrorMsg('');
@@ -67,26 +67,35 @@ export default function MesasSection() {
       } else {
         setMesas([]);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Error al cargar mesas desde la API:", err);
       setMesas([]);
-      setErrorMsg(err.message || 'Error al conectar con la API de mesas.');
+      setErrorMsg(getErrorMessage(err, 'Error al conectar con la API de mesas.'));
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
-    cargarMesas();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void cargarMesas();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [cargarMesas]);
 
   const handleCrearMesa = async (e: React.FormEvent) => {
     e.preventDefault();
     const num = parseInt(nuevoNumero, 10);
-    const cap = parseInt(nuevaCapacidad, 10) || 4;
+    const cap = parseInt(nuevaCapacidad, 10);
 
     if (isNaN(num) || num <= 0) {
       setErrorMsg('Ingresa un número de mesa válido.');
+      return;
+    }
+
+    if (isNaN(cap) || cap <= 0) {
+      setErrorMsg('Ingresa una capacidad válida.');
       return;
     }
 
@@ -98,6 +107,14 @@ export default function MesasSection() {
     setErrorMsg('');
     const sucursalId = sucursales[0].id;
 
+    const yaExiste = mesas.some(
+      mesa => mesa.sucursal_id === sucursalId && mesa.numero === num
+    );
+    if (yaExiste) {
+      setErrorMsg(`Ya existe una mesa con el número ${num}.`);
+      return;
+    }
+
     try {
       const creada = await api.crearMesa({
         sucursal_id: sucursalId,
@@ -108,8 +125,8 @@ export default function MesasSection() {
       setNuevoNumero('');
       setNuevaCapacidad('4');
       setMostrarFormMesa(false);
-    } catch (err: any) {
-      setErrorMsg(err.message || 'Error al crear la mesa.');
+    } catch (err: unknown) {
+      setErrorMsg(getErrorMessage(err, 'Error al crear la mesa.'));
     }
   };
 
@@ -118,9 +135,9 @@ export default function MesasSection() {
     try {
       await api.eliminarMesa(id);
       setMesas(prev => prev.filter(m => m.id !== id));
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("No se pudo eliminar mesa:", err);
-      setErrorMsg(err.message || 'Error al eliminar la mesa.');
+      setErrorMsg(getErrorMessage(err, 'Error al eliminar la mesa.'));
     }
   };
 
@@ -134,8 +151,11 @@ export default function MesasSection() {
           </p>
         </div>
         <button
-          onClick={() => setMostrarFormMesa(true)}
-          className="px-16 py-8 bg-plain-green text-ash-graphite text-13 font-medium rounded-md hover:opacity-90 transition-opacity flex items-center gap-6"
+          onClick={() => {
+            setErrorMsg('');
+            setMostrarFormMesa(true);
+          }}
+          className="px-16 py-8 bg-plain-green text-ash-graphite text-13 font-medium rounded-md hover:opacity-90 transition-opacity flex items-center gap-6 shrink-0 whitespace-nowrap"
         >
           <span className="material-symbols-outlined text-16">add</span>
           Nueva Mesa
@@ -155,6 +175,7 @@ export default function MesasSection() {
             <input
               type="number"
               required
+              min="1"
               autoFocus
               placeholder="Ej: 1"
               value={nuevoNumero}
@@ -167,6 +188,7 @@ export default function MesasSection() {
             <input
               type="number"
               required
+              min="1"
               placeholder="4"
               value={nuevaCapacidad}
               onChange={e => setNuevaCapacidad(e.target.value)}
@@ -182,7 +204,10 @@ export default function MesasSection() {
             </button>
             <button
               type="button"
-              onClick={() => setMostrarFormMesa(false)}
+              onClick={() => {
+                setErrorMsg('');
+                setMostrarFormMesa(false);
+              }}
               className="px-12 py-8 text-sage-green text-13 hover:text-ash-graphite"
             >
               Cancelar

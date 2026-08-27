@@ -4,8 +4,9 @@ import "errors"
 
 // Sentinel errors
 var (
-	ErrNotFound  = errors.New("mesa no encontrada")
-	ErrValidation = errors.New("datos inválidos")
+	ErrNotFound        = errors.New("mesa no encontrada")
+	ErrValidation      = errors.New("datos inválidos")
+	ErrNumeroDuplicado = errors.New("ya existe una mesa con ese número")
 )
 
 type Mesa struct {

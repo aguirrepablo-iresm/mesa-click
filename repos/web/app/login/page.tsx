@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { api } from "@/lib/api";
+import { api, getErrorMessage } from "@/lib/api";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -25,8 +25,8 @@ export default function LoginPage() {
       const res = await api.solicitarMagicLink(email);
       setLinkDev(res?.magic_link_dev || "");
       setEnviado(true);
-    } catch (err: any) {
-      setError(err.message || "Error al solicitar el enlace de acceso.");
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Error al solicitar el enlace de acceso."));
     } finally {
       setLoading(false);
     }

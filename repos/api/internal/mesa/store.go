@@ -6,6 +6,7 @@ import (
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/db"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 // Store define las operaciones de persistencia del módulo mesa.
@@ -60,6 +61,9 @@ func (s *pgStore) Crear(ctx context.Context, tenantID string, input MesaInput, q
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
 		}
+		if isConstraintViolation(err, "mesas_sucursal_id_numero_key") {
+			return nil, ErrNumeroDuplicado
+		}
 		return nil, err
 	}
 	return m, nil
@@ -80,6 +84,9 @@ func (s *pgStore) Actualizar(ctx context.Context, id, tenantID string, u MesaUpd
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
+		}
+		if isConstraintViolation(err, "mesas_sucursal_id_numero_key") {
+			return nil, ErrNumeroDuplicado
 		}
 		return nil, err
 	}
@@ -114,4 +121,9 @@ func (s *pgStore) ObtenerPorQRToken(ctx context.Context, token string) (*MesaPub
 		return nil, err
 	}
 	return mp, nil
+}
+
+func isConstraintViolation(err error, constraintName string) bool {
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23505" && pgErr.ConstraintName == constraintName
 }

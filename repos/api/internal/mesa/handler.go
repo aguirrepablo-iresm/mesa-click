@@ -39,6 +39,10 @@ func (h *Handlers) Crear(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		if errors.Is(err, ErrNumeroDuplicado) {
+			jsonError(w, err.Error(), http.StatusConflict)
+			return
+		}
 		slog.ErrorContext(r.Context(), "error creando mesa", "err", err)
 		jsonError(w, "error interno", http.StatusInternalServerError)
 		return
@@ -64,6 +68,10 @@ func (h *Handlers) Actualizar(w http.ResponseWriter, r *http.Request) {
 		}
 		if errors.Is(err, ErrValidation) {
 			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		if errors.Is(err, ErrNumeroDuplicado) {
+			jsonError(w, err.Error(), http.StatusConflict)
 			return
 		}
 		slog.ErrorContext(r.Context(), "error actualizando mesa", "err", err)

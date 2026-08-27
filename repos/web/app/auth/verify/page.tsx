@@ -3,20 +3,22 @@
 import React, { useEffect, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { api } from "@/lib/api";
+import { api, getErrorMessage } from "@/lib/api";
 
 function VerifyContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
-  const [estado, setEstado] = useState<"cargando" | "exito" | "error">("cargando");
-  const [errorMsg, setErrorMsg] = useState("");
+  const [estado, setEstado] = useState<"cargando" | "exito" | "error">(
+    token ? "cargando" : "error"
+  );
+  const [errorMsg, setErrorMsg] = useState(
+    token ? "" : "No se proporcionó ningún token de autenticación."
+  );
 
   useEffect(() => {
     if (!token) {
-      setEstado("error");
-      setErrorMsg("No se proporcionó ningún token de autenticación.");
       return;
     }
 
@@ -31,10 +33,10 @@ function VerifyContent() {
             router.push("/dashboard");
           }, 1200);
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         if (isMounted) {
           setEstado("error");
-          setErrorMsg(err.message || "El token es inválido o ha expirado.");
+          setErrorMsg(getErrorMessage(err, "El token es inválido o ha expirado."));
         }
       }
     }

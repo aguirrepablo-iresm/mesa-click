@@ -8,13 +8,35 @@ const TOKEN_STORAGE_KEY = 'mc_token';
 
 export class ApiError extends Error {
   status: number;
-  data: any;
+  data: unknown;
 
-  constructor(message: string, status: number, data?: any) {
+  constructor(message: string, status: number, data?: unknown) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.data = data;
+  }
+}
+
+function getApiErrorMessage(data: unknown, fallback: string) {
+  if (typeof data === 'object' && data !== null) {
+    const payload = data as Record<string, unknown>;
+    if (typeof payload.error === 'string') return payload.error;
+    if (typeof payload.mensaje === 'string') return payload.mensaje;
+  }
+  return fallback;
+}
+
+export function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error && error.message ? error.message : fallback;
+}
+
+function parseJsonField(value: unknown) {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
   }
 }
 
@@ -61,10 +83,10 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
 
   const contentType = response.headers.get('content-type');
   const isJson = contentType && contentType.includes('application/json');
-  const data = isJson ? await response.json() : null;
+  const data: unknown = isJson ? await response.json() : null;
 
   if (!response.ok) {
-    const errorMsg = data?.error || data?.mensaje || `Error HTTP ${response.status}`;
+    const errorMsg = getApiErrorMessage(data, `Error HTTP ${response.status}`);
     throw new ApiError(errorMsg, response.status, data);
   }
 
@@ -89,10 +111,12 @@ export interface OnboardingInput {
   slug: string;
   email_admin: string;
   nombre_admin: string;
+  sucursal_nombre?: string;
+  email_sucursal?: string;
   direccion?: string;
   telefono?: string;
   whatsapp?: string;
-  horarios?: string;
+  horarios?: unknown;
 }
 
 export interface Sucursal {
@@ -133,8 +157,8 @@ export interface ArticuloAPI {
   nombre: string;
   descripcion: string;
   precio: number;
-  imagen_url: string;
-  disponible: boolean;
+  foto_url?: string;
+  activo: boolean;
   orden: number;
   created_at: string;
   updated_at: string;
@@ -251,7 +275,11 @@ export const api = {
   crearTenant: async (data: OnboardingInput) => {
     return apiFetch<Tenant>('/tenants', {
       method: 'POST',
-      body: JSON.stringify({ ...data, email_admin: data.email_admin.trim().toLowerCase() }),
+      body: JSON.stringify({
+        ...data,
+        email_admin: data.email_admin.trim().toLowerCase(),
+        horarios: parseJsonField(data.horarios),
+      }),
     });
   },
 
@@ -309,8 +337,8 @@ export const api = {
     nombre: string;
     descripcion?: string;
     precio: number;
-    imagen_url?: string;
-    disponible?: boolean;
+    foto_url?: string;
+    activo?: boolean;
     orden?: number;
   }) => {
     return apiFetch<ArticuloAPI>('/carta/articulos', {
@@ -373,7 +401,7 @@ export const api = {
     rol: 'admin' | 'encargado' | 'mozo';
     sucursal_id?: string;
   }) => {
-    return apiFetch<{ usuario: UsuarioAPI; url_invitacion?: string }>('/usuarios', {
+    return apiFetch<{ usuario: UsuarioAPI; magic_link?: string; url_invitacion?: string }>('/usuarios', {
       method: 'POST',
       body: JSON.stringify(data),
     });

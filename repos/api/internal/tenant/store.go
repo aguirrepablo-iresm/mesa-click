@@ -2,6 +2,7 @@ package tenant
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -44,10 +45,15 @@ func (s *pgStore) Crear(ctx context.Context, input OnboardingInput) (*Tenant, er
 		return nil, fmt.Errorf("error creando usuario admin: %w", err)
 	}
 
+	horariosJSON, err := json.Marshal(input.Horarios)
+	if err != nil {
+		return nil, fmt.Errorf("error serializando horarios de sucursal: %w", err)
+	}
+
 	_, err = tx.Exec(ctx,
-		`INSERT INTO sucursales (tenant_id, nombre)
-		 VALUES ($1, 'Casa central')`,
-		t.ID,
+		`INSERT INTO sucursales (tenant_id, nombre, whatsapp, email, horarios)
+		 VALUES ($1, $2, $3, $4, $5)`,
+		t.ID, input.SucursalNombre, optionalString(input.Whatsapp), optionalString(input.EmailSucursal), horariosJSON,
 	)
 	if err != nil {
 		return nil, fmt.Errorf("error creando sucursal default: %w", err)
@@ -57,6 +63,13 @@ func (s *pgStore) Crear(ctx context.Context, input OnboardingInput) (*Tenant, er
 		return nil, err
 	}
 	return &t, nil
+}
+
+func optionalString(value string) *string {
+	if value == "" {
+		return nil
+	}
+	return &value
 }
 
 func (s *pgStore) ObtenerPorID(ctx context.Context, id string) (*Tenant, error) {
