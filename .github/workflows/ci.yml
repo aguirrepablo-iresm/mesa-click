@@ -1,13 +1,14 @@
-name: Mesa CLICK — Backend CI
+name: Mesa CLICK — CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, qa ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, master, qa ]
 
 jobs:
-  build-and-test:
+  backend-test:
+    name: Backend Tests & Migrations
     runs-on: ubuntu-latest
 
     services:
@@ -19,7 +20,6 @@ jobs:
           POSTGRES_DB: mesa_click_test
         ports:
           - 5432:5432
-        # Esperar a que postgres esté listo
         options: >-
           --health-cmd pg_isready
           --health-interval 10s
@@ -35,7 +35,7 @@ jobs:
         with:
           go-version: '1.22'
 
-      - name: Build and run tests
+      - name: Build and run backend tests
         env:
           DATABASE_URL: postgres://postgres:postgres_pass@localhost:5432/mesa_click_test?sslmode=disable
           JWT_SECRET: test_jwt_secret_for_ci_pipeline_env
@@ -43,3 +43,22 @@ jobs:
         run: |
           cd repos/api
           go test -v ./...
+
+  frontend-build:
+    name: Frontend Build & Typecheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies & build frontend
+        run: |
+          cd repos/web
+          npm ci
+          npm run build

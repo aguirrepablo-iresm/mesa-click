@@ -7,14 +7,14 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
 ## ANTES DE EMPEZAR
 
 1. **Leer las User Stories del sprint actual** en:
-   `docs/presentations/mesa-click-presentacion.html` → slide "Backlog"
+   `docs/presentations/parte-2/index.html` → slide "Backlog" (o `docs/presentations/mesa-click-presentacion.html` para el histórico del MVP)
 
 2. **Leer el happy path correspondiente** a la tarea:
    - `docs/flows/happy-path-admin-negocio.md` — flujo del admin de negocio
    - `docs/flows/happy-path-cliente.md` — flujo del cliente / comensal
 
 3. **Consultar el Status Report más reciente** para ver bloqueantes o decisiones pendientes:
-   - `docs/presentations/status-report-01.html`
+   - `docs/presentations/status-report-03.html`
 
 > No implementar nada que no esté cubierto por una US del sprint en curso. Si hay dudas, preguntar antes de avanzar.
 
@@ -38,9 +38,9 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
 
 | | |
 |---|---|
-| **Fase actual** | Fase 3 — Integración y QA |
-| **Sprint en curso** | **Sprint 9 (QA end-to-end, polish y deploy)** |
-| **Objetivo Sprint 9** | Validar happy paths completos en entorno staging/prod y deploy final |
+| **Fase actual** | Fase 4 — Evolución, Monetización & Analítica (2do Cuatrimestre) |
+| **Sprint en curso** | **Sprint 10 (Configuración Avanzada de Cuenta & Rediseño UI/UX Base)** |
+| **Objetivo Fase 4** | Llevar Mesa CLICK a nivel comercial: SaaS Freemium (Free vs Pro), Mobile-First comensal, carga masiva CSV/Excel, métricas y analítica de negocio |
 
 ### Sprints detallados
 | Sprint | Objetivo | Estado |
@@ -54,6 +54,12 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
 | 6 | Tests unitarios e integración | ✓ Completado |
 | 7 | Integración flujo admin y autenticación real | ✓ Completado |
 | 8 | Integración flujo cliente y recepcionista en tiempo real | ✓ Completado |
+| 9 | QA end-to-end, polish responsive y deploy a producción | ✓ Completado |
+| 10 | Configuración avanzada de cuenta & Rediseño UI/UX Base | ⚡ En Curso |
+| 11 | Mobile-First Comensal + Carga masiva y ajuste de precios | 📋 Planificado |
+| 12 | Modelo Freemium (Free vs Pro) & Control de suscripciones | 📋 Planificado |
+| 13 | Dashboard con métricas & Business Analytics | 📋 Planificado |
+| 14 | QA E2E, Load Testing, Polish final & Cierre | 📋 Planificado |
 
 ---
 
@@ -91,16 +97,13 @@ mesa-click/
 ---
 
 ## Reglas por fase
-
-### Fase 2 — Backend (Actual)
-- Consultar `docs/product/arquitectura-back.md` para el modelo de datos.
-- Usar `slog` para logs.
-- Reportar errores 500 con `c.Error(err)` a Sentry (si el middleware está presente).
-- Antes de cada commit, verificar que el código compila y pasa tests básicos.
-
-### Fase 3 — Integración (Próxima)
-- Conectar los componentes del frontend en `repos/web/` con los endpoints reales de `repos/api/`.
-- Reemplazar los archivos en `lib/mock/` por llamadas a la API.
+ 
+### Fase 4 — Evolución, Monetización & Analítica (Actual - 2do Cuatrimestre)
+- **UI/UX & Mobile-First**: Todo componente del flujo de mesa debe priorizar la interacción táctil en dispositivos móviles (tap targets de al menos 44px, gestos bottom-sheet, tabs sticky).
+- **Control de Suscripciones**: El backend debe validar las cuotas del plan (Free vs Pro) en middleware antes de permitir la creación de mesas, ítems o sucursales adicionales.
+- **Carga Masiva**: Las operaciones de importación de menús por CSV/Excel deben ser atómicas y devolver reportes claros de filas procesadas con error.
+- **Métricas**: Consultas de agregación SQL optimizadas con índices adecuados para no penalizar la performance del servidor.
+- Mantener cobertura de tests en Go y validar compilación con `go test ./...` y `npm run build` en web antes de cada merge.
 
 ---
 

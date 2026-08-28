@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Status Report #3 — Mesa CLICK</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange:   #E25B1A;
+    --orange-l: #FAE8D8;
+    --green:    #16A34A;
+    --green-l:  #DCFCE7;
+    --amber:    #D97706;
+    --amber-l:  #FEF3C7;
+    --slate:    #64748B;
+    --slate-l:  #F1F5F9;
+    --text:     #111827;
+    --text2:    #374151;
+    --text3:    #6B7280;
+    --bg:       #F4F2EC;
+    --card:     #FFFFFF;
+    --border:   #E5E7EB;
+    --border2:  #D1D5DB;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 28px 20px 60px;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 1100px; margin: 0 auto; }
+
+  .top-bar {
+    background: var(--card);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--orange);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .logo-name { font-size: 17px; font-weight: 600; letter-spacing: -.01em; line-height: 1.2; }
+  .logo-sub  { font-size: 11px; color: var(--text3); }
+  .report-title { text-align: right; }
+  .report-title h1 { font-size: 18px; font-weight: 600; }
+  .report-title .sub { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; margin-top: 3px; }
+
+  .meta-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .meta-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .meta-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); margin-bottom: 5px; }
+  .meta-val   { font-size: 14px; font-weight: 600; color: var(--text); }
+  .meta-val.small { font-size: 12px; font-weight: 500; color: var(--text2); }
+
+  .sec-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--text3);
+    margin: 24px 0 10px;
+    display: block;
+  }
+
+  .rag-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .rag-card {
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 16px 20px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .rag-card.green { background: var(--green-l); border-color: #86EFAC; }
+  .rag-dot {
+    font-size: 20px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .rag-dot.green { color: var(--green); }
+  .rag-info { display: flex; flex-direction: column; gap: 3px; }
+  .rag-dim { font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--text3); letter-spacing: .04em; }
+  .rag-status { font-size: 14px; font-weight: 700; }
+  .rag-status.green { color: #15803D; }
+  .rag-note { font-size: 12px; color: var(--text2); line-height: 1.5; margin-top: 2px; }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  @media(max-width: 768px) {
+    .meta-strip, .rag-row, .content-grid { grid-template-columns: 1fr; }
+  }
+
+  .c-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .c-card-head {
+    background: var(--slate-l);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+  }
+  .c-card-body { padding: 18px; }
+  .sprint-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--green);
+    background: var(--green-l);
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+  .c-card-body ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .c-card-body li { display: flex; gap: 8px; font-size: 12px; line-height: 1.5; align-items: flex-start; }
+  .c-card-body .dot { color: var(--green); font-size: 14px; line-height: 1; flex-shrink: 0; }
+  .c-card-body .chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    background: var(--slate-l);
+    padding: 1px 4px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+  }
+
+  .issue {
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .issue:last-child { margin-bottom: 0; }
+  .issue.resolved { background: var(--green-l); border: 1px solid #86EFAC; }
+  .issue-tag { font-weight: 700; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .issue.resolved .issue-tag { color: #15803D; }
+
+  .gantt-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow-x: auto;
+    padding: 16px;
+  }
+  table.gantt {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+  }
+  .g-lbl-col { width: 220px; }
+  th.g-lbl { text-align: left; font-size: 11px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; }
+  th.gth {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--text3);
+    padding: 6px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  th.gth.today {
+    background: var(--green-l);
+    border-left: 1px solid #86EFAC;
+    border-right: 1px solid #86EFAC;
+    position: relative;
+  }
+  .today-arrow {
+    display: block;
+    font-size: 8px;
+    color: var(--green);
+    font-weight: 700;
+    margin-top: 2px;
+  }
+  .sn { display: block; font-size: 10px; font-weight: 700; color: var(--text); }
+  .sd { display: block; font-size: 9px; color: var(--text3); margin-top: 1px; }
+  
+  tr.g-phase td {
+    padding: 8px 0 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  td.ph1 { color: var(--green); }
+  td.ph2 { color: var(--green); }
+  td.ph3 { color: var(--green); }
+
+  td.g-lbl {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text2);
+    padding: 8px 8px 8px 0;
+    border-bottom: 1px solid #F3F4F6;
+  }
+  td.g-cell {
+    border-bottom: 1px solid #F3F4F6;
+    text-align: center;
+    font-size: 11px;
+    padding: 6px;
+  }
+  .bar-done { background: var(--green-l); color: var(--green); font-weight: bold; }
+  .bar-wip  { background: var(--orange-l); color: var(--orange); }
+  .bar-plan { background: var(--slate-l); }
+  .bar-empty { background: transparent; }
+
+  tr.g-ckpt td {
+    border-bottom: 1px solid #F3F4F6;
+    padding: 4px 6px;
+  }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 12px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .li { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text3); }
+  .sq { width: 11px; height: 11px; border-radius: 2px; flex-shrink: 0; }
+  .sq-done { background: var(--green); }
+  .sq-wip  { background: var(--orange); }
+  .sq-plan { background: var(--border2); }
+  .hoy-badge {
+    margin-left: auto;
+    background: var(--green-l); color: #166534;
+    font-size: 10px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px;
+    border: 1px solid #86EFAC;
+    letter-spacing: .04em;
+  }
+  .btn-pdf {
+    background: var(--orange);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  .btn-pdf:hover {
+    background: #c24b12;
+  }
+  .btn-pdf:active {
+    transform: scale(0.97);
+  }
+  .btn-pdf svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  @media print {
+    @page {
+      size: A4 portrait;
+      margin: 0.8cm;
+    }
+    body {
+      background: white !important;
+      padding: 0 !important;
+      min-height: auto !important;
+    }
+    .wrap {
+      max-width: 100% !important;
+      margin: 0 !important;
+    }
+    .top-bar {
+      margin-bottom: 10px !important;
+      padding: 12px 18px !important;
+      border: 1px solid var(--border) !important;
+      border-radius: 8px !important;
+    }
+    .meta-strip {
+      margin-bottom: 10px !important;
+      gap: 8px !important;
+    }
+    .meta-card {
+      padding: 8px 12px !important;
+      border-radius: 8px !important;
+    }
+    .rag-row {
+      margin-bottom: 10px !important;
+      gap: 8px !important;
+    }
+    .rag-card {
+      padding: 10px 14px !important;
+      border-radius: 8px !important;
+    }
+    .content-grid {
+      margin-bottom: 10px !important;
+      gap: 8px !important;
+    }
+    .c-card {
+      border-radius: 8px !important;
+    }
+    .c-card-body {
+      padding: 10px 14px !important;
+    }
+    .gantt-wrap {
+      padding: 8px !important;
+      margin-bottom: 6px !important;
+      border-radius: 8px !important;
+    }
+    .legend {
+      margin-top: 6px !important;
+    }
+    .btn-pdf {
+      display: none !important;
+    }
+    * {
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <rect x="3"  y="3"  width="8" height="8" rx="2" fill="white" opacity=".95"/>
+          <rect x="13" y="3"  width="8" height="8" rx="2" fill="white" opacity=".65"/>
+          <rect x="3"  y="13" width="8" height="8" rx="2" fill="white" opacity=".65"/>
+          <rect x="13" y="13" width="8" height="8" rx="2" fill="white" opacity=".35"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-name">Mesa CLICK</div>
+        <div class="logo-sub">Práctica Profesionalizante I · IRESM</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <button class="btn-pdf" onclick="window.print()">
+        <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+        Exportar PDF
+      </button>
+      <div class="report-title">
+        <h1>Project Status Report #3</h1>
+        <div class="sub">Fase 3 Completada · Sprints 7, 8 y 9 ✓ · 30/07/2026</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Meta strip -->
+  <div class="meta-strip">
+    <div class="meta-card">
+      <div class="meta-label">Project Name</div>
+      <div class="meta-val" style="font-size:13px;">Mesa CLICK — Digitalización de pedidos gastronómicos</div>
+    </div>
+    <div class="meta-card">
+      <div class="meta-label">Date</div>
+      <div class="meta-val">30 de julio de 2026</div>
+    </div>
+    <div class="meta-card">
+      <div class="meta-label">Created By</div>
+      <div class="meta-val small">Aguirre Pablo · Oviedo Martín · Silvestrin Mateo</div>
+    </div>
+  </div>
+
+  <!-- RAG -->
+  <div class="sec-label">Status RAG</div>
+  <div class="rag-row">
+    <div class="rag-card green">
+      <div class="rag-dot green">●</div>
+      <div class="rag-info">
+        <div class="rag-dim">Time</div>
+        <div class="rag-status green">Verde (Finalizado a tiempo)</div>
+        <div class="rag-note">Todos los sprints planificados (Fase 1, 2 y 3) fueron completados y validados. El proyecto se entrega en la fecha comprometida.</div>
+      </div>
+    </div>
+    <div class="rag-card green">
+      <div class="rag-dot green">●</div>
+      <div class="rag-info">
+        <div class="rag-dim">Alcance (Scope)</div>
+        <div class="rag-status green">Verde (100% Entregado)</div>
+        <div class="rag-note">Se completaron las 49 User Stories del MVP. Ambos happy paths (Admin de Negocio y Cliente Comensal) se encuentran integrados y operativos en producción.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress + Deliverables -->
+  <div class="sec-label" style="margin-top:16px;">Logros y Cierre de Fase 3</div>
+  <div class="content-grid">
+
+    <div class="c-card">
+      <div class="c-card-head">Hitos Completados — Fase 3 (Integración y QA)</div>
+      <div class="c-card-body">
+        <div class="sprint-tag">Sprints 7, 8 y 9 — 100% Completados</div>
+        <ul>
+          <li><span class="dot">▸</span><span><b>Integración Flujo Admin (Sprint 7):</b> Reemplazo de mocks por endpoints reales de autenticación (magic link vía email), onboarding completo persistido en PostgreSQL y ABM de carta y mesas.</span></li>
+          <li><span class="dot">▸</span><span><b>Integración Flujo Cliente & Realtime (Sprint 8):</b> Acceso a carta pública vía token QR de mesa, envío de comanda al backend y seguimiento en vivo con Server-Sent Events (SSE).</span></li>
+          <li><span class="dot">▸</span><span><b>Dashboard de Recepcionista en Vivo (Sprint 8):</b> Recepción instantánea de pedidos creados y actualización de estados con sincronización bidireccional cliente-negocio.</span></li>
+          <li><span class="dot">▸</span><span><b>QA End-to-End & Polish Responsive (Sprint 9):</b> Pruebas integrales de punta a punta en desktop y mobile, asegurando una experiencia de usuario fluida y sin fricción.</span></li>
+          <li><span class="dot">▸</span><span><b>Deploy Productivo & CI/CD (Sprint 9):</b> Despliegue automático en Render mediante Docker para backend (<span class="chip">mesa-click-api</span>) y frontend (<span class="chip">mesa-click-web</span>), con pipeline en GitHub Actions.</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="c-card">
+      <div class="c-card-head">Entregables y Estado Operativo</div>
+      <div class="c-card-body">
+        <div class="sprint-tag">Proyecto en Producción</div>
+        <ul>
+          <li><span class="dot">▸</span><span><b>Backend API:</b> Desplegado en Render con base de datos PostgreSQL gestionada y 12 migraciones automáticas.</span></li>
+          <li><span class="dot">▸</span><span><b>Frontend Web PWA:</b> Desplegado en Render (Next.js 16 + React 19 + Tailwind CSS) optimizado para dispositivos móviles y tablets.</span></li>
+          <li><span class="dot">▸</span><span><b>Pipeline de CI/CD:</b> Ejecución automatizada de suite de tests de Go y build de TypeScript en GitHub Actions ante cada commit y pull request hacia <span class="chip">qa</span> y <span class="chip">main</span>.</span></li>
+          <li><span class="dot">▸</span><span><b>Documentación y Presentación:</b> Arquitectura, flujos, contratos y diapositivas académicas actualizadas con trazabilidad completa.</span></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Issues -->
+  <div class="sec-label" style="margin-top:4px;">Riesgos y Cierre</div>
+  <div class="content-grid">
+
+    <div class="c-card">
+      <div class="c-card-head">Estado Final de Riesgos y Bloqueantes</div>
+      <div class="c-card-body" style="padding:12px 14px;">
+        <div class="issue resolved">
+          <div class="issue-tag">✓ Resuelto — Integración Total de Happy Paths</div>
+          <p>Se validaron con éxito todos los escenarios de prueba: alta de local, configuración de carta, generación de QR físico, pedido en mesa, recepción en cocina y cierre de cuenta.</p>
+        </div>
+        <div class="issue resolved">
+          <div class="issue-tag">✓ Resuelto — Despliegue y Ambientes Estables</div>
+          <p>Servicios productivos en Render sincronizados mediante Git Workflow (<span class="chip">qa</span> → <span class="chip">main</span>) con Dockerfile optimizado.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="c-card">
+      <div class="c-card-head">Conclusión del Proyecto</div>
+      <div class="c-card-body" style="padding:14px 16px;">
+        <p style="font-size:13px; color:var(--text2); line-height:1.6;">
+          El desarrollo del MVP de <strong>Mesa CLICK</strong> ha concluido satisfactoriamente, cumpliendo con los objetivos pedagógicos y técnicos de la <em>Práctica Profesionalizante I</em>. El sistema se encuentra completamente operativo y listo para su uso.
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Gantt -->
+  <div class="sec-label" style="margin-top:16px;">Timeline Final — Épicas por Sprint (S0 a S9)</div>
+  <div class="gantt-wrap">
+    <table class="gantt">
+      <colgroup>
+        <col class="g-lbl-col">
+        <col><col><col><col><col><col><col><col><col><col>
+      </colgroup>
+      <thead>
+        <tr>
+          <th class="g-lbl header">Épica</th>
+          <th class="gth"><span class="sn">S0</span><span class="sd">04/05</span></th>
+          <th class="gth"><span class="sn">S1</span><span class="sd">11/05</span></th>
+          <th class="gth"><span class="sn">S2</span><span class="sd">18/05</span></th>
+          <th class="gth"><span class="sn">S3</span><span class="sd">25/05</span></th>
+          <th class="gth"><span class="sn">S4</span><span class="sd">08/06</span></th>
+          <th class="gth"><span class="sn">S5</span><span class="sd">26/06</span></th>
+          <th class="gth"><span class="sn">S6</span><span class="sd">03/07</span></th>
+          <th class="gth"><span class="sn">S7</span><span class="sd">10/07</span></th>
+          <th class="gth"><span class="sn">S8</span><span class="sd">17/07</span></th>
+          <th class="gth today">
+            <span class="sn">S9</span>
+            <span class="sd">24/07</span>
+            <span class="today-arrow">▲ FINAL</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- FASE 1 -->
+        <tr class="g-phase"><td class="ph1" colspan="11">Fase 1 — Frontend sin backend · completada ✓</td></tr>
+        <tr>
+          <td class="g-lbl">Maqueta base</td>
+          <td class="g-cell bar-done">✓</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Happy path Admin + Recepcionista</td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-done">✓</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Happy path Cliente</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-done">✓</td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+
+        <!-- Checkpoint -->
+        <tr class="g-ckpt">
+          <td class="g-lbl" style="font-size:10px;font-weight:600;">Checkpoint docente</td>
+          <td></td><td></td>
+          <td style="font-size:14px;color:var(--green)">◆</td>
+          <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+        </tr>
+
+        <!-- FASE 2 -->
+        <tr class="g-phase"><td class="ph2" colspan="11">Fase 2 — Backend · completada ✓</td></tr>
+        <tr>
+          <td class="g-lbl">Stack + Base de datos</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-done">✓</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Servicios core + Auth magic link</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-done">✓</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Pedidos + Tiempo real (SSE)</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-done">✓</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Tests unitarios e integración</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-done">✓</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+
+        <!-- FASE 3 -->
+        <tr class="g-phase"><td class="ph3" colspan="11">Fase 3 — Integración y QA · completada ✓</td></tr>
+        <tr>
+          <td class="g-lbl">Integración flujo Admin</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-done">✓</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Integración Cliente + Recepcionista</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-done">✓</td>
+          <td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">QA end-to-end + deploy</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-done">✓</td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <div class="li"><div class="sq sq-done"></div>Completado</div>
+    <div class="li"><div class="sq sq-wip"></div>En curso</div>
+    <div class="li"><div class="sq sq-plan"></div>Planificado</div>
+    <div class="li"><span style="color:var(--green);">◆</span>&nbsp;Checkpoint docente (aprobado ~25/05)</div>
+    <div class="hoy-badge">▲ 30/07/2026 · Cierre del Proyecto y Deploy</div>
+  </div>
+
+</div>
+</body>
+</html>

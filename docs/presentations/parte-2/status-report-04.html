@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Status Report #4 — Mesa CLICK (Parte 2: Evolución & Escalamiento)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange:   #E25B1A;
+    --orange-l: #FAE8D8;
+    --green:    #16A34A;
+    --green-l:  #DCFCE7;
+    --blue:     #185FA5;
+    --blue-l:   #E6F1FB;
+    --purple:   #6D28D9;
+    --purple-l: #EDE9FE;
+    --amber:    #D97706;
+    --amber-l:  #FEF3C7;
+    --slate:    #64748B;
+    --slate-l:  #F1F5F9;
+    --text:     #111827;
+    --text2:    #374151;
+    --text3:    #6B7280;
+    --bg:       #F4F2EC;
+    --card:     #FFFFFF;
+    --border:   #E5E7EB;
+    --border2:  #D1D5DB;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 28px 20px 60px;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 1100px; margin: 0 auto; }
+
+  .top-bar {
+    background: var(--card);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--orange);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(226,91,26,0.25);
+  }
+  .logo-name { font-size: 17px; font-weight: 700; letter-spacing: -.01em; line-height: 1.2; }
+  .logo-sub  { font-size: 11px; color: var(--text3); }
+  .report-title { text-align: right; }
+  .report-title h1 { font-size: 18px; font-weight: 700; }
+  .report-title .sub { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; margin-top: 3px; }
+
+  .meta-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .meta-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .meta-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); margin-bottom: 5px; }
+  .meta-val   { font-size: 14px; font-weight: 700; color: var(--text); }
+  .meta-val.small { font-size: 12px; font-weight: 600; color: var(--text2); }
+
+  .sec-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--text3);
+    margin: 24px 0 10px;
+    display: block;
+  }
+
+  .rag-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .rag-card {
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 16px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .rag-card.green { background: var(--green-l); border-color: #86EFAC; }
+  .rag-dot {
+    font-size: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .rag-dot.green { color: var(--green); }
+  .rag-info { display: flex; flex-direction: column; gap: 3px; }
+  .rag-dim { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text3); letter-spacing: .04em; }
+  .rag-status { font-size: 13.5px; font-weight: 700; }
+  .rag-status.green { color: #15803D; }
+  .rag-note { font-size: 11.5px; color: var(--text2); line-height: 1.45; margin-top: 2px; }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  @media(max-width: 768px) {
+    .meta-strip, .rag-row, .content-grid { grid-template-columns: 1fr; }
+  }
+
+  .c-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .c-card-head {
+    background: var(--slate-l);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text2);
+  }
+  .c-card-body { padding: 18px; }
+  .sprint-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--orange);
+    background: var(--orange-l);
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+  .sprint-tag.blue { color: var(--blue); background: var(--blue-l); }
+  .c-card-body ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .c-card-body li { display: flex; gap: 8px; font-size: 12.5px; line-height: 1.5; align-items: flex-start; }
+  .c-card-body .dot { color: var(--orange); font-size: 14px; line-height: 1; flex-shrink: 0; }
+  .c-card-body .dot-blue { color: var(--blue); font-size: 14px; line-height: 1; flex-shrink: 0; }
+  .c-card-body .chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px;
+    background: var(--slate-l);
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    font-weight: 600;
+  }
+
+  .issue {
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .issue:last-child { margin-bottom: 0; }
+  .issue.risk { background: var(--amber-l); border: 1px solid #FCD34D; }
+  .issue.info { background: var(--blue-l); border: 1px solid #BFDBFE; }
+  .issue-tag { font-weight: 700; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+  .issue.risk .issue-tag { color: #92400E; }
+  .issue.info .issue-tag { color: #1E40AF; }
+
+  /* GANTT */
+  .gantt-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow-x: auto;
+    padding: 16px;
+  }
+  table.gantt {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 750px;
+  }
+  .g-lbl-col { width: 230px; }
+  th.g-lbl { text-align: left; font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; }
+  th.gth {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    padding: 6px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  th.gth.today {
+    background: var(--orange-l);
+    border-left: 1px solid var(--orange);
+    border-right: 1px solid var(--orange);
+  }
+  .today-arrow {
+    display: block;
+    font-size: 8px;
+    color: var(--orange);
+    font-weight: 800;
+    margin-top: 2px;
+  }
+  .sn { display: block; font-size: 10px; font-weight: 700; color: var(--text); }
+  .sd { display: block; font-size: 9px; color: var(--text3); margin-top: 1px; font-family: 'DM Mono', monospace; }
+  
+  tr.g-phase td {
+    padding: 10px 0 4px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  td.ph-past { color: var(--green); }
+  td.ph-act { color: var(--orange); }
+
+  td.g-lbl {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text2);
+    padding: 8px 8px 8px 0;
+    border-bottom: 1px solid #F3F4F6;
+  }
+  td.g-cell {
+    border-bottom: 1px solid #F3F4F6;
+    text-align: center;
+    font-size: 11px;
+    padding: 6px;
+  }
+  .bar-done { background: var(--green-l); color: var(--green); font-weight: bold; }
+  .bar-wip  { background: var(--orange-l); color: var(--orange); font-weight: bold; }
+  .bar-plan { background: var(--blue-l); color: var(--blue); font-weight: 600; }
+  .bar-empty { background: transparent; }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .li { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text3); font-weight: 500; }
+  .sq { width: 11px; height: 11px; border-radius: 2px; flex-shrink: 0; }
+  .sq-done { background: var(--green); }
+  .sq-wip  { background: var(--orange); }
+  .sq-plan { background: var(--blue); }
+  .hoy-badge {
+    margin-left: auto;
+    background: var(--orange-l); color: var(--orange);
+    font-size: 10px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px;
+    border: 1px solid var(--orange);
+    letter-spacing: .04em;
+  }
+  .btn-pdf {
+    background: var(--orange);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  .btn-pdf:hover { background: #c24b12; }
+  .btn-pdf:active { transform: scale(0.97); }
+  .btn-pdf svg { width: 14px; height: 14px; }
+
+  @media print {
+    @page { size: A4 portrait; margin: 0.7cm; }
+    body { background: white !important; padding: 0 !important; }
+    .wrap { max-width: 100% !important; margin: 0 !important; }
+    .btn-pdf { display: none !important; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <rect x="3"  y="3"  width="8" height="8" rx="2" fill="white" opacity=".95"/>
+          <rect x="13" y="3"  width="8" height="8" rx="2" fill="white" opacity=".65"/>
+          <rect x="3"  y="13" width="8" height="8" rx="2" fill="white" opacity=".65"/>
+          <rect x="13" y="13" width="8" height="8" rx="2" fill="white" opacity=".35"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-name">Mesa CLICK &nbsp;<span style="font-size: 11px; background: var(--orange-l); color: var(--orange); padding: 1px 6px; border-radius: 4px;">Parte 2</span></div>
+        <div class="logo-sub">Práctica Profesionalizante I · 2do Cuatrimestre</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <button class="btn-pdf" onclick="window.print()">
+        <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+        Exportar PDF
+      </button>
+      <div class="report-title">
+        <h1>Project Status Report #4</h1>
+        <div class="sub">Lanzamiento Fase 4: Evolución & Escalamiento · 28/08/2026</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Meta strip -->
+  <div class="meta-strip">
+    <div class="meta-card">
+      <div class="meta-label">Project Name</div>
+      <div class="meta-val" style="font-size:13.5px;">Mesa CLICK — Fase 4: Monetización, Analítica & Mobile UX</div>
+    </div>
+    <div class="meta-card">
+      <div class="meta-label">Fecha de Inicio / Corte</div>
+      <div class="meta-val">28 de agosto de 2026 (Kick-off: 31/08)</div>
+    </div>
+    <div class="meta-card">
+      <div class="meta-label">Integrantes</div>
+      <div class="meta-val small">Aguirre Pablo · Oviedo Martín · Silvestrin Mateo</div>
+    </div>
+  </div>
+
+  <!-- RAG -->
+  <div class="sec-label">Status RAG — Fase 4</div>
+  <div class="rag-row">
+    <div class="rag-card green">
+      <div class="rag-dot green">●</div>
+      <div class="rag-info">
+        <div class="rag-dim">Tiempo (Schedule)</div>
+        <div class="rag-status green">Verde (En Plan)</div>
+        <div class="rag-note">Inicio fijado para el lunes 31/08/2026 con 5 sprints bisemanales hasta el 08/11/2026, culminando con la presentación final.</div>
+      </div>
+    </div>
+    <div class="rag-card green">
+      <div class="rag-dot green">●</div>
+      <div class="rag-info">
+        <div class="rag-dim">Alcance (Scope)</div>
+        <div class="rag-status green">Verde (Definido)</div>
+        <div class="rag-note">20 User Stories nuevas (US-50 a US-69) organizadas en 5 épicas que abordan los 6 requerimientos clave del cuatrimestre.</div>
+      </div>
+    </div>
+    <div class="rag-card green">
+      <div class="rag-dot green">●</div>
+      <div class="rag-info">
+        <div class="rag-dim">Riesgo & Arquitectura</div>
+        <div class="rag-status green">Verde (Bajo Riesgo)</div>
+        <div class="rag-note">Base productiva en Render y PostgreSQL validada en el MVP (Sprints 0 a 9). Se construye de forma incremental sin deuda técnica.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Progress + Deliverables -->
+  <div class="sec-label" style="margin-top:16px;">Objetivos y Estructura de la Parte 2</div>
+  <div class="content-grid">
+
+    <div class="c-card">
+      <div class="c-card-head">Los 6 Pilares de Evolución Planificados</div>
+      <div class="c-card-body">
+        <div class="sprint-tag">Fase 4 — Sprints 10 al 14</div>
+        <ul>
+          <li><span class="dot">▸</span><span><b>1. Rediseño UI/UX Intuitivo:</b> Sistema de diseño renovado, microinteracciones, mejor contraste visual y tipografía pulida para personal y comensales.</span></li>
+          <li><span class="dot">▸</span><span><b>2. Experiencia Comensal Mobile-First:</b> Navegación táctil optimizada para celular con categorías sticky, modal de producto y carrito flotante bottom-sheet.</span></li>
+          <li><span class="dot">▸</span><span><b>3. Configuración Avanzada de Cuenta:</b> Ajustes del negocio, logo y portada, horarios/turnos de atención por sucursal y datos fiscales.</span></li>
+          <li><span class="dot">▸</span><span><b>4. Modelo Freemium (Free vs Pro):</b> Límites automáticos en backend (10 mesas, 30 platos, 1 sucursal) e incentivo a suscripción con funciones Pro.</span></li>
+          <li><span class="dot">▸</span><span><b>5. Carga Masiva y Ajuste de Precios:</b> Importador masivo de menús vía CSV/Excel con validador de errores y actualizador de precios en 1 clic.</span></li>
+          <li><span class="dot">▸</span><span><b>6. Dashboard con Métricas & Business Analytics:</b> Reportes de ventas en tiempo real, ticket promedio, top platos y exportación a PDF/Excel.</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="c-card">
+      <div class="c-card-head">Gestión de Riesgos y Decisiones Técnicas</div>
+      <div class="c-card-body">
+        <div class="sprint-tag blue">Mitigaciones Arquitecturales</div>
+
+        <div class="issue info">
+          <div class="issue-tag">⚡ Importación Masiva Segura (CSV / Excel)</div>
+          El parsing y la inserción masiva se ejecutarán en una sola transacción SQL atómica en Go, con validación previa de columnas para evitar estados inconsistentes.
+        </div>
+
+        <div class="issue info">
+          <div class="issue-tag">🔒 Control de Cuotas en Middleware (Free vs Pro)</div>
+          La validación de cuotas (límite de mesas, productos y sucursales) se aplicará a nivel middleware en la API Go antes de procesar las operaciones de escritura.
+        </div>
+
+        <div class="issue risk">
+          <div class="issue-tag">📊 Consultas de Métricas sin Impacto Operativo</div>
+          Las métricas de ventas utilizarán índices compuestos en PostgreSQL (`tenant_id`, `created_at`, `status`) para garantizar tiempos de respuesta menores a 50ms.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Gantt Chart -->
+  <div class="sec-label" style="margin-top:16px;">Cronograma Gantt — Fase 4 (Septiembre – Noviembre 2026)</div>
+  <div class="gantt-wrap">
+    <table class="gantt">
+      <thead>
+        <tr>
+          <th class="g-lbl g-lbl-col">Épica / Sprint</th>
+          <th class="gth today">
+            <span class="sn">Sprint 10</span>
+            <span class="sd">31/08 – 13/09</span>
+            <span class="today-arrow">▲ KICK-OFF</span>
+          </th>
+          <th class="gth">
+            <span class="sn">Sprint 11</span>
+            <span class="sd">14/09 – 27/09</span>
+          </th>
+          <th class="gth">
+            <span class="sn">Sprint 12</span>
+            <span class="sd">28/09 – 11/10</span>
+          </th>
+          <th class="gth">
+            <span class="sn">Sprint 13</span>
+            <span class="sd">12/10 – 25/10</span>
+          </th>
+          <th class="gth">
+            <span class="sn">Sprint 14</span>
+            <span class="sd">26/10 – 08/11</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="g-phase">
+          <td colspan="6" class="ph-act">Fase 4 — Evolución, Monetización & Analítica (2do Cuatrimestre)</td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Configuración de Cuenta & Rediseño UI/UX Base</td>
+          <td class="g-cell bar-wip">En Curso (Sprint 10)</td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Mobile-First Comensal + Carga Masiva Carta</td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan">Planificado (Sprint 11)</td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Modelo Freemium (Free vs Pro) & Suscripciones</td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan">Planificado (Sprint 12)</td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Dashboard con Métricas & Business Analytics</td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan">Planificado (Sprint 13)</td>
+          <td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">QA E2E, Load Testing & Cierre / Demo Day</td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan">Cierre (Sprint 14)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="legend">
+      <div class="li"><div class="sq sq-wip"></div> Sprint en Curso (Activo)</div>
+      <div class="li"><div class="sq sq-plan"></div> Sprints Planificados</div>
+      <div class="li"><div class="sq sq-done"></div> Base MVP Desplegada (Sprints 0–9 ✓)</div>
+      <div class="hoy-badge">● KICK-OFF FASE 4: 31/08/2026</div>
+    </div>
+  </div>
+
+  <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+    <a href="index.html" style="font-size: 12.5px; color: var(--orange); text-decoration: none; font-weight: 600; font-family: 'DM Mono', monospace; display: inline-flex; align-items: center; gap: 6px;">
+      ← Abrir Presentación Completa (Parte 2)
+    </a>
+    <span style="font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace;">
+      Mesa CLICK · Práctica Profesionalizante I · IRESM 2026
+    </span>
+  </div>
+
+</div>
+</body>
+</html>

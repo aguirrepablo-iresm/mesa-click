@@ -6,9 +6,9 @@ Mesa CLICK es una plataforma web PWA para el sector gastronómico que permite di
 
 | | |
 |---|---|
-| **Fase actual** | Fase 3 — Integración |
-| **Sprint en curso** | Sprint 7 · 10/07 – 16/07/2026 |
-| **Fin estimado** | 30/07/2026 |
+| **Fase actual** | Fase 3 — Integración y QA (Completada ✅) |
+| **Sprint en curso** | Sprint 9 · 24/07 – 30/07/2026 (Completado ✅) |
+| **Estado MVP** | 100% Finalizado y Desplegado en Producción |
 
 Ver el roadmap completo en `docs/presentations/mesa-click-presentacion.html`.
 
@@ -20,7 +20,8 @@ mesa-click/
 │   ├── presentations/
 │   │   ├── mesa-click-presentacion.html   ← roadmap, US, backlog y línea de tiempo
 │   │   ├── status-report-01.html          ← status report #1 (Sprint 3 completado)
-│   │   └── status-report-02.html          ← status report #2 (Fase 2 Backend completada)
+│   │   ├── status-report-02.html          ← status report #2 (Fase 2 Backend completada)
+│   │   └── status-report-03.html          ← status report #3 (Fase 3 y Cierre del Proyecto)
 │   ├── product/
 │   │   └── arquitectura-back.md           ← entidades, servicios y auth (Fase 2)
 │   ├── flows/
@@ -47,7 +48,7 @@ mesa-click/
 │       ├── components/
 │       │   ├── dashboard/                 ← CartaSection, MesasSection, EquipoSection, RecepcionistaSection
 │       │   └── menu/                      ← CategoriaNav, ItemCard, CartDrawer, SeguimientoView
-│       └── lib/mock/                      ← datos mockeados (menu, mesas, pedidos, equipo)
+│       └── lib/api.ts                     ← cliente HTTP tipado y conexión SSE en tiempo real
 └── AGENTS.md                              ← reglas para todos los agentes de IA
 ```
 
@@ -57,7 +58,7 @@ mesa-click/
 |---|---|---|---|---|
 | **1 — Frontend** | 0–2 | 04/05 → 24/05 | Happy paths navegables sin backend | ✅ Completa |
 | **2 — Backend** | 3–6 | 25/05 → 25/06 | API, DB, servicios, auth, tests | ✅ Completa |
-| **3 — Integración** | 7–9 | 26/06 → 30/07 | Conectar front con back, QA, deploy | 🔄 En curso |
+| **3 — Integración y QA** | 7–9 | 26/06 → 30/07 | Conectar front con back, QA, deploy | ✅ Completa |
 
 ---
 
@@ -248,6 +249,7 @@ http://localhost:3000/mesa/mesa-token-2   ← Mesa 2
 docs/presentations/mesa-click-presentacion.html   ← roadmap, backlog y línea de tiempo
 docs/presentations/status-report-01.html          ← status report #1 (Sprint 3 completado)
 docs/presentations/status-report-02.html          ← status report #2 (Fase 2 Backend completada)
+docs/presentations/status-report-03.html          ← status report #3 (Fase 3 y Cierre del Proyecto)
 ```
 
 Abrí los archivos directamente en el browser. La presentación principal se navega con ← → o con la barra superior.

@@ -7,6 +7,10 @@
   * Implementado el almacenamiento y flujo del servicio de pedidos en `internal/pedido`.
   * Diseñado un broker de Server-Sent Events (SSE) concurrente seguro en `internal/notificacion` y expuestos endpoints SSE (con y sin autenticación) en `rutas.go`.
   * Desarrollada una suite robusta de tests unitarios e integración en `internal/notificacion/broker_test.go` para validar suscripción, publicación, desuscripción y stream de red, asegurando la compilación exitosa (`go test ./...` pasa al 100%).
+- **Fase 3: Integración y QA Completada (Sprints 7, 8 y 9) (30/07/2026):**
+  * **Sprint 7:** Integración del flujo Admin (login magic link real, onboarding de negocio/sucursal y CRUD de carta/mesas conectado a PostgreSQL).
+  * **Sprint 8:** Integración del flujo Cliente y Recepcionista en tiempo real (carta pública vía QR token, creación de pedidos reales y sincronización SSE en vivo).
+  * **Sprint 9:** QA end-to-end de ambos happy paths, optimización responsive mobile, pipeline de CI/CD en GitHub Actions y deploy automático en Render (Docker).
 - **Estrategia Git y Ambientes de Despliegue:**
   * Ramas principales: `main` (Producción) y `qa` (Testing).
   * Todo desarrollo de nueva feature o corrección de bug inicia a partir de `qa` (`feat/*`, `fix/*`).
