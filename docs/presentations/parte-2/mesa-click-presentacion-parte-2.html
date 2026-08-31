@@ -381,8 +381,8 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
           Repositorio GitHub
         </a>
-        <a href="status-report-04.html" style="font-size: 12.5px; color: var(--orange); text-decoration: none; font-family: 'DM Mono', monospace; display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border: 1px solid var(--orange); border-radius: 8px; background: var(--orange-light); font-weight: 600;">
-          📄 Ver Status Report #4
+        <a href="status-report-05.html" style="font-size: 12.5px; color: var(--orange); text-decoration: none; font-family: 'DM Mono', monospace; display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border: 1px solid var(--orange); border-radius: 8px; background: var(--orange-light); font-weight: 600;">
+          📄 Ver Status Report #5
         </a>
         <a href="../parte-1/mesa-click-presentacion.html" style="font-size: 12.5px; color: var(--text-secondary); text-decoration: none; font-family: 'DM Mono', monospace; display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--bg-card); transition: all 0.15s;">
           ← Ver Presentación Parte 1 (MVP)
@@ -448,14 +448,14 @@
   <section class="slide" id="s2">
     <div class="slide-tag">Nuevas Funcionalidades</div>
     <h1 class="slide-title">Pilares de Mejora para el Cuatrimestre</h1>
-    <p class="slide-sub">6 ejes estratégicos de desarrollo definidos para maximizar la usabilidad, la monetización y el control operativo de los comercios gastronómicos.</p>
+    <p class="slide-sub">8 ejes estratégicos de desarrollo definidos para maximizar la usabilidad, la monetización y el control operativo de los comercios gastronómicos.</p>
 
     <div class="grid-2" style="gap: 14px; margin-bottom: 14px;">
       <div class="feature-box">
         <div class="feature-icon-wrap" style="background: var(--orange-light); color: var(--orange-dark);">✨</div>
         <div class="feature-content">
-          <h4>1. Rediseño UI/UX Intuitivo</h4>
-          <p>Interfaz moderna y limpia con microinteracciones, tipografía optimizada, estados vacíos enriquecidos y navegación simplificada para admin y personal.</p>
+          <h4>1. Rediseño UI/UX Intuitivo & Onboarding Guiado</h4>
+          <p>Interfaz moderna y limpia con microinteracciones, tipografía optimizada, estados vacíos enriquecidos y un tour de onboarding interactivo que guía al admin nuevo en su primer ingreso.</p>
         </div>
       </div>
       <div class="feature-box">
@@ -493,6 +493,20 @@
           <p>Panel de Business Intelligence: facturación en vivo, ticket promedio por mesa, ranking de platos más vendidos, tiempos de preparación y horas pico.</p>
         </div>
       </div>
+      <div class="feature-box">
+        <div class="feature-icon-wrap" style="background: #FEE2E2; color: #991B1B;">👨‍🍳</div>
+        <div class="feature-content">
+          <h4>7. Kitchen Display System (KDS)</h4>
+          <p>Pantalla de cocina independiente del dashboard de recepción: comandas en columnas por estado, avance por ítem con un tap e impresión de comanda en impresora térmica.</p>
+        </div>
+      </div>
+      <div class="feature-box">
+        <div class="feature-icon-wrap" style="background: #E0E7FF; color: #3730A3;">🕑</div>
+        <div class="feature-content">
+          <h4>8. Disponibilidad & Menús por Franja Horaria</h4>
+          <p>Marcado de ítems "sin stock" (86) con un tap y reflejo inmediato al comensal, más menús que se activan por franja (mediodía / noche) según la hora de la sucursal.</p>
+        </div>
+      </div>
     </div>
 
     <div class="footer-nav">
@@ -523,7 +537,9 @@
           <li><span class="plan-icon-check">✓</span> <span>Hasta <strong>30 Productos</strong> en la carta digital</span></li>
           <li><span class="plan-icon-check">✓</span> <span>Toma de pedidos y dashboard en tiempo real (SSE)</span></li>
           <li><span class="plan-icon-check">✓</span> <span>Acceso de 1 usuario recepcionista / mozo</span></li>
+          <li><span class="plan-icon-check">✓</span> <span>Disponibilidad de ítems <strong>(86 / sin stock)</strong> en tiempo real</span></li>
           <li><span class="plan-icon-cross">✕</span> <span style="color: var(--text-muted);">Carga masiva vía Excel / CSV</span></li>
+          <li><span class="plan-icon-cross">✕</span> <span style="color: var(--text-muted);">Kitchen Display System (KDS) e impresión de comandas</span></li>
           <li><span class="plan-icon-cross">✕</span> <span style="color: var(--text-muted);">Ajuste masivo de precios</span></li>
           <li><span class="plan-icon-cross">✕</span> <span style="color: var(--text-muted);">Dashboard con métricas avanzadas y exportación</span></li>
           <li><span class="plan-icon-cross">✕</span> <span style="color: var(--text-muted);">Personalización de marca (incluye badge Mesa CLICK)</span></li>
@@ -551,6 +567,7 @@
           <li><span class="plan-icon-check">✓</span> <span><strong>Múltiples roles de staff</strong> (Dueño, Encargado, Mozo, Cocina)</span></li>
           <li><span class="plan-icon-check">✓</span> <span><strong>Personalización de marca</strong> (logo propio, colores y sin branding externo)</span></li>
           <li><span class="plan-icon-check">✓</span> <span>Configuración de horarios, turnos y apertura/cierre automático</span></li>
+          <li><span class="plan-icon-check">✓</span> <span><strong>Kitchen Display System (KDS)</strong> + impresión de comandas y menús por franja horaria</span></li>
         </ul>
         <div style="background: var(--orange-light); padding: 10px; border-radius: var(--radius-sm); font-size: 12px; color: var(--orange-dark); font-weight: 600; text-align: center;">
           Acceso total a todas las herramientas de automatización
@@ -575,6 +592,7 @@
       <button class="hp-tab active" onclick="switchHp(0)">📱 Flujo Comensal Mobile-First</button>
       <button class="hp-tab" onclick="switchHp(1)">⚡ Flujo Admin: Carga Masiva & Gestión</button>
       <button class="hp-tab" onclick="switchHp(2)">📊 Flujo Admin: Analítica & Métricas</button>
+      <button class="hp-tab" onclick="switchHp(3)">👨‍🍳 Flujo Cocina: KDS</button>
     </div>
 
     <!-- PANEL 0: CLIENTE MOBILE-FIRST -->
@@ -627,6 +645,22 @@
           <div class="hp-step"><div class="hp-num green">3</div><div><div class="hp-title">Tiempos y rotación de mesas</div><div class="hp-desc">Demora promedio desde pedido hasta entrega y tiempo de ocupación por mesa.</div></div></div>
           <div class="hp-line"></div>
           <div class="hp-step"><div class="hp-num green">4</div><div><div class="hp-title">Exportación de reportes</div><div class="hp-desc">Descarga de métricas históricas en formato PDF y Excel para contabilidad.</div></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PANEL 3: COCINA KDS -->
+    <div class="hp-panel" id="hp3">
+      <div class="hp-grid">
+        <div>
+          <div class="hp-step"><div class="hp-num" style="background:#991B1B;">1</div><div><div class="hp-title">La comanda entra a cocina</div><div class="hp-desc">Al confirmarse el pedido aparece en el KDS y se imprime el ticket en la impresora térmica (58/80 mm).</div></div></div>
+          <div class="hp-line"></div>
+          <div class="hp-step"><div class="hp-num" style="background:#991B1B;">2</div><div><div class="hp-title">Columnas por estado</div><div class="hp-desc">Pendiente → En preparación → Listo, con temporizador de antigüedad por comanda para priorizar.</div></div></div>
+        </div>
+        <div>
+          <div class="hp-step"><div class="hp-num" style="background:#991B1B;">3</div><div><div class="hp-title">Avance por ítem con un tap</div><div class="hp-desc">Cada plato se marca individualmente; útil cuando una mesa pide entradas y principales juntos.</div></div></div>
+          <div class="hp-line"></div>
+          <div class="hp-step"><div class="hp-num" style="background:#991B1B;">4</div><div><div class="hp-title">Cierre automático</div><div class="hp-desc">Cuando todos los ítems quedan "listos", el pedido pasa a Listo y avisa al mozo en su dashboard.</div></div></div>
         </div>
       </div>
     </div>
@@ -690,7 +724,7 @@
 
     <div class="card" style="background: var(--bg-surface); border-left: 4px solid var(--orange);">
       <div style="font-size: 13.5px; color: var(--text-primary); font-weight: 600;">
-        Punto de partida sólido: No arrancamos desde cero. Las 6 nuevas funcionalidades se integran directamente sobre la infraestructura ya productiva y validada.
+        Punto de partida sólido: No arrancamos desde cero. Las 8 nuevas funcionalidades se integran directamente sobre la infraestructura ya productiva y validada.
       </div>
     </div>
 
@@ -705,7 +739,7 @@
   <section class="slide" id="s6">
     <div class="slide-tag">Planificación Fase 4</div>
     <h1 class="slide-title">Roadmap — 2do Cuatrimestre 2026</h1>
-    <p class="slide-sub">Plan estructurado en 5 nuevos sprints bisemanales, con hitos claros de entrega, revisiones docentes y testing continuo.</p>
+    <p class="slide-sub">Plan estructurado en 10 nuevos sprints semanales, con hitos claros de entrega, revisiones docentes y testing continuo.</p>
 
     <div class="rm-phase">Fase 4 — Evolución, Monetización & Analítica</div>
     <div class="rm-phase-divider"></div>
@@ -713,40 +747,80 @@
     <div class="rm-row rm-wip">
       <div class="rm-label">Sprint 10</div>
       <div class="rm-block">
-        Configuración Avanzada de Cuenta & Rediseño UI/UX Base <span class="rm-wip-tag">En Curso</span>
-        <div class="rm-date">31/08 – 13/09/2026 · Perfil de negocio, horarios, sucursales, roles y nuevo sistema de diseño</div>
+        Configuración Avanzada de Cuenta <span class="rm-wip-tag">En Curso</span>
+        <div class="rm-date">31/08 – 06/09/2026 · Perfil de negocio, logo, datos fiscales y horarios/turnos por sucursal</div>
       </div>
     </div>
 
     <div class="rm-row rm-next">
       <div class="rm-label">Sprint 11</div>
       <div class="rm-block">
-        Mobile-First Comensal + Carga Masiva y Ajuste de Precios
-        <div class="rm-date">14/09 – 27/09/2026 · Flujo comensal táctil + Importador CSV/Excel y actualizador masivo de precios</div>
+        Rediseño UI/UX Base & Onboarding Guiado
+        <div class="rm-date">07/09 – 13/09/2026 · Nuevo sistema de diseño, accesibilidad y tour interactivo de primer ingreso</div>
       </div>
     </div>
 
     <div class="rm-row rm-next">
       <div class="rm-label">Sprint 12</div>
       <div class="rm-block">
-        Modelo Freemium (Free vs Pro) & Control de Suscripciones
-        <div class="rm-date">28/09 – 11/10/2026 · Validación de límites por tier en back/front + vistas de upgrade y planes</div>
+        Mobile-First Comensal
+        <div class="rm-date">14/09 – 20/09/2026 · Navegación táctil, categorías sticky, carrito bottom-sheet y personalización</div>
       </div>
     </div>
 
     <div class="rm-row rm-next">
       <div class="rm-label">Sprint 13</div>
       <div class="rm-block">
-        Dashboard con Métricas & Business Analytics
-        <div class="rm-date">12/10 – 25/10/2026 · Agregaciones SQL, KPIs de ventas, top productos, tiempos y exportación</div>
+        Carga Masiva CSV/Excel & Ajuste de Precios
+        <div class="rm-date">21/09 – 27/09/2026 · Importador atómico con previsualización de errores y aumento porcentual masivo</div>
       </div>
     </div>
 
     <div class="rm-row rm-next">
       <div class="rm-label">Sprint 14</div>
       <div class="rm-block">
+        Disponibilidad de Ítems (86) & Menús por Franja Horaria
+        <div class="rm-date">28/09 – 04/10/2026 · Marcado "sin stock" en tiempo real y activación de menús por mediodía / noche</div>
+      </div>
+    </div>
+
+    <div class="rm-row rm-next">
+      <div class="rm-label">Sprint 15</div>
+      <div class="rm-block">
+        Kitchen Display System (KDS) & Impresión de Comandas
+        <div class="rm-date">05/10 – 11/10/2026 · Pantalla de cocina con estados por ítem, temporizadores e impresión térmica</div>
+      </div>
+    </div>
+
+    <div class="rm-row rm-next">
+      <div class="rm-label">Sprint 16</div>
+      <div class="rm-block">
+        Modelo Freemium (Free vs Pro) & Control de Suscripciones
+        <div class="rm-date">12/10 – 18/10/2026 · Validación de límites por tier en back/front + vistas de upgrade y planes</div>
+      </div>
+    </div>
+
+    <div class="rm-row rm-next">
+      <div class="rm-label">Sprint 17</div>
+      <div class="rm-block">
+        Dashboard con Métricas (KPIs)
+        <div class="rm-date">19/10 – 25/10/2026 · Agregaciones SQL optimizadas y tarjetas de KPIs de ventas en vivo</div>
+      </div>
+    </div>
+
+    <div class="rm-row rm-next">
+      <div class="rm-label">Sprint 18</div>
+      <div class="rm-block">
+        Business Analytics & Exportación
+        <div class="rm-date">26/10 – 01/11/2026 · Gráficos por categoría, mapa de calor de horas pico y export a PDF/Excel</div>
+      </div>
+    </div>
+
+    <div class="rm-row rm-next">
+      <div class="rm-label">Sprint 19</div>
+      <div class="rm-block">
         QA E2E, Load Testing, Polish Final & Presentación de Cierre
-        <div class="rm-date">26/10 – 08/11/2026 · Pruebas de estrés, refinamiento visual responsive y Demo Final</div>
+        <div class="rm-date">02/11 – 08/11/2026 · Pruebas de estrés, refinamiento visual responsive y Demo Final</div>
       </div>
     </div>
 
@@ -769,83 +843,152 @@
     <h1 class="slide-title">Épicas y User Stories — Fase 4</h1>
     <p class="slide-sub">Hacé clic en cada épica para desplegar las historias de usuario asociadas. Roles: <span class="badge b-blue" style="font-size:10px;">Back</span>, <span class="badge b-green" style="font-size:10px;">Front</span> e <span class="badge b-orange" style="font-size:10px;">Int</span>.</p>
 
-    <!-- ÉPICA 10 -->
+    <!-- ÉPICA S10 -->
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
         <span class="badge b-orange">Sprint 10</span>
-        <span class="epica-title">Configuración Avanzada de Cuenta & Rediseño UI/UX Base</span>
-        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">31/08–13/09</span>
+        <span class="epica-title">Configuración Avanzada de Cuenta</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">31/08–06/09</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
         <div class="us-row"><span class="us-id">US-50</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, puedo gestionar el perfil completo de mi negocio (logo, portada, datos de contacto y datos fiscales) desde una nueva pantalla de Ajustes</span></div>
         <div class="us-row"><span class="us-id">US-51</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, expongo endpoints para actualizar metadatos del comercio, logo y configuración tributaria del tenant</span></div>
         <div class="us-row"><span class="us-id">US-52</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, puedo configurar horarios y turnos de atención por sucursal con apertura/cierre automático de la carta</span></div>
-        <div class="us-row"><span class="us-id">US-53</span><span class="us-dev d-front">Front</span><span class="us-text">Como usuario, la interfaz de administración adopta un nuevo sistema de diseño más limpio, accesible y con mejor contraste</span></div>
       </div>
     </div>
 
-    <!-- ÉPICA 11 -->
+    <!-- ÉPICA S11 -->
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
         <span class="badge b-blue">Sprint 11</span>
-        <span class="epica-title">Mobile-First Comensal + Carga Masiva y Ajuste de Precios</span>
-        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">14/09–27/09</span>
+        <span class="epica-title">Rediseño UI/UX Base & Onboarding Guiado</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">07/09–13/09</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-id">US-54</span><span class="us-dev d-front">Front</span><span class="us-text">Como cliente, tengo una navegación mobile táctil optimizada con selector de categorías sticky y carrito flotante bottom-sheet</span></div>
-        <div class="us-row"><span class="us-id">US-55</span><span class="us-dev d-front">Front</span><span class="us-text">Como cliente, puedo personalizar platos con variantes, opciones y notas libres antes de agregar al pedido con confirmación táctil</span></div>
-        <div class="us-row"><span class="us-id">US-56</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, proceso la carga masiva de categorías y productos a partir de un archivo CSV/Excel en una sola transacción</span></div>
-        <div class="us-row"><span class="us-id">US-57</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, puedo descargar la plantilla oficial de carga, previsualizar errores en el archivo e importar mi catálogo completo</span></div>
-        <div class="us-row"><span class="us-id">US-58</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, puedo aplicar un incremento porcentual masivo de precios por categoría o a toda la carta con un solo clic</span></div>
+        <div class="us-row"><span class="us-id">US-53</span><span class="us-dev d-front">Front</span><span class="us-text">Como usuario, la interfaz de administración adopta un nuevo sistema de diseño más limpio, accesible y con mejor contraste</span></div>
+        <div class="us-row"><span class="us-id">US-54</span><span class="us-dev d-front">Front</span><span class="us-text">Como usuario, los estados vacíos, de carga y de error tienen tratamiento visual enriquecido y microinteracciones consistentes</span></div>
+        <div class="us-row"><span class="us-id">US-55</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin nuevo, un tour interactivo paso a paso me guía por sucursales, mesas, carta y QR en el primer ingreso, y puedo reactivarlo desde Ayuda</span></div>
       </div>
     </div>
 
-    <!-- ÉPICA 12 -->
+    <!-- ÉPICA S12 -->
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
         <span class="badge b-blue">Sprint 12</span>
-        <span class="epica-title">Modelo Freemium (Free vs Pro) & Control de Suscripciones</span>
-        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">28/09–11/10</span>
+        <span class="epica-title">Mobile-First Comensal</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">14/09–20/09</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-id">US-59</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, modelo el esquema de suscripciones (Free/Pro) en BD y valido límites (10 mesas, 30 productos, 1 sucursal) en middleware</span></div>
-        <div class="us-row"><span class="us-id">US-60</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, veo una sección de "Planes y Suscripción" con el uso actual de mis cuotas y botones de upgrade a Pro</span></div>
-        <div class="us-row"><span class="us-id">US-61</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin en plan Free, el sistema me bloquea elegantemente la creación de mesas o productos extra con un modal invitando al upgrade</span></div>
-        <div class="us-row"><span class="us-id">US-62</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin en plan Pro, puedo ocultar la marca de agua de Mesa CLICK y personalizar la paleta de colores de mi carta digital</span></div>
+        <div class="us-row"><span class="us-id">US-56</span><span class="us-dev d-front">Front</span><span class="us-text">Como cliente, tengo una navegación mobile táctil optimizada con selector de categorías sticky y carrito flotante bottom-sheet</span></div>
+        <div class="us-row"><span class="us-id">US-57</span><span class="us-dev d-front">Front</span><span class="us-text">Como cliente, puedo personalizar platos con variantes, opciones y notas libres antes de agregar al pedido con confirmación táctil</span></div>
       </div>
     </div>
 
-    <!-- ÉPICA 13 -->
+    <!-- ÉPICA S13 -->
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
         <span class="badge b-blue">Sprint 13</span>
-        <span class="epica-title">Dashboard con Métricas & Business Analytics</span>
-        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">12/10–25/10</span>
+        <span class="epica-title">Carga Masiva CSV/Excel & Ajuste de Precios</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">21/09–27/09</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-id">US-63</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, genero consultas optimizadas de agregación para facturación por turno, ticket promedio y rotación de mesas</span></div>
-        <div class="us-row"><span class="us-id">US-64</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, veo un panel visual con tarjetas de KPIs (Total vendido hoy, Pedidos activos, Ticket promedio, Platos más vendidos)</span></div>
-        <div class="us-row"><span class="us-id">US-65</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, visualizo gráficos de distribución de ventas por categoría y un mapa de calor con los horarios de mayor demanda</span></div>
-        <div class="us-row"><span class="us-id">US-66</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, puedo filtrar el dashboard por rangos de fecha y exportar el reporte consolidado a PDF o Excel</span></div>
+        <div class="us-row"><span class="us-id">US-58</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, proceso la carga masiva de categorías y productos a partir de un archivo CSV/Excel en una sola transacción atómica</span></div>
+        <div class="us-row"><span class="us-id">US-59</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, puedo descargar la plantilla oficial de carga, previsualizar los errores por fila e importar mi catálogo completo</span></div>
+        <div class="us-row"><span class="us-id">US-60</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, puedo aplicar un incremento porcentual masivo de precios por categoría o a toda la carta con un solo clic</span></div>
       </div>
     </div>
 
-    <!-- ÉPICA 14 -->
+    <!-- ÉPICA S14 -->
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
-        <span class="badge b-purple">Sprint 14</span>
-        <span class="epica-title">QA E2E, Load Testing, Polish Final & Presentación</span>
-        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">26/10–08/11</span>
+        <span class="badge b-blue">Sprint 14</span>
+        <span class="epica-title">Disponibilidad de Ítems (86) & Menús por Franja Horaria</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">28/09–04/10</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-id">US-67</span><span class="us-dev d-all">Todos</span><span class="us-text">Como equipo, realizamos pruebas de carga simultáneas simulando 50+ mesas enviando pedidos en tiempo real</span></div>
-        <div class="us-row"><span class="us-id">US-68</span><span class="us-dev d-front">Front</span><span class="us-text">Como usuario, la aplicación pasa auditorías de Lighthouse y accesibilidad con puntuaciones superiores a 90</span></div>
-        <div class="us-row"><span class="us-id">US-69</span><span class="us-dev d-all">Todos</span><span class="us-text">Como equipo, preparamos la demo interactiva en vivo y la documentación final para la entrega de la materia</span></div>
+        <div class="us-row"><span class="us-id">US-61</span><span class="us-dev d-int">Int</span><span class="us-text">Como personal, puedo marcar un ítem como "sin stock" (86) con un tap desde la carta o el dashboard y el comensal lo ve agotado en tiempo real</span></div>
+        <div class="us-row"><span class="us-id">US-62</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, persisto la disponibilidad de cada ítem, con reposición automática al inicio del día y endpoint de reposición manual</span></div>
+        <div class="us-row"><span class="us-id">US-63</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, puedo asignar categorías o ítems a franjas horarias (mediodía, noche) y la carta del comensal se resuelve por hora de la sucursal, disponibilidad y estado de apertura</span></div>
+      </div>
+    </div>
+
+    <!-- ÉPICA S15 -->
+    <div class="epica-wrap">
+      <div class="epica-header" onclick="toggle(this)">
+        <span class="badge b-blue">Sprint 15</span>
+        <span class="epica-title">Kitchen Display System (KDS) & Impresión de Comandas</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">05/10–11/10</span>
+        <span class="chevron open">▶</span>
+      </div>
+      <div class="epica-body">
+        <div class="us-row"><span class="us-id">US-64</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, modelo estados por ítem de pedido (pendiente, en preparación, listo) además del estado global y los emito por SSE en un canal de cocina</span></div>
+        <div class="us-row"><span class="us-id">US-65</span><span class="us-dev d-front">Front</span><span class="us-text">Como cocina, tengo una pantalla dedicada (KDS) separada del dashboard de recepción, con comandas en columnas por estado y temporizador de antigüedad</span></div>
+        <div class="us-row"><span class="us-id">US-66</span><span class="us-dev d-int">Int</span><span class="us-text">Como cocinero, marco ítems individuales como "en preparación" o "listo" con un tap y el pedido pasa a "listo" cuando todos sus ítems lo están</span></div>
+        <div class="us-row"><span class="us-id">US-67</span><span class="us-dev d-int">Int</span><span class="us-text">Como cocina, imprimo la comanda en una impresora térmica (ticket 58/80 mm) al confirmarse el pedido, con reintento manual si falla</span></div>
+      </div>
+    </div>
+
+    <!-- ÉPICA S16 -->
+    <div class="epica-wrap">
+      <div class="epica-header" onclick="toggle(this)">
+        <span class="badge b-blue">Sprint 16</span>
+        <span class="epica-title">Modelo Freemium (Free vs Pro) & Control de Suscripciones</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">12/10–18/10</span>
+        <span class="chevron open">▶</span>
+      </div>
+      <div class="epica-body">
+        <div class="us-row"><span class="us-id">US-68</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, modelo el esquema de suscripciones (Free/Pro) en BD y valido límites (10 mesas, 30 productos, 1 sucursal) en middleware</span></div>
+        <div class="us-row"><span class="us-id">US-69</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, veo una sección de "Planes y Suscripción" con el uso actual de mis cuotas y botones de upgrade a Pro</span></div>
+        <div class="us-row"><span class="us-id">US-70</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin en plan Free, el sistema me bloquea elegantemente la creación de mesas o productos extra con un modal invitando al upgrade</span></div>
+        <div class="us-row"><span class="us-id">US-71</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin en plan Pro, puedo ocultar la marca de agua de Mesa CLICK y personalizar la paleta de colores de mi carta digital</span></div>
+      </div>
+    </div>
+
+    <!-- ÉPICA S17 -->
+    <div class="epica-wrap">
+      <div class="epica-header" onclick="toggle(this)">
+        <span class="badge b-blue">Sprint 17</span>
+        <span class="epica-title">Dashboard con Métricas (KPIs)</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">19/10–25/10</span>
+        <span class="chevron open">▶</span>
+      </div>
+      <div class="epica-body">
+        <div class="us-row"><span class="us-id">US-72</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, genero consultas optimizadas de agregación para facturación por turno, ticket promedio y rotación de mesas</span></div>
+        <div class="us-row"><span class="us-id">US-73</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, veo un panel visual con tarjetas de KPIs (Total vendido hoy, Pedidos activos, Ticket promedio, Platos más vendidos)</span></div>
+      </div>
+    </div>
+
+    <!-- ÉPICA S18 -->
+    <div class="epica-wrap">
+      <div class="epica-header" onclick="toggle(this)">
+        <span class="badge b-blue">Sprint 18</span>
+        <span class="epica-title">Business Analytics & Exportación</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">26/10–01/11</span>
+        <span class="chevron open">▶</span>
+      </div>
+      <div class="epica-body">
+        <div class="us-row"><span class="us-id">US-74</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, visualizo gráficos de distribución de ventas por categoría y un mapa de calor con los horarios de mayor demanda</span></div>
+        <div class="us-row"><span class="us-id">US-75</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, puedo filtrar el dashboard por rangos de fecha y exportar el reporte consolidado a PDF o Excel</span></div>
+      </div>
+    </div>
+
+    <!-- ÉPICA S19 -->
+    <div class="epica-wrap">
+      <div class="epica-header" onclick="toggle(this)">
+        <span class="badge b-purple">Sprint 19</span>
+        <span class="epica-title">QA E2E, Load Testing, Polish Final & Presentación</span>
+        <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">02/11–08/11</span>
+        <span class="chevron open">▶</span>
+      </div>
+      <div class="epica-body">
+        <div class="us-row"><span class="us-id">US-76</span><span class="us-dev d-all">Todos</span><span class="us-text">Como equipo, realizamos pruebas de carga simultáneas simulando 50+ mesas enviando pedidos en tiempo real</span></div>
+        <div class="us-row"><span class="us-id">US-77</span><span class="us-dev d-front">Front</span><span class="us-text">Como usuario, la aplicación pasa auditorías de Lighthouse y accesibilidad con puntuaciones superiores a 90</span></div>
+        <div class="us-row"><span class="us-id">US-78</span><span class="us-dev d-all">Todos</span><span class="us-text">Como equipo, preparamos la demo interactiva en vivo y la documentación final para la entrega de la materia</span></div>
       </div>
     </div>
 
@@ -860,7 +1003,7 @@
   <section class="slide" id="s8">
     <div class="slide-tag">Timeline General</div>
     <h1 class="slide-title">Línea de Tiempo del Proyecto</h1>
-    <p class="slide-sub">Visión completa desde los cimientos del MVP (Sprints 0 a 9 completados) hasta los nuevos sprints de evolución del cuatrimestre (Sprints 10 a 14).</p>
+    <p class="slide-sub">Visión completa desde los cimientos del MVP (Sprints 0 a 9 completados) hasta los nuevos sprints de evolución del cuatrimestre (Sprints 10 a 19).</p>
 
     <div>
 
@@ -905,50 +1048,95 @@
         <div class="tl-phase-bar"><div style="width:2px;height:16px;background:var(--orange);"></div></div>
         <div class="tl-phase-pill f4">
           <span class="tl-phase-name">Fase 4 — Evolución & Escalamiento (2do Cuatrimestre)</span>
-          <span class="tl-phase-range">Septiembre → Noviembre 2026 · Sprints 10 al 14</span>
+          <span class="tl-phase-range">Septiembre → Noviembre 2026 · Sprints 10 al 19 (semanales)</span>
         </div>
       </div>
 
       <div class="tl-row">
         <div class="tl-dot-col"><div class="tl-seg tl-seg-done"></div><div class="tl-node tl-node-wip">10</div><div class="tl-seg tl-seg-wip"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 10</span><span class="tl-date">31/08 – 13/09</span><span class="badge b-orange" style="font-size:10px;">En Curso</span></div>
-          <div class="tl-title">Configuración de Cuenta & Rediseño UI/UX</div>
-          <div class="tl-desc">Perfil de negocio, horarios por sucursal, datos fiscales y refinamiento estético global.</div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 10</span><span class="tl-date">31/08 – 06/09</span><span class="badge b-orange" style="font-size:10px;">En Curso</span></div>
+          <div class="tl-title">Configuración Avanzada de Cuenta</div>
+          <div class="tl-desc">Perfil de negocio, logo, datos fiscales y horarios/turnos por sucursal.</div>
         </div>
       </div>
 
       <div class="tl-row">
         <div class="tl-dot-col"><div class="tl-seg tl-seg-wip"></div><div class="tl-node tl-node-next">11</div><div class="tl-seg tl-seg-next"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 11</span><span class="tl-date">14/09 – 27/09</span><span class="badge b-blue" style="font-size:10px;">Planificado</span></div>
-          <div class="tl-title">Mobile-First Comensal + Carga Masiva de Carta</div>
-          <div class="tl-desc">Experiencia táctil fluida en smartphone + importador masivo CSV/Excel y actualizador de precios.</div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 11</span><span class="tl-date">07/09 – 13/09</span><span class="badge b-blue" style="font-size:10px;">Planificado</span></div>
+          <div class="tl-title">Rediseño UI/UX Base & Onboarding Guiado</div>
+          <div class="tl-desc">Nuevo sistema de diseño accesible y tour interactivo para el primer ingreso del admin.</div>
         </div>
       </div>
 
       <div class="tl-row">
         <div class="tl-dot-col"><div class="tl-seg tl-seg-next"></div><div class="tl-node tl-node-next">12</div><div class="tl-seg tl-seg-next"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 12</span><span class="tl-date">28/09 – 11/10</span><span class="badge b-blue" style="font-size:10px;">Planificado</span></div>
-          <div class="tl-title">Modelo Freemium (Free vs Pro)</div>
-          <div class="tl-desc">Límites automáticos por tier en backend/frontend y panel de suscripción con upgrade.</div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 12</span><span class="tl-date">14/09 – 20/09</span><span class="badge b-blue" style="font-size:10px;">Planificado</span></div>
+          <div class="tl-title">Mobile-First Comensal</div>
+          <div class="tl-desc">Navegación táctil, categorías sticky, carrito bottom-sheet y personalización de platos.</div>
         </div>
       </div>
 
       <div class="tl-row">
         <div class="tl-dot-col"><div class="tl-seg tl-seg-next"></div><div class="tl-node tl-node-next">13</div><div class="tl-seg tl-seg-next"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 13</span><span class="tl-date">12/10 – 25/10</span><span class="badge b-blue" style="font-size:10px;">Planificado</span></div>
-          <div class="tl-title">Dashboard con Métricas & Business Analytics</div>
-          <div class="tl-desc">KPIs en tiempo real (ticket promedio, ranking platos, mapa de calor) y exportación a PDF/Excel.</div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 13</span><span class="tl-date">21/09 – 27/09</span><span class="badge b-blue" style="font-size:10px;">Planificado</span></div>
+          <div class="tl-title">Carga Masiva CSV/Excel & Ajuste de Precios</div>
+          <div class="tl-desc">Importador atómico con previsualización de errores y aumento porcentual masivo.</div>
         </div>
       </div>
 
       <div class="tl-row">
-        <div class="tl-dot-col"><div class="tl-seg tl-seg-next"></div><div class="tl-node tl-node-pending">14</div><div class="tl-seg tl-seg-none"></div></div>
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-next"></div><div class="tl-node tl-node-next">14</div><div class="tl-seg tl-seg-next"></div></div>
         <div class="tl-content">
-          <div class="tl-meta"><span class="tl-sid">Sprint 14</span><span class="tl-date">26/10 – 08/11</span><span class="badge b-gray" style="font-size:10px;">Cierre</span></div>
+          <div class="tl-meta"><span class="tl-sid">Sprint 14</span><span class="tl-date">28/09 – 04/10</span><span class="badge b-blue" style="font-size:10px;">Planificado</span></div>
+          <div class="tl-title">Disponibilidad de Ítems (86) & Menús por Franja Horaria</div>
+          <div class="tl-desc">Marcado "sin stock" en tiempo real y menús que se activan por mediodía / noche.</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-next"></div><div class="tl-node tl-node-next">15</div><div class="tl-seg tl-seg-next"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 15</span><span class="tl-date">05/10 – 11/10</span><span class="badge b-blue" style="font-size:10px;">Planificado</span></div>
+          <div class="tl-title">Kitchen Display System (KDS)</div>
+          <div class="tl-desc">Pantalla de cocina con estados por ítem, temporizadores e impresión de comanda térmica.</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-next"></div><div class="tl-node tl-node-next">16</div><div class="tl-seg tl-seg-next"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 16</span><span class="tl-date">12/10 – 18/10</span><span class="badge b-blue" style="font-size:10px;">Planificado</span></div>
+          <div class="tl-title">Modelo Freemium (Free vs Pro)</div>
+          <div class="tl-desc">Límites automáticos por tier en backend/frontend y panel de suscripción con upgrade.</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-next"></div><div class="tl-node tl-node-next">17</div><div class="tl-seg tl-seg-next"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 17</span><span class="tl-date">19/10 – 25/10</span><span class="badge b-blue" style="font-size:10px;">Planificado</span></div>
+          <div class="tl-title">Dashboard con Métricas (KPIs)</div>
+          <div class="tl-desc">Agregaciones SQL optimizadas y tarjetas de KPIs de ventas en tiempo real.</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-next"></div><div class="tl-node tl-node-next">18</div><div class="tl-seg tl-seg-next"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 18</span><span class="tl-date">26/10 – 01/11</span><span class="badge b-blue" style="font-size:10px;">Planificado</span></div>
+          <div class="tl-title">Business Analytics & Exportación</div>
+          <div class="tl-desc">Gráficos por categoría, mapa de calor de horas pico y exportación a PDF/Excel.</div>
+        </div>
+      </div>
+
+      <div class="tl-row">
+        <div class="tl-dot-col"><div class="tl-seg tl-seg-next"></div><div class="tl-node tl-node-pending">19</div><div class="tl-seg tl-seg-none"></div></div>
+        <div class="tl-content">
+          <div class="tl-meta"><span class="tl-sid">Sprint 19</span><span class="tl-date">02/11 – 08/11</span><span class="badge b-gray" style="font-size:10px;">Cierre</span></div>
           <div class="tl-title">QA E2E, Load Testing & Demo Final</div>
           <div class="tl-desc">Pruebas de estrés concurrentes, auditoría de performance y presentación de cierre de cuatrimestre.</div>
         </div>

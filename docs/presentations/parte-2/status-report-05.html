@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Status Report #4 — Mesa CLICK (Parte 2: Evolución & Escalamiento)</title>
+<title>Status Report #5 — Mesa CLICK (Parte 2: Re-planificación Fase 4)</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -106,16 +106,19 @@
     gap: 12px;
   }
   .rag-card.green { background: var(--green-l); border-color: #86EFAC; }
+  .rag-card.amber { background: var(--amber-l); border-color: #FCD34D; }
   .rag-dot {
     font-size: 18px;
     line-height: 1;
     flex-shrink: 0;
   }
   .rag-dot.green { color: var(--green); }
+  .rag-dot.amber { color: var(--amber); }
   .rag-info { display: flex; flex-direction: column; gap: 3px; }
   .rag-dim { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text3); letter-spacing: .04em; }
   .rag-status { font-size: 13.5px; font-weight: 700; }
   .rag-status.green { color: #15803D; }
+  .rag-status.amber { color: #92400E; }
   .rag-note { font-size: 11.5px; color: var(--text2); line-height: 1.45; margin-top: 2px; }
 
   .content-grid {
@@ -155,10 +158,12 @@
     margin-bottom: 12px;
   }
   .sprint-tag.blue { color: var(--blue); background: var(--blue-l); }
+  .sprint-tag.green { color: #15803D; background: var(--green-l); }
   .c-card-body ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
   .c-card-body li { display: flex; gap: 8px; font-size: 12.5px; line-height: 1.5; align-items: flex-start; }
   .c-card-body .dot { color: var(--orange); font-size: 14px; line-height: 1; flex-shrink: 0; }
   .c-card-body .dot-blue { color: var(--blue); font-size: 14px; line-height: 1; flex-shrink: 0; }
+  .c-card-body .dot-green { color: var(--green); font-size: 14px; line-height: 1; flex-shrink: 0; }
   .c-card-body .chip {
     font-family: 'DM Mono', monospace;
     font-size: 10.5px;
@@ -182,6 +187,23 @@
   .issue-tag { font-weight: 700; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
   .issue.risk .issue-tag { color: #92400E; }
   .issue.info .issue-tag { color: #1E40AF; }
+
+  /* CHANGE LOG */
+  .delta { display: flex; flex-direction: column; gap: 0; }
+  .delta-row {
+    display: grid;
+    grid-template-columns: 130px 1fr;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid #F3F4F6;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .delta-row:last-child { border-bottom: none; }
+  .delta-k { font-weight: 700; color: var(--text2); font-family: 'DM Mono', monospace; font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; padding-top: 1px; }
+  .was { color: var(--text3); text-decoration: line-through; }
+  .now { color: var(--text); font-weight: 600; }
+  .arrow { color: var(--orange); font-weight: 700; margin: 0 4px; }
 
   /* GANTT */
   .gantt-wrap {
@@ -221,7 +243,7 @@
   }
   .sn { display: block; font-size: 10px; font-weight: 700; color: var(--text); }
   .sd { display: block; font-size: 9px; color: var(--text3); margin-top: 1px; font-family: 'DM Mono', monospace; }
-  
+
   tr.g-phase td {
     padding: 10px 0 4px;
     font-size: 10.5px;
@@ -309,7 +331,7 @@
     .gantt-wrap { padding: 12px; }
 
     /* solo los bloques atómicos no se parten; las grillas fluyen libres */
-    .rag-card, .c-card, .issue, .meta-card, .gantt-wrap { break-inside: avoid; }
+    .rag-card, .c-card, .issue, .meta-card, .gantt-wrap, .delta-row { break-inside: avoid; }
     thead, tr { break-inside: avoid; }
 
     /* cada sección (título + su bloque) viaja junta a la misma hoja */
@@ -352,8 +374,8 @@
         Exportar PDF
       </button>
       <div class="report-title">
-        <h1>Project Status Report #4</h1>
-        <div class="sub">Lanzamiento Fase 4: Evolución & Escalamiento · 28/08/2026</div>
+        <h1>Project Status Report #5</h1>
+        <div class="sub">Re-planificación Fase 4: Cadencia Semanal & Ampliación de Alcance · 31/08/2026</div>
       </div>
     </div>
   </div>
@@ -365,8 +387,8 @@
       <div class="meta-val" style="font-size:13.5px;">Mesa CLICK — Fase 4: Monetización, Analítica & Mobile UX</div>
     </div>
     <div class="meta-card">
-      <div class="meta-label">Fecha de Inicio / Corte</div>
-      <div class="meta-val">28 de agosto de 2026 (Kick-off: 31/08)</div>
+      <div class="meta-label">Fecha de Corte</div>
+      <div class="meta-val">31 de agosto de 2026 · Sprint 10 (semana 1 de 10)</div>
     </div>
     <div class="meta-card">
       <div class="meta-label">Integrantes</div>
@@ -383,15 +405,15 @@
       <div class="rag-info">
         <div class="rag-dim">Tiempo (Schedule)</div>
         <div class="rag-status green">Verde (En Plan)</div>
-        <div class="rag-note">Inicio fijado para el lunes 31/08/2026 con 10 sprints semanales hasta el 08/11/2026, culminando con la presentación final.</div>
+        <div class="rag-note">La Fase 4 pasa de 5 sprints bisemanales a <b>10 sprints semanales (S10–S19)</b> manteniendo la misma ventana 31/08 → 08/11/2026. El Sprint 10 arrancó en fecha el 31/08.</div>
       </div>
     </div>
-    <div class="rag-card green">
-      <div class="rag-dot green">●</div>
+    <div class="rag-card amber">
+      <div class="rag-dot amber">●</div>
       <div class="rag-info">
         <div class="rag-dim">Alcance (Scope)</div>
-        <div class="rag-status green">Verde (Definido)</div>
-        <div class="rag-note">29 User Stories nuevas (US-50 a US-78) organizadas en 10 épicas semanales que abordan los 8 requerimientos clave del cuatrimestre.</div>
+        <div class="rag-status amber">Ámbar (Ampliado, Bajo Control)</div>
+        <div class="rag-note">De 6 a <b>8 pilares</b>: se suman KDS de cocina y Disponibilidad/Franjas horarias; el onboarding guiado se incorpora al Sprint 11. Backlog re-numerado a <b>29 US (US-50 a US-78)</b> en 10 épicas. Sin impacto en la fecha de cierre.</div>
       </div>
     </div>
     <div class="rag-card green">
@@ -399,53 +421,112 @@
       <div class="rag-info">
         <div class="rag-dim">Riesgo & Arquitectura</div>
         <div class="rag-status green">Verde (Bajo Riesgo)</div>
-        <div class="rag-note">Base productiva en Render y PostgreSQL validada en el MVP (Sprints 0 a 9). Se construye de forma incremental sin deuda técnica.</div>
+        <div class="rag-note">Base productiva en Render y PostgreSQL validada en el MVP (Sprints 0 a 9). Los nuevos riesgos (impresión térmica ESC/POS y estados por ítem) están acotados y con mitigación definida.</div>
       </div>
     </div>
   </div>
 
   </div><!-- /rpt-section -->
 
-  <!-- Progress + Deliverables -->
+  <!-- Change log + Objetivos -->
   <div class="rpt-section">
-  <div class="sec-label" style="margin-top:16px;">Objetivos y Estructura de la Parte 2</div>
+  <div class="sec-label" style="margin-top:16px;">Cambios respecto del Status Report #4</div>
   <div class="content-grid">
 
     <div class="c-card">
-      <div class="c-card-head">Los 8 Pilares de Evolución Planificados</div>
+      <div class="c-card-head">Re-planificación de Fase 4 — Delta</div>
       <div class="c-card-body">
-        <div class="sprint-tag">Fase 4 — Sprints 10 al 19 (semanales)</div>
-        <ul>
-          <li><span class="dot">▸</span><span><b>1. Rediseño UI/UX Intuitivo & Onboarding Guiado:</b> Sistema de diseño renovado, microinteracciones, mejor contraste y un tour interactivo para el primer ingreso del admin.</span></li>
-          <li><span class="dot">▸</span><span><b>2. Experiencia Comensal Mobile-First:</b> Navegación táctil optimizada para celular con categorías sticky, modal de producto y carrito flotante bottom-sheet.</span></li>
-          <li><span class="dot">▸</span><span><b>3. Configuración Avanzada de Cuenta:</b> Ajustes del negocio, logo y portada, horarios/turnos de atención por sucursal y datos fiscales.</span></li>
-          <li><span class="dot">▸</span><span><b>4. Modelo Freemium (Free vs Pro):</b> Límites automáticos en backend (10 mesas, 30 platos, 1 sucursal) e incentivo a suscripción con funciones Pro.</span></li>
-          <li><span class="dot">▸</span><span><b>5. Carga Masiva y Ajuste de Precios:</b> Importador masivo de menús vía CSV/Excel con validador de errores y actualizador de precios en 1 clic.</span></li>
-          <li><span class="dot">▸</span><span><b>6. Dashboard con Métricas & Business Analytics:</b> Reportes de ventas en tiempo real, ticket promedio, top platos y exportación a PDF/Excel.</span></li>
-          <li><span class="dot">▸</span><span><b>7. Kitchen Display System (KDS):</b> Pantalla de cocina independiente del dashboard de mozo, con estados por ítem, temporizadores e impresión de comanda térmica.</span></li>
-          <li><span class="dot">▸</span><span><b>8. Disponibilidad & Menús por Franja Horaria:</b> Marcado de ítems "sin stock" (86) en tiempo real y menús que se activan por mediodía / noche según la hora de la sucursal.</span></li>
-        </ul>
+        <div class="delta">
+          <div class="delta-row">
+            <div class="delta-k">Cadencia</div>
+            <div><span class="was">5 sprints bisemanales</span><span class="arrow">→</span><span class="now">10 sprints semanales (S10–S19)</span>. Misma ventana 31/08 → 08/11; release desplegado a Render al cierre de cada semana.</div>
+          </div>
+          <div class="delta-row">
+            <div class="delta-k">Alcance</div>
+            <div><span class="was">6 pilares</span><span class="arrow">→</span><span class="now">8 pilares</span>. Nuevos: <b>KDS</b> (Sprint 15) y <b>Disponibilidad de ítems (86) + Menús por franja horaria</b> (Sprint 14).</div>
+          </div>
+          <div class="delta-row">
+            <div class="delta-k">Onboarding</div>
+            <div>Se suma un <span class="now">tour interactivo de primer ingreso</span> (sucursales, mesas, carta, QR) al Sprint 11, junto al rediseño UI/UX base.</div>
+          </div>
+          <div class="delta-row">
+            <div class="delta-k">Backlog</div>
+            <div><span class="was">20 US (US-50–US-69) / 5 épicas</span><span class="arrow">→</span><span class="now">29 US (US-50–US-78) / 10 épicas</span>, renumeradas en orden correlativo por sprint.</div>
+          </div>
+          <div class="delta-row">
+            <div class="delta-k">Docs</div>
+            <div>Actualizados: presentación Parte 2 (<span class="chip">index.html</span>), <span class="chip">AGENTS.md</span> y este Status Report.</div>
+          </div>
+        </div>
       </div>
     </div>
 
     <div class="c-card">
-      <div class="c-card-head">Gestión de Riesgos y Decisiones Técnicas</div>
+      <div class="c-card-head">Los 8 Pilares de Evolución (post re-plan)</div>
+      <div class="c-card-body">
+        <div class="sprint-tag">Fase 4 — Sprints 10 al 19 (semanales)</div>
+        <ul>
+          <li><span class="dot">▸</span><span><b>1. Rediseño UI/UX & Onboarding Guiado</b> <span class="chip">S11</span> — sistema de diseño accesible + tour interactivo de primer ingreso.</span></li>
+          <li><span class="dot">▸</span><span><b>2. Experiencia Comensal Mobile-First</b> <span class="chip">S12</span> — categorías sticky, modal de producto y carrito bottom-sheet.</span></li>
+          <li><span class="dot">▸</span><span><b>3. Configuración Avanzada de Cuenta</b> <span class="chip">S10</span> — perfil, logo/portada, horarios/turnos por sucursal y datos fiscales.</span></li>
+          <li><span class="dot">▸</span><span><b>4. Modelo Freemium (Free vs Pro)</b> <span class="chip">S16</span> — límites por tier en middleware e incentivo de upgrade.</span></li>
+          <li><span class="dot">▸</span><span><b>5. Carga Masiva & Ajuste de Precios</b> <span class="chip">S13</span> — importador CSV/Excel atómico y aumento porcentual masivo.</span></li>
+          <li><span class="dot">▸</span><span><b>6. Dashboard con Métricas & Analytics</b> <span class="chip">S17–S18</span> — KPIs en vivo, gráficos, heatmap y export PDF/Excel.</span></li>
+          <li><span class="dot">▸</span><span><b>7. Kitchen Display System (KDS)</b> <span class="chip">S15</span> — pantalla de cocina con estados por ítem e impresión térmica. <b>(nuevo)</b></span></li>
+          <li><span class="dot">▸</span><span><b>8. Disponibilidad & Menús por Franja Horaria</b> <span class="chip">S14</span> — "sin stock" (86) en tiempo real y menús por mediodía/noche. <b>(nuevo)</b></span></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  </div><!-- /rpt-section -->
+
+  <!-- Riesgos técnicos -->
+  <div class="rpt-section">
+  <div class="sec-label" style="margin-top:16px;">Decisiones y Riesgos Técnicos del Alcance Ampliado</div>
+  <div class="content-grid">
+
+    <div class="c-card">
+      <div class="c-card-head">Nuevos Riesgos (KDS & Disponibilidad)</div>
       <div class="c-card-body">
         <div class="sprint-tag blue">Mitigaciones Arquitecturales</div>
 
-        <div class="issue info">
-          <div class="issue-tag">⚡ Importación Masiva Segura (CSV / Excel)</div>
-          El parsing y la inserción masiva se ejecutarán en una sola transacción SQL atómica en Go, con validación previa de columnas para evitar estados inconsistentes.
+        <div class="issue risk">
+          <div class="issue-tag">🖨️ Impresión de comandas térmica (ESC/POS 58/80 mm)</div>
+          Dependencia de hardware externo. Mitigación: cola de impresión con reintento manual desde el KDS; el pedido nunca se bloquea si la impresora no responde.
         </div>
 
         <div class="issue info">
-          <div class="issue-tag">🔒 Control de Cuotas en Middleware (Free vs Pro)</div>
-          La validación de cuotas (límite de mesas, productos y sucursales) se aplicará a nivel middleware en la API Go antes de procesar las operaciones de escritura.
+          <div class="issue-tag">🍳 Estados por ítem de pedido</div>
+          Cambio de esquema (estado por línea de pedido) + canal SSE dedicado de cocina. Se aplica con migración incremental sin romper el dashboard de mozo ni el flujo actual del comensal.
         </div>
+
+        <div class="issue info">
+          <div class="issue-tag">🕑 Resolución de la carta del comensal</div>
+          Disponibilidad + franja horaria + estado de apertura se resuelven en una sola consulta indexada para no penalizar el tiempo de carga de la carta.
+        </div>
+      </div>
+    </div>
+
+    <div class="c-card">
+      <div class="c-card-head">Riesgo de Cadencia Semanal</div>
+      <div class="c-card-body">
+        <div class="sprint-tag green">Control de Ejecución</div>
 
         <div class="issue risk">
-          <div class="issue-tag">📊 Consultas de Métricas sin Impacto Operativo</div>
-          Las métricas de ventas utilizarán índices compuestos en PostgreSQL (`tenant_id`, `created_at`, `status`) para garantizar tiempos de respuesta menores a 50ms.
+          <div class="issue-tag">⏱️ Menor margen por sprint</div>
+          Cada épica se acota a <b>2–4 US</b> ejecutables en una semana. Si una US no cierra, se corta el alcance (no la calidad) y se reprograma; la fecha del 08/11 no se mueve.
+        </div>
+
+        <div class="issue info">
+          <div class="issue-tag">🔁 Overhead de ceremonias</div>
+          Planning y review se comprimen a revisiones cortas de inicio/cierre de semana. El release semanal a Render funciona como demo continua para feedback docente.
+        </div>
+
+        <div class="issue info">
+          <div class="issue-tag">✅ Calidad</div>
+          Se mantiene la regla de merge: <span class="chip">go test ./...</span> + <span class="chip">npm run build</span> verdes antes de integrar a <span class="chip">qa</span> y luego a <span class="chip">main</span>.
         </div>
       </div>
     </div>
@@ -456,7 +537,7 @@
 
   <!-- Gantt Chart -->
   <div class="rpt-section">
-  <div class="sec-label" style="margin-top:16px;">Cronograma Gantt — Fase 4 (Septiembre – Noviembre 2026)</div>
+  <div class="sec-label" style="margin-top:16px;">Cronograma Gantt — Fase 4 (Septiembre – Noviembre 2026) · 10 sprints semanales</div>
   <div class="gantt-wrap">
     <table class="gantt">
       <thead>
@@ -465,7 +546,7 @@
           <th class="gth today">
             <span class="sn">S10</span>
             <span class="sd">31/08–06/09</span>
-            <span class="today-arrow">▲ KICK-OFF</span>
+            <span class="today-arrow">▲ EN CURSO</span>
           </th>
           <th class="gth"><span class="sn">S11</span><span class="sd">07/09–13/09</span></th>
           <th class="gth"><span class="sn">S12</span><span class="sd">14/09–20/09</span></th>
@@ -547,7 +628,26 @@
       <div class="li"><div class="sq sq-wip"></div> Sprint en Curso (Activo)</div>
       <div class="li"><div class="sq sq-plan"></div> Sprints Planificados</div>
       <div class="li"><div class="sq sq-done"></div> Base MVP Desplegada (Sprints 0–9 ✓)</div>
-      <div class="hoy-badge">● KICK-OFF FASE 4: 31/08/2026</div>
+      <div class="hoy-badge">● SEMANA 1 · SPRINT 10 EN CURSO</div>
+    </div>
+  </div>
+
+  </div><!-- /rpt-section -->
+
+  <!-- Próximos pasos -->
+  <div class="rpt-section">
+  <div class="sec-label" style="margin-top:16px;">Foco de la Semana — Sprint 10 (31/08 – 06/09)</div>
+  <div class="c-card">
+    <div class="c-card-body">
+      <div class="sprint-tag">Configuración Avanzada de Cuenta</div>
+      <ul>
+        <li><span class="dot-blue">▸</span><span><b>US-50 (Front):</b> pantalla de Ajustes con perfil completo del negocio (logo, portada, datos de contacto y datos fiscales).</span></li>
+        <li><span class="dot-blue">▸</span><span><b>US-51 (Back):</b> endpoints para actualizar metadatos del comercio, logo y configuración tributaria del tenant.</span></li>
+        <li><span class="dot-blue">▸</span><span><b>US-52 (Int):</b> horarios y turnos de atención por sucursal con apertura/cierre automático de la carta.</span></li>
+      </ul>
+      <div style="margin-top: 14px; font-size: 11.5px; color: var(--text3); line-height: 1.5;">
+        <b>Cierre esperado:</b> release desplegado en Render con la sección de Ajustes operativa y los horarios por sucursal afectando la disponibilidad de la carta.
+      </div>
     </div>
   </div>
   </div><!-- /rpt-section -->
@@ -556,6 +656,12 @@
     <a href="index.html" class="no-print" style="font-size: 12.5px; color: var(--orange); text-decoration: none; font-weight: 600; font-family: 'DM Mono', monospace; display: inline-flex; align-items: center; gap: 6px;">
       ← Abrir Presentación Completa (Parte 2)
     </a>
+    <a href="status-report-04.html" class="no-print" style="font-size: 12.5px; color: var(--text3); text-decoration: none; font-weight: 600; font-family: 'DM Mono', monospace;">
+      Ver Status Report #4 →
+    </a>
+  </div>
+
+  <div style="margin-top: 10px; text-align: right;">
     <span style="font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace;">
       Mesa CLICK · Práctica Profesionalizante I · IRESM 2026
     </span>
