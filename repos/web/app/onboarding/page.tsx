@@ -199,8 +199,8 @@ export default function OnboardingPage() {
   if (completado) {
     return (
       <div className="min-h-screen bg-canvas-white flex flex-col items-center justify-center p-24 font-inter">
-        <div className="w-full max-w-md bg-vanilla-cream p-32 rounded-xl border border-system-black shadow-sm text-center space-y-24">
-          <span className="material-symbols-outlined text-48 text-plain-green">
+        <div className="w-full max-w-md bg-canvas-white p-32 rounded-lg border border-ash-graphite text-center space-y-24">
+          <span className="material-symbols-outlined text-48 text-success">
             celebration
           </span>
           <div className="space-y-8">
@@ -212,7 +212,7 @@ export default function OnboardingPage() {
             </p>
             {linkEnviado ? (
               <div className="p-16 bg-ghost-fog border border-ghost-fog rounded-lg text-left text-12 text-ash-graphite space-y-6">
-                <div className="flex items-center gap-6 text-plain-green font-medium">
+                <div className="flex items-center gap-6 text-success-muted font-medium">
                   <span className="material-symbols-outlined text-18">mark_email_unread</span>
                   <span>Revisá tu casilla de correo</span>
                 </div>
@@ -240,7 +240,7 @@ export default function OnboardingPage() {
                 </div>
                 <a
                   href={linkDev}
-                  className="block text-11 font-mono text-plain-green break-all hover:underline"
+                  className="block text-11 font-mono text-ash-graphite break-all hover:underline"
                 >
                   {linkDev}
                 </a>
@@ -250,7 +250,7 @@ export default function OnboardingPage() {
           <div className="pt-8 flex flex-col gap-12">
             <Link
               href="/login"
-              className="w-full h-40 bg-plain-green text-ash-graphite font-bold rounded-md hover:bg-plain-green-muted transition-all flex items-center justify-center gap-8 text-13"
+              className="w-full h-44 bg-plain-green text-canvas-white text-12 font-bold uppercase tracking-wide rounded-full hover:opacity-85 transition-opacity flex items-center justify-center gap-8"
             >
               Ir a Iniciar Sesión
               <span className="material-symbols-outlined text-16">arrow_forward</span>

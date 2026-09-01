@@ -379,7 +379,7 @@ export default function StepBranch({
                     aria-pressed={abierto}
                     className={`h-32 min-w-44 px-10 rounded-md border text-11 font-mono uppercase tracking-wider transition-all ${
                       abierto
-                        ? "bg-plain-green text-ash-graphite border-plain-green"
+                        ? "bg-plain-green text-canvas-white border-plain-green"
                         : "bg-canvas-white text-sage-green border-ash-graphite/30"
                     }`}
                   >
@@ -464,7 +464,7 @@ export default function StepBranch({
                           onClick={() => toggleDia(dia.key)}
                           className={`h-30 px-8 rounded-md border text-10 font-mono uppercase tracking-wider ${
                             diaHorario.abierto
-                              ? "bg-plain-green text-ash-graphite border-plain-green"
+                              ? "bg-plain-green text-canvas-white border-plain-green"
                               : "bg-canvas-white text-sage-green border-ash-graphite/30"
                           }`}
                         >
@@ -541,7 +541,7 @@ export default function StepBranch({
         <button
           type="submit"
           disabled={loading || diasAbiertos.length === 0}
-          className="w-full h-44 bg-plain-green text-ash-graphite font-bold rounded-md hover:bg-plain-green-muted active:scale-95 transition-all shadow-lg shadow-plain-green/10 flex items-center justify-center gap-8 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-44 bg-plain-green text-canvas-white font-bold rounded-md hover:bg-plain-green-muted active:scale-95 transition-all shadow-lg shadow-plain-green/10 flex items-center justify-center gap-8 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <span className="animate-spin material-symbols-outlined text-20">progress_activity</span>

@@ -3,16 +3,16 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import CartaSection from "@/components/dashboard/CartaSection";
 import MesasSection from "@/components/dashboard/MesasSection";
-import EquipoSection from "@/components/dashboard/EquipoSection";
 import RecepcionistaSection from "@/components/dashboard/RecepcionistaSection";
+import ConfiguracionSection from "@/components/dashboard/ConfiguracionSection";
+import Logo from "@/components/brand/Logo";
 import { api, cerrarSesion, estaAutenticado, Tenant } from "@/lib/api";
 
-type Section = 'carta' | 'mesas' | 'equipo' | 'recepcionista';
+type Section = 'carta' | 'mesas' | 'recepcionista' | 'configuracion';
 
 const SECTIONS: { id: Section; icon: string; label: string }[] = [
   { id: 'carta', icon: 'restaurant_menu', label: 'Carta' },
   { id: 'mesas', icon: 'table_restaurant', label: 'Mesas & QR' },
-  { id: 'equipo', icon: 'group', label: 'Equipo' },
   { id: 'recepcionista', icon: 'receipt_long', label: 'Recepcionista' },
 ];
 
@@ -20,8 +20,8 @@ function renderSection(section: Section) {
   switch (section) {
     case 'carta': return <CartaSection />;
     case 'mesas': return <MesasSection />;
-    case 'equipo': return <EquipoSection />;
     case 'recepcionista': return <RecepcionistaSection />;
+    case 'configuracion': return <ConfiguracionSection />;
   }
 }
 
@@ -61,8 +61,11 @@ export default function DashboardPage() {
           >
             {isExpanded ? 'menu_open' : 'menu'}
           </button>
-          <h1 className="text-15 font-medium tracking-tight">Mesa CLICK</h1>
-          <span className="text-11 font-mono text-sage-green uppercase tracking-wider border-l border-ghost-fog pl-8">
+          <span className="flex items-center gap-8 text-ash-graphite">
+            <Logo className="w-20 h-20" />
+            <h1 className="text-15 font-bold uppercase tracking-tight">Mesa CLICK</h1>
+          </span>
+          <span className="text-11 font-mono text-sage-green uppercase tracking-wider border-l border-concrete pl-8">
             {tenant ? tenant.nombre : "Admin"}
           </span>
           {tenant && (
@@ -119,9 +122,9 @@ export default function DashboardPage() {
           }`}
         >
           <div className="px-16 pb-16 flex items-center justify-between border-b border-ghost-fog mb-8">
-            <div className="flex items-center gap-8">
-              <span className="material-symbols-outlined text-plain-green text-24">restaurant</span>
-              <span className="font-medium text-14 text-ash-graphite">Menú Principal</span>
+            <div className="flex items-center gap-8 text-ash-graphite">
+              <Logo className="w-22 h-22" />
+              <span className="font-bold uppercase text-14">Menú Principal</span>
             </div>
             <button 
               onClick={() => setIsExpanded(false)}
@@ -146,7 +149,16 @@ export default function DashboardPage() {
             ))}
           </nav>
           <div className="pt-16 border-t border-ghost-fog space-y-4 px-8">
-            <NavItem icon="settings" label="Configuración" expanded={true} />
+            <NavItem
+              icon="settings"
+              label="Configuración"
+              active={activeSection === "configuracion"}
+              expanded={true}
+              onClick={() => {
+                setActiveSection("configuracion");
+                setIsExpanded(false);
+              }}
+            />
             <NavItem icon="help_outline" label="Ayuda" expanded={true} />
           </div>
         </aside>
@@ -170,7 +182,13 @@ export default function DashboardPage() {
             ))}
           </nav>
           <div className={`pt-16 border-t border-ghost-fog space-y-4 flex flex-col ${isExpanded ? "px-8" : "items-center"}`}>
-            <NavItem icon="settings" label="Configuración" expanded={isExpanded} />
+            <NavItem
+              icon="settings"
+              label="Configuración"
+              active={activeSection === "configuracion"}
+              expanded={isExpanded}
+              onClick={() => setActiveSection("configuracion")}
+            />
             <NavItem icon="help_outline" label="Ayuda" expanded={isExpanded} />
           </div>
         </aside>
@@ -202,7 +220,7 @@ function NavItem({
       onClick={onClick}
       className={`flex items-center rounded-md cursor-pointer transition-all ${
         expanded ? "w-full px-12 py-8 gap-12" : "justify-center w-40 h-40"
-      } ${active ? "bg-ghost-fog text-plain-green" : "text-ash-graphite hover:bg-vanilla-cream"}`}
+      } ${active ? "bg-ash-graphite text-canvas-white" : "text-ash-graphite hover:bg-vanilla-cream"}`}
     >
       <span className="material-symbols-outlined text-20">{icon}</span>
       {expanded && <span className="text-13 font-medium whitespace-nowrap">{label}</span>}

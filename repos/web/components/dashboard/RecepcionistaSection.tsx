@@ -22,7 +22,7 @@ const ESTADO_LABELS: Record<'recibido' | 'preparando' | 'listo', string> = {
 const ESTADO_STYLES: Record<'recibido' | 'preparando' | 'listo', string> = {
   recibido: 'bg-vanilla-cream text-ash-graphite border-ash-graphite',
   preparando: 'bg-ghost-fog text-sage-green border-sage-green',
-  listo: 'bg-plain-green text-ash-graphite border-plain-green',
+  listo: 'bg-success text-ash-graphite border-success',
 };
 
 function PedidoCard({
@@ -75,7 +75,7 @@ function PedidoCard({
         {pedido.estado !== 'listo' && (
           <button
             onClick={() => onAvanzar(pedido.id)}
-            className="flex-1 sm:flex-initial px-16 py-8 bg-plain-green text-ash-graphite text-12 font-semibold rounded-md hover:opacity-90 active:scale-98 transition-all text-center"
+            className="flex-1 sm:flex-initial px-16 py-8 bg-plain-green text-canvas-white text-12 font-semibold rounded-md hover:opacity-90 active:scale-98 transition-all text-center"
           >
             {pedido.estado === 'recibido' ? '→ Preparando' : '→ Listo'}
           </button>
@@ -263,7 +263,7 @@ export default function RecepcionistaSection() {
         </div>
         <div className="flex items-center gap-8 self-start sm:self-auto bg-ghost-fog px-12 py-6 rounded-full border border-ash-graphite/10">
           <span
-            className={`w-8 h-8 rounded-full ${sseConectado ? 'bg-plain-green animate-pulse' : 'bg-sage-green'}`}
+            className={`w-8 h-8 rounded-full ${sseConectado ? 'bg-success animate-pulse' : 'bg-sage-green'}`}
           />
           <span className="text-11 font-mono text-sage-green uppercase tracking-wide">
             {sseConectado ? 'En vivo (SSE)' : 'Conectando...'}
