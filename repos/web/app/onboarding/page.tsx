@@ -55,6 +55,14 @@ function pasoParaCampo(campo: keyof OnboardingFormData) {
   return 3;
 }
 
+function puedeOmitirPrevalidacionEmail(err: unknown) {
+  if (err instanceof ApiError && err.status === 404) return true;
+  if (err instanceof TypeError) return true;
+
+  const message = err instanceof Error ? err.message.trim().toLowerCase() : "";
+  return message === "failed to fetch" || message.includes("networkerror");
+}
+
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -131,7 +139,7 @@ export default function OnboardingPage() {
 
       handleNext();
     } catch (err: unknown) {
-      if (err instanceof ApiError && err.status === 404) {
+      if (puedeOmitirPrevalidacionEmail(err)) {
         handleNext();
         return;
       }

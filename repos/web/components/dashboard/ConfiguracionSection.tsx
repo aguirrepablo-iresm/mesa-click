@@ -288,12 +288,23 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
   const [color, setColor] = useState("#F54927");
   const [estilo, setEstilo] = useState<"claro" | "oscuro">("oscuro");
   const [logoUrl, setLogoUrl] = useState("");
+  const [arrastrandoLogo, setArrastrandoLogo] = useState(false);
   const [ok, setOk] = useState(false);
 
-  const onLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) setLogoUrl(URL.createObjectURL(file));
+  const cargarLogo = (file?: File | null) => {
+    if (!file || !file.type.startsWith("image/")) return;
+    setLogoUrl(URL.createObjectURL(file));
     setOk(false);
+  };
+
+  const onLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
+    cargarLogo(e.target.files?.[0]);
+  };
+
+  const onDropLogo = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    setArrastrandoLogo(false);
+    cargarLogo(e.dataTransfer.files?.[0]);
   };
 
   const oscuro = estilo === "oscuro";
@@ -314,8 +325,21 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
 
         <div className="grid sm:grid-cols-2 gap-12">
           <Campo label="Logo">
-            <div className="flex items-center gap-12">
-              <div className="w-44 h-44 rounded-md border border-concrete grid place-items-center overflow-hidden bg-vanilla-cream shrink-0">
+            <div
+              onDragEnter={(e) => {
+                e.preventDefault();
+                setArrastrandoLogo(true);
+              }}
+              onDragOver={(e) => e.preventDefault()}
+              onDragLeave={() => setArrastrandoLogo(false)}
+              onDrop={onDropLogo}
+              className={`h-72 w-full px-12 rounded-md border border-dashed flex items-center gap-12 cursor-pointer transition-colors ${
+                arrastrandoLogo
+                  ? "border-plain-green bg-ghost-fog"
+                  : "border-concrete bg-canvas-white hover:border-ash-graphite"
+              }`}
+            >
+              <div className="w-48 h-48 rounded-md border border-concrete grid place-items-center overflow-hidden bg-vanilla-cream shrink-0">
                 {logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={logoUrl} alt="logo" className="w-full h-full object-cover" />
@@ -323,15 +347,16 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
                   <span className="material-symbols-outlined text-20 text-stone">image</span>
                 )}
               </div>
-              <label className="h-32 px-10 flex items-center text-11 font-medium rounded-md border border-ash-graphite cursor-pointer hover:bg-vanilla-cream">
-                Subir logo
-                <input type="file" accept="image/*" onChange={onLogo} className="hidden" />
-              </label>
+              <div className="min-w-0">
+                <span className="block text-12 font-medium text-ash-graphite">Subir logo</span>
+                <span className="block text-10 font-mono uppercase tracking-wider text-stone">PNG / JPG</span>
+              </div>
+              <input type="file" accept="image/*" onChange={onLogo} className="hidden" />
             </div>
           </Campo>
 
           <Campo label="Color principal del menú">
-            <div className="flex items-center gap-12">
+            <div className="h-72 w-full px-12 rounded-md border border-concrete bg-canvas-white flex items-center gap-12">
               <input
                 type="color"
                 value={color}
@@ -339,10 +364,10 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
                   setColor(e.target.value);
                   setOk(false);
                 }}
-                className="w-40 h-40 p-0 border border-concrete rounded-md bg-canvas-white"
+                className="w-48 h-48 p-0 border border-concrete rounded-md bg-canvas-white shrink-0"
               />
               <input
-                className={`${INPUT} font-mono text-13`}
+                className="h-48 min-w-0 flex-1 px-12 text-13 font-mono rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-system-black"
                 value={color.toUpperCase()}
                 onChange={(e) => {
                   setColor(e.target.value);

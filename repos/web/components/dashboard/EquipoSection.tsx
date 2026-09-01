@@ -97,18 +97,16 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
     setTimeout(() => setCopiado(false), 2500);
   };
 
+  const miembrosLabel = `${equipo.length} ${
+    equipo.length === 1 ? "miembro registrado" : "miembros registrados"
+  }${loading ? " (cargando...)" : ""}`;
+
   return (
     <div className={`${embedded ? "space-y-24" : "p-24 md:p-32 space-y-32"} font-inter`}>
-      <div>
-        <h2 className="text-20 font-medium text-ash-graphite">Equipo de Trabajo</h2>
-        <p className="text-13 text-sage-green mt-4">
-          {equipo.length} miembros registrados {loading && "(cargando...)"}
-        </p>
-      </div>
-
       <div className="border border-ash-graphite rounded-lg overflow-hidden bg-canvas-white">
-        <div className="px-20 py-10 bg-vanilla-cream border-b border-ash-graphite">
+        <div className="px-20 py-10 bg-vanilla-cream border-b border-ash-graphite flex items-center justify-between gap-12">
           <p className="text-11 font-mono text-sage-green uppercase tracking-wider">Miembros actuales</p>
+          <p className="text-11 text-sage-green text-right whitespace-nowrap">{miembrosLabel}</p>
         </div>
         <div className="divide-y divide-ghost-fog">
           {equipo.map(u => (
