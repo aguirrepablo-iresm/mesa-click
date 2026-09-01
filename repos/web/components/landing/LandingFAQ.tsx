@@ -31,7 +31,7 @@ export default function LandingFAQ() {
   return (
     <section id="faq" className="py-80 md:py-120 bg-canvas-white">
       <div className="max-w-4xl mx-auto px-24">
-        <h2 className="display text-32 md:text-44 text-ash-graphite mb-28">Preguntas frecuentes</h2>
+        <h2 className="display text-[34px] md:text-56 text-ash-graphite mb-28">Preguntas frecuentes</h2>
 
         <div className="border-t border-ash-graphite">
           {FAQS.map(([q, a], i) => (

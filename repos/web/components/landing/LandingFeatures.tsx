@@ -4,7 +4,7 @@ export default function LandingFeatures() {
   return (
     <section id="features" className="py-80 md:py-120 bg-ash-graphite text-canvas-white">
       <div className="max-w-7xl mx-auto px-24">
-        <h2 className="display text-32 md:text-44 text-center mb-48">Ridículamente simple</h2>
+        <h2 className="display text-[34px] md:text-56 text-center mb-48">Ridículamente simple</h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-32 md:gap-40">
           <Step

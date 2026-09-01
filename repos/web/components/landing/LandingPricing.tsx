@@ -5,12 +5,12 @@ export default function LandingPricing() {
   return (
     <section id="pricing" className="py-80 md:py-120 bg-canvas-white">
       <div className="max-w-7xl mx-auto px-24">
-        <h2 className="display text-32 md:text-44 text-ash-graphite mb-12">Planes</h2>
-        <p className="text-16 text-deep-forest max-w-xl mb-48">
+        <h2 className="display text-[34px] md:text-56 text-ash-graphite mb-12 text-center">Planes</h2>
+        <p className="text-16 text-deep-forest max-w-xl mx-auto mb-48 text-center">
           Elegí el plan según el tamaño de tu operación. Sin ataduras.
         </p>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-24 max-w-4xl">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-24 max-w-4xl mx-auto">
           {/* Free */}
           <div className="p-32 rounded-lg border border-ash-graphite bg-canvas-white flex flex-col">
             <h4 className="text-12 font-bold uppercase tracking-widest text-sage-green">Plan Free</h4>

@@ -92,7 +92,7 @@
   /* Fonts */
   --font-inter: "Inter", sans-serif;
   --font-mono: "Geist Mono", monospace;
-  --font-display: "Anton", "Arial Narrow", system-ui, sans-serif; /* sustituto de Foggy */
+  --font-display: var(--font-anton), "Arial Narrow", system-ui, sans-serif; /* sustituto de Foggy */
 
   /* Border Radius */
   --radius-md: 8px;

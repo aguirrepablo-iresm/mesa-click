@@ -13,7 +13,7 @@ export default function LandingHero() {
       <div className="max-w-7xl mx-auto px-24 grid md:grid-cols-2 gap-48 items-center">
         {/* Copy */}
         <div>
-          <h2 className="display text-44 md:text-88 text-ash-graphite">
+          <h2 className="display text-[52px] md:text-[104px] text-ash-graphite">
             Tu mesa<br />Tu carta<br />Un&nbsp;click
           </h2>
           <p className="mt-24 text-18 text-deep-forest max-w-md">
