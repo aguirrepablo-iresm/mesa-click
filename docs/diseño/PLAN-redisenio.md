@@ -1,0 +1,94 @@
+# Plan — Rediseño UI (monocromático) + Configuración de cuenta
+
+> Estilo de referencia: `docs/diseño/` (DESIGN.md, tokens.json, screenshots).
+> Prototipos: `docs/diseño/preview/home-login.html`, `logo-mesas.html`.
+> Mockups Configuración: `docs/diseño/preview/config-vista-*.png`.
+
+**Rama:** `feat/US-53-redisenio-ui` (creada desde `qa`).
+**US cubiertas:** US-53 (sistema de diseño) + US-50 / US-51 / US-52 (Configuración avanzada de cuenta) del Sprint 10.
+**Decisiones tomadas:**
+- Alcance: sistema visual completo (afecta landing, login, onboarding, dashboard, comensal).
+- Color: **monocromático puro**. Verde `#1ad379` reservado a estados de éxito / confirmación.
+- Logo: **concepto E** ("mesa cenital") — `components/brand/Logo.tsx`.
+
+---
+
+## Convención de tokens
+
+`app/globals.css` conserva los **nombres** de token y cambia los valores:
+
+| Token | Antes | Ahora | Uso |
+|---|---|---|---|
+| `plain-green` | `#1ad379` | `#0a0a0a` | **acción primaria (tinta)** |
+| `plain-green-muted` | `#17b267` | `#262626` | hover primaria |
+| `success` *(nuevo)* | — | `#1ad379` | éxito / confirmación (único color) |
+| `success-muted` *(nuevo)* | — | `#17b267` | hover éxito |
+| `ash-graphite` | `#0a2414` | `#0a0a0a` | texto principal |
+| `deep-forest` | `#283a2e` | `#333333` | texto secundario |
+| `sage-green` | `#607166` | `#595959` | texto atenuado |
+| `stone` *(nuevo)* | — | `#808080` | texto terciario / helper |
+| `concrete` *(nuevo)* | — | `#d9d9d9` | bordes / divisores / inputs |
+| `vanilla-cream` | `#f9f6f1` | `#eeeeee` | superficie |
+| `ghost-fog` | `#f3fbe9` | `#f4f4f4` | relleno sutil |
+| `font-display` *(nuevo)* | — | `Anton` | titulares grandes (`.display`) |
+
+Botones primarios: `rounded-full`, `bg-plain-green text-canvas-white`.
+Radios: `--radius-md` / `--radius-lg` = 8px.
+
+---
+
+## Fases y estado
+
+### Fase A — Fundaciones + Landing + Login  ⏳ EN CURSO
+- [x] `app/globals.css` — @theme monocromático, `.display`, reset de inputs
+- [x] `app/layout.tsx` — fuente Anton + favicon (logo E)
+- [x] `components/brand/Logo.tsx` — marca + `Wordmark`
+- [x] `components/landing/LandingHeader.tsx`
+- [x] `components/landing/LandingHero.tsx` — display + mockup de teléfono
+- [ ] `components/landing/LandingFeatures.tsx` — banda negra, 3 pasos, íconos line-art
+- [ ] `components/landing/LandingPricing.tsx` — tarjetas mono (Pro = invertida)
+- [ ] `components/landing/LandingFAQ.tsx` — **nuevo**, acordeón `<details>`
+- [ ] `components/landing/LandingFooter.tsx`
+- [ ] `app/page.tsx` — insertar `<LandingFAQ />`
+- [ ] `app/login/page.tsx` — layout split; "enlace enviado" en `success`
+- [ ] `app/auth/verify/page.tsx` — estados mono; éxito en `success`
+- [ ] `npm run build` verde → **checkpoint de revisión**
+
+### Fase B — Onboarding + Dashboard + Comensal
+- [ ] `components/onboarding/*` + `app/onboarding/page.tsx` — inputs, pills, progreso mono; check de paso en `success`
+- [ ] `app/dashboard/page.tsx` + `components/dashboard/*` — sidebar, tabs, acciones a negro; badge "listo/confirmado" en `success`
+- [ ] `app/mesa/[token]/page.tsx` + `components/menu/*` — pase liviano: heredan tokens; botones primarios a negro; "pedido listo" en `success` (rework mobile-first fino queda para S11)
+
+### Fase C — Sección Configuración (nueva)  ·  ruta `/dashboard/configuracion`
+Mueve **Equipo** y **Sucursales** fuera del dashboard a un área con 4 pestañas.
+- [ ] Layout de Configuración + navegación por pestañas + selector de sucursal + botón Guardar
+- [ ] **Negocio** — nombre, rubro, email admin, WhatsApp, link público base, descripción + card "Estado del plan / Upgrade"
+- [ ] **Apariencia** — nombre visible, subir logo, color principal, estilo Claro/Oscuro + vista previa en vivo del menú
+- [ ] **Equipo de trabajo** — miembros + editar rol + invitar (nombre/email/rol → magic link) + panel "Roles disponibles"
+- [ ] **Sucursales** — lista, datos, días abiertos + horario apertura/cierre + 2º turno, "Crear sucursal PRO" (gated)
+- [ ] Quitar el tab "Equipo" del sidebar del dashboard; agregar acceso a Configuración (⚙️)
+
+### Fase D — Cierre
+- [ ] `npm run build` + revisión de cada ruta
+- [ ] PR a `qa`
+
+---
+
+## Backend pendiente (US-51 / US-52 · `repos/api`, Go)
+
+La UI de Configuración se construye contra la API donde exista; donde falta, guarda con estado local + aviso "pendiente de backend".
+
+| Necesita | Estado hoy |
+|---|---|
+| `PATCH /tenants/me` — metadatos del negocio + datos fiscales | ❌ no existe (`GET /tenants/me` sí) |
+| Branding del menú (nombre visible, color, estilo) + **subir logo** (storage) | ❌ no existe |
+| `PATCH /usuarios/{id}` — cambiar rol de un miembro | ❌ no existe (`GET/POST/DELETE /usuarios` sí) |
+| Campos `dias_abiertos` + `turnos[]` (apertura/cierre, 2º turno) en sucursal | ❌ faltan (`PATCH /sucursales/{id}` existe) |
+| Cuotas por plan (Free/Pro) para gating de "Crear sucursal PRO" | ⏳ Sprint 16 |
+
+---
+
+## Fuera de alcance / no se toca
+
+- Comportamiento, llamadas a API, textos funcionales, estructura de rutas, tests.
+- Integración de pago, KDS, métricas (sprints posteriores).

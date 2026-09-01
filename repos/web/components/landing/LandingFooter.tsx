@@ -1,52 +1,44 @@
 import React from "react";
 import Link from "next/link";
+import Logo from "@/components/brand/Logo";
 
 export default function LandingFooter() {
   return (
-    <footer className="py-64 bg-vanilla-cream border-t border-ghost-fog">
-      <div className="max-w-7xl mx-auto px-24">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-40 pb-40">
-          <div className="col-span-1 md:col-span-2 space-y-16">
-            <div className="flex items-center gap-8">
-              <span className="material-symbols-outlined text-plain-green">restaurant</span>
-              <span className="text-16 font-medium tracking-tight text-ash-graphite">Mesa CLICK</span>
-            </div>
-            <p className="text-14 text-sage-green max-w-xs leading-relaxed">
-              La plataforma definitiva para digitalizar la experiencia en tu restaurante. 
-              Hecho para el trabajo real, día a día.
-            </p>
-          </div>
-          
-          <div className="space-y-16">
-            <h5 className="text-12 font-mono text-ash-graphite uppercase tracking-widest font-bold">Producto</h5>
-            <ul className="space-y-8">
-              <li><a href="#" className="text-14 text-sage-green hover:text-plain-green transition-colors">Menú Digital</a></li>
-              <li><a href="#" className="text-14 text-sage-green hover:text-plain-green transition-colors">Gestión QR</a></li>
-              <li><a href="#" className="text-14 text-sage-green hover:text-plain-green transition-colors">Pedidos</a></li>
-              <li><Link href="/login" className="text-14 text-sage-green hover:text-plain-green transition-colors">Iniciar sesión</Link></li>
-            </ul>
+    <footer className="bg-canvas-white border-t border-concrete">
+      <div className="max-w-7xl mx-auto px-24 py-48">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-24">
+          <div className="col-span-2 md:col-span-1 flex items-center gap-10 text-ash-graphite">
+            <Logo className="w-28 h-28" />
+            <span className="text-16 font-bold uppercase tracking-tight">Mesa CLICK</span>
           </div>
 
-          <div className="space-y-16">
-            <h5 className="text-12 font-mono text-ash-graphite uppercase tracking-widest font-bold">Legal</h5>
-            <ul className="space-y-8">
-              <li><a href="#" className="text-14 text-sage-green hover:text-plain-green transition-colors">Términos</a></li>
-              <li><a href="#" className="text-14 text-sage-green hover:text-plain-green transition-colors">Privacidad</a></li>
-              <li><a href="#" className="text-14 text-sage-green hover:text-plain-green transition-colors">Contacto</a></li>
-            </ul>
-          </div>
+          <FootCol title="Producto" links={[["Cómo funciona", "#features"], ["Precios", "#pricing"], ["FAQ", "#faq"]]} />
+          <FootCol title="Soporte" links={[["FAQ", "#faq"], ["Contacto", "#"], ["Estado", "#"]]} />
+          <FootCol title="Legal" links={[["Términos", "#"], ["Privacidad", "#"]]} />
         </div>
-        
-        <div className="pt-32 border-t border-ash-graphite/5 flex flex-col md:flex-row justify-between items-center gap-16">
-          <p className="text-12 font-mono text-sage-green">
-            © 2026 Mesa CLICK. Todos los derechos reservados.
-          </p>
-          <div className="flex items-center gap-24">
-            <span className="material-symbols-outlined text-ash-graphite hover:text-plain-green cursor-pointer">language</span>
-            <span className="material-symbols-outlined text-ash-graphite hover:text-plain-green cursor-pointer">share</span>
-          </div>
+
+        <div className="mt-40 pt-20 border-t border-concrete flex flex-wrap justify-between items-center gap-10 text-12 text-stone">
+          <span>© 2026 Mesa CLICK · Práctica Profesionalizante I · IRESM</span>
+          <span>Hecho en Argentina</span>
         </div>
       </div>
     </footer>
+  );
+}
+
+function FootCol({ title, links }: { title: string; links: [string, string][] }) {
+  return (
+    <div>
+      <h5 className="text-13 font-bold text-ash-graphite mb-14">{title}</h5>
+      <ul>
+        {links.map(([label, href]) => (
+          <li key={label} className="mb-10">
+            <Link href={href} className="text-14 text-sage-green hover:text-ash-graphite transition-colors">
+              {label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
