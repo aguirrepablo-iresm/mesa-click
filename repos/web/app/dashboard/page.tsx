@@ -3,17 +3,16 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import CartaSection from "@/components/dashboard/CartaSection";
 import MesasSection from "@/components/dashboard/MesasSection";
-import EquipoSection from "@/components/dashboard/EquipoSection";
 import RecepcionistaSection from "@/components/dashboard/RecepcionistaSection";
+import ConfiguracionSection from "@/components/dashboard/ConfiguracionSection";
 import Logo from "@/components/brand/Logo";
 import { api, cerrarSesion, estaAutenticado, Tenant } from "@/lib/api";
 
-type Section = 'carta' | 'mesas' | 'equipo' | 'recepcionista';
+type Section = 'carta' | 'mesas' | 'recepcionista' | 'configuracion';
 
 const SECTIONS: { id: Section; icon: string; label: string }[] = [
   { id: 'carta', icon: 'restaurant_menu', label: 'Carta' },
   { id: 'mesas', icon: 'table_restaurant', label: 'Mesas & QR' },
-  { id: 'equipo', icon: 'group', label: 'Equipo' },
   { id: 'recepcionista', icon: 'receipt_long', label: 'Recepcionista' },
 ];
 
@@ -21,8 +20,8 @@ function renderSection(section: Section) {
   switch (section) {
     case 'carta': return <CartaSection />;
     case 'mesas': return <MesasSection />;
-    case 'equipo': return <EquipoSection />;
     case 'recepcionista': return <RecepcionistaSection />;
+    case 'configuracion': return <ConfiguracionSection />;
   }
 }
 
@@ -150,7 +149,16 @@ export default function DashboardPage() {
             ))}
           </nav>
           <div className="pt-16 border-t border-ghost-fog space-y-4 px-8">
-            <NavItem icon="settings" label="Configuración" expanded={true} />
+            <NavItem
+              icon="settings"
+              label="Configuración"
+              active={activeSection === "configuracion"}
+              expanded={true}
+              onClick={() => {
+                setActiveSection("configuracion");
+                setIsExpanded(false);
+              }}
+            />
             <NavItem icon="help_outline" label="Ayuda" expanded={true} />
           </div>
         </aside>
@@ -174,7 +182,13 @@ export default function DashboardPage() {
             ))}
           </nav>
           <div className={`pt-16 border-t border-ghost-fog space-y-4 flex flex-col ${isExpanded ? "px-8" : "items-center"}`}>
-            <NavItem icon="settings" label="Configuración" expanded={isExpanded} />
+            <NavItem
+              icon="settings"
+              label="Configuración"
+              active={activeSection === "configuracion"}
+              expanded={isExpanded}
+              onClick={() => setActiveSection("configuracion")}
+            />
             <NavItem icon="help_outline" label="Ayuda" expanded={isExpanded} />
           </div>
         </aside>

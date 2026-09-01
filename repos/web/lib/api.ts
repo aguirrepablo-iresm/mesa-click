@@ -337,6 +337,13 @@ export const api = {
     });
   },
 
+  actualizarSucursal: async (id: string, data: Partial<Sucursal>) => {
+    return apiFetch<Sucursal>(`/sucursales/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
   listarSectores: async (sucursalId: string) => {
     return apiFetch<Sector[]>(`/sucursales/${sucursalId}/sectores`);
   },

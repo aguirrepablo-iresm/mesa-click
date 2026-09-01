@@ -59,17 +59,19 @@ Radios: `--radius-md` / `--radius-lg` = 8px.
 - [x] `app/dashboard/page.tsx` + `components/dashboard/*` — logo en cabecera/drawer, item de nav activo **invertido** (negro/blanco), acciones primarias a negro, badge "Listo" + punto SSE conectado en `success`
 - [ ] **Comensal (`app/mesa/[token]`, `components/menu/*`) — NO se toca en Fase B.** Usa su propio sistema de color (`slate-*` / `green-*` de Tailwind), independiente de los tokens del admin. Su rework va con el **Mobile-First Comensal del Sprint 11** (US-56/57), no con este reskin.
 
-### Fase C — Sección Configuración (nueva)  ·  ruta `/dashboard/configuracion`
-Mueve **Equipo** y **Sucursales** fuera del dashboard a un área con 4 pestañas.
-- [ ] Layout de Configuración + navegación por pestañas + selector de sucursal + botón Guardar
-- [ ] **Negocio** — nombre, rubro, email admin, WhatsApp, link público base, descripción + card "Estado del plan / Upgrade"
-- [ ] **Apariencia** — nombre visible, subir logo, color principal, estilo Claro/Oscuro + vista previa en vivo del menú
-- [ ] **Equipo de trabajo** — miembros + editar rol + invitar (nombre/email/rol → magic link) + panel "Roles disponibles"
-- [ ] **Sucursales** — lista, datos, días abiertos + horario apertura/cierre + 2º turno, "Crear sucursal PRO" (gated)
-- [ ] Quitar el tab "Equipo" del sidebar del dashboard; agregar acceso a Configuración (⚙️)
+### Fase C — Sección Configuración (nueva)  ✅
+Vive como sección del dashboard (`ConfiguracionSection`), no como ruta aparte:
+el mockup muestra el shell del dashboard + sub-pestañas.
+- [x] `components/dashboard/ConfiguracionSection.tsx` — cabecera "Configuración", selector de sucursal, 4 sub-pestañas
+- [x] **Negocio** — nombre (prefill del tenant), rubro, email admin, WhatsApp, link público base (derivado del slug), descripción + card "Estado del plan / Upgrade" (mock). Guardado **local** + banner "pendiente US-51"
+- [x] **Apariencia** — nombre visible, subir logo (preview local), color principal (`input[type=color]`), estilo Claro/Oscuro + **vista previa en vivo** del menú. Guardado local + banner
+- [x] **Equipo de trabajo** — reusa `EquipoSection` (list/invitar/eliminar contra la API real) + panel "Roles disponibles"
+- [x] **Sucursales** — lista + form (nombre, WhatsApp, email, días abiertos, horario apertura/cierre, 2º turno). Guarda con `api.actualizarSucursal` (`PATCH /sucursales/{id}`, nuevo wrapper en `lib/api.ts`), horarios serializados al mismo JSON que usa el onboarding. "Crear sucursal PRO" = card gated/mock
+- [x] Dashboard: se quita el tab "Equipo" del sidebar (pasa a Configuración) y el NavItem ⚙️ "Configuración" queda funcional; item de nav activo invertido
 
 ### Fase D — Cierre
-- [ ] `npm run build` + revisión de cada ruta
+- [x] `npm run build` verde (todas las rutas)
+- [ ] Revisión visual de cada ruta con `npm run dev`
 - [ ] PR a `qa`
 
 ---
@@ -82,8 +84,8 @@ La UI de Configuración se construye contra la API donde exista; donde falta, gu
 |---|---|
 | `PATCH /tenants/me` — metadatos del negocio + datos fiscales | ❌ no existe (`GET /tenants/me` sí) |
 | Branding del menú (nombre visible, color, estilo) + **subir logo** (storage) | ❌ no existe |
-| `PATCH /usuarios/{id}` — cambiar rol de un miembro | ❌ no existe (`GET/POST/DELETE /usuarios` sí) |
-| Campos `dias_abiertos` + `turnos[]` (apertura/cierre, 2º turno) en sucursal | ❌ faltan (`PATCH /sucursales/{id}` existe) |
+| `PATCH /usuarios/{id}` — cambiar rol de un miembro | ❌ no existe (`GET/POST/DELETE /usuarios` sí). Equipo no edita rol inline. |
+| Que `PATCH /sucursales/{id}` **persista** `horarios` (días + turnos) | ⚠️ el front ya lo envía (`api.actualizarSucursal`, mismo JSON que el onboarding); falta confirmar que el handler Go lo guarde |
 | Cuotas por plan (Free/Pro) para gating de "Crear sucursal PRO" | ⏳ Sprint 16 |
 
 ---
