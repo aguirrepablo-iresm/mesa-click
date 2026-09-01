@@ -71,8 +71,10 @@ el mockup muestra el shell del dashboard + sub-pestañas.
 
 ### Fase D — Cierre
 - [x] `npm run build` verde (todas las rutas)
-- [ ] Revisión visual de cada ruta con `npm run dev`
-- [ ] PR a `qa`
+- [x] Revisión visual con `npm run dev` (ajustes: header, tamaños display, planes centrados)
+- [x] PR a `qa` → https://github.com/aguirrepablo-iresm/mesa-click/pull/2
+
+Rama `feat/US-53-redisenio-ui` · 6 commits (`75bf24a` → `fcc16ef` + este del plan).
 
 ---
 
