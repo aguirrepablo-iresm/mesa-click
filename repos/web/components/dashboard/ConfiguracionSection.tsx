@@ -157,7 +157,7 @@ function Guardado({ visible }: { visible: boolean }) {
   return (
     <p className="flex items-center gap-6 text-12 font-medium text-success-muted">
       <span className="material-symbols-outlined text-16">check</span>
-      Cambios guardados en la pantalla.
+      Cambios guardados.
     </p>
   );
 }
@@ -280,21 +280,79 @@ function NegocioTab({ tenant }: { tenant: Tenant | null }) {
 
 /* ─────────────────────────── tab: Apariencia ─────────────────────────── */
 
+type EstiloVisual = "claro" | "oscuro";
+
+type AparienciaForm = {
+  nombreVisible: string;
+  color: string;
+  estilo: EstiloVisual;
+  logoUrl: string;
+};
+
+const COLOR_DEFAULT = "#F54927";
+
+function esColorHex(valor: string) {
+  return /^#[0-9a-fA-F]{6}$/.test(valor);
+}
+
+function aparienciaDefault(sucursal: Sucursal | null, tenant: Tenant | null): AparienciaForm {
+  const base = tenant?.nombre ?? "Tu negocio";
+  return {
+    nombreVisible: sucursal ? `${base} - ${sucursal.nombre}` : base,
+    color: COLOR_DEFAULT,
+    estilo: "oscuro",
+    logoUrl: "",
+  };
+}
+
+function leerAparienciaGuardada(storageKey: string, fallback: AparienciaForm): AparienciaForm {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) return fallback;
+    const data = JSON.parse(raw) as Partial<AparienciaForm>;
+    return {
+      nombreVisible: typeof data.nombreVisible === "string" ? data.nombreVisible : fallback.nombreVisible,
+      color: typeof data.color === "string" && esColorHex(data.color) ? data.color : fallback.color,
+      estilo: data.estilo === "claro" || data.estilo === "oscuro" ? data.estilo : fallback.estilo,
+      logoUrl: typeof data.logoUrl === "string" ? data.logoUrl : fallback.logoUrl,
+    };
+  } catch {
+    return fallback;
+  }
+}
+
+function guardarAparienciaLocal(storageKey: string, apariencia: AparienciaForm) {
+  if (typeof window === "undefined") return;
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(apariencia));
+  } catch {
+    /* Si el navegador bloquea localStorage, la vista previa sigue funcionando en memoria. */
+  }
+}
+
 function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant: Tenant | null }) {
-  const [nombreVisible, setNombreVisible] = useState(() => {
-    const base = tenant?.nombre ?? "Tu negocio";
-    return sucursal ? `${base} - ${sucursal.nombre}` : base;
-  });
-  const [color, setColor] = useState("#F54927");
-  const [estilo, setEstilo] = useState<"claro" | "oscuro">("oscuro");
-  const [logoUrl, setLogoUrl] = useState("");
+  const storageKey = `mesa-click:apariencia:${tenant?.id ?? "sin-tenant"}:${sucursal?.id ?? "sin-sucursal"}`;
+  const [apariencia, setApariencia] = useState(() =>
+    leerAparienciaGuardada(storageKey, aparienciaDefault(sucursal, tenant)),
+  );
   const [arrastrandoLogo, setArrastrandoLogo] = useState(false);
   const [ok, setOk] = useState(false);
+  const { nombreVisible, color, estilo, logoUrl } = apariencia;
+
+  useEffect(() => {
+    guardarAparienciaLocal(storageKey, apariencia);
+  }, [storageKey, apariencia]);
 
   const cargarLogo = (file?: File | null) => {
     if (!file || !file.type.startsWith("image/")) return;
-    setLogoUrl(URL.createObjectURL(file));
-    setOk(false);
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string") return;
+      setApariencia((prev) => ({ ...prev, logoUrl: reader.result as string }));
+      setOk(false);
+    };
+    reader.readAsDataURL(file);
   };
 
   const onLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -317,7 +375,7 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
             className={INPUT}
             value={nombreVisible}
             onChange={(e) => {
-              setNombreVisible(e.target.value);
+              setApariencia((prev) => ({ ...prev, nombreVisible: e.target.value }));
               setOk(false);
             }}
           />
@@ -363,10 +421,10 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
               >
                 <input
                   type="color"
-                  value={color}
+                  value={esColorHex(color) ? color : COLOR_DEFAULT}
                   aria-label="Elegir color principal del menú"
                   onChange={(e) => {
-                    setColor(e.target.value);
+                    setApariencia((prev) => ({ ...prev, color: e.target.value }));
                     setOk(false);
                   }}
                   className="absolute inset-0 h-full w-full opacity-0 cursor-pointer"
@@ -376,7 +434,7 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
                 className="h-48 min-w-0 flex-1 px-12 text-13 font-mono rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-system-black"
                 value={color.toUpperCase()}
                 onChange={(e) => {
-                  setColor(e.target.value);
+                  setApariencia((prev) => ({ ...prev, color: e.target.value }));
                   setOk(false);
                 }}
               />
@@ -390,7 +448,7 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
               <button
                 key={op}
                 onClick={() => {
-                  setEstilo(op);
+                  setApariencia((prev) => ({ ...prev, estilo: op }));
                   setOk(false);
                 }}
                 className={`h-32 px-12 text-12 font-medium rounded-md border capitalize ${
@@ -405,7 +463,13 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
           </div>
         </Campo>
 
-        <PendienteBackend us="US-51 / US-53" />
+        <div className="flex items-start gap-8 p-12 bg-vanilla-cream border border-dashed border-concrete rounded-md text-12 text-sage-green">
+          <span className="material-symbols-outlined text-16 shrink-0">construction</span>
+          <span>
+            Los cambios se guardan en este navegador. La persistencia real entre dispositivos depende de US-51 /
+            US-53 (backend Go), todavía pendiente.
+          </span>
+        </div>
         <div className="flex items-center gap-16">
           <PillPrimaria onClick={() => setOk(true)}>Guardar apariencia</PillPrimaria>
           <Guardado visible={ok} />

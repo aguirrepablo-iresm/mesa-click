@@ -60,11 +60,11 @@ func TestBroker_Desuscripcion(t *testing.T) {
 
 func TestHandlers_EventosSucursal_SSEConnect(t *testing.T) {
 	handlers := notificacion.NuevosHandlers()
-	
+
 	// Crear request con un context cancelable para simular desconexión
 	req := httptest.NewRequest("GET", "/sucursales/123/eventos", nil)
 	req.SetPathValue("sucursal_id", "123")
-	
+
 	ctx, cancel := context.WithCancel(req.Context())
 	req = req.WithContext(ctx)
 
@@ -78,12 +78,9 @@ func TestHandlers_EventosSucursal_SSEConnect(t *testing.T) {
 		handlers.EventosSucursal(w, req)
 	}()
 
-	// Darle un momento para que se conecte e imprima el ping inicial
-	time.Sleep(50 * time.Millisecond)
+	body := esperarPing(t, w)
 	cancel() // Desconectar al cliente
-	time.Sleep(50 * time.Millisecond)
 
-	body := w.Body.String()
 	if !strings.Contains(body, "event: ping") || !strings.Contains(body, "data: conectado") {
 		t.Errorf("no se recibió el ping de conexión inicial. Body: %q", body)
 	}
@@ -91,10 +88,10 @@ func TestHandlers_EventosSucursal_SSEConnect(t *testing.T) {
 
 func TestHandlers_EventosPedido_SSEConnect(t *testing.T) {
 	handlers := notificacion.NuevosHandlers()
-	
+
 	req := httptest.NewRequest("GET", "/pedidos/abc/eventos", nil)
 	req.SetPathValue("id", "abc")
-	
+
 	ctx, cancel := context.WithCancel(req.Context())
 	req = req.WithContext(ctx)
 
@@ -104,12 +101,24 @@ func TestHandlers_EventosPedido_SSEConnect(t *testing.T) {
 		handlers.EventosPedido(w, req)
 	}()
 
-	time.Sleep(50 * time.Millisecond)
+	body := esperarPing(t, w)
 	cancel()
-	time.Sleep(50 * time.Millisecond)
 
-	body := w.Body.String()
 	if !strings.Contains(body, "event: ping") || !strings.Contains(body, "data: conectado") {
 		t.Errorf("no se recibió el ping de conexión inicial para pedido. Body: %q", body)
 	}
+}
+
+func esperarPing(t *testing.T, w *httptest.ResponseRecorder) string {
+	t.Helper()
+
+	deadline := time.Now().Add(1 * time.Second)
+	for time.Now().Before(deadline) {
+		body := w.Body.String()
+		if strings.Contains(body, "event: ping") && strings.Contains(body, "data: conectado") {
+			return body
+		}
+		time.Sleep(10 * time.Millisecond)
+	}
+	return w.Body.String()
 }

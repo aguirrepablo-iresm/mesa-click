@@ -18,6 +18,9 @@ func (m *mockStore) Crear(ctx context.Context, input tenant.OnboardingInput) (*t
 func (m *mockStore) ObtenerPorID(ctx context.Context, id string) (*tenant.Tenant, error) {
 	return nil, nil
 }
+func (m *mockStore) EmailAdminEnUso(ctx context.Context, email string) (bool, error) {
+	return false, nil
+}
 
 func TestCrear_Exitoso(t *testing.T) {
 	store := &mockStore{
