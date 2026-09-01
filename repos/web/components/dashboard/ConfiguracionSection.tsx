@@ -366,9 +366,16 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
   };
 
   const oscuro = estilo === "oscuro";
+  const colorPrincipal = esColorHex(color) ? color : COLOR_DEFAULT;
+  const phoneScreenBg = oscuro ? "#111611" : "#f7f7f7";
+  const phonePanelBg = oscuro ? "#18201b" : "#ffffff";
+  const phoneHeaderBg = oscuro ? "#0c100d" : "#ffffff";
+  const phoneText = oscuro ? "#f5f5f5" : "#0a0a0a";
+  const phoneMutedText = oscuro ? "#b8beb9" : "#595959";
+  const phoneBorder = oscuro ? "#283229" : "#e6e6e6";
 
   return (
-    <div className="grid lg:grid-cols-[1fr_320px] gap-16 items-start">
+    <div className="grid lg:grid-cols-[1fr_300px] gap-16 items-start">
       <Card titulo="Apariencia del menú">
         <Campo label="Nombre visible en el menú">
           <input
@@ -476,51 +483,111 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
         </div>
       </Card>
 
-      {/* Vista previa */}
-      <div className="border border-concrete rounded-lg p-16 bg-vanilla-cream">
-        <p className="text-12 font-mono text-sage-green uppercase tracking-wider mb-12 text-center">
-          Vista previa del menú
-        </p>
-        <div
-          className="rounded-lg overflow-hidden"
-          style={{ background: oscuro ? "#141a17" : "#ffffff", border: "1px solid #d9d9d9" }}
-        >
-          <div className="p-16 text-center" style={{ background: oscuro ? "#0d120f" : "#f4f4f4" }}>
-            {logoUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="" className="w-32 h-32 rounded object-cover mx-auto mb-6" />
-            )}
-            <p className="text-14 font-bold" style={{ color: oscuro ? "#fff" : "#0a0a0a" }}>
-              {nombreVisible || "Tu negocio"}
-            </p>
-          </div>
-          <div className="p-12 flex gap-8">
-            <span className="px-10 py-4 text-11 font-medium rounded-full text-white" style={{ background: color }}>
-              Cafés
-            </span>
-            <span
-              className="px-10 py-4 text-11 font-medium rounded-full border"
-              style={{ color: oscuro ? "#ccc" : "#595959", borderColor: oscuro ? "#333" : "#d9d9d9" }}
-            >
-              Dulces
-            </span>
-          </div>
-          {["Latte vainilla · $2.800", "Medialuna · $900"].map((t) => (
+      <div className="flex justify-center lg:justify-end">
+        <div className="w-full max-w-[300px]">
+          <p className="mb-12 text-center font-mono text-[12px] uppercase text-sage-green">
+            Vista previa del menú
+          </p>
+          <div className="mx-auto w-full max-w-[260px] rounded-[30px] bg-ash-graphite p-[6px] shadow-lg">
             <div
-              key={t}
-              className="mx-12 mb-8 px-12 py-10 rounded-md text-12 flex items-center justify-between"
-              style={{
-                background: oscuro ? "#1c231f" : "#fff",
-                color: oscuro ? "#eee" : "#0a0a0a",
-                border: `1px solid ${oscuro ? "#2a332d" : "#eee"}`,
-              }}
+              className="flex h-[430px] flex-col overflow-hidden rounded-[24px]"
+              style={{ background: phoneScreenBg, color: phoneText }}
             >
-              <span>{t}</span>
-              <span className="w-18 h-18 grid place-items-center rounded-full text-white text-12" style={{ background: color }}>
-                +
-              </span>
+              <div className="relative flex h-[32px] shrink-0 items-start justify-between px-[16px] pt-[9px] text-[10px] font-bold leading-none">
+                <div className="absolute left-1/2 top-[12px] h-[4px] w-[64px] -translate-x-1/2 rounded-full bg-system-black opacity-70" />
+                <span>9:41</span>
+                <div className="flex items-center gap-[4px]">
+                  <span className="h-[4px] w-[8px] rounded-full border" style={{ borderColor: phoneText }} />
+                  <span className="h-[7px] w-[18px] rounded-sm border" style={{ borderColor: phoneText }}>
+                    <span className="block h-full w-[12px]" style={{ background: phoneText }} />
+                  </span>
+                </div>
+              </div>
+
+              <div className="shrink-0 px-[14px] pb-[12px] pt-[8px]" style={{ background: phoneHeaderBg }}>
+                <div className="flex items-center gap-[9px]">
+                  <div
+                    className="h-[38px] w-[38px] shrink-0 overflow-hidden rounded-lg border grid place-items-center"
+                    style={{ background: phonePanelBg, borderColor: phoneBorder }}
+                  >
+                    {logoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={logoUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="material-symbols-outlined text-20" style={{ color: phoneMutedText }}>
+                        restaurant_menu
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="truncate text-[13px] font-bold leading-[16px]">{nombreVisible || "Tu negocio"}</p>
+                    <p className="mt-2 text-[11px] leading-[14px]" style={{ color: phoneMutedText }}>
+                      Mesa 12
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="min-h-0 flex-1 overflow-hidden px-[12px] py-[12px]">
+                <div className="mb-[10px] flex gap-[6px] overflow-hidden">
+                  <span
+                    className="grid h-[38px] shrink-0 place-items-center rounded-full px-[10px] text-[12px] font-bold leading-none text-white"
+                    style={{ background: colorPrincipal }}
+                  >
+                    Cafés
+                  </span>
+                  <span
+                    className="grid h-[38px] shrink-0 place-items-center rounded-full border px-[10px] text-[12px] font-medium leading-none"
+                    style={{ color: phoneMutedText, borderColor: phoneBorder, background: phonePanelBg }}
+                  >
+                    Dulces
+                  </span>
+                  <span
+                    className="grid h-[38px] shrink-0 place-items-center rounded-full border px-[10px] text-[12px] font-medium leading-none"
+                    style={{ color: phoneMutedText, borderColor: phoneBorder, background: phonePanelBg }}
+                  >
+                    Bebidas
+                  </span>
+                </div>
+
+                <div className="space-y-[8px]">
+                  {[
+                    ["Latte vainilla", "Café, leche y vainilla", "$2.800"],
+                    ["Medialuna", "Manteca artesanal", "$900"],
+                  ].map(([titulo, descripcion, precio]) => (
+                    <div
+                      key={titulo}
+                      className="flex min-h-[78px] items-center gap-[8px] rounded-lg border p-[10px]"
+                      style={{ background: phonePanelBg, borderColor: phoneBorder }}
+                    >
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-[13px] font-bold leading-[16px]">{titulo}</p>
+                        <p className="mt-[3px] truncate text-[11px] leading-[14px]" style={{ color: phoneMutedText }}>
+                          {descripcion}
+                        </p>
+                        <p className="mt-[6px] text-[12px] font-bold leading-[14px]">{precio}</p>
+                      </div>
+                      <button
+                        className="grid h-[36px] w-[36px] shrink-0 place-items-center rounded-full text-[18px] font-medium leading-none text-white"
+                        style={{ background: colorPrincipal }}
+                        aria-label={`Agregar ${titulo}`}
+                      >
+                        +
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div
+                className="mx-[12px] mb-[12px] flex h-[42px] shrink-0 items-center justify-between rounded-full px-[14px] text-white"
+                style={{ background: colorPrincipal }}
+              >
+                <span className="text-[12px] font-bold leading-none">2 items</span>
+                <span className="text-[13px] font-bold leading-none">$3.700</span>
+              </div>
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </div>
