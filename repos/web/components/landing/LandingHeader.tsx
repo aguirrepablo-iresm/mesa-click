@@ -16,14 +16,14 @@ export default function LandingHeader() {
 
   return (
     <header className="border-b border-concrete bg-canvas-white sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-24 h-64 flex items-center">
+      <div className="max-w-7xl mx-auto px-24 h-64 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-10 text-ash-graphite">
           <Logo className="w-28 h-28" />
           <span className="text-18 font-bold uppercase tracking-tight">Mesa CLICK</span>
         </Link>
 
         {/* Desktop: menú alineado a la derecha */}
-        <nav className="hidden md:flex items-center gap-28 ml-auto">
+        <nav className="hidden md:flex items-center gap-28">
           {LINKS.map(([label, href]) => (
             <Link
               key={href}
@@ -38,10 +38,12 @@ export default function LandingHeader() {
         {/* Mobile: solo el botón de menú */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden ml-auto material-symbols-outlined text-ash-graphite p-8 focus:outline-none"
+          className="md:hidden p-8 -mr-8 text-ash-graphite focus:outline-none"
           aria-label="Abrir menú"
         >
-          {mobileMenuOpen ? "close" : "menu"}
+          <span className="material-symbols-outlined block">
+            {mobileMenuOpen ? "close" : "menu"}
+          </span>
         </button>
       </div>
 
