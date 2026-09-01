@@ -76,7 +76,7 @@ export default function ConfiguracionSection() {
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`h-36 px-16 text-13 font-medium rounded-md border transition-colors ${
+            className={`h-32 px-12 text-12 font-medium rounded-md border transition-colors ${
               tab === t
                 ? "bg-ash-graphite text-canvas-white border-ash-graphite"
                 : "border-concrete text-ash-graphite hover:border-ash-graphite"
@@ -175,7 +175,7 @@ function PillPrimaria({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="h-40 px-20 rounded-full bg-plain-green text-canvas-white text-12 font-bold uppercase tracking-wide hover:opacity-85 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+      className="h-32 px-16 rounded-full bg-plain-green text-canvas-white text-11 font-bold uppercase tracking-wide hover:opacity-85 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
     >
       {children}
     </button>
@@ -315,7 +315,7 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
         <div className="grid sm:grid-cols-2 gap-12">
           <Campo label="Logo">
             <div className="flex items-center gap-12">
-              <div className="w-52 h-52 rounded-md border border-concrete grid place-items-center overflow-hidden bg-vanilla-cream shrink-0">
+              <div className="w-44 h-44 rounded-md border border-concrete grid place-items-center overflow-hidden bg-vanilla-cream shrink-0">
                 {logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={logoUrl} alt="logo" className="w-full h-full object-cover" />
@@ -323,7 +323,7 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
                   <span className="material-symbols-outlined text-20 text-stone">image</span>
                 )}
               </div>
-              <label className="h-36 px-12 flex items-center text-12 font-medium rounded-md border border-ash-graphite cursor-pointer hover:bg-vanilla-cream">
+              <label className="h-32 px-10 flex items-center text-11 font-medium rounded-md border border-ash-graphite cursor-pointer hover:bg-vanilla-cream">
                 Subir logo
                 <input type="file" accept="image/*" onChange={onLogo} className="hidden" />
               </label>
@@ -362,7 +362,7 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
                   setEstilo(op);
                   setOk(false);
                 }}
-                className={`h-36 px-16 text-13 font-medium rounded-md border capitalize ${
+                className={`h-32 px-12 text-12 font-medium rounded-md border capitalize ${
                   estilo === op
                     ? "bg-ash-graphite text-canvas-white border-ash-graphite"
                     : "border-concrete text-ash-graphite hover:border-ash-graphite"
@@ -698,7 +698,7 @@ function SucursalesTab({
         </Campo>
         <button
           disabled
-          className="w-full h-40 rounded-full border border-ash-graphite text-ash-graphite text-12 font-bold uppercase tracking-wide opacity-50 cursor-not-allowed"
+          className="w-full h-32 rounded-full border border-ash-graphite text-ash-graphite text-11 font-bold uppercase tracking-wide opacity-50 cursor-not-allowed"
           title="Disponible con el plan Pro (Sprint 16)"
         >
           Actualizar a Pro

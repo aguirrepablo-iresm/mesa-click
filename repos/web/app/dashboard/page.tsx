@@ -1,5 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import CartaSection from "@/components/dashboard/CartaSection";
 import MesasSection from "@/components/dashboard/MesasSection";
@@ -61,10 +62,14 @@ export default function DashboardPage() {
           >
             {isExpanded ? 'menu_open' : 'menu'}
           </button>
-          <span className="flex items-center gap-8 text-ash-graphite">
+          <Link
+            href="/"
+            className="flex items-center gap-8 text-ash-graphite hover:opacity-70 transition-opacity"
+            aria-label="Ir al inicio"
+          >
             <Logo className="w-20 h-20" />
             <h1 className="text-15 font-bold uppercase tracking-tight">Mesa CLICK</h1>
-          </span>
+          </Link>
           <span className="text-11 font-mono text-sage-green uppercase tracking-wider border-l border-concrete pl-8">
             {tenant ? tenant.nombre : "Admin"}
           </span>
@@ -122,10 +127,14 @@ export default function DashboardPage() {
           }`}
         >
           <div className="px-16 pb-16 flex items-center justify-between border-b border-ghost-fog mb-8">
-            <div className="flex items-center gap-8 text-ash-graphite">
+            <Link
+              href="/"
+              className="flex items-center gap-8 text-ash-graphite hover:opacity-70 transition-opacity"
+              aria-label="Ir al inicio"
+            >
               <Logo className="w-22 h-22" />
               <span className="font-bold uppercase text-14">Menú Principal</span>
-            </div>
+            </Link>
             <button 
               onClick={() => setIsExpanded(false)}
               className="material-symbols-outlined text-ash-graphite p-4 hover:text-plain-green"

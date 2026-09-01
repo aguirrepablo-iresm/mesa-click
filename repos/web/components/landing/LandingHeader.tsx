@@ -8,7 +8,6 @@ const LINKS: [string, string][] = [
   ["Cómo funciona", "#features"],
   ["Precios", "#pricing"],
   ["FAQ", "#faq"],
-  ["Iniciar sesión", "/login"],
 ];
 
 export default function LandingHeader() {
@@ -23,7 +22,7 @@ export default function LandingHeader() {
         </Link>
 
         {/* Desktop: menú alineado a la derecha */}
-        <nav className="hidden md:flex items-center gap-28">
+        <nav className="hidden md:flex items-center gap-24">
           {LINKS.map(([label, href]) => (
             <Link
               key={href}
@@ -33,6 +32,20 @@ export default function LandingHeader() {
               {label}
             </Link>
           ))}
+          <div className="flex items-center gap-10 pl-4">
+            <Link
+              href="/login"
+              className="text-14 text-ash-graphite hover:opacity-60 transition-opacity"
+            >
+              Iniciar sesión
+            </Link>
+            <Link
+              href="/onboarding"
+              className="h-32 px-14 inline-flex items-center rounded-full bg-ash-graphite text-canvas-white text-11 font-bold uppercase tracking-wide hover:opacity-85 transition-opacity"
+            >
+              Registrarse
+            </Link>
+          </div>
         </nav>
 
         {/* Mobile: solo el botón de menú */}
@@ -60,6 +73,20 @@ export default function LandingHeader() {
                 {label}
               </Link>
             ))}
+            <Link
+              href="/login"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-14 text-ash-graphite py-4"
+            >
+              Iniciar sesión
+            </Link>
+            <Link
+              href="/onboarding"
+              onClick={() => setMobileMenuOpen(false)}
+              className="h-36 px-14 inline-flex items-center justify-center rounded-full bg-ash-graphite text-canvas-white text-11 font-bold uppercase tracking-wide"
+            >
+              Registrarse
+            </Link>
           </nav>
         </div>
       )}

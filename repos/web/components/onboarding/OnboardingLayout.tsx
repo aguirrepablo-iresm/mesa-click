@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import Logo from "@/components/brand/Logo";
 
 interface OnboardingLayoutProps {
@@ -33,8 +34,14 @@ export default function OnboardingLayout({
               arrow_back
             </button>
           )}
-          <Logo className="w-24 h-24" />
-          <h1 className="font-bold text-18 uppercase tracking-tight">Mesa CLICK</h1>
+          <Link
+            href="/"
+            className="flex items-center gap-8 text-ash-graphite hover:opacity-70 transition-opacity"
+            aria-label="Ir al inicio"
+          >
+            <Logo className="w-24 h-24" />
+            <h1 className="font-bold text-18 uppercase tracking-tight">Mesa CLICK</h1>
+          </Link>
         </div>
         <div className="flex items-center gap-8">
             <span className="text-13 font-mono text-sage-green uppercase tracking-wider">
