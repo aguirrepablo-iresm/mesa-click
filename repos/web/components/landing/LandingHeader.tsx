@@ -83,7 +83,7 @@ export default function LandingHeader() {
             <Link
               href="/onboarding"
               onClick={() => setMobileMenuOpen(false)}
-              className="h-36 px-14 inline-flex items-center justify-center rounded-full bg-ash-graphite text-canvas-white text-11 font-bold uppercase tracking-wide"
+              className="h-32 px-14 inline-flex items-center justify-center rounded-full bg-ash-graphite text-canvas-white text-11 font-bold uppercase tracking-wide"
             >
               Registrarse
             </Link>

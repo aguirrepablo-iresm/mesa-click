@@ -68,6 +68,9 @@ function toUserMessage(message: string, fallback: string) {
   if (normalized.startsWith('error http 403')) {
     return 'No tenés permisos para realizar esta acción.';
   }
+  if (normalized.startsWith('error http 404')) {
+    return 'No encontramos ese recurso en el servidor. Probá nuevamente en unos minutos.';
+  }
 
   return message;
 }

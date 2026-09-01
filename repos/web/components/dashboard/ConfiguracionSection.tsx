@@ -444,7 +444,7 @@ function EquipoTab() {
   return (
     <div className="grid lg:grid-cols-[1fr_300px] gap-16 items-start">
       <div>
-        <EquipoSection />
+        <EquipoSection embedded />
       </div>
       <div className="border border-concrete rounded-lg p-20 bg-canvas-white space-y-16">
         <p className="text-13 font-bold text-ash-graphite">Roles disponibles</p>
@@ -633,44 +633,53 @@ function SucursalesTab({
                 Horario para días abiertos
               </span>
               <div className="space-y-8">
-                {turnos.map((t, i) => (
-                  <div key={i} className="flex items-center gap-8">
-                    <input
-                      type="time"
-                      value={t.apertura}
-                      onChange={(e) =>
-                        setTurnos((prev) => prev.map((x, j) => (j === i ? { ...x, apertura: e.target.value } : x)))
-                      }
-                      className="h-36 px-10 text-13 rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-system-black"
-                    />
-                    <span className="text-12 text-sage-green">a</span>
-                    <input
-                      type="time"
-                      value={t.cierre}
-                      onChange={(e) =>
-                        setTurnos((prev) => prev.map((x, j) => (j === i ? { ...x, cierre: e.target.value } : x)))
-                      }
-                      className="h-36 px-10 text-13 rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-system-black"
-                    />
-                    {turnos.length > 1 && (
-                      <button
-                        onClick={() => setTurnos((prev) => prev.filter((_, j) => j !== i))}
-                        className="text-12 text-alert-red hover:opacity-70"
-                        title="Quitar turno"
-                      >
-                        ✕
-                      </button>
-                    )}
+                <div className="flex flex-col md:flex-row md:items-start gap-12 md:justify-between">
+                  <div className="space-y-8">
+                    {turnos.map((t, i) => (
+                      <div key={i} className="flex flex-wrap items-center gap-8">
+                        <input
+                          type="time"
+                          value={t.apertura}
+                          onChange={(e) =>
+                            setTurnos((prev) =>
+                              prev.map((x, j) => (j === i ? { ...x, apertura: e.target.value } : x)),
+                            )
+                          }
+                          className="h-40 w-120 max-w-full px-10 text-13 font-mono rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-system-black"
+                        />
+                        <span className="text-12 text-sage-green">a</span>
+                        <input
+                          type="time"
+                          value={t.cierre}
+                          onChange={(e) =>
+                            setTurnos((prev) =>
+                              prev.map((x, j) => (j === i ? { ...x, cierre: e.target.value } : x)),
+                            )
+                          }
+                          className="h-40 w-120 max-w-full px-10 text-13 font-mono rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-system-black"
+                        />
+                        {turnos.length > 1 && (
+                          <button
+                            onClick={() => setTurnos((prev) => prev.filter((_, j) => j !== i))}
+                            className="h-32 w-32 grid place-items-center rounded-md text-12 text-alert-red hover:bg-red-50"
+                            title="Quitar turno"
+                          >
+                            ✕
+                          </button>
+                        )}
+                      </div>
+                    ))}
                   </div>
-                ))}
-                {turnos.length < 2 && (
+
+                  {turnos.length < 2 && (
                   <button
                     onClick={() => setTurnos((prev) => [...prev, { apertura: "16:00", cierre: "00:00" }])}
-                    className="h-32 px-10 text-11 font-mono uppercase tracking-wider rounded-md border border-concrete hover:border-ash-graphite"
+                    className="h-32 px-10 text-11 font-mono uppercase tracking-wider rounded-md border border-concrete hover:border-ash-graphite md:mt-4 md:shrink-0"
                   >
                     + Agregar segundo turno
                   </button>
-                )}
+                  )}
+                </div>
               </div>
             </div>
 

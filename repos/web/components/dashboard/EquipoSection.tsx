@@ -16,7 +16,7 @@ const ROL_DESCRIPTIONS: Record<RolInvitable, string> = {
   mozo: 'Puede ver pedidos en vivo, avanzar estados y atender solicitudes de cuenta.',
 };
 
-export default function EquipoSection() {
+export default function EquipoSection({ embedded = false }: { embedded?: boolean }) {
   const [equipo, setEquipo] = useState<UsuarioAPI[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState<FormState>({ nombre: '', email: '', rol: 'mozo' });
@@ -98,7 +98,7 @@ export default function EquipoSection() {
   };
 
   return (
-    <div className="p-24 md:p-32 space-y-32 font-inter">
+    <div className={`${embedded ? "space-y-24" : "p-24 md:p-32 space-y-32"} font-inter`}>
       <div>
         <h2 className="text-20 font-medium text-ash-graphite">Equipo de Trabajo</h2>
         <p className="text-13 text-sage-green mt-4">

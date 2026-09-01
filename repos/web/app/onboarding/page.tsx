@@ -6,7 +6,7 @@ import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import StepAccount from "@/components/onboarding/StepAccount";
 import StepBusiness from "@/components/onboarding/StepBusiness";
 import StepBranch from "@/components/onboarding/StepBranch";
-import { api, getErrorMessage } from "@/lib/api";
+import { ApiError, api, getErrorMessage } from "@/lib/api";
 
 const TOTAL_STEPS = 3;
 const HORARIOS_DEFAULT = JSON.stringify({
@@ -131,13 +131,17 @@ export default function OnboardingPage() {
 
       handleNext();
     } catch (err: unknown) {
-      setFieldErrors({
-        emailAdmin: getErrorMessage(
-          err,
-          "No pudimos validar el correo de acceso. Intentá nuevamente.",
-        ),
-      });
-      setError(getErrorMessage(err, "No pudimos validar el correo de acceso. Intentá nuevamente."));
+      if (err instanceof ApiError && err.status === 404) {
+        handleNext();
+        return;
+      }
+
+      const mensaje = getErrorMessage(
+        err,
+        "No pudimos validar el correo de acceso. Intentá nuevamente.",
+      );
+      setFieldErrors({ emailAdmin: mensaje });
+      setError(mensaje);
     } finally {
       setValidandoEmail(false);
     }

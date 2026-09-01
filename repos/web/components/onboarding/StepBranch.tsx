@@ -400,43 +400,47 @@ export default function StepBranch({
               )}
             </div>
 
-            {tramosBase.map((tramo, index) => (
-              <div key={index} className="flex flex-wrap items-end gap-8">
-                <TimeField
-                  label="Apertura"
-                  value={tramo.apertura}
-                  disabled={diasAbiertos.length === 0}
-                  onChange={(value) => updateTramoBase(index, "apertura", value)}
-                />
-                <TimeField
-                  label="Cierre"
-                  value={tramo.cierre}
-                  disabled={diasAbiertos.length === 0}
-                  onChange={(value) => updateTramoBase(index, "cierre", value)}
-                />
-                {index > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => quitarTramoBase(index)}
-                    title="Quitar turno"
-                    className="h-40 w-40 rounded-md border border-ash-graphite/30 flex items-center justify-center hover:border-alert-red hover:text-alert-red"
-                  >
-                    <span className="material-symbols-outlined text-18">remove</span>
-                  </button>
-                )}
+            <div className="flex flex-col md:flex-row md:items-start gap-12 md:justify-between">
+              <div className="space-y-8">
+                {tramosBase.map((tramo, index) => (
+                  <div key={index} className="flex flex-wrap items-end gap-8">
+                    <TimeField
+                      label="Apertura"
+                      value={tramo.apertura}
+                      disabled={diasAbiertos.length === 0}
+                      onChange={(value) => updateTramoBase(index, "apertura", value)}
+                    />
+                    <TimeField
+                      label="Cierre"
+                      value={tramo.cierre}
+                      disabled={diasAbiertos.length === 0}
+                      onChange={(value) => updateTramoBase(index, "cierre", value)}
+                    />
+                    {index > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => quitarTramoBase(index)}
+                        title="Quitar turno"
+                        className="h-40 w-40 rounded-md border border-ash-graphite/30 flex items-center justify-center hover:border-alert-red hover:text-alert-red"
+                      >
+                        <span className="material-symbols-outlined text-18">remove</span>
+                      </button>
+                    )}
+                  </div>
+                ))}
               </div>
-            ))}
 
-            {tramosBase.length < 2 && diasAbiertos.length > 0 && (
-              <button
-                type="button"
-                onClick={agregarTramoBase}
-                className="h-32 px-10 rounded-md border border-ash-graphite/30 text-11 font-mono uppercase tracking-wider flex items-center gap-6 hover:border-plain-green"
-              >
-                <span className="material-symbols-outlined text-16">add</span>
-                Agregar segundo turno
-              </button>
-            )}
+              {tramosBase.length < 2 && diasAbiertos.length > 0 && (
+                <button
+                  type="button"
+                  onClick={agregarTramoBase}
+                  className="h-32 px-10 rounded-md border border-ash-graphite/30 text-11 font-mono uppercase tracking-wider flex items-center gap-6 hover:border-plain-green md:mt-16 md:shrink-0"
+                >
+                  <span className="material-symbols-outlined text-16">add</span>
+                  Agregar segundo turno
+                </button>
+              )}
+            </div>
           </div>
 
           <div className="rounded-md bg-ghost-fog px-12 py-10 text-11 text-sage-green font-mono break-words">
@@ -485,44 +489,48 @@ export default function StepBranch({
 
                     {editando && diaHorario.abierto && (
                       <div className="pt-8 space-y-8">
-                        {tramosDia.map((tramo, index) => (
-                          <div key={index} className="flex flex-wrap items-end gap-8">
-                            <TimeField
-                              label="Apertura"
-                              value={tramo.apertura}
-                              onChange={(value) =>
-                                updateTramoDia(dia.key, index, "apertura", value)
-                              }
-                            />
-                            <TimeField
-                              label="Cierre"
-                              value={tramo.cierre}
-                              onChange={(value) =>
-                                updateTramoDia(dia.key, index, "cierre", value)
-                              }
-                            />
-                            {index > 0 && (
-                              <button
-                                type="button"
-                                onClick={() => quitarTramoDia(dia.key, index)}
-                                title="Quitar turno"
-                                className="h-40 w-40 rounded-md border border-ash-graphite/30 flex items-center justify-center hover:border-alert-red hover:text-alert-red"
-                              >
-                                <span className="material-symbols-outlined text-18">remove</span>
-                              </button>
-                            )}
+                        <div className="flex flex-col md:flex-row md:items-start gap-12 md:justify-between">
+                          <div className="space-y-8">
+                            {tramosDia.map((tramo, index) => (
+                              <div key={index} className="flex flex-wrap items-end gap-8">
+                                <TimeField
+                                  label="Apertura"
+                                  value={tramo.apertura}
+                                  onChange={(value) =>
+                                    updateTramoDia(dia.key, index, "apertura", value)
+                                  }
+                                />
+                                <TimeField
+                                  label="Cierre"
+                                  value={tramo.cierre}
+                                  onChange={(value) =>
+                                    updateTramoDia(dia.key, index, "cierre", value)
+                                  }
+                                />
+                                {index > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => quitarTramoDia(dia.key, index)}
+                                    title="Quitar turno"
+                                    className="h-40 w-40 rounded-md border border-ash-graphite/30 flex items-center justify-center hover:border-alert-red hover:text-alert-red"
+                                  >
+                                    <span className="material-symbols-outlined text-18">remove</span>
+                                  </button>
+                                )}
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                        {tramosDia.length < 2 && (
-                          <button
-                            type="button"
-                            onClick={() => agregarTramoDia(dia.key)}
-                            className="h-32 px-10 rounded-md border border-ash-graphite/30 text-11 font-mono uppercase tracking-wider flex items-center gap-6 hover:border-plain-green"
-                          >
-                            <span className="material-symbols-outlined text-16">add</span>
-                            Agregar segundo turno
-                          </button>
-                        )}
+                          {tramosDia.length < 2 && (
+                            <button
+                              type="button"
+                              onClick={() => agregarTramoDia(dia.key)}
+                              className="h-32 px-10 rounded-md border border-ash-graphite/30 text-11 font-mono uppercase tracking-wider flex items-center gap-6 hover:border-plain-green md:mt-16 md:shrink-0"
+                            >
+                              <span className="material-symbols-outlined text-16">add</span>
+                              Agregar segundo turno
+                            </button>
+                          )}
+                        </div>
                       </div>
                     )}
                   </div>
