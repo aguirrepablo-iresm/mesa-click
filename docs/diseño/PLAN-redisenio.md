@@ -54,10 +54,10 @@ Radios: `--radius-md` / `--radius-lg` = 8px.
 - [ ] `app/auth/verify/page.tsx` — estados mono; éxito en `success`
 - [ ] `npm run build` verde → **checkpoint de revisión**
 
-### Fase B — Onboarding + Dashboard + Comensal
-- [ ] `components/onboarding/*` + `app/onboarding/page.tsx` — inputs, pills, progreso mono; check de paso en `success`
-- [ ] `app/dashboard/page.tsx` + `components/dashboard/*` — sidebar, tabs, acciones a negro; badge "listo/confirmado" en `success`
-- [ ] `app/mesa/[token]/page.tsx` + `components/menu/*` — pase liviano: heredan tokens; botones primarios a negro; "pedido listo" en `success` (rework mobile-first fino queda para S11)
+### Fase B — Onboarding + Dashboard  ✅
+- [x] `components/onboarding/*` + `app/onboarding/page.tsx` — logo, progreso mono, pills negras (`text-canvas-white`), pantalla "negocio creado" con `success`
+- [x] `app/dashboard/page.tsx` + `components/dashboard/*` — logo en cabecera/drawer, item de nav activo **invertido** (negro/blanco), acciones primarias a negro, badge "Listo" + punto SSE conectado en `success`
+- [ ] **Comensal (`app/mesa/[token]`, `components/menu/*`) — NO se toca en Fase B.** Usa su propio sistema de color (`slate-*` / `green-*` de Tailwind), independiente de los tokens del admin. Su rework va con el **Mobile-First Comensal del Sprint 11** (US-56/57), no con este reskin.
 
 ### Fase C — Sección Configuración (nueva)  ·  ruta `/dashboard/configuracion`
 Mueve **Equipo** y **Sucursales** fuera del dashboard a un área con 4 pestañas.

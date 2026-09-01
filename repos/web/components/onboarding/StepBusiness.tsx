@@ -176,7 +176,7 @@ export default function StepBusiness({ data, errors = {}, onChange, onNext }: St
 
         <button
           type="submit"
-          className="w-full h-40 bg-plain-green text-ash-graphite font-medium rounded-md hover:bg-plain-green-muted transition-all flex items-center justify-center gap-8 mt-24"
+          className="w-full h-40 bg-plain-green text-canvas-white font-medium rounded-md hover:bg-plain-green-muted transition-all flex items-center justify-center gap-8 mt-24"
         >
           Continuar
           <span className="material-symbols-outlined text-16">arrow_forward</span>

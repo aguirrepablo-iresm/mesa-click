@@ -170,7 +170,7 @@ export default function EquipoSection() {
             </select>
             <button
               type="submit"
-              className="w-full sm:w-auto px-16 py-8 bg-plain-green text-ash-graphite text-13 font-medium rounded-md hover:opacity-90 transition-opacity text-center"
+              className="w-full sm:w-auto px-16 py-8 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90 transition-opacity text-center"
             >
               Generar Magic Link de Invitación
             </button>
@@ -181,7 +181,7 @@ export default function EquipoSection() {
           {error && <p className="text-12 text-alert-red">{error}</p>}
           {invitacionLink && (
             <div className="p-12 bg-ghost-fog border border-plain-green rounded-md space-y-8">
-              <p className="text-12 text-plain-green font-medium">✓ Invitación generada correctamente:</p>
+              <p className="text-12 text-success-muted font-medium">✓ Invitación generada correctamente:</p>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-8">
                 <input
                   type="text"
@@ -192,7 +192,7 @@ export default function EquipoSection() {
                 <button
                   type="button"
                   onClick={handleCopiarLink}
-                  className="px-16 py-6 text-12 font-medium bg-plain-green text-ash-graphite rounded hover:opacity-90 text-center"
+                  className="px-16 py-6 text-12 font-medium bg-plain-green text-canvas-white rounded hover:opacity-90 text-center"
                 >
                   {copiado ? "¡Copiado!" : "Copiar Link"}
                 </button>

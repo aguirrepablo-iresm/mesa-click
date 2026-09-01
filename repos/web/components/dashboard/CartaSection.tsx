@@ -175,7 +175,7 @@ export default function CartaSection() {
         </div>
         <button
           onClick={() => setMostrarFormCat(true)}
-          className="px-16 py-8 bg-plain-green text-ash-graphite text-13 font-medium rounded-md hover:opacity-90 transition-opacity"
+          className="px-16 py-8 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90 transition-opacity"
         >
           + Nueva categoría
         </button>
@@ -200,7 +200,7 @@ export default function CartaSection() {
           <div className="flex items-center gap-8 justify-end">
             <button
               onClick={agregarCategoria}
-              className="flex-1 sm:flex-initial px-16 py-8 bg-plain-green text-ash-graphite text-13 font-medium rounded-md hover:opacity-90"
+              className="flex-1 sm:flex-initial px-16 py-8 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90"
             >
               Agregar
             </button>
@@ -346,7 +346,7 @@ export default function CartaSection() {
                     <button
                       type="button"
                       onClick={() => agregarItem(cat.id)}
-                      className="px-14 py-6 bg-plain-green text-ash-graphite text-13 font-medium rounded-md hover:opacity-90 whitespace-nowrap"
+                      className="px-14 py-6 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90 whitespace-nowrap"
                     >
                       Agregar ítem
                     </button>

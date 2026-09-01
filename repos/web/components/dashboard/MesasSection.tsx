@@ -155,7 +155,7 @@ export default function MesasSection() {
             setErrorMsg('');
             setMostrarFormMesa(true);
           }}
-          className="px-16 py-8 bg-plain-green text-ash-graphite text-13 font-medium rounded-md hover:opacity-90 transition-opacity flex items-center gap-6 shrink-0 whitespace-nowrap"
+          className="px-16 py-8 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90 transition-opacity flex items-center gap-6 shrink-0 whitespace-nowrap"
         >
           <span className="material-symbols-outlined text-16">add</span>
           Nueva Mesa
@@ -198,7 +198,7 @@ export default function MesasSection() {
           <div className="flex items-center gap-8 pt-4 sm:pt-0">
             <button
               type="submit"
-              className="flex-1 sm:flex-initial px-16 py-8 bg-plain-green text-ash-graphite text-13 font-medium rounded-md hover:opacity-90 transition-opacity"
+              className="flex-1 sm:flex-initial px-16 py-8 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90 transition-opacity"
             >
               Guardar
             </button>
