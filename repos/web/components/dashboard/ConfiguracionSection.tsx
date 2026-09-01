@@ -357,15 +357,21 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
 
           <Campo label="Color principal del menú">
             <div className="h-72 w-full px-12 rounded-md border border-concrete bg-canvas-white flex items-center gap-12">
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => {
-                  setColor(e.target.value);
-                  setOk(false);
-                }}
-                className="w-48 h-48 p-0 border border-concrete rounded-md bg-canvas-white shrink-0"
-              />
+              <div
+                className="relative w-48 h-48 rounded-md border border-concrete overflow-hidden shrink-0"
+                style={{ backgroundColor: color }}
+              >
+                <input
+                  type="color"
+                  value={color}
+                  aria-label="Elegir color principal del menú"
+                  onChange={(e) => {
+                    setColor(e.target.value);
+                    setOk(false);
+                  }}
+                  className="absolute inset-0 h-full w-full opacity-0 cursor-pointer"
+                />
+              </div>
               <input
                 className="h-48 min-w-0 flex-1 px-12 text-13 font-mono rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-system-black"
                 value={color.toUpperCase()}
