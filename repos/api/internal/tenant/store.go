@@ -14,6 +14,7 @@ import (
 type Store interface {
 	Crear(ctx context.Context, input OnboardingInput) (*Tenant, error)
 	ObtenerPorID(ctx context.Context, id string) (*Tenant, error)
+	EmailAdminEnUso(ctx context.Context, email string) (bool, error)
 }
 
 type pgStore struct{}
@@ -97,4 +98,16 @@ func (s *pgStore) ObtenerPorID(ctx context.Context, id string) (*Tenant, error) 
 		return nil, fmt.Errorf("error obteniendo tenant: %w", err)
 	}
 	return t, nil
+}
+
+func (s *pgStore) EmailAdminEnUso(ctx context.Context, email string) (bool, error) {
+	var existe bool
+	err := db.Pool.QueryRow(ctx,
+		`SELECT EXISTS(SELECT 1 FROM usuarios WHERE lower(email) = lower($1))`,
+		email,
+	).Scan(&existe)
+	if err != nil {
+		return false, fmt.Errorf("error verificando email admin: %w", err)
+	}
+	return existe, nil
 }

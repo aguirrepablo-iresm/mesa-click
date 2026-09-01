@@ -41,6 +41,19 @@ func (svc *Service) ObtenerPorID(ctx context.Context, id string) (*Tenant, error
 	return svc.store.ObtenerPorID(ctx, id)
 }
 
+func (svc *Service) EmailAdminDisponible(ctx context.Context, email string) (bool, error) {
+	email = auth.NormalizarEmail(email)
+	if email == "" {
+		return false, fmt.Errorf("%w: email del admin requerido", ErrValidation)
+	}
+
+	enUso, err := svc.store.EmailAdminEnUso(ctx, email)
+	if err != nil {
+		return false, err
+	}
+	return !enUso, nil
+}
+
 func normalizarRubro(r string) string {
 	r = strings.ToLower(strings.TrimSpace(r))
 	// Reemplazar acentos

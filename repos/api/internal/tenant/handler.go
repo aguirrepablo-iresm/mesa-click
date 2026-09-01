@@ -70,6 +70,26 @@ func (h *Handlers) ObtenerMe(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(t)
 }
 
+func (h *Handlers) EmailAdminDisponible(w http.ResponseWriter, r *http.Request) {
+	email := r.URL.Query().Get("email")
+
+	disponible, err := h.svc.EmailAdminDisponible(r.Context(), email)
+	if err != nil {
+		if errors.Is(err, ErrValidation) {
+			jsonError(w, "Ingresá un correo de acceso válido.", http.StatusBadRequest)
+			return
+		}
+
+		slog.ErrorContext(r.Context(), "error verificando disponibilidad de email", "err", err)
+		jsonError(w, "No pudimos validar el correo de acceso.", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
+	json.NewEncoder(w).Encode(map[string]bool{"disponible": disponible})
+}
+
 func jsonError(w http.ResponseWriter, msg string, status int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)

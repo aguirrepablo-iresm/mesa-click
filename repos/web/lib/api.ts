@@ -56,6 +56,9 @@ function toUserMessage(message: string, fallback: string) {
   if (normalized === 'email requerido') {
     return 'Ingresá un correo electrónico.';
   }
+  if (normalized.includes('validar el correo')) {
+    return 'No pudimos validar el correo de acceso. Intentá nuevamente.';
+  }
   if (normalized === 'error interno' || normalized.startsWith('error http 500')) {
     return 'Ocurrió un problema en el servidor. Intentá nuevamente en unos minutos.';
   }
@@ -319,6 +322,12 @@ export const api = {
         horarios: parseJsonField(data.horarios),
       }),
     });
+  },
+
+  verificarEmailAdminDisponible: async (email: string) => {
+    return apiFetch<{ disponible: boolean }>(
+      `/tenants/email-disponible?email=${encodeURIComponent(email.trim().toLowerCase())}`,
+    );
   },
 
   obtenerMiTenant: async () => {

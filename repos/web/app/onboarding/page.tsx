@@ -58,6 +58,7 @@ function pasoParaCampo(campo: keyof OnboardingFormData) {
 export default function OnboardingPage() {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [validandoEmail, setValidandoEmail] = useState(false);
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [completado, setCompletado] = useState(false);
@@ -95,6 +96,51 @@ export default function OnboardingPage() {
   const handleNext = () => {
     setError("");
     setStep((s) => Math.min(s + 1, TOTAL_STEPS));
+  };
+
+  const handleAccountNext = async () => {
+    const errors: FieldErrors = {};
+
+    if (!formData.nombreAdmin.trim()) {
+      errors.nombreAdmin = "Ingresá el nombre del responsable.";
+    }
+    if (!formData.emailAdmin.trim()) {
+      errors.emailAdmin = "Ingresá el correo de acceso.";
+    } else if (!emailValido(formData.emailAdmin)) {
+      errors.emailAdmin = "Ingresá un correo de acceso válido.";
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      setError("Revisá los campos marcados para continuar.");
+      return;
+    }
+
+    setValidandoEmail(true);
+    setError("");
+
+    try {
+      const res = await api.verificarEmailAdminDisponible(formData.emailAdmin);
+      if (!res.disponible) {
+        const mensaje =
+          "Ese correo de acceso ya está asociado a un negocio. Usá otro correo o iniciá sesión.";
+        setFieldErrors({ emailAdmin: mensaje });
+        setError(mensaje);
+        return;
+      }
+
+      handleNext();
+    } catch (err: unknown) {
+      setFieldErrors({
+        emailAdmin: getErrorMessage(
+          err,
+          "No pudimos validar el correo de acceso. Intentá nuevamente.",
+        ),
+      });
+      setError(getErrorMessage(err, "No pudimos validar el correo de acceso. Intentá nuevamente."));
+    } finally {
+      setValidandoEmail(false);
+    }
   };
 
   const handleBack = () => {
@@ -274,8 +320,9 @@ export default function OnboardingPage() {
               nombreAdmin: fieldErrors.nombreAdmin,
               emailAdmin: fieldErrors.emailAdmin,
             }}
+            loading={validandoEmail}
             onChange={handleUpdate}
-            onNext={handleNext}
+            onNext={handleAccountNext}
           />
         );
       case 2:

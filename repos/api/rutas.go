@@ -78,6 +78,7 @@ func registrarRutas(mux *http.ServeMux) {
 	tenantSvc := tenant.NuevoService(tenantStore)
 	tenantH := tenant.NuevosHandlers(tenantSvc)
 	mux.Handle("POST /tenants", http.HandlerFunc(tenantH.Crear))
+	mux.Handle("GET /tenants/email-disponible", http.HandlerFunc(tenantH.EmailAdminDisponible))
 	mux.Handle("GET /tenants/me", auth.Requerir(http.HandlerFunc(tenantH.ObtenerMe)))
 
 	// Sucursales y Sectores (admin — protegidas)

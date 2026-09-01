@@ -6,15 +6,22 @@ interface StepAccountProps {
     emailAdmin: string;
   };
   errors?: Partial<Record<"nombreAdmin" | "emailAdmin", string>>;
+  loading?: boolean;
   onChange: (fields: Partial<{ nombreAdmin: string; emailAdmin: string }>) => void;
-  onNext: () => void;
+  onNext: () => void | Promise<void>;
 }
 
-export default function StepAccount({ data, errors = {}, onChange, onNext }: StepAccountProps) {
+export default function StepAccount({
+  data,
+  errors = {},
+  loading = false,
+  onChange,
+  onNext,
+}: StepAccountProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!data.emailAdmin.trim() || !data.nombreAdmin.trim()) return;
-    onNext();
+    void onNext();
   };
 
   return (
@@ -80,10 +87,22 @@ export default function StepAccount({ data, errors = {}, onChange, onNext }: Ste
 
         <button
           type="submit"
-          className="w-full h-40 bg-plain-green text-canvas-white font-medium rounded-md hover:bg-plain-green-muted transition-all flex items-center justify-center gap-8 mt-24"
+          disabled={loading}
+          className="w-full h-40 bg-plain-green text-canvas-white font-medium rounded-md hover:bg-plain-green-muted transition-all flex items-center justify-center gap-8 mt-24 disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          Continuar
-          <span className="material-symbols-outlined text-16">arrow_forward</span>
+          {loading ? (
+            <>
+              Validando correo
+              <span className="animate-spin material-symbols-outlined text-16">
+                progress_activity
+              </span>
+            </>
+          ) : (
+            <>
+              Continuar
+              <span className="material-symbols-outlined text-16">arrow_forward</span>
+            </>
+          )}
         </button>
       </form>
     </div>

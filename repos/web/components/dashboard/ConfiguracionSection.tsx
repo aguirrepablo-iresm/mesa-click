@@ -87,11 +87,18 @@ export default function ConfiguracionSection() {
         ))}
       </nav>
 
-      {tab === "negocio" && <NegocioTab tenant={tenant} />}
-      {tab === "apariencia" && <AparienciaTab sucursal={sucursalSel} tenant={tenant} />}
+      {tab === "negocio" && <NegocioTab key={tenant?.id ?? "sin-tenant"} tenant={tenant} />}
+      {tab === "apariencia" && (
+        <AparienciaTab
+          key={`${tenant?.id ?? "sin-tenant"}-${sucursalSel?.id ?? "sin-sucursal"}`}
+          sucursal={sucursalSel}
+          tenant={tenant}
+        />
+      )}
       {tab === "equipo" && <EquipoTab />}
       {tab === "sucursales" && (
         <SucursalesTab
+          key={sucursalSelId || "sin-sucursal"}
           sucursales={sucursales}
           setSucursales={setSucursales}
           selId={sucursalSelId}
@@ -180,18 +187,14 @@ function PillPrimaria({
 const RUBROS = ["Cafetería", "Bar", "Restaurante", "Cervecería", "Pizzería", "Otro"];
 
 function NegocioTab({ tenant }: { tenant: Tenant | null }) {
-  const [form, setForm] = useState({
-    nombre: "",
+  const [form, setForm] = useState(() => ({
+    nombre: tenant?.nombre ?? "",
     rubro: RUBROS[0],
     emailAdmin: "",
     whatsapp: "",
     descripcion: "",
-  });
+  }));
   const [ok, setOk] = useState(false);
-
-  useEffect(() => {
-    if (tenant) setForm((f) => ({ ...f, nombre: tenant.nombre }));
-  }, [tenant]);
 
   const linkBase = `mesa-click-web.onrender.com/${tenant?.slug ?? "tu-negocio"}`;
   const set = (k: keyof typeof form, v: string) => {
@@ -278,16 +281,14 @@ function NegocioTab({ tenant }: { tenant: Tenant | null }) {
 /* ─────────────────────────── tab: Apariencia ─────────────────────────── */
 
 function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant: Tenant | null }) {
-  const [nombreVisible, setNombreVisible] = useState("");
+  const [nombreVisible, setNombreVisible] = useState(() => {
+    const base = tenant?.nombre ?? "Tu negocio";
+    return sucursal ? `${base} - ${sucursal.nombre}` : base;
+  });
   const [color, setColor] = useState("#F54927");
   const [estilo, setEstilo] = useState<"claro" | "oscuro">("oscuro");
   const [logoUrl, setLogoUrl] = useState("");
   const [ok, setOk] = useState(false);
-
-  useEffect(() => {
-    const base = tenant?.nombre ?? "Tu negocio";
-    setNombreVisible(sucursal ? `${base} - ${sucursal.nombre}` : base);
-  }, [sucursal, tenant]);
 
   const onLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -509,21 +510,19 @@ function SucursalesTab({
   setSelId: (id: string) => void;
 }) {
   const sel = useMemo(() => sucursales.find((s) => s.id === selId) ?? null, [sucursales, selId]);
+  const horariosIniciales = parseHorarios(sel?.horarios);
 
-  const [form, setForm] = useState({ nombre: "", whatsapp: "", email: "" });
-  const [abiertos, setAbiertos] = useState<Set<string>>(new Set());
-  const [turnos, setTurnos] = useState<Turno[]>([{ apertura: "08:00", cierre: "00:00" }]);
+  const [form, setForm] = useState(() => ({
+    nombre: sel?.nombre ?? "",
+    whatsapp: sel?.whatsapp ?? "",
+    email: sel?.email ?? "",
+  }));
+  const [abiertos, setAbiertos] = useState<Set<string>>(() => horariosIniciales.abiertos);
+  const [turnos, setTurnos] = useState<Turno[]>(() =>
+    horariosIniciales.turnos.length ? horariosIniciales.turnos : [{ apertura: "08:00", cierre: "00:00" }],
+  );
   const [guardando, setGuardando] = useState(false);
   const [msg, setMsg] = useState("");
-
-  useEffect(() => {
-    if (!sel) return;
-    setForm({ nombre: sel.nombre, whatsapp: sel.whatsapp ?? "", email: sel.email ?? "" });
-    const h = parseHorarios(sel.horarios);
-    setAbiertos(h.abiertos);
-    setTurnos(h.turnos.length ? h.turnos : [{ apertura: "08:00", cierre: "00:00" }]);
-    setMsg("");
-  }, [sel]);
 
   const toggleDia = (key: string) =>
     setAbiertos((prev) => {
