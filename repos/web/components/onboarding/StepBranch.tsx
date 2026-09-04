@@ -549,7 +549,7 @@ export default function StepBranch({
         <button
           type="submit"
           disabled={loading || diasAbiertos.length === 0}
-          className="w-full h-44 bg-plain-green text-canvas-white font-bold rounded-md hover:bg-plain-green-muted active:scale-95 transition-all shadow-lg shadow-plain-green/10 flex items-center justify-center gap-8 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full h-52 rounded-full bg-plain-green text-canvas-white text-12 font-bold uppercase tracking-wide hover:bg-plain-green-muted active:scale-95 transition-all shadow-lg shadow-plain-green/10 flex items-center justify-center gap-8 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
             <span className="animate-spin material-symbols-outlined text-20">progress_activity</span>

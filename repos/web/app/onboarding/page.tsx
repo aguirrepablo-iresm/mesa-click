@@ -384,18 +384,18 @@ export default function OnboardingPage() {
     switch (step) {
       case 1:
         return {
-          title: "Crea tu cuenta de Administrador",
-          subtitle: "Datos personales para el responsable del local gastronómico.",
+          title: "Crear cuenta",
+          subtitle: "Datos personales del responsable del local gastronómico.",
         };
       case 2:
         return {
-          title: "Perfil del Negocio",
-          subtitle: "Configura el nombre y rubro de tu establecimiento.",
+          title: "Tu negocio",
+          subtitle: "Nombre, rubro y link público para que tus clientes encuentren el menú.",
         };
       case 3:
         return {
-          title: "Primera Sucursal",
-          subtitle: "Detalles de contacto y horarios de atención.",
+          title: "Sucursal",
+          subtitle: "Contacto y horarios de atención de la primera sede.",
         };
       default:
         return { title: "", subtitle: "" };

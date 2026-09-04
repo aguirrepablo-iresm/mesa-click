@@ -42,7 +42,7 @@ export default function StepAccount({
             onChange={(e) => onChange({ nombreAdmin: e.target.value })}
             placeholder="Ej: Pablo Aguirre"
             aria-invalid={Boolean(errors.nombreAdmin)}
-            className={`w-full h-40 px-12 bg-canvas-white border rounded-md focus:border-plain-green outline-none transition-all text-14 ${
+            className={`w-full h-52 px-16 bg-canvas-white border rounded-lg focus:border-plain-green outline-none transition-all text-15 ${
               errors.nombreAdmin ? "border-alert-red" : "border-ash-graphite"
             }`}
           />
@@ -66,7 +66,7 @@ export default function StepAccount({
             onChange={(e) => onChange({ emailAdmin: e.target.value })}
             placeholder="admin@minegocio.com"
             aria-invalid={Boolean(errors.emailAdmin)}
-            className={`w-full h-40 px-12 bg-canvas-white border rounded-md focus:border-plain-green outline-none transition-all text-14 ${
+            className={`w-full h-52 px-16 bg-canvas-white border rounded-lg focus:border-plain-green outline-none transition-all text-15 ${
               errors.emailAdmin ? "border-alert-red" : "border-ash-graphite"
             }`}
           />
@@ -75,12 +75,12 @@ export default function StepAccount({
           )}
         </div>
 
-        <div className="p-12 bg-ghost-fog rounded-md border border-ghost-fog text-12 text-sage-green space-y-4">
+        <div className="p-16 bg-vanilla-cream rounded-lg text-13 text-sage-green space-y-6">
           <div className="flex items-center gap-6 font-medium text-ash-graphite">
             <span className="material-symbols-outlined text-16 text-plain-green">verified_user</span>
             <span>Autenticación sin contraseñas</span>
           </div>
-          <p className="text-11 leading-normal">
+          <p className="text-13 leading-normal">
             Tu cuenta utilizará enlaces mágicos (Magic Link) enviados a tu correo para iniciar sesión de forma segura y directa.
           </p>
         </div>
@@ -88,7 +88,7 @@ export default function StepAccount({
         <button
           type="submit"
           disabled={loading}
-          className="w-full h-40 bg-plain-green text-canvas-white font-medium rounded-md hover:bg-plain-green-muted transition-all flex items-center justify-center gap-8 mt-24 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="w-full h-52 rounded-full bg-plain-green text-canvas-white text-12 font-bold uppercase tracking-wide hover:bg-plain-green-muted transition-all flex items-center justify-center gap-8 mt-24 disabled:opacity-60 disabled:cursor-not-allowed"
         >
           {loading ? (
             <>
