@@ -2,23 +2,27 @@
 import { useState, useEffect, useCallback } from "react";
 import { api, UsuarioAPI, getErrorMessage } from "@/lib/api";
 
-type RolInvitable = 'encargado' | 'mozo';
+type RolUsuario = 'admin' | 'encargado' | 'mozo' | 'cocina';
+type RolInvitable = 'encargado' | 'mozo' | 'cocina';
 type FormState = { nombre: string; email: string; rol: RolInvitable };
 
 const ROL_LABELS: Record<string, string> = {
   admin: 'Admin',
   encargado: 'Encargado',
-  mozo: 'Mozo',
+  mozo: 'Mozo / Recepcionista',
+  cocina: 'Cocina (KDS)',
 };
 
 const ROL_DESCRIPTIONS: Record<RolInvitable, string> = {
   encargado: 'Puede gestionar la operación de una sucursal: carta, mesas y pedidos activos.',
   mozo: 'Puede ver pedidos en vivo, avanzar estados y atender solicitudes de cuenta.',
+  cocina: 'Acceso a la pantalla Kitchen Display System (KDS) para despachar comandas.',
 };
 
 export default function EquipoSection({ embedded = false }: { embedded?: boolean }) {
   const [equipo, setEquipo] = useState<UsuarioAPI[]>([]);
   const [loading, setLoading] = useState(true);
+  const [actualizandoId, setActualizandoId] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>({ nombre: '', email: '', rol: 'mozo' });
   const [error, setError] = useState('');
   const [invitacionLink, setInvitacionLink] = useState('');
@@ -90,6 +94,18 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
     setEquipo(prev => prev.filter(u => u.id !== id));
   };
 
+  const handleCambiarRol = async (id: string, nuevoRol: RolUsuario) => {
+    try {
+      setActualizandoId(id);
+      await api.actualizarUsuario(id, { rol: nuevoRol });
+      setEquipo(prev => prev.map(u => (u.id === id ? { ...u, rol: nuevoRol } : u)));
+    } catch (err: unknown) {
+      alert(getErrorMessage(err, 'No se pudo actualizar el rol del usuario.'));
+    } finally {
+      setActualizandoId(null);
+    }
+  };
+
   const handleCopiarLink = () => {
     if (!invitacionLink) return;
     navigator.clipboard.writeText(invitacionLink);
@@ -116,9 +132,22 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
                 <p className="text-12 text-sage-green font-mono">{u.email}</p>
               </div>
               <div className="flex items-center gap-12">
-                <span className="px-8 py-2 text-11 font-medium text-sage-green bg-vanilla-cream border border-ghost-fog rounded-md">
-                  {ROL_LABELS[u.rol] || u.rol}
-                </span>
+                {u.rol === 'admin' ? (
+                  <span className="px-8 py-2 text-11 font-medium text-sage-green bg-vanilla-cream border border-ghost-fog rounded-md">
+                    Admin
+                  </span>
+                ) : (
+                  <select
+                    value={u.rol}
+                    disabled={actualizandoId === u.id}
+                    onChange={(e) => void handleCambiarRol(u.id, e.target.value as RolUsuario)}
+                    className="h-28 px-6 text-11 rounded border border-ash-graphite bg-canvas-white outline-none focus:border-plain-green cursor-pointer disabled:opacity-50"
+                  >
+                    <option value="encargado">Encargado</option>
+                    <option value="mozo">Mozo / Recepcionista</option>
+                    <option value="cocina">Cocina (KDS)</option>
+                  </select>
+                )}
                 {u.rol !== 'admin' && (
                   <button
                     onClick={() => handleEliminarUsuario(u.id)}
@@ -165,6 +194,7 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
             >
               <option value="encargado">Encargado de Sucursal</option>
               <option value="mozo">Mozo / Recepcionista</option>
+              <option value="cocina">Cocina (KDS)</option>
             </select>
             <button
               type="submit"

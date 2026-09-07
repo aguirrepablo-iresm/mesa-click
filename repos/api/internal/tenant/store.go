@@ -14,6 +14,7 @@ import (
 type Store interface {
 	Crear(ctx context.Context, input OnboardingInput) (*Tenant, error)
 	ObtenerPorID(ctx context.Context, id string) (*Tenant, error)
+	Actualizar(ctx context.Context, id string, input ActualizarTenantInput) (*Tenant, error)
 	EmailAdminEnUso(ctx context.Context, email string) (bool, error)
 }
 
@@ -87,17 +88,119 @@ func isUniqueConstraint(err error, constraintName string) bool {
 
 func (s *pgStore) ObtenerPorID(ctx context.Context, id string) (*Tenant, error) {
 	t := &Tenant{}
+	var datosFiscalesBytes []byte
 	err := db.Pool.QueryRow(ctx,
-		`SELECT id, nombre, nombre_fantasia, rubro, slug, created_at
+		`SELECT id, nombre, nombre_fantasia, rubro, descripcion, email_contacto, whatsapp,
+		        logo_url, color_primario, estilo_visual, datos_fiscales, google_review_url, slug, created_at
 		 FROM tenants WHERE id = $1`, id,
-	).Scan(&t.ID, &t.Nombre, &t.NombreFantasia, &t.Rubro, &t.Slug, &t.CreatedAt)
+	).Scan(&t.ID, &t.Nombre, &t.NombreFantasia, &t.Rubro, &t.Descripcion, &t.EmailContacto, &t.Whatsapp,
+		&t.LogoURL, &t.ColorPrimario, &t.EstiloVisual, &datosFiscalesBytes, &t.GoogleReviewURL, &t.Slug, &t.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
 		}
 		return nil, fmt.Errorf("error obteniendo tenant: %w", err)
 	}
+	if len(datosFiscalesBytes) > 0 {
+		_ = json.Unmarshal(datosFiscalesBytes, &t.DatosFiscales)
+	}
 	return t, nil
+}
+
+func (s *pgStore) Actualizar(ctx context.Context, id string, input ActualizarTenantInput) (*Tenant, error) {
+	actual, err := s.ObtenerPorID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	nombre := actual.Nombre
+	if input.Nombre != nil && *input.Nombre != "" {
+		nombre = *input.Nombre
+	}
+
+	nombreFantasia := actual.NombreFantasia
+	if input.NombreFantasia != nil {
+		nombreFantasia = *input.NombreFantasia
+	}
+
+	rubro := actual.Rubro
+	if input.Rubro != nil && *input.Rubro != "" {
+		rubro = *input.Rubro
+	}
+
+	descripcion := actual.Descripcion
+	if input.Descripcion != nil {
+		descripcion = input.Descripcion
+	}
+
+	emailContacto := actual.EmailContacto
+	if input.EmailContacto != nil {
+		emailContacto = input.EmailContacto
+	}
+
+	whatsapp := actual.Whatsapp
+	if input.Whatsapp != nil {
+		whatsapp = input.Whatsapp
+	}
+
+	logoURL := actual.LogoURL
+	if input.LogoURL != nil {
+		logoURL = input.LogoURL
+	}
+
+	colorPrimario := actual.ColorPrimario
+	if input.ColorPrimario != nil {
+		colorPrimario = input.ColorPrimario
+	}
+
+	estiloVisual := actual.EstiloVisual
+	if input.EstiloVisual != nil {
+		estiloVisual = input.EstiloVisual
+	}
+
+	datosFiscales := actual.DatosFiscales
+	if input.DatosFiscales != nil {
+		datosFiscales = input.DatosFiscales
+	}
+	if datosFiscales == nil {
+		datosFiscales = make(map[string]any)
+	}
+	datosFiscalesJSON, err := json.Marshal(datosFiscales)
+	if err != nil {
+		return nil, fmt.Errorf("error serializando datos fiscales: %w", err)
+	}
+
+	googleReviewURL := actual.GoogleReviewURL
+	if input.GoogleReviewURL != nil {
+		googleReviewURL = input.GoogleReviewURL
+	}
+
+	var t Tenant
+	var datosFiscalesBytes []byte
+
+	err = db.Pool.QueryRow(ctx,
+		`UPDATE tenants
+		 SET nombre = $1, nombre_fantasia = $2, rubro = $3, descripcion = $4,
+		     email_contacto = $5, whatsapp = $6, logo_url = $7, color_primario = $8,
+		     estilo_visual = $9, datos_fiscales = $10, google_review_url = $11
+		 WHERE id = $12
+		 RETURNING id, nombre, nombre_fantasia, rubro, descripcion, email_contacto, whatsapp,
+		           logo_url, color_primario, estilo_visual, datos_fiscales, google_review_url, slug, created_at`,
+		nombre, nombreFantasia, rubro, descripcion,
+		emailContacto, whatsapp, logoURL, colorPrimario,
+		estiloVisual, datosFiscalesJSON, googleReviewURL, id,
+	).Scan(&t.ID, &t.Nombre, &t.NombreFantasia, &t.Rubro, &t.Descripcion, &t.EmailContacto, &t.Whatsapp,
+		&t.LogoURL, &t.ColorPrimario, &t.EstiloVisual, &datosFiscalesBytes, &t.GoogleReviewURL, &t.Slug, &t.CreatedAt)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("error actualizando tenant: %w", err)
+	}
+	if len(datosFiscalesBytes) > 0 {
+		_ = json.Unmarshal(datosFiscalesBytes, &t.DatosFiscales)
+	}
+	return &t, nil
 }
 
 func (s *pgStore) EmailAdminEnUso(ctx context.Context, email string) (bool, error) {

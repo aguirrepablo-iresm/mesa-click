@@ -15,6 +15,7 @@ import (
 type Store interface {
 	Crear(ctx context.Context, tenantID string, input UsuarioInput) (*Usuario, error)
 	Listar(ctx context.Context, tenantID string) ([]Usuario, error)
+	Actualizar(ctx context.Context, id string, tenantID string, input ActualizarUsuarioInput) (*Usuario, error)
 	Eliminar(ctx context.Context, id string, tenantID string) error
 	CrearMagicToken(ctx context.Context, usuarioID string) (string, error)
 }
@@ -67,6 +68,40 @@ func (s *pgStore) Listar(ctx context.Context, tenantID string) ([]Usuario, error
 	}
 
 	return usuarios, nil
+}
+
+func (s *pgStore) Actualizar(ctx context.Context, id string, tenantID string, input ActualizarUsuarioInput) (*Usuario, error) {
+	var u Usuario
+	err := db.Pool.QueryRow(ctx,
+		`SELECT id, tenant_id, email, nombre, rol, created_at
+		 FROM usuarios WHERE id = $1 AND tenant_id = $2`,
+		id, tenantID,
+	).Scan(&u.ID, &u.TenantID, &u.Email, &u.Nombre, &u.Rol, &u.CreatedAt)
+	if err != nil {
+		return nil, ErrNotFound
+	}
+
+	nombre := u.Nombre
+	if input.Nombre != nil && *input.Nombre != "" {
+		nombre = *input.Nombre
+	}
+	rol := u.Rol
+	if input.Rol != nil && *input.Rol != "" {
+		rol = *input.Rol
+	}
+
+	err = db.Pool.QueryRow(ctx,
+		`UPDATE usuarios
+		 SET nombre = $1, rol = $2
+		 WHERE id = $3 AND tenant_id = $4
+		 RETURNING id, tenant_id, email, nombre, rol, created_at`,
+		nombre, rol, id, tenantID,
+	).Scan(&u.ID, &u.TenantID, &u.Email, &u.Nombre, &u.Rol, &u.CreatedAt)
+	if err != nil {
+		return nil, fmt.Errorf("error actualizando usuario: %w", err)
+	}
+
+	return &u, nil
 }
 
 func (s *pgStore) Eliminar(ctx context.Context, id string, tenantID string) error {

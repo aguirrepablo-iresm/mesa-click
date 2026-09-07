@@ -13,12 +13,20 @@ var (
 )
 
 type Tenant struct {
-	ID             string    `json:"id"`
-	Nombre         string    `json:"nombre"`
-	NombreFantasia string    `json:"nombre_fantasia,omitempty"`
-	Rubro          string    `json:"rubro"`
-	Slug           string    `json:"slug"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID              string         `json:"id"`
+	Nombre          string         `json:"nombre"`
+	NombreFantasia  string         `json:"nombre_fantasia,omitempty"`
+	Rubro           string         `json:"rubro"`
+	Descripcion     *string        `json:"descripcion,omitempty"`
+	EmailContacto   *string        `json:"email_contacto,omitempty"`
+	Whatsapp        *string        `json:"whatsapp,omitempty"`
+	LogoURL         *string        `json:"logo_url,omitempty"`
+	ColorPrimario   *string        `json:"color_primario,omitempty"`
+	EstiloVisual    *string        `json:"estilo_visual,omitempty"`
+	DatosFiscales   map[string]any `json:"datos_fiscales,omitempty"`
+	GoogleReviewURL *string        `json:"google_review_url,omitempty"`
+	Slug            string         `json:"slug"`
+	CreatedAt       time.Time      `json:"created_at"`
 }
 
 type OnboardingInput struct {
@@ -32,4 +40,18 @@ type OnboardingInput struct {
 	Whatsapp       string         `json:"whatsapp"`
 	EmailSucursal  string         `json:"email_sucursal"`
 	Horarios       map[string]any `json:"horarios"`
+}
+
+type ActualizarTenantInput struct {
+	Nombre          *string        `json:"nombre,omitempty"`
+	NombreFantasia  *string        `json:"nombre_fantasia,omitempty"`
+	Rubro           *string        `json:"rubro,omitempty"`
+	Descripcion     *string        `json:"descripcion,omitempty"`
+	EmailContacto   *string        `json:"email_contacto,omitempty"`
+	Whatsapp        *string        `json:"whatsapp,omitempty"`
+	LogoURL         *string        `json:"logo_url,omitempty"`
+	ColorPrimario   *string        `json:"color_primario,omitempty"`
+	EstiloVisual    *string        `json:"estilo_visual,omitempty"`
+	DatosFiscales   map[string]any `json:"datos_fiscales,omitempty"`
+	GoogleReviewURL *string        `json:"google_review_url,omitempty"`
 }

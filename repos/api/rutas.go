@@ -80,6 +80,7 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.Handle("POST /tenants", http.HandlerFunc(tenantH.Crear))
 	mux.Handle("GET /tenants/email-disponible", http.HandlerFunc(tenantH.EmailAdminDisponible))
 	mux.Handle("GET /tenants/me", auth.Requerir(http.HandlerFunc(tenantH.ObtenerMe)))
+	mux.Handle("PATCH /tenants/me", auth.Requerir(http.HandlerFunc(tenantH.ActualizarMe)))
 
 	// Sucursales y Sectores (admin — protegidas)
 	sucursalStore := sucursal.NuevoStore()
@@ -101,6 +102,7 @@ func registrarRutas(mux *http.ServeMux) {
 	usuarioH := usuario.NuevosHandlers(usuarioSvc)
 	mux.Handle("GET /usuarios", auth.Requerir(http.HandlerFunc(usuarioH.Listar)))
 	mux.Handle("POST /usuarios", auth.Requerir(http.HandlerFunc(usuarioH.Invitar)))
+	mux.Handle("PATCH /usuarios/{id}", auth.Requerir(http.HandlerFunc(usuarioH.Actualizar)))
 	mux.Handle("DELETE /usuarios/{id}", auth.Requerir(http.HandlerFunc(usuarioH.Eliminar)))
 
 	// Carta (admin — protegida)

@@ -70,6 +70,38 @@ func (h *Handlers) ObtenerMe(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(t)
 }
 
+func (h *Handlers) ActualizarMe(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	if claims == nil {
+		jsonError(w, "no autorizado", http.StatusUnauthorized)
+		return
+	}
+
+	var input ActualizarTenantInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		jsonError(w, "body inválido", http.StatusBadRequest)
+		return
+	}
+
+	t, err := h.svc.Actualizar(r.Context(), claims.TenantID, input)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			jsonError(w, "tenant no encontrado", http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, ErrValidation) {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error actualizando tenant", "err", err)
+		jsonError(w, "error actualizando negocio", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(t)
+}
+
 func (h *Handlers) EmailAdminDisponible(w http.ResponseWriter, r *http.Request) {
 	email := r.URL.Query().Get("email")
 

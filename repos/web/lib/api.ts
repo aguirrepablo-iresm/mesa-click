@@ -142,10 +142,34 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
 export interface Tenant {
   id: string;
   nombre: string;
+  nombre_fantasia?: string;
+  rubro?: string;
+  descripcion?: string;
+  email_contacto?: string;
+  whatsapp?: string;
+  logo_url?: string;
+  color_primario?: string;
+  estilo_visual?: string;
+  datos_fiscales?: Record<string, unknown>;
+  google_review_url?: string;
   slug: string;
-  activo: boolean;
+  activo?: boolean;
   created_at: string;
-  updated_at: string;
+  updated_at?: string;
+}
+
+export interface ActualizarTenantInput {
+  nombre?: string;
+  nombre_fantasia?: string;
+  rubro?: string;
+  descripcion?: string;
+  email_contacto?: string;
+  whatsapp?: string;
+  logo_url?: string;
+  color_primario?: string;
+  estilo_visual?: string;
+  datos_fiscales?: Record<string, unknown>;
+  google_review_url?: string;
 }
 
 export interface OnboardingInput {
@@ -228,7 +252,7 @@ export interface UsuarioAPI {
   sucursal_id?: string;
   nombre: string;
   email: string;
-  rol: 'admin' | 'encargado' | 'mozo';
+  rol: 'admin' | 'encargado' | 'mozo' | 'cocina';
   activo: boolean;
   created_at: string;
   updated_at: string;
@@ -335,6 +359,13 @@ export const api = {
 
   obtenerMiTenant: async () => {
     return apiFetch<Tenant>('/tenants/me');
+  },
+
+  actualizarMiTenant: async (data: ActualizarTenantInput) => {
+    return apiFetch<Tenant>('/tenants/me', {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
   },
 
   // 3. Sucursales & Sectores
@@ -455,7 +486,7 @@ export const api = {
   invitarUsuario: async (data: {
     nombre: string;
     email: string;
-    rol: 'admin' | 'encargado' | 'mozo';
+    rol: 'admin' | 'encargado' | 'mozo' | 'cocina';
     sucursal_id?: string;
   }) => {
     return apiFetch<{ usuario: UsuarioAPI; magic_link?: string; url_invitacion?: string }>('/usuarios', {
@@ -467,6 +498,13 @@ export const api = {
   eliminarUsuario: async (id: string) => {
     return apiFetch<void>(`/usuarios/${id}`, {
       method: 'DELETE',
+    });
+  },
+
+  actualizarUsuario: async (id: string, data: { nombre?: string; rol?: 'admin' | 'encargado' | 'mozo' | 'cocina' }) => {
+    return apiFetch<UsuarioAPI>(`/usuarios/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
     });
   },
 
