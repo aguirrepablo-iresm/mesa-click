@@ -30,3 +30,8 @@ type UsuarioInvitacionResponse struct {
 	Usuario   *Usuario `json:"usuario"`
 	MagicLink string   `json:"magic_link,omitempty"`
 }
+
+type ActualizarUsuarioInput struct {
+	Nombre *string `json:"nombre,omitempty"`
+	Rol    *string `json:"rol,omitempty"`
+}

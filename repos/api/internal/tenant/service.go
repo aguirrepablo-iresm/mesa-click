@@ -41,6 +41,60 @@ func (svc *Service) ObtenerPorID(ctx context.Context, id string) (*Tenant, error
 	return svc.store.ObtenerPorID(ctx, id)
 }
 
+func (svc *Service) Actualizar(ctx context.Context, id string, input ActualizarTenantInput) (*Tenant, error) {
+	if id == "" {
+		return nil, fmt.Errorf("%w: id de tenant requerido", ErrValidation)
+	}
+	if input.Nombre != nil {
+		trimmed := strings.TrimSpace(*input.Nombre)
+		if trimmed == "" {
+			return nil, fmt.Errorf("%w: el nombre no puede estar vacío", ErrValidation)
+		}
+		input.Nombre = &trimmed
+	}
+	if input.NombreFantasia != nil {
+		trimmed := strings.TrimSpace(*input.NombreFantasia)
+		input.NombreFantasia = &trimmed
+	}
+	if input.Rubro != nil {
+		normalizado := normalizarRubro(*input.Rubro)
+		input.Rubro = &normalizado
+	}
+	if input.EmailContacto != nil {
+		normalizado := auth.NormalizarEmail(*input.EmailContacto)
+		input.EmailContacto = &normalizado
+	}
+	if input.Whatsapp != nil {
+		trimmed := strings.TrimSpace(*input.Whatsapp)
+		input.Whatsapp = &trimmed
+	}
+	if input.Descripcion != nil {
+		trimmed := strings.TrimSpace(*input.Descripcion)
+		input.Descripcion = &trimmed
+	}
+	if input.GoogleReviewURL != nil {
+		trimmed := strings.TrimSpace(*input.GoogleReviewURL)
+		input.GoogleReviewURL = &trimmed
+	}
+	if input.LogoURL != nil {
+		trimmed := strings.TrimSpace(*input.LogoURL)
+		input.LogoURL = &trimmed
+	}
+	if input.ColorPrimario != nil {
+		trimmed := strings.TrimSpace(*input.ColorPrimario)
+		input.ColorPrimario = &trimmed
+	}
+	if input.EstiloVisual != nil {
+		trimmed := strings.ToLower(strings.TrimSpace(*input.EstiloVisual))
+		if trimmed != "claro" && trimmed != "oscuro" {
+			trimmed = "oscuro"
+		}
+		input.EstiloVisual = &trimmed
+	}
+
+	return svc.store.Actualizar(ctx, id, input)
+}
+
 func (svc *Service) EmailAdminDisponible(ctx context.Context, email string) (bool, error) {
 	email = auth.NormalizarEmail(email)
 	if email == "" {
@@ -70,7 +124,11 @@ func normalizarRubro(r string) string {
 		return "cafeteria"
 	case "comida_rapida", "comida rapida", "fast_food", "fast food":
 		return "comida_rapida"
-	case "bar", "pub", "bar / pub", "cerveceria":
+	case "cerveceria":
+		return "cerveceria"
+	case "pizzeria":
+		return "pizzeria"
+	case "bar", "pub", "bar / pub":
 		return "bar"
 	case "otro":
 		return "otro"

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/auth"
 )
@@ -51,6 +52,28 @@ func (svc *Service) Invitar(ctx context.Context, tenantID string, input UsuarioI
 
 func (svc *Service) Listar(ctx context.Context, tenantID string) ([]Usuario, error) {
 	return svc.store.Listar(ctx, tenantID)
+}
+
+func (svc *Service) Actualizar(ctx context.Context, id string, tenantID string, input ActualizarUsuarioInput) (*Usuario, error) {
+	if id == "" {
+		return nil, fmt.Errorf("%w: id de usuario requerido", ErrValidation)
+	}
+	if input.Nombre != nil {
+		trimmed := strings.TrimSpace(*input.Nombre)
+		if trimmed == "" {
+			return nil, fmt.Errorf("%w: el nombre no puede estar vacío", ErrValidation)
+		}
+		input.Nombre = &trimmed
+	}
+	if input.Rol != nil {
+		rol := strings.ToLower(strings.TrimSpace(*input.Rol))
+		if rol != "admin" && rol != "encargado" && rol != "mozo" && rol != "cocina" {
+			return nil, fmt.Errorf("%w: rol inválido (debe ser admin, encargado, mozo o cocina)", ErrValidation)
+		}
+		input.Rol = &rol
+	}
+
+	return svc.store.Actualizar(ctx, id, tenantID, input)
 }
 
 func (svc *Service) Eliminar(ctx context.Context, id string, tenantID string) error {

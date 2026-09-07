@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { api, Tenant, Sucursal } from "@/lib/api";
+import { api, Tenant, Sucursal, getErrorMessage } from "@/lib/api";
 import EquipoSection from "./EquipoSection";
 
 /* ─────────────────────────── contenedor ─────────────────────────── */
@@ -140,17 +140,7 @@ function Campo({
 const INPUT =
   "w-full h-40 px-12 text-14 rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-system-black";
 
-function PendienteBackend({ us }: { us: string }) {
-  return (
-    <div className="flex items-start gap-8 p-12 bg-vanilla-cream border border-dashed border-concrete rounded-md text-12 text-sage-green">
-      <span className="material-symbols-outlined text-16 shrink-0">construction</span>
-      <span>
-        Los cambios se guardan solo en esta pantalla. La persistencia real depende de {us} (backend Go),
-        todavía pendiente.
-      </span>
-    </div>
-  );
-}
+
 
 function Guardado({ visible }: { visible: boolean }) {
   if (!visible) return null;
@@ -187,19 +177,61 @@ function PillPrimaria({
 const RUBROS = ["Cafetería", "Bar", "Restaurante", "Cervecería", "Pizzería", "Otro"];
 
 function NegocioTab({ tenant }: { tenant: Tenant | null }) {
+  const rubroNormalizado = useMemo(() => {
+    if (!tenant?.rubro) return RUBROS[0];
+    const clean = tenant.rubro.toLowerCase().replace(/í/g, "i").replace(/é/g, "e");
+    const found = RUBROS.find((r) => r.toLowerCase().replace(/í/g, "i").replace(/é/g, "e") === clean);
+    return found ?? RUBROS[0];
+  }, [tenant?.rubro]);
+
+  const fiscalData = (tenant?.datos_fiscales ?? {}) as Record<string, string>;
+
   const [form, setForm] = useState(() => ({
     nombre: tenant?.nombre ?? "",
-    rubro: RUBROS[0],
-    emailAdmin: "",
-    whatsapp: "",
-    descripcion: "",
+    rubro: rubroNormalizado,
+    emailContacto: tenant?.email_contacto ?? "",
+    whatsapp: tenant?.whatsapp ?? "",
+    descripcion: tenant?.descripcion ?? "",
+    googleReviewUrl: tenant?.google_review_url ?? "",
+    razonSocial: typeof fiscalData.razon_social === "string" ? fiscalData.razon_social : "",
+    cuit: typeof fiscalData.cuit === "string" ? fiscalData.cuit : "",
+    condicionIva: typeof fiscalData.condicion_iva === "string" ? fiscalData.condicion_iva : "",
   }));
+  const [loading, setLoading] = useState(false);
   const [ok, setOk] = useState(false);
+  const [error, setError] = useState("");
 
   const linkBase = `mesa-click-web.onrender.com/${tenant?.slug ?? "tu-negocio"}`;
   const set = (k: keyof typeof form, v: string) => {
     setForm((f) => ({ ...f, [k]: v }));
     setOk(false);
+    setError("");
+  };
+
+  const handleGuardar = async () => {
+    setLoading(true);
+    setError("");
+    setOk(false);
+    try {
+      await api.actualizarMiTenant({
+        nombre: form.nombre,
+        rubro: form.rubro,
+        email_contacto: form.emailContacto,
+        whatsapp: form.whatsapp,
+        descripcion: form.descripcion,
+        google_review_url: form.googleReviewUrl,
+        datos_fiscales: {
+          razon_social: form.razonSocial,
+          cuit: form.cuit,
+          condicion_iva: form.condicionIva,
+        },
+      });
+      setOk(true);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Error al guardar los datos del negocio."));
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -217,13 +249,13 @@ function NegocioTab({ tenant }: { tenant: Tenant | null }) {
                 ))}
               </select>
             </Campo>
-            <Campo label="Email administrativo">
+            <Campo label="Email de contacto">
               <input
                 type="email"
                 className={INPUT}
-                value={form.emailAdmin}
-                onChange={(e) => set("emailAdmin", e.target.value)}
-                placeholder="admin@minegocio.com"
+                value={form.emailContacto}
+                onChange={(e) => set("emailContacto", e.target.value)}
+                placeholder="contacto@minegocio.com"
               />
             </Campo>
             <Campo label="WhatsApp general">
@@ -246,9 +278,60 @@ function NegocioTab({ tenant }: { tenant: Tenant | null }) {
               placeholder="Café de especialidad, meriendas y opciones rápidas."
             />
           </Campo>
-          <PendienteBackend us="US-51" />
+          <Campo label="Enlace / Place ID de Google Reviews (Smart Funnel)">
+            <input
+              className={INPUT}
+              value={form.googleReviewUrl}
+              onChange={(e) => set("googleReviewUrl", e.target.value)}
+              placeholder="https://g.page/r/.../review o enlace de Google Maps"
+            />
+            <span className="block text-11 text-sage-green mt-4">
+              Usado para el Smart Funnel: comensales que califiquen con 4 o 5 estrellas serán invitados a recomendarte en Google Maps.
+            </span>
+          </Campo>
+
+          <div className="pt-16 border-t border-concrete space-y-12">
+            <p className="text-12 font-mono text-sage-green uppercase tracking-wider">
+              Datos fiscales y facturación (opcional)
+            </p>
+            <div className="grid sm:grid-cols-2 gap-12">
+              <Campo label="Razón social">
+                <input
+                  className={INPUT}
+                  value={form.razonSocial}
+                  onChange={(e) => set("razonSocial", e.target.value)}
+                  placeholder="Ej: Gastronómica Central S.R.L."
+                />
+              </Campo>
+              <Campo label="CUIT / CUIL">
+                <input
+                  className={INPUT}
+                  value={form.cuit}
+                  onChange={(e) => set("cuit", e.target.value)}
+                  placeholder="30-12345678-9"
+                />
+              </Campo>
+              <Campo label="Condición frente al IVA">
+                <select
+                  className={INPUT}
+                  value={form.condicionIva}
+                  onChange={(e) => set("condicionIva", e.target.value)}
+                >
+                  <option value="">Sin especificar</option>
+                  <option value="Responsable Inscripto">Responsable Inscripto</option>
+                  <option value="Monotributo">Monotributo</option>
+                  <option value="Exento">Exento</option>
+                  <option value="Consumidor Final">Consumidor Final</option>
+                </select>
+              </Campo>
+            </div>
+          </div>
+
+          {error && <p className="text-12 text-alert-red">{error}</p>}
           <div className="flex items-center gap-16">
-            <PillPrimaria onClick={() => setOk(true)}>Guardar cambios</PillPrimaria>
+            <PillPrimaria onClick={handleGuardar} disabled={loading}>
+              {loading ? "Guardando..." : "Guardar cambios"}
+            </PillPrimaria>
             <Guardado visible={ok} />
           </div>
         </Card>
@@ -296,12 +379,12 @@ function esColorHex(valor: string) {
 }
 
 function aparienciaDefault(sucursal: Sucursal | null, tenant: Tenant | null): AparienciaForm {
-  const base = tenant?.nombre ?? "Tu negocio";
+  const base = tenant?.nombre_fantasia || tenant?.nombre || "Tu negocio";
   return {
     nombreVisible: sucursal ? `${base} - ${sucursal.nombre}` : base,
-    color: COLOR_DEFAULT,
-    estilo: "oscuro",
-    logoUrl: "",
+    color: tenant?.color_primario && esColorHex(tenant.color_primario) ? tenant.color_primario : COLOR_DEFAULT,
+    estilo: tenant?.estilo_visual === "claro" || tenant?.estilo_visual === "oscuro" ? tenant.estilo_visual : "oscuro",
+    logoUrl: tenant?.logo_url ?? "",
   };
 }
 
@@ -337,12 +420,36 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
     leerAparienciaGuardada(storageKey, aparienciaDefault(sucursal, tenant)),
   );
   const [arrastrandoLogo, setArrastrandoLogo] = useState(false);
+  const [guardando, setGuardando] = useState(false);
   const [ok, setOk] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { nombreVisible, color, estilo, logoUrl } = apariencia;
 
   useEffect(() => {
     guardarAparienciaLocal(storageKey, apariencia);
   }, [storageKey, apariencia]);
+
+  const handleGuardar = async () => {
+    setGuardando(true);
+    setError(null);
+    setOk(false);
+    try {
+      guardarAparienciaLocal(storageKey, apariencia);
+      if (tenant) {
+        await api.actualizarMiTenant({
+          nombre_fantasia: nombreVisible.trim() || undefined,
+          color_primario: esColorHex(color) ? color : undefined,
+          estilo_visual: estilo,
+          logo_url: logoUrl || undefined,
+        });
+      }
+      setOk(true);
+    } catch (err: unknown) {
+      setError(getErrorMessage(err, "Error al guardar la apariencia del menú."));
+    } finally {
+      setGuardando(false);
+    }
+  };
 
   const cargarLogo = (file?: File | null) => {
     if (!file || !file.type.startsWith("image/")) return;
@@ -470,15 +577,11 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
           </div>
         </Campo>
 
-        <div className="flex items-start gap-8 p-12 bg-vanilla-cream border border-dashed border-concrete rounded-md text-12 text-sage-green">
-          <span className="material-symbols-outlined text-16 shrink-0">construction</span>
-          <span>
-            Los cambios se guardan en este navegador. La persistencia real entre dispositivos depende de US-51 /
-            US-53 (backend Go), todavía pendiente.
-          </span>
-        </div>
+        {error && <p className="text-12 text-alert-red">{error}</p>}
         <div className="flex items-center gap-16">
-          <PillPrimaria onClick={() => setOk(true)}>Guardar apariencia</PillPrimaria>
+          <PillPrimaria onClick={handleGuardar} disabled={guardando}>
+            {guardando ? "Guardando..." : "Guardar apariencia"}
+          </PillPrimaria>
           <Guardado visible={ok} />
         </div>
       </Card>

@@ -54,6 +54,33 @@ func (h *Handlers) Listar(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, usuarios)
 }
 
+func (h *Handlers) Actualizar(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	id := r.PathValue("id")
+	var input ActualizarUsuarioInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		jsonError(w, "body inválido", http.StatusBadRequest)
+		return
+	}
+
+	u, err := h.svc.Actualizar(r.Context(), id, claims.TenantID, input)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			jsonError(w, "usuario no encontrado", http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, ErrValidation) {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error actualizando usuario", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
+		return
+	}
+
+	jsonOK(w, u)
+}
+
 func (h *Handlers) Eliminar(w http.ResponseWriter, r *http.Request) {
 	claims := auth.ClaimsFromContext(r.Context())
 	id := r.PathValue("id")
