@@ -7,14 +7,14 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
 ## ANTES DE EMPEZAR
 
 1. **Leer las User Stories del sprint actual** en:
-   `docs/presentations/parte-2/index.html` → slide "Backlog" (o `docs/presentations/mesa-click-presentacion.html` para el histórico del MVP)
+   `docs/features/README.md` y `docs/features/sprint-XX/` (o `docs/presentations/parte-2/index.html` → slide "Backlog")
 
 2. **Leer el happy path correspondiente** a la tarea:
    - `docs/flows/happy-path-admin-negocio.md` — flujo del admin de negocio
    - `docs/flows/happy-path-cliente.md` — flujo del cliente / comensal
 
 3. **Consultar el Status Report más reciente** para ver bloqueantes o decisiones pendientes:
-   - `docs/presentations/parte-2/status-report-05.html`
+   - `docs/presentations/parte-2/status-report-06.html`
 
 > No implementar nada que no esté cubierto por una US del sprint en curso. Si hay dudas, preguntar antes de avanzar.
 

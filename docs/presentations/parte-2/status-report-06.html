@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Status Report #6 — Mesa CLICK (Cierre Sprint 10 & Kickoff Sprint 11)</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange:   #E25B1A;
+    --orange-l: #FAE8D8;
+    --green:    #16A34A;
+    --green-l:  #DCFCE7;
+    --blue:     #185FA5;
+    --blue-l:   #E6F1FB;
+    --purple:   #6D28D9;
+    --purple-l: #EDE9FE;
+    --amber:    #D97706;
+    --amber-l:  #FEF3C7;
+    --slate:    #64748B;
+    --slate-l:  #F1F5F9;
+    --text:     #111827;
+    --text2:    #374151;
+    --text3:    #6B7280;
+    --bg:       #F4F2EC;
+    --card:     #FFFFFF;
+    --border:   #E5E7EB;
+    --border2:  #D1D5DB;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    padding: 28px 20px 60px;
+    min-height: 100vh;
+  }
+
+  .wrap { max-width: 1100px; margin: 0 auto; }
+
+  .top-bar {
+    background: var(--card);
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    padding: 18px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .logo { display: flex; align-items: center; gap: 12px; }
+  .logo-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    background: var(--orange);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(226,91,26,0.25);
+  }
+  .logo-name { font-size: 17px; font-weight: 700; letter-spacing: -.01em; line-height: 1.2; }
+  .logo-sub  { font-size: 11px; color: var(--text3); }
+  .report-title { text-align: right; }
+  .report-title h1 { font-size: 18px; font-weight: 700; }
+  .report-title .sub { font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace; margin-top: 3px; }
+
+  .meta-strip {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .meta-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .meta-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text3); margin-bottom: 5px; }
+  .meta-val   { font-size: 14px; font-weight: 700; color: var(--text); }
+  .meta-val.small { font-size: 12px; font-weight: 600; color: var(--text2); }
+
+  .sec-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--text3);
+    margin: 24px 0 10px;
+    display: block;
+  }
+
+  .rag-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .rag-card {
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    padding: 16px 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  .rag-card.green { background: var(--green-l); border-color: #86EFAC; }
+  .rag-card.amber { background: var(--amber-l); border-color: #FCD34D; }
+  .rag-dot {
+    font-size: 18px;
+    line-height: 1;
+    flex-shrink: 0;
+  }
+  .rag-dot.green { color: var(--green); }
+  .rag-dot.amber { color: var(--amber); }
+  .rag-info { display: flex; flex-direction: column; gap: 3px; }
+  .rag-dim { font-size: 10px; font-weight: 700; text-transform: uppercase; color: var(--text3); letter-spacing: .04em; }
+  .rag-status { font-size: 13.5px; font-weight: 700; }
+  .rag-status.green { color: #15803D; }
+  .rag-status.amber { color: #92400E; }
+  .rag-note { font-size: 11.5px; color: var(--text2); line-height: 1.45; margin-top: 2px; }
+
+  .content-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  @media(max-width: 768px) {
+    .meta-strip, .rag-row, .content-grid { grid-template-columns: 1fr; }
+  }
+
+  .c-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .c-card-head {
+    background: var(--slate-l);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text2);
+  }
+  .c-card-body { padding: 18px; }
+  .sprint-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--orange);
+    background: var(--orange-l);
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 12px;
+  }
+  .sprint-tag.blue { color: var(--blue); background: var(--blue-l); }
+  .sprint-tag.green { color: #15803D; background: var(--green-l); }
+  .c-card-body ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .c-card-body li { display: flex; gap: 8px; font-size: 12.5px; line-height: 1.5; align-items: flex-start; }
+  .c-card-body .dot { color: var(--orange); font-size: 14px; line-height: 1; flex-shrink: 0; }
+  .c-card-body .dot-blue { color: var(--blue); font-size: 14px; line-height: 1; flex-shrink: 0; }
+  .c-card-body .dot-green { color: var(--green); font-size: 14px; line-height: 1; flex-shrink: 0; }
+  .c-card-body .chip {
+    font-family: 'DM Mono', monospace;
+    font-size: 10.5px;
+    background: var(--slate-l);
+    padding: 1px 5px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    font-weight: 600;
+  }
+
+  .issue {
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+  .issue:last-child { margin-bottom: 0; }
+  .issue.risk { background: var(--amber-l); border: 1px solid #FCD34D; }
+  .issue.info { background: var(--blue-l); border: 1px solid #BFDBFE; }
+  .issue.success { background: var(--green-l); border: 1px solid #86EFAC; }
+  .issue-tag { font-weight: 700; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
+  .issue.risk .issue-tag { color: #92400E; }
+  .issue.info .issue-tag { color: #1E40AF; }
+  .issue.success .issue-tag { color: #15803D; }
+
+  /* GANTT */
+  .gantt-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow-x: auto;
+    padding: 16px;
+  }
+  table.gantt {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 750px;
+  }
+  .g-lbl-col { width: 230px; }
+  th.g-lbl { text-align: left; font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; }
+  th.gth {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--text3);
+    padding: 6px;
+    text-align: center;
+    border-bottom: 1px solid var(--border);
+  }
+  th.gth.today {
+    background: var(--orange-l);
+    border-left: 1px solid var(--orange);
+    border-right: 1px solid var(--orange);
+  }
+  .today-arrow {
+    display: block;
+    font-size: 8px;
+    color: var(--orange);
+    font-weight: 800;
+    margin-top: 2px;
+  }
+  .sn { display: block; font-size: 10px; font-weight: 700; color: var(--text); }
+  .sd { display: block; font-size: 9px; color: var(--text3); margin-top: 1px; font-family: 'DM Mono', monospace; }
+
+  tr.g-phase td {
+    padding: 10px 0 4px;
+    font-size: 10.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+  }
+  td.ph-past { color: var(--green); }
+  td.ph-act { color: var(--orange); }
+
+  td.g-lbl {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text2);
+    padding: 8px 8px 8px 0;
+    border-bottom: 1px solid #F3F4F6;
+  }
+  td.g-cell {
+    border-bottom: 1px solid #F3F4F6;
+    text-align: center;
+    font-size: 11px;
+    padding: 6px;
+  }
+  .bar-done { background: var(--green-l); color: var(--green); font-weight: bold; }
+  .bar-wip  { background: var(--orange-l); color: var(--orange); font-weight: bold; }
+  .bar-plan { background: var(--blue-l); color: var(--blue); font-weight: 600; }
+  .bar-empty { background: transparent; }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .li { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text3); font-weight: 500; }
+  .sq { width: 11px; height: 11px; border-radius: 2px; flex-shrink: 0; }
+  .sq-done { background: var(--green); }
+  .sq-wip  { background: var(--orange); }
+  .sq-plan { background: var(--blue); }
+  .hoy-badge {
+    margin-left: auto;
+    background: var(--orange-l); color: var(--orange);
+    font-size: 10px; font-weight: 700;
+    padding: 3px 10px; border-radius: 20px;
+    border: 1px solid var(--orange);
+    letter-spacing: .04em;
+  }
+  .btn-pdf {
+    background: var(--orange);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 11.5px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    transition: background 0.15s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  .btn-pdf:hover { background: #c24b12; }
+  .btn-pdf:active { transform: scale(0.97); }
+  .btn-pdf svg { width: 14px; height: 14px; }
+
+  @media print {
+    @page { size: A4 landscape; margin: 0.7cm; }
+    html, body { background: white !important; padding: 0 !important; }
+    .wrap { max-width: 100% !important; margin: 0 !important; }
+    .btn-pdf, .no-print { display: none !important; }
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    .top-bar { padding: 12px 18px; margin-bottom: 10px; }
+    .meta-strip { gap: 8px; margin-bottom: 10px; }
+    .meta-card { padding: 10px 14px; }
+    .sec-label { margin: 10px 0 6px; }
+    .rag-row, .content-grid { gap: 8px; margin-bottom: 10px; }
+    .rag-card { padding: 12px 14px; }
+    .c-card-body { padding: 14px; }
+    .c-card-body ul { gap: 7px; }
+    .gantt-wrap { padding: 12px; }
+    .rag-card, .c-card, .issue, .meta-card, .gantt-wrap { break-inside: avoid; }
+    thead, tr { break-inside: avoid; }
+    .rpt-section { break-inside: avoid; }
+    .gantt-wrap { overflow: visible !important; }
+    table.gantt { min-width: 0 !important; width: 100% !important; table-layout: fixed; }
+    .g-lbl-col { width: 21% !important; }
+    td.g-lbl { font-size: 8.5px; white-space: normal; padding-right: 4px; }
+    th.gth, td.g-cell { padding: 3px 2px; }
+    .sn { font-size: 8px; }
+    .sd { font-size: 6.5px; }
+    .today-arrow { font-size: 6px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+          <rect x="3"  y="3"  width="8" height="8" rx="2" fill="white" opacity=".95"/>
+          <rect x="13" y="3"  width="8" height="8" rx="2" fill="white" opacity=".65"/>
+          <rect x="3"  y="13" width="8" height="8" rx="2" fill="white" opacity=".65"/>
+          <rect x="13" y="13" width="8" height="8" rx="2" fill="white" opacity=".35"/>
+        </svg>
+      </div>
+      <div>
+        <div class="logo-name">Mesa CLICK &nbsp;<span style="font-size: 11px; background: var(--orange-l); color: var(--orange); padding: 1px 6px; border-radius: 4px;">Parte 2</span></div>
+        <div class="logo-sub">Práctica Profesionalizante I · 2do Cuatrimestre</div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <button class="btn-pdf" onclick="window.print()">
+        <svg fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+        Exportar PDF
+      </button>
+      <div class="report-title">
+        <h1>Project Status Report #6</h1>
+        <div class="sub">Cierre Sprint 10, Desglose de US & Kickoff Sprint 11 · 07/09/2026</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Meta strip -->
+  <div class="meta-strip">
+    <div class="meta-card">
+      <div class="meta-label">Project Name</div>
+      <div class="meta-val" style="font-size:13.5px;">Mesa CLICK — Fase 4: Monetización, Analítica & Mobile UX</div>
+    </div>
+    <div class="meta-card">
+      <div class="meta-label">Fecha de Corte</div>
+      <div class="meta-val">07 de septiembre de 2026 · Sprint 11 (semana 2 de 10)</div>
+    </div>
+    <div class="meta-card">
+      <div class="meta-label">Integrantes</div>
+      <div class="meta-val small">Aguirre Pablo · Oviedo Martín · Silvestrin Mateo</div>
+    </div>
+  </div>
+
+  <!-- RAG -->
+  <div class="rpt-section">
+  <div class="sec-label">Status RAG — Fase 4</div>
+  <div class="rag-row">
+    <div class="rag-card green">
+      <div class="rag-dot green">●</div>
+      <div class="rag-info">
+        <div class="rag-dim">Tiempo (Schedule)</div>
+        <div class="rag-status green">Verde (En Plan)</div>
+        <div class="rag-note"><b>Sprint 10 cerrado en tiempo y forma (06/09)</b> con deuda técnica de backend y persistencia 100% resuelta. El <b>Sprint 11 arranca en fecha hoy 07/09</b> sin desvíos en el cronograma general hacia el 08/11.</div>
+      </div>
+    </div>
+    <div class="rag-card green">
+      <div class="rag-dot green">●</div>
+      <div class="rag-info">
+        <div class="rag-dim">Alcance (Scope)</div>
+        <div class="rag-status green">Verde (31 US Desglosadas y Asignables)</div>
+        <div class="rag-note">Se integró la propuesta de Martín (Reseñas al local & Smart Google Funnel como <b>US-79</b> y <b>US-80</b> en Sprint 18). Se estructuró <span class="chip">docs/features/</span> con 31 archivos individuales y tablero Kanban listo para trabajo en paralelo de los 3 devs.</div>
+      </div>
+    </div>
+    <div class="rag-card green">
+      <div class="rag-dot green">●</div>
+      <div class="rag-info">
+        <div class="rag-dim">Riesgo & Calidad</div>
+        <div class="rag-status green">Verde (Bajo Riesgo · 100% Tests Verdes)</div>
+        <div class="rag-note">Nuevos endpoints <span class="chip">PATCH /tenants/me</span> y <span class="chip">PATCH /usuarios/{id}</span> integrados en Go con logs estructurados <span class="chip">slog</span>. Suite completa de Go (<span class="chip">go test ./...</span>) y build de Next.js (<span class="chip">npm run build</span>) pasando al 100%.</div>
+      </div>
+    </div>
+  </div>
+  </div><!-- /rpt-section -->
+
+  <!-- Logros Sprint 10 y Novedades -->
+  <div class="rpt-section">
+  <div class="sec-label" style="margin-top:16px;">Resultados y Novedades del Proyecto</div>
+  <div class="content-grid">
+
+    <div class="c-card">
+      <div class="c-card-head">Cierre Sprint 10 — Entregables Completados</div>
+      <div class="c-card-body">
+        <div class="sprint-tag green">Sprint 10 (31/08 – 06/09) · 100% Resuelto ✓</div>
+        <ul>
+          <li><span class="dot-green">✓</span><span><b>US-50 (Front):</b> Pestaña de Ajustes/Configuración con perfil comercial completo, selector de logo interactivo, datos fiscales de facturación y URL de Google Reviews.</span></li>
+          <li><span class="dot-green">✓</span><span><b>US-51 (Back):</b> Migración SQL <span class="chip">014_alter_tenants_settings.sql</span>; endpoints <span class="chip">PATCH /tenants/me</span> y <span class="chip">PATCH /usuarios/{id}</span> (roles y branding). Rol <span class="chip">cocina</span> agregado al schema.</span></li>
+          <li><span class="dot-green">✓</span><span><b>US-52 (Int):</b> Configuración de días y turnos de atención por sucursal persistidos en backend y vinculados a la disponibilidad de la carta.</span></li>
+          <li><span class="dot-green">✓</span><span><b>Gestión de Equipo:</b> Selector de cambio de rol en vivo por usuario y capacidad de invitar personal de cocina para el KDS.</span></li>
+          <li><span class="dot-green">✓</span><span><b>Integración & Deploy:</b> Código integrado en rama <span class="chip">qa</span> listo para pase a producción en Render.</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="c-card">
+      <div class="c-card-head">Innovaciones de Negocio & Metodología de Equipo</div>
+      <div class="c-card-body">
+        <div class="sprint-tag blue">Aportes del Equipo & Organización</div>
+        <ul>
+          <li><span class="dot-blue">⭐</span><span><b>Smart Google Review Funnel (Propuesta Martín Oviedo):</b> Los comensales que califiquen con 4-5★ reciben un CTA de 1 tap para recomendar el comercio en Google Maps (Place ID); las valoraciones de 1-3★ quedan privadas en el local para alertas tempranas de servicio (US-79 y US-80).</span></li>
+          <li><span class="dot-blue">📁</span><span><b>Seguimiento US por US en <span class="chip">docs/features/</span>:</b> Cada una de las 31 historias cuenta con un archivo Markdown individual (<span class="chip">US-XX.md</span>) con DoD, checklist técnico y rama sugerida.</span></li>
+          <li><span class="dot-blue">👥</span><span><b>Trabajo en Paralelo (3 Desarrolladores):</b> Pablo, Martín y Mateo cuentan con asignación unívoca y protocolo de branching desde <span class="chip">qa</span> para evitar bloqueos mutuos.</span></li>
+          <li><span class="dot-blue">📊</span><span><b>Tablero Kanban Central:</b> <span class="chip">docs/features/README.md</span> sincronizado como fuente única de la verdad del estado de avance.</span></li>
+        </ul>
+      </div>
+    </div>
+
+  </div>
+  </div><!-- /rpt-section -->
+
+  <!-- Gantt Chart -->
+  <div class="rpt-section">
+  <div class="sec-label" style="margin-top:16px;">Cronograma Gantt — Fase 4 (Septiembre – Noviembre 2026) · 10 sprints semanales</div>
+  <div class="gantt-wrap">
+    <table class="gantt">
+      <thead>
+        <tr>
+          <th class="g-lbl g-lbl-col">Épica / Sprint</th>
+          <th class="gth"><span class="sn">S10</span><span class="sd">31/08–06/09</span><span style="display:block; font-size:8px; color:var(--green); font-weight:700; margin-top:2px;">✓ CERRADO</span></th>
+          <th class="gth today">
+            <span class="sn">S11</span>
+            <span class="sd">07/09–13/09</span>
+            <span class="today-arrow">▲ EN CURSO</span>
+          </th>
+          <th class="gth"><span class="sn">S12</span><span class="sd">14/09–20/09</span></th>
+          <th class="gth"><span class="sn">S13</span><span class="sd">21/09–27/09</span></th>
+          <th class="gth"><span class="sn">S14</span><span class="sd">28/09–04/10</span></th>
+          <th class="gth"><span class="sn">S15</span><span class="sd">05/10–11/10</span></th>
+          <th class="gth"><span class="sn">S16</span><span class="sd">12/10–18/10</span></th>
+          <th class="gth"><span class="sn">S17</span><span class="sd">19/10–25/10</span></th>
+          <th class="gth"><span class="sn">S18</span><span class="sd">26/10–01/11</span></th>
+          <th class="gth"><span class="sn">S19</span><span class="sd">02/11–08/11</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="g-phase">
+          <td colspan="11" class="ph-act">Fase 4 — Evolución, Monetización & Analítica (2do Cuatrimestre) · 10 sprints semanales</td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Configuración Avanzada de Cuenta</td>
+          <td class="g-cell bar-done">Completado ✓</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Rediseño UI/UX Base & Onboarding Guiado</td>
+          <td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-wip">En Curso</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Mobile-First Comensal</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan">Plan.</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Carga Masiva CSV/Excel & Ajuste de Precios</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan">Plan.</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Disponibilidad de Ítems (86) & Franjas Horarias</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan">Plan.</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Kitchen Display System (KDS) & Comandas</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan">Plan.</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Modelo Freemium (Free vs Pro) & Suscripciones</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan">Plan.</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Dashboard con Métricas (KPIs)</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan">Plan.</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">Business Analytics & Reputación (Google Reviews)</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan">Plan.</td>
+          <td class="g-cell bar-empty"></td>
+        </tr>
+        <tr>
+          <td class="g-lbl">QA E2E, Load Testing & Cierre / Demo Day</td>
+          <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
+          <td class="g-cell bar-plan">Cierre</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="legend">
+      <div class="li"><div class="sq sq-done"></div> Sprint Completado (S10 ✓)</div>
+      <div class="li"><div class="sq sq-wip"></div> Sprint en Curso (S11 Activo)</div>
+      <div class="li"><div class="sq sq-plan"></div> Sprints Planificados (S12–S19)</div>
+      <div class="hoy-badge">● SEMANA 2 · SPRINT 11 EN CURSO</div>
+    </div>
+  </div>
+  </div><!-- /rpt-section -->
+
+  <!-- Próximos pasos / Foco Sprint 11 -->
+  <div class="rpt-section">
+  <div class="sec-label" style="margin-top:16px;">Foco de la Semana — Sprint 11 (07/09 – 13/09)</div>
+  <div class="c-card">
+    <div class="c-card-body">
+      <div class="sprint-tag">Rediseño UI/UX Base & Onboarding Guiado</div>
+      <ul>
+        <li><span class="dot-blue">▸</span><span><b>US-53 (Front):</b> Rediseño UI/UX Base y Sistema de Diseño Accesible con contraste WCAG 2.1 AA, tokens consistentes de Tailwind y tap targets de al menos 44x44px.</span></li>
+        <li><span class="dot-blue">▸</span><span><b>US-54 (Front):</b> Tratamiento visual enriquecido para estados vacíos (empty states) con CTA directo, skeletons de carga fluidos y microinteracciones consistentes.</span></li>
+        <li><span class="dot-blue">▸</span><span><b>US-55 (Int):</b> Tour interactivo guiado de primer ingreso para nuevos administradores (Sucursales → Mesas & QR → Carta → Pedidos) con reactivación permanente desde Ayuda.</span></li>
+      </ul>
+      <div style="margin-top: 14px; font-size: 11.5px; color: var(--text3); line-height: 1.5;">
+        <b>Asignación para la reunión:</b> cada desarrollador toma 1 US del Sprint 11 en <span class="chip">docs/features/sprint-11/</span>, crea su rama <span class="chip">feat/US-XX-...</span> desde <span class="chip">qa</span> y se valida con build limpio antes del cierre del viernes.
+      </div>
+    </div>
+  </div>
+  </div><!-- /rpt-section -->
+
+  <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+    <div style="display: flex; gap: 14px; align-items: center;">
+      <a href="index.html" class="no-print" style="font-size: 12.5px; color: var(--orange); text-decoration: none; font-weight: 600; font-family: 'DM Mono', monospace; display: inline-flex; align-items: center; gap: 6px;">
+        ← Abrir Presentación Completa (Parte 2)
+      </a>
+      <a href="../features/README.md" class="no-print" style="font-size: 12.5px; color: var(--blue); text-decoration: none; font-weight: 600; font-family: 'DM Mono', monospace; display: inline-flex; align-items: center; gap: 6px;">
+        📋 Tablero de User Stories (docs/features)
+      </a>
+    </div>
+    <a href="status-report-05.html" class="no-print" style="font-size: 12.5px; color: var(--text3); text-decoration: none; font-weight: 600; font-family: 'DM Mono', monospace;">
+      Ver Status Report #5 (Anterior) →
+    </a>
+  </div>
+
+  <div style="margin-top: 10px; text-align: right;">
+    <span style="font-size: 11px; color: var(--text3); font-family: 'DM Mono', monospace;">
+      Mesa CLICK · Práctica Profesionalizante I · IRESM 2026
+    </span>
+  </div>
+
+</div>
+</body>
+</html>
