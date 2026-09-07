@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mesa CLICK — Feature: Reseñas al Local</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --orange: #E25B1A;
+    --orange-light: #FAE8D8;
+    --orange-mid: #F08040;
+    --orange-dark: #A73807;
+    --bg: #FAFAF8;
+    --bg-card: #FFFFFF;
+    --bg-surface: #F3F2EE;
+    --text-primary: #1A1A18;
+    --text-secondary: #5A5A55;
+    --text-muted: #9A9A94;
+    --border: rgba(0,0,0,0.1);
+    --border-strong: rgba(0,0,0,0.18);
+    --radius: 12px;
+    --radius-sm: 8px;
+    --radius-lg: 16px;
+    --green: #16A34A;
+    --green-light: #DCFCE7;
+    --blue: #185FA5;
+    --blue-light: #E6F1FB;
+    --purple: #6D28D9;
+    --purple-light: #EDE9FE;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-icon {
+    width: 36px; height: 36px; border-radius: 9px;
+    background: var(--orange);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 6px rgba(226,91,26,0.3);
+  }
+  .logo-icon svg { width: 20px; height: 20px; }
+  .logo-name { font-size: 17px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+  .logo-sub { font-size: 11px; color: var(--text-muted); font-weight: 500; }
+
+  .nav-pills { display: flex; gap: 5px; flex-wrap: wrap; }
+  .nav-btn {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 13px;
+    border-radius: 20px;
+    border: 1px solid var(--border-strong);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+  }
+  .nav-btn:hover { background: var(--bg-surface); color: var(--text-primary); }
+  .nav-btn.active { background: var(--orange); color: white; border-color: var(--orange); }
+  .page-counter { font-size: 12px; color: var(--text-muted); font-family: 'DM Mono', monospace; font-weight: 600; }
+
+  /* MAIN SLIDES */
+  .main { flex: 1; max-width: 960px; margin: 0 auto; width: 100%; padding: 36px 28px 60px; }
+  .slide { display: none; animation: fadeUp 0.22s cubic-bezier(0.16, 1, 0.3, 1); }
+  .slide.active { display: block; }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .slide-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--orange);
+    margin-bottom: 8px;
+    background: var(--orange-light);
+    padding: 3px 10px;
+    border-radius: 12px;
+  }
+  .slide-title { font-size: 32px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.15; margin-bottom: 10px; color: var(--text-primary); }
+  .slide-sub { font-size: 15px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 28px; max-width: 760px; }
+
+  /* CARDS & GRIDS */
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    transition: box-shadow 0.15s;
+  }
+  .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+  .card-accent { border-left: 4px solid var(--orange); }
+  .card-accent-blue { border-left: 4px solid var(--blue); }
+  .card-accent-green { border-left: 4px solid var(--green); }
+  .card-accent-purple { border-left: 4px solid var(--purple); }
+
+  .card-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 6px; }
+  .card-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+  .card-body { font-size: 13.5px; color: var(--text-secondary); line-height: 1.55; }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
+
+  /* BADGES */
+  .badge { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 20px; }
+  .b-orange { background: var(--orange-light); color: var(--orange-dark); }
+  .b-blue { background: var(--blue-light); color: #0C447C; }
+  .b-green { background: var(--green-light); color: #166534; }
+  .b-purple { background: var(--purple-light); color: #5B21B6; }
+  .b-gray { background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-strong); }
+  .b-amber { background: #FEF3C7; color: #92400E; }
+
+  /* FEATURE HIGHLIGHT BOXES */
+  .feature-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+  .feature-icon-wrap {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; font-size: 18px;
+  }
+  .feature-content h4 { font-size: 15px; font-weight: 700; margin-bottom: 4px; color: var(--text-primary); }
+  .feature-content p { font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+
+  /* HAPPY PATH STEPS */
+  .hp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 32px; }
+  .hp-step { display: flex; gap: 12px; align-items: flex-start; padding: 11px 0; }
+  .hp-num {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--orange); color: white;
+    font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .hp-num.alt { background: var(--blue); }
+  .hp-num.green { background: var(--green); }
+  .hp-title { font-size: 14px; font-weight: 700; color: var(--text-primary); margin-bottom: 2px; }
+  .hp-desc { font-size: 12.5px; color: var(--text-secondary); line-height: 1.45; }
+  .hp-line { height: 1px; background: var(--border); margin: 0 0 0 40px; }
+
+  /* TECHNICAL TABLE */
+  .tbl { width: 100%; border-collapse: collapse; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .tbl th {
+    text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--text-muted); background: var(--bg-surface); padding: 12px 16px; border-bottom: 1px solid var(--border);
+  }
+  .tbl td { font-size: 13px; color: var(--text-secondary); padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; line-height: 1.5; }
+  .tbl tr:last-child td { border-bottom: none; }
+  .tbl td strong { color: var(--text-primary); }
+  .mono { font-family: 'DM Mono', monospace; font-size: 12px; }
+  .code-chip {
+    display: inline-block; font-family: 'DM Mono', monospace; font-size: 11.5px; background: var(--bg-surface);
+    border: 1px solid var(--border-strong); border-radius: 6px; padding: 2px 8px; color: var(--orange-dark); margin: 2px 0;
+  }
+
+  /* SCOPE LISTS */
+  .scope-list { list-style: none; margin-top: 12px; }
+  .scope-list li {
+    font-size: 13px; color: var(--text-secondary); margin-bottom: 10px;
+    display: flex; align-items: flex-start; gap: 10px; line-height: 1.45;
+  }
+  .scope-list li strong { color: var(--text-primary); }
+  .scope-icon-check { color: var(--green); font-weight: 700; font-size: 13px; flex-shrink: 0; }
+  .scope-icon-cross { color: var(--text-muted); font-size: 13px; flex-shrink: 0; }
+
+  /* FOOTER NAV */
+  .footer-nav { display: flex; justify-content: space-between; align-items: center; padding-top: 28px; margin-top: 32px; border-top: 1px solid var(--border); }
+  .fn-btn { font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 600; padding: 8px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); background: var(--bg-card); color: var(--text-secondary); cursor: pointer; transition: all 0.15s; }
+  .fn-btn:hover { background: var(--bg-surface); color: var(--text-primary); }
+  .fn-page { font-size: 12px; color: var(--text-muted); font-family: 'DM Mono', monospace; font-weight: 600; }
+
+  .site-footer { text-align: center; padding: 16px; font-size: 12px; color: var(--text-muted); border-top: 1px solid var(--border); background: var(--bg-card); }
+
+  @media (max-width: 768px) {
+    .header { padding: 12px 16px; flex-wrap: wrap; gap: 8px; }
+    .page-counter { display: none; }
+    .main { padding: 20px 16px 40px; }
+    .slide-title { font-size: 24px; }
+    .grid-2, .grid-3, .hp-grid { grid-template-columns: 1fr; }
+    .nav-pills { overflow-x: auto; white-space: nowrap; width: 100%; padding-bottom: 4px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">
+      <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="2" fill="white" opacity="0.95"/><rect x="13" y="3" width="8" height="8" rx="2" fill="white" opacity="0.65"/><rect x="3" y="13" width="8" height="8" rx="2" fill="white" opacity="0.65"/><rect x="13" y="13" width="8" height="8" rx="2" fill="white" opacity="0.35"/></svg>
+    </div>
+    <div>
+      <div class="logo-name">Mesa CLICK &nbsp;<span style="font-size: 12px; background: var(--orange-light); color: var(--orange-dark); padding: 2px 7px; border-radius: 6px;">Propuesta de Feature</span></div>
+      <div class="logo-sub">Plataforma SaaS para Gastronomía</div>
+    </div>
+  </div>
+  <nav class="nav-pills" id="nav">
+    <button class="nav-btn active" onclick="goSlide(0)">1. Portada</button>
+    <button class="nav-btn" onclick="goSlide(1)">2. Resumen</button>
+    <button class="nav-btn" onclick="goSlide(2)">3. Problema</button>
+    <button class="nav-btn" onclick="goSlide(3)">4. Valor</button>
+    <button class="nav-btn" onclick="goSlide(4)">5. Flujo Comensal</button>
+    <button class="nav-btn" onclick="goSlide(5)">6. Dashboard</button>
+    <button class="nav-btn" onclick="goSlide(6)">7. Alcance MVP</button>
+    <button class="nav-btn" onclick="goSlide(7)">8. Técnica</button>
+    <button class="nav-btn" onclick="goSlide(8)">9. Métricas & Next</button>
+  </nav>
+  <div class="page-counter" id="counter">1 / 9</div>
+</header>
+
+<main class="main">
+
+  <!-- SLIDE 0: PORTADA -->
+  <section class="slide active" id="s0">
+    <div style="min-height: 460px; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 30px 0;">
+      <div style="margin-bottom: 24px;">
+        <div style="display: inline-flex; align-items: center; justify-content: center; width: 76px; height: 76px; background: var(--orange); border-radius: 20px; margin-bottom: 18px; box-shadow: 0 6px 18px rgba(226,91,26,0.3);">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="8" height="8" rx="2" fill="white" opacity="0.95"/><rect x="13" y="3" width="8" height="8" rx="2" fill="white" opacity="0.65"/><rect x="3" y="13" width="8" height="8" rx="2" fill="white" opacity="0.65"/><rect x="13" y="13" width="8" height="8" rx="2" fill="white" opacity="0.35"/></svg>
+        </div>
+        <div style="display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; flex-wrap: wrap;">
+          <span class="badge b-orange" style="font-size: 11px; font-weight: 700; text-transform: uppercase;">Nueva Funcionalidad</span>
+          <span class="badge b-green" style="font-size: 11px; font-weight: 700; text-transform: uppercase;">Fase 4: Monetización & Data</span>
+        </div>
+        <h1 style="font-size: 42px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; color: var(--text-primary); margin-bottom: 10px;">Reseñas al Local</h1>
+        <p style="font-size: 17px; color: var(--text-secondary); max-width: 620px; margin: 0 auto;">Feedback de satisfacción en el momento de la experiencia — calificación, comentario y dato accionable para el negocio.</p>
+      </div>
+
+      <div style="width: 48px; height: 1px; background: var(--border-strong); margin: 6px auto 24px;"></div>
+
+      <div style="display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px;">
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 20px; min-width: 140px; text-align: left;">
+          <div style="font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 3px;">Alumno</div>
+          <div style="font-size: 14.5px; font-weight: 700; color: var(--text-primary);">Oviedo Martín</div>
+        </div>
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 20px; min-width: 140px; text-align: left;">
+          <div style="font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 3px;">Alumno</div>
+          <div style="font-size: 14.5px; font-weight: 700; color: var(--text-primary);">Silvestrin Mateo</div>
+        </div>
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 20px; min-width: 140px; text-align: left;">
+          <div style="font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 3px;">Alumno</div>
+          <div style="font-size: 14.5px; font-weight: 700; color: var(--text-primary);">Aguirre Pablo</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
+        <a href="https://github.com/aguirrepablo-iresm/mesa-click" target="_blank" rel="noopener" style="font-size: 12.5px; color: var(--text-secondary); text-decoration: none; font-family: 'DM Mono', monospace; display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--bg-card); transition: all 0.15s;">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          Repositorio GitHub
+        </a>
+        <a href="../presentations/parte-2/index.html" style="font-size: 12.5px; color: var(--orange); text-decoration: none; font-family: 'DM Mono', monospace; display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border: 1px solid var(--orange); border-radius: 8px; background: var(--orange-light); font-weight: 600;">
+          ← Ver Presentación Parte 2
+        </a>
+        <a href="../presentations/parte-2/status-report-05.html" style="font-size: 12.5px; color: var(--text-secondary); text-decoration: none; font-family: 'DM Mono', monospace; display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--bg-card); transition: all 0.15s;">
+          📄 Status Report #5
+        </a>
+      </div>
+    </div>
+    <div class="footer-nav">
+      <button class="fn-btn" style="visibility:hidden">← Anterior</button>
+      <span class="fn-page">1 / 9</span>
+      <button class="fn-btn" onclick="goSlide(1)">Siguiente: Resumen & Propósito →</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 1: RESUMEN & PROPÓSITO -->
+  <section class="slide" id="s1">
+    <div class="slide-tag">Executive Summary</div>
+    <h1 class="slide-title">Resumen & Propósito de la Feature</h1>
+    <p class="slide-sub">"Reseñas al Local" permite al comensal calificar su experiencia con <strong>1 a 5 estrellas</strong> y un <strong>comentario opcional</strong>, directamente desde la vista de seguimiento de su pedido en el celular. El local las consulta y gestiona desde su dashboard con un resumen del promedio y la distribución de estrellas.</p>
+
+    <div class="grid-2" style="margin-bottom: 16px;">
+      <div class="card card-accent">
+        <div class="card-label">Propósito principal</div>
+        <div class="card-title">Feedback en el momento exacto</div>
+        <div class="card-body">
+          Capturar la satisfacción <strong>post-comida, mientras el cliente aún está en la mesa</strong>. Cerrar el ciclo de calidad del servicio sin depender de reseñas tardías de terceros (Google, redes), que suelen ser escasas, sesgadas y fuera de contexto.
+        </div>
+      </div>
+      <div class="card card-accent-green">
+        <div class="card-label">Dato accionable</div>
+        <div class="card-title">La voz del cliente como insumo</div>
+        <div class="card-body">
+          El negocio obtiene un <strong>indicador en tiempo real</strong> de cómo estuvo la experiencia: mesa, mozo, comida, tiempos. Permite <strong>detectar problemas temprano</strong> (antes de que el cliente se vaya y no vuelva) y <strong>reconocer lo que funciona</strong>.
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="background: var(--bg-surface); border-left: 4px solid var(--orange);">
+      <div style="font-size: 13.5px; color: var(--text-primary); font-weight: 600; line-height: 1.5;">
+        🎯 Sin registrar al cliente, sin fricción: estrellas + comentario en 2 toques, dentro del flujo que los comensales ya usan para pedir.
+      </div>
+    </div>
+
+    <div class="footer-nav">
+      <button class="fn-btn" onclick="goSlide(0)">← Anterior</button>
+      <span class="fn-page">2 / 9</span>
+      <button class="fn-btn" onclick="goSlide(2)">Siguiente: Problema →</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 2: PROBLEMA QUE RESUELVE -->
+  <section class="slide" id="s2">
+    <div class="slide-tag">Contexto</div>
+    <h1 class="slide-title">El Problema que Resuelve</h1>
+    <p class="slide-sub">Hoy la satisfacción del comensal es una caja negra para el negocio.</p>
+
+    <div class="grid-2" style="gap: 14px; margin-bottom: 14px;">
+      <div class="feature-box">
+        <div class="feature-icon-wrap" style="background: #FEE2E2; color: #991B1B;">🔍</div>
+        <div class="feature-content">
+          <h4>Cero visibilidad de satisfacción</h4>
+          <p>El local no sabe cómo estuvo la experiencia hasta que el cliente vuelve (o no). No existe un indicador de satisfacción en el momento de consumo.</p>
+        </div>
+      </div>
+      <div class="feature-box">
+        <div class="feature-icon-wrap" style="background: #FEF3C7; color: #92400E;">⏳</div>
+        <div class="feature-content">
+          <h4>Feedback tardío y sesgado</h4>
+          <p>Las reseñas de Google o redes llegan días después, generalmente extremas (muy buenas o muy malas). No representan la experiencia promedio y no sirven para corregir en tiempo real.</p>
+        </div>
+      </div>
+      <div class="feature-box">
+        <div class="feature-icon-wrap" style="background: var(--blue-light); color: var(--blue);">🚫</div>
+        <div class="feature-content">
+          <h4>Sin canal directo en contexto</h4>
+          <p>No existe una vía simple para que el comensal exprese su experiencia en el lugar y momento exacto, sin registrarse ni salir de la app.</p>
+        </div>
+      </div>
+      <div class="feature-box">
+        <div class="feature-icon-wrap" style="background: var(--purple-light); color: var(--purple);">⚠️</div>
+        <div class="feature-content">
+          <h4>Oportunidad perdida de corregir</h4>
+          <p>Un problema detectado mientras el cliente está en la mesa (comida fría, demora) se puede compensar a tiempo. Detectado a los 3 días, es un cliente perdido.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-nav">
+      <button class="fn-btn" onclick="goSlide(1)">← Anterior</button>
+      <span class="fn-page">3 / 9</span>
+      <button class="fn-btn" onclick="goSlide(3)">Siguiente: Propuesta de Valor →</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 3: PROPUESTA DE VALOR -->
+  <section class="slide" id="s3">
+    <div class="slide-tag">Valor</div>
+    <h1 class="slide-title">Propuesta de Valor</h1>
+    <p class="slide-sub">Una misma funcionalidad que entrega beneficios a ambos lados del mostrador.</p>
+
+    <div class="grid-2">
+      <!-- Para el cliente -->
+      <div class="card card-accent-blue" style="padding: 22px;">
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--blue); margin-bottom: 8px;">📱 Para el comensal</div>
+        <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">Feedback fácil y en contexto</div>
+        <ul class="scope-list" style="margin-top: 0;">
+          <li><span class="scope-icon-check">✓</span> <span>Calificar sin registrarse ni crear cuenta</span></li>
+          <li><span class="scope-icon-check">✓</span> <span>Proceso en <strong>2 toques / 10 segundos</strong></span></li>
+          <li><span class="scope-icon-check">✓</span> <span>En el momento justo (pedido entregado)</span></li>
+          <li><span class="scope-icon-check">✓</span> <span>Sensación de <strong>ser escuchado</strong> por el local</span></li>
+        </ul>
+      </div>
+
+      <!-- Para el local -->
+      <div class="card card-accent" style="padding: 22px;">
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--orange); margin-bottom: 8px;">🏪 Para el local</div>
+        <div style="font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px;">Visión real de satisfacción</div>
+        <ul class="scope-list" style="margin-top: 0;">
+          <li><span class="scope-icon-check">✓</span> <span>Satisfacción <strong>en tiempo real</strong>, no a los 3 días</span></li>
+          <li><span class="scope-icon-check">✓</span> <span><strong>Detección temprana</strong> de problemas operativos</span></li>
+          <li><span class="scope-icon-check">✓</span> <span>Promedio + distribución de estrellas como KPI</span></li>
+          <li><span class="scope-icon-check">✓</span> <span>Feedback <strong>accionable</strong> (comentarios con contexto)</span></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="footer-nav">
+      <button class="fn-btn" onclick="goSlide(2)">← Anterior</button>
+      <span class="fn-page">4 / 9</span>
+      <button class="fn-btn" onclick="goSlide(4)">Siguiente: Flujo del Comensal →</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 4: FLUJO DEL COMENSAL -->
+  <section class="slide" id="s4">
+    <div class="slide-tag">Experiencia de Usuario</div>
+    <h1 class="slide-title">Flujo del Comensal</h1>
+    <p class="slide-sub">Sin cambios en cómo el cliente pide: la reseña aparece solo cuando corresponde, en el momento justo.</p>
+
+    <div class="hp-grid">
+      <div>
+        <div class="hp-step"><div class="hp-num">1</div><div><div class="hp-title">Escanea el QR y hace su pedido</div><div class="hp-desc">Flujo de carta, carrito y envío del pedido — exactamente igual a hoy.</div></div></div>
+        <div class="hp-line"></div>
+        <div class="hp-step"><div class="hp-num">2</div><div><div class="hp-title">Vista de seguimiento</div><div class="hp-desc">Sigue el pedido en vivo: Recibido → En preparación → Listo (SSE).</div></div></div>
+        <div class="hp-line"></div>
+        <div class="hp-step"><div class="hp-num">3</div><div><div class="hp-title">Pedido en estado "Listo"</div><div class="hp-desc">Cuando la comida llega a la mesa, aparece el botón <strong>"⭐ Calificar"</strong>.</div></div></div>
+      </div>
+      <div>
+        <div class="hp-step"><div class="hp-num alt">4</div><div><div class="hp-title">Elige 1 a 5 estrellas</div><div class="hp-desc">Selector táctil de estrellas, sin evaluar platos por separado (reseña global al local).</div></div></div>
+        <div class="hp-line"></div>
+        <div class="hp-step"><div class="hp-num alt">5</div><div><div class="hp-title">Comentario opcional</div><div class="hp-desc">Campo de texto libre para ampliar ("la milanesa tardó", "muy buena atención").</div></div></div>
+        <div class="hp-line"></div>
+        <div class="hp-step"><div class="hp-num green">6</div><div><div class="hp-title">Confirmación & Smart Funnel (Google)</div><div class="hp-desc">Se registra la reseña. Si es <strong>4-5★</strong>, invita a recomendar en <strong>Google Maps</strong> con 1 tap. Si es <strong>1-3★</strong>, queda interna y alerta al encargado.</div></div></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 14px; background: var(--bg-surface); border-left: 4px solid var(--green);">
+      <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+        <strong style="color: var(--text-primary);">Momento justo + Escudo de Reputación:</strong> El comensal evalúa post-comida (estado "Listo"). Los clientes felices disparan el SEO del local en Google; los insatisfechos se retienen internamente para ser asistidos antes de marcharse.
+      </div>
+    </div>
+
+    <div class="footer-nav">
+      <button class="fn-btn" onclick="goSlide(3)">← Anterior</button>
+      <span class="fn-page">5 / 9</span>
+      <button class="fn-btn" onclick="goSlide(5)">Siguiente: Dashboard del Local →</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 5: DASHBOARD DEL LOCAL -->
+  <section class="slide" id="s5">
+    <div class="slide-tag">Dashboard Admin</div>
+    <h1 class="slide-title">Lo que Ve el Local</h1>
+    <p class="slide-sub">Nueva sección <strong>"Reseñas"</strong> en el panel de administración, con resumen general y listado completo.</p>
+
+    <div class="grid-2" style="gap: 14px; margin-bottom: 14px;">
+      <div class="card card-accent-green" style="padding: 16px;">
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--green); margin-bottom: 6px;">Resumen general</div>
+        <div style="font-size: 34px; font-weight: 800; color: var(--text-primary); line-height: 1.1;">4,6 <span style="font-size: 15px; font-weight: 600; color: var(--text-secondary);">★ promedio</span></div>
+        <div style="font-size: 12.5px; color: var(--text-secondary); margin-top: 4px;">Basado en 24 reseñas del local</div>
+      </div>
+      <div class="card card-accent" style="padding: 16px;">
+        <div style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--orange); margin-bottom: 8px;">Distribución por estrella</div>
+        <div style="display: grid; gap: 5px;">
+          <div style="display:flex; align-items:center; gap:8px; font-size:12px;"><span style="width:34px; color:var(--text-secondary);">★★★★★</span><div style="flex:1; height:8px; background:var(--bg-surface); border-radius:4px;"><div style="width:78%; height:8px; background:var(--orange); border-radius:4px;"></div></div><span class="mono" style="color:var(--text-muted);">19</span></div>
+          <div style="display:flex; align-items:center; gap:8px; font-size:12px;"><span style="width:34px; color:var(--text-secondary);">★★★★</span><div style="flex:1; height:8px; background:var(--bg-surface); border-radius:4px;"><div style="width:12%; height:8px; background:var(--orange); border-radius:4px;"></div></div><span class="mono" style="color:var(--text-muted);">3</span></div>
+          <div style="display:flex; align-items:center; gap:8px; font-size:12px;"><span style="width:34px; color:var(--text-secondary);">★★★</span><div style="flex:1; height:8px; background:var(--bg-surface); border-radius:4px;"><div style="width:4%; height:8px; background:var(--orange); border-radius:4px;"></div></div><span class="mono" style="color:var(--text-muted);">1</span></div>
+          <div style="display:flex; align-items:center; gap:8px; font-size:12px;"><span style="width:34px; color:var(--text-secondary);">★★</span><div style="flex:1; height:8px; background:var(--bg-surface); border-radius:4px;"></div><span class="mono" style="color:var(--text-muted);">0</span></div>
+          <div style="display:flex; align-items:center; gap:8px; font-size:12px;"><span style="width:34px; color:var(--text-secondary);">★</span><div style="flex:1; height:8px; background:var(--bg-surface); border-radius:4px;"><div style="width:4%; height:8px; background:#991B1B; border-radius:4px;"></div></div><span class="mono" style="color:var(--text-muted);">1</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Listado de reseñas</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <span class="badge b-green">★★★★★ · "Excelente todo, volvemos seguro"</span>
+        </div>
+        <span class="mono" style="font-size:11px; color:var(--text-muted);">Mesa 4 · hace 2 h</span>
+      </div>
+      <div style="height:1px; background:var(--border); margin:10px 0;"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <span class="badge b-amber">★★★ · "Lento el postre, lo mejoraría"</span>
+        </div>
+        <span class="mono" style="font-size:11px; color:var(--text-muted);">Mesa 7 · hace 5 h</span>
+      </div>
+      <div style="height:1px; background:var(--border); margin:10px 0;"></div>
+      <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <span class="badge b-gray">★★★★★ · Sin comentario</span>
+        </div>
+        <span class="mono" style="font-size:11px; color:var(--text-muted);">Mesa 2 · ayer</span>
+      </div>
+      <div style="margin-top: 12px; font-size: 12.5px; color: var(--text-secondary);">
+        Filtro por <strong>sucursal</strong> disponible automáticamente (multi-local) + conteo por mesa y fecha.
+      </div>
+    </div>
+
+    <div class="footer-nav">
+      <button class="fn-btn" onclick="goSlide(4)">← Anterior</button>
+      <span class="fn-page">6 / 9</span>
+      <button class="fn-btn" onclick="goSlide(6)">Siguiente: Alcance MVP →</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 6: ALCANCE MVP -->
+  <section class="slide" id="s6">
+    <div class="slide-tag">Scope</div>
+    <h1 class="slide-title">Alcance del MVP</h1>
+    <p class="slide-sub">Definición clara de lo que entra en la primera versión y lo que queda para iteraciones futuras.</p>
+
+    <div class="grid-2">
+      <!-- INCLUIDO -->
+      <div class="card card-accent-green" style="padding: 22px;">
+        <div class="card-label" style="color: var(--green);">✓ Incluido (MVP)</div>
+        <div class="card-title">Reseña global al local</div>
+        <ul class="scope-list">
+          <li><span class="scope-icon-check">✓</span> <span>Calificación <strong>1 a 5 estrellas</strong> + <strong>comentario opcional</strong></span></li>
+          <li><span class="scope-icon-check">✓</span> <span><strong>Una reseña por pedido</strong> (evita duplicados)</span></li>
+          <li><span class="scope-icon-check">✓</span> <span>Inserción <strong>directa</strong>, sin moderación</span></li>
+          <li><span class="scope-icon-check">✓</span> <span>Visible <strong>solo en el dashboard</strong> del local</span></li>
+          <li><span class="scope-icon-check">✓</span> <span><strong>Multi-local</strong>: cada reseña ligada a su sucursal</span></li>
+          <li><span class="scope-icon-check">✓</span> <span>Botón "Calificar" <strong>solo en estado "Listo"</strong></span></li>
+          <li><span class="scope-icon-check">✓</span> <span>Promedio + distribución de estrellas en el dashboard (CSAT)</span></li>
+          <li><span class="scope-icon-check">✓</span> <span><strong>Smart Google Funnel</strong>: comensales 4-5★ invitados a recomendar en Google Maps</span></li>
+          <li><span class="scope-icon-check">✓</span> <span><strong>Escudo de Reputación</strong>: calificaciones 1-3★ quedan privadas con alerta al local</span></li>
+        </ul>
+      </div>
+
+      <!-- EXCLUIDO -->
+      <div class="card card-accent-blue" style="padding: 22px;">
+        <div class="card-label" style="color: var(--blue);">✕ Excluido (Futuro)</div>
+        <div class="card-title">Iteraciones posteriores</div>
+        <ul class="scope-list">
+          <li><span class="scope-icon-cross">✕</span> <span><strong>Reseñas públicas</strong> en la carta/repo del local</span></li>
+          <li><span class="scope-icon-cross">✕</span> <span>Valoración <strong>por plato/ítem</strong> puntual</span></li>
+          <li><span class="scope-icon-cross">✕</span> <span><strong>Moderación / aprobación</strong> del local</span></li>
+          <li><span class="scope-icon-cross">✕</span> <span>Respuesta del local a la reseña</span></li>
+          <li><span class="scope-icon-cross">✕</span> <span>Notificación por email/WhatsApp al local</span></li>
+        </ul>
+        <div style="margin-top: 16px; background: var(--bg-surface); padding: 10px; border-radius: var(--radius-sm); font-size: 12px; color: var(--text-secondary);">
+          La base de datos ya permite habilitar <strong>reseñas públicas y moderación</strong> en el futuro sin rediseñar el esquema.
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-nav">
+      <button class="fn-btn" onclick="goSlide(5)">← Anterior</button>
+      <span class="fn-page">7 / 9</span>
+      <button class="fn-btn" onclick="goSlide(7)">Siguiente: Propuesta Técnica →</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 7: PROPUESTA TÉCNICA -->
+  <section class="slide" id="s7">
+    <div class="slide-tag">Implementación</div>
+    <h1 class="slide-title">Propuesta Técnica</h1>
+    <p class="slide-sub">Se integra con las convenciones existentes del proyecto: paquete backend siguiendo el patrón <span class="code-chip">handler → service → store</span> y componentes frontend al estilo del dashboard.</p>
+
+    <table class="tbl">
+      <tr>
+        <th style="width:130px;">Capa</th>
+        <th>Detalle</th>
+      </tr>
+      <tr>
+        <td><strong>Base de datos</strong></td>
+        <td>
+          Migración <span class="code-chip">014_create_resenias.sql</span> · tabla <span class="code-chip">resenias</span>: <span class="code-chip">pedido_id</span>, <span class="code-chip">sucursal_id</span>, <span class="code-chip">tenant_id</span>, <span class="code-chip">estrellas (1-5)</span>, <span class="code-chip">comentario</span>, <span class="code-chip">created_at</span>.<br>
+          Index único <span class="code-chip">UNIQUE(pedido_id)</span> (una por pedido) + índices por tenant y sucursal. Campo opcional <span class="code-chip">google_review_url</span> en tabla <span class="code-chip">sucursales</span>.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Backend (Go)</strong></td>
+        <td>
+          Nuevo paquete <span class="code-chip">internal/resenia</span> (model → store → service → handler + tests).<br>
+          <span class="code-chip">POST /resenias</span> — público (celular del comensal) · <span class="code-chip">GET /resenias?sucursal_id=</span> — protegido (dashboard), scoped por <span class="code-chip">tenant_id</span> del JWT.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Frontend (Next.js)</strong></td>
+        <td>
+          Vista <span class="code-chip">ReseniaView</span> en el flujo comensal <span class="code-chip">/mesa/[token]</span> + botón "Calificar" en <span class="code-chip">SeguimientoView</span> (estado "listo") con modal de derivación a Google para 4-5★.<br>
+          Sección <span class="code-chip">ReseniasSection</span> en el dashboard + métodos en <span class="code-chip">lib/api.ts</span> (<span class="code-chip">crearResenia</span> / <span class="code-chip">listarResenias</span>).
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Integración Google</strong></td>
+        <td>
+          <strong>Review Funneling</strong> sin costo ni credenciales OAuth complejas: el comensal califica internamente; si califica 4 o 5★ se abre el enlace oficial de Google Maps Review del comercio.
+        </td>
+      </tr>
+      <tr>
+        <td><strong>Testing</strong></td>
+        <td>
+          Unit tests en Go (<span class="code-chip">go test ./...</span>) con mock stores · build + lint en web (<span class="code-chip">npm run build</span> / <span class="code-chip">npm run lint</span>) · E2E: pedir → calificar → funnel Google → métricas en dashboard.
+        </td>
+      </tr>
+    </table>
+
+    <div class="footer-nav">
+      <button class="fn-btn" onclick="goSlide(6)">← Anterior</button>
+      <span class="fn-page">8 / 9</span>
+      <button class="fn-btn" onclick="goSlide(8)">Siguiente: Métricas & Próximos Pasos →</button>
+    </div>
+  </section>
+
+  <!-- SLIDE 8: MÉTRICAS, RIESGOS & PRÓXIMOS PASOS -->
+  <section class="slide" id="s8">
+    <div class="slide-tag">Evaluación del Feature</div>
+    <h1 class="slide-title">Métricas de Éxito, Riesgos & Próximos Pasos</h1>
+    <p class="slide-sub">Cómo medimos que la feature funciona y qué sigue después de la decisión.</p>
+
+    <div class="grid-3" style="margin-bottom: 16px;">
+      <div class="card" style="padding: 16px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--orange); text-transform: uppercase; margin-bottom: 4px;">Captación</div>
+        <div style="font-size: 13.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Tasa de reseñas</div>
+        <p style="font-size: 12.5px; color: var(--text-secondary);">% de pedidos "Listo" que generan una reseña. Objetivo &gt; 15%.</p>
+      </div>
+      <div class="card" style="padding: 16px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--blue); text-transform: uppercase; margin-bottom: 4px;">Reputación</div>
+        <div style="font-size: 13.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Conversión Google</div>
+        <p style="font-size: 12.5px; color: var(--text-secondary);">% de calificaciones de 4-5★ que tocan el botón de recomendación en Google Maps.</p>
+      </div>
+      <div class="card" style="padding: 16px;">
+        <div style="font-size: 11px; font-weight: 700; color: var(--purple); text-transform: uppercase; margin-bottom: 4px;">Impacto</div>
+        <div style="font-size: 13.5px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;">Tiempo de detección</div>
+        <p style="font-size: 12.5px; color: var(--text-secondary);">Reducción del tiempo entre incidentes y su resolución antes de que el cliente se vaya.</p>
+      </div>
+    </div>
+
+    <div class="grid-2" style="margin-bottom: 16px;">
+      <div class="card card-accent" style="padding: 16px;">
+        <div class="card-label">Riesgo principal</div>
+        <div class="card-title">Abandono por fricción</div>
+        <div class="card-body">
+          Si el proceso es largo, el comensal no reseña. <strong>Mitigación:</strong> flujo de 2 toques (estrellas + comentario opcional) y botón solo cuando corresponde (estado "Listo").
+        </div>
+      </div>
+      <div class="card card-accent-green" style="padding: 16px;">
+        <div class="card-label">Beneficio clave</div>
+        <div class="card-title">Bajo costo, altísimo valor</div>
+        <div class="card-body">
+          Protege la imagen del local reteniendo el malestar internamente y potencia el posicionamiento en Google Maps de los clientes satisfechos.
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="background: var(--bg-surface); border-left: 4px solid var(--blue);">
+      <div class="card-label" style="color: var(--blue);">Próximos pasos & Integración al Backlog</div>
+      <div style="font-size: 13.5px; color: var(--text-primary); line-height: 1.6;">
+        <strong>Sprints asociados:</strong> S10 (campo Google en sucursal), S12 (flujo comensal mobile) y <strong>Sprint 18 (Business Analytics, Reputación & Exportación)</strong>.<br>
+        <strong>User Stories:</strong> <span class="code-chip">US-79</span> (Persistencia de reseñas y smart Google funnel) y <span class="code-chip">US-80</span> (Panel de reseñas, CSAT y desglose en dashboard).<br>
+        <strong>Git Workflow:</strong> rama <span class="code-chip">feat/US-79-80-resenias-google</span> desde <span class="code-chip">qa</span> → PR a <span class="code-chip">qa</span> → merge a <span class="code-chip">main</span> (deploy automático en Render).
+      </div>
+    </div>
+
+    <div class="footer-nav">
+      <button class="fn-btn" onclick="goSlide(7)">← Anterior</button>
+      <span class="fn-page">9 / 9</span>
+      <button class="fn-btn" onclick="goSlide(0)">Volver al Inicio ↺</button>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  Mesa CLICK &mdash; Práctica Profesionalizante I &mdash; Propuesta de Feature: Reseñas al Local (Fase 4)
+  &nbsp;&nbsp;·&nbsp;&nbsp;
+  <a href="https://github.com/aguirrepablo-iresm/mesa-click" target="_blank" rel="noopener" style="color: var(--orange); text-decoration: none; font-weight: 600;">github.com/aguirrepablo-iresm/mesa-click</a>
+</footer>
+
+<script>
+  let current = 0;
+  const total = 9;
+
+  function goSlide(n) {
+    document.getElementById('s' + current).classList.remove('active');
+    document.querySelectorAll('.nav-btn')[current].classList.remove('active');
+    current = n;
+    document.getElementById('s' + current).classList.add('active');
+    document.querySelectorAll('.nav-btn')[current].classList.add('active');
+    document.getElementById('counter').textContent = (n + 1) + ' / ' + total;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight' && current < total - 1) goSlide(current + 1);
+    if (e.key === 'ArrowLeft' && current > 0) goSlide(current - 1);
+  });
+</script>
+</body>
+</html>

@@ -384,6 +384,9 @@
         <a href="status-report-05.html" style="font-size: 12.5px; color: var(--orange); text-decoration: none; font-family: 'DM Mono', monospace; display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border: 1px solid var(--orange); border-radius: 8px; background: var(--orange-light); font-weight: 600;">
           📄 Ver Status Report #5
         </a>
+        <a href="../features/reseñas-local.html" style="font-size: 12.5px; color: var(--text-secondary); text-decoration: none; font-family: 'DM Mono', monospace; display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--bg-card); transition: all 0.15s;">
+          ⭐ Feature: Reseñas & Google
+        </a>
         <a href="../parte-1/mesa-click-presentacion.html" style="font-size: 12.5px; color: var(--text-secondary); text-decoration: none; font-family: 'DM Mono', monospace; display: inline-flex; align-items: center; gap: 6px; padding: 7px 16px; border: 1px solid var(--border-strong); border-radius: 8px; background: var(--bg-card); transition: all 0.15s;">
           ← Ver Presentación Parte 1 (MVP)
         </a>
@@ -448,7 +451,7 @@
   <section class="slide" id="s2">
     <div class="slide-tag">Nuevas Funcionalidades</div>
     <h1 class="slide-title">Pilares de Mejora para el Cuatrimestre</h1>
-    <p class="slide-sub">8 ejes estratégicos de desarrollo definidos para maximizar la usabilidad, la monetización y el control operativo de los comercios gastronómicos.</p>
+    <p class="slide-sub">9 ejes estratégicos de desarrollo definidos para maximizar la usabilidad, la monetización y el control operativo de los comercios gastronómicos.</p>
 
     <div class="grid-2" style="gap: 14px; margin-bottom: 14px;">
       <div class="feature-box">
@@ -505,6 +508,13 @@
         <div class="feature-content">
           <h4>8. Disponibilidad & Menús por Franja Horaria</h4>
           <p>Marcado de ítems "sin stock" (86) con un tap y reflejo inmediato al comensal, más menús que se activan por franja (mediodía / noche) según la hora de la sucursal.</p>
+        </div>
+      </div>
+      <div class="feature-box" style="grid-column: 1 / -1; border-left: 4px solid var(--orange);">
+        <div class="feature-icon-wrap" style="background: var(--orange-light); color: var(--orange-dark);">⭐</div>
+        <div class="feature-content">
+          <h4>9. Reputación, Reseñas al Local & Smart Google Funnel</h4>
+          <p>Feedback de satisfacción post-consumo (1 a 5★ + comentario) al quedar el pedido en "Listo". <strong>Funnel Inteligente:</strong> 4-5★ invita a calificar en Google Maps para elevar el SEO local; 1-3★ queda 100% privado en el dashboard como alerta para resolver reclamos a tiempo.</p>
         </div>
       </div>
     </div>
@@ -610,7 +620,7 @@
           <div class="hp-line"></div>
           <div class="hp-step"><div class="hp-num">5</div><div><div class="hp-title">Seguimiento en vivo animado</div><div class="hp-desc">Progreso visual paso a paso (Recibido → Cocina → Listo) con aviso acústico.</div></div></div>
           <div class="hp-line"></div>
-          <div class="hp-step"><div class="hp-num">6</div><div><div class="hp-title">Re-pedidos y solicitar cuenta</div><div class="hp-desc">Permite sumar platos adicionales a la misma cuenta o pedir la cuenta al mozo.</div></div></div>
+          <div class="hp-step"><div class="hp-num">6</div><div><div class="hp-title">Re-pedidos, cuenta & reseña</div><div class="hp-desc">Suma platos, pide la cuenta y califica (4-5★ deriva a Google Reviews; 1-3★ queda privada).</div></div></div>
         </div>
       </div>
     </div>
@@ -644,7 +654,9 @@
         <div>
           <div class="hp-step"><div class="hp-num green">3</div><div><div class="hp-title">Tiempos y rotación de mesas</div><div class="hp-desc">Demora promedio desde pedido hasta entrega y tiempo de ocupación por mesa.</div></div></div>
           <div class="hp-line"></div>
-          <div class="hp-step"><div class="hp-num green">4</div><div><div class="hp-title">Exportación de reportes</div><div class="hp-desc">Descarga de métricas históricas en formato PDF y Excel para contabilidad.</div></div></div>
+          <div class="hp-step"><div class="hp-num green">4</div><div><div class="hp-title">Satisfacción & Reputación (Google)</div><div class="hp-desc">Métricas de CSAT, promedio de estrellas, comentarios en vivo y conversión a Google Reviews.</div></div></div>
+          <div class="hp-line"></div>
+          <div class="hp-step"><div class="hp-num green">5</div><div><div class="hp-title">Exportación de reportes</div><div class="hp-desc">Descarga de métricas históricas en formato PDF y Excel para contabilidad.</div></div></div>
         </div>
       </div>
     </div>
@@ -811,8 +823,8 @@
     <div class="rm-row rm-next">
       <div class="rm-label">Sprint 18</div>
       <div class="rm-block">
-        Business Analytics & Exportación
-        <div class="rm-date">26/10 – 01/11/2026 · Gráficos por categoría, mapa de calor de horas pico y export a PDF/Excel</div>
+        Business Analytics, Reputación & Exportación
+        <div class="rm-date">26/10 – 01/11/2026 · Gráficos por categoría, mapa de calor, módulo de reseñas al local con Smart Google Funnel y exportación</div>
       </div>
     </div>
 
@@ -852,8 +864,8 @@
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
-        <div class="us-row"><span class="us-id">US-50</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, puedo gestionar el perfil completo de mi negocio (logo, portada, datos de contacto y datos fiscales) desde una nueva pantalla de Ajustes</span></div>
-        <div class="us-row"><span class="us-id">US-51</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, expongo endpoints para actualizar metadatos del comercio, logo y configuración tributaria del tenant</span></div>
+        <div class="us-row"><span class="us-id">US-50</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, puedo gestionar el perfil completo de mi negocio (logo, portada, datos de contacto, enlace de Google Reviews y datos fiscales) desde una nueva pantalla de Ajustes</span></div>
+        <div class="us-row"><span class="us-id">US-51</span><span class="us-dev d-back">Back</span><span class="us-text">Como sistema, expongo endpoints para actualizar metadatos del comercio, logo, Place ID de Google y configuración tributaria del tenant/sucursal</span></div>
         <div class="us-row"><span class="us-id">US-52</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, puedo configurar horarios y turnos de atención por sucursal con apertura/cierre automático de la carta</span></div>
       </div>
     </div>
@@ -967,13 +979,15 @@
     <div class="epica-wrap">
       <div class="epica-header" onclick="toggle(this)">
         <span class="badge b-blue">Sprint 18</span>
-        <span class="epica-title">Business Analytics & Exportación</span>
+        <span class="epica-title">Business Analytics, Reputación & Exportación</span>
         <span style="font-size:11px; color:var(--text-muted); font-family:'DM Mono',monospace; margin-right:4px;">26/10–01/11</span>
         <span class="chevron open">▶</span>
       </div>
       <div class="epica-body">
         <div class="us-row"><span class="us-id">US-74</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, visualizo gráficos de distribución de ventas por categoría y un mapa de calor con los horarios de mayor demanda</span></div>
         <div class="us-row"><span class="us-id">US-75</span><span class="us-dev d-int">Int</span><span class="us-text">Como admin, puedo filtrar el dashboard por rangos de fecha y exportar el reporte consolidado a PDF o Excel</span></div>
+        <div class="us-row"><span class="us-id">US-79</span><span class="us-dev d-int">Int</span><span class="us-text">Como comensal con pedido "Listo", puedo calificar la experiencia (1 a 5★ + comentario) y, si es 4-5★, recibir la invitación directa con 1 tap para recomendar el local en Google Maps (Place ID)</span></div>
+        <div class="us-row"><span class="us-id">US-80</span><span class="us-dev d-front">Front</span><span class="us-text">Como admin, accedo a una sección de "Reseñas y Reputación" en el dashboard con índice de satisfacción (CSAT), desglose de estrellas, comentarios en tiempo real y alertas de clientes insatisfechos</span></div>
       </div>
     </div>
 
@@ -1128,8 +1142,8 @@
         <div class="tl-dot-col"><div class="tl-seg tl-seg-next"></div><div class="tl-node tl-node-next">18</div><div class="tl-seg tl-seg-next"></div></div>
         <div class="tl-content">
           <div class="tl-meta"><span class="tl-sid">Sprint 18</span><span class="tl-date">26/10 – 01/11</span><span class="badge b-blue" style="font-size:10px;">Planificado</span></div>
-          <div class="tl-title">Business Analytics & Exportación</div>
-          <div class="tl-desc">Gráficos por categoría, mapa de calor de horas pico y exportación a PDF/Excel.</div>
+          <div class="tl-title">Business Analytics, Reputación & Exportación</div>
+          <div class="tl-desc">Gráficos por categoría, mapa de calor, reseñas al local con Smart Google Funnel y exportación a PDF/Excel.</div>
         </div>
       </div>
 

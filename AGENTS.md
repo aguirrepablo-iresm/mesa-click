@@ -63,7 +63,7 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
 | 15 | Kitchen Display System (KDS) & impresión de comandas térmicas · 05/10–11/10 | 📋 Planificado |
 | 16 | Modelo Freemium (Free vs Pro) & control de suscripciones · 12/10–18/10 | 📋 Planificado |
 | 17 | Dashboard con métricas (KPIs, agregaciones SQL) · 19/10–25/10 | 📋 Planificado |
-| 18 | Business Analytics & exportación (gráficos, heatmap, PDF/Excel) · 26/10–01/11 | 📋 Planificado |
+| 18 | Business Analytics, Reputación (Reseñas & Google Funnel) & exportación · 26/10–01/11 | 📋 Planificado |
 | 19 | QA E2E, Load Testing, Polish final & Demo de cierre · 02/11–08/11 | 📋 Planificado |
 
 ---
@@ -110,6 +110,7 @@ mesa-click/
 - **Métricas**: Consultas de agregación SQL optimizadas con índices adecuados para no penalizar la performance del servidor.
 - **KDS (cocina)**: La pantalla de cocina es una vista independiente del dashboard de mozo. Los estados por ítem se propagan por SSE; la impresión térmica (ESC/POS 58/80 mm) debe tolerar fallos con reintento manual.
 - **Disponibilidad & Franjas horarias**: La carta visible del comensal se resuelve combinando disponibilidad del ítem (86), franja horaria de la sucursal y estado de apertura en una sola consulta.
+- **Reseñas & Reputación (Smart Google Funnel)**: Calificación 1 a 5★ + comentario post-consumo (estado "Listo"). Comensales satisfechos (4-5★) reciben CTA directo para recomendar en Google Reviews vía Place ID; valoraciones bajas (1-3★) se retienen internamente como feedback privado y alertan en tiempo real al encargado.
 - **Sprints semanales**: Cada sprint dura 1 semana y culmina con un release desplegado en Render.
 - Mantener cobertura de tests en Go y validar compilación con `go test ./...` y `npm run build` en web antes de cada merge.
 
