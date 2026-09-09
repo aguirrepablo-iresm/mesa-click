@@ -1,0 +1,17 @@
+{
+  "name": "mesa-click-local",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "setup": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/docker-setup.ps1",
+    "dev": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/docker-dev.ps1",
+    "seed": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/docker-seed.ps1",
+    "login:dev": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev-login.ps1",
+    "firewall:local": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/firewall-local.ps1",
+    "docker:repair": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/repair-docker.ps1",
+    "docker:down": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/docker-down.ps1",
+    "dev:portable": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/dev.ps1",
+    "db:up": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/postgres-up.ps1",
+    "db:down": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/postgres-down.ps1"
+  }
+}

@@ -22,14 +22,18 @@ func NuevoStore() Store { return &pgStore{} }
 
 func (s *pgStore) ObtenerSucursalPorMesa(ctx context.Context, mesaID string) (string, error) {
 	var sucursalID string
+	var estado string
 	err := db.Pool.QueryRow(ctx,
-		`SELECT sucursal_id FROM mesas WHERE id = $1`, mesaID,
-	).Scan(&sucursalID)
+		`SELECT sucursal_id, estado FROM mesas WHERE id = $1`, mesaID,
+	).Scan(&sucursalID, &estado)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return "", ErrNotFound
 		}
 		return "", fmt.Errorf("error obteniendo sucursal por mesa: %w", err)
+	}
+	if estado != "activa" {
+		return "", ErrMesaCerrada
 	}
 	return sucursalID, nil
 }
@@ -61,11 +65,12 @@ func (s *pgStore) Crear(ctx context.Context, input NuevoPedidoInput, sucursalID 
 	}
 
 	for _, item := range input.Items {
+		var nombreArticulo string
 		var precioUnitario float64
 		err = tx.QueryRow(ctx,
-			`SELECT precio FROM articulos WHERE id = $1 AND tenant_id = $2 AND activo = true`,
+			`SELECT nombre, precio FROM articulos WHERE id = $1 AND tenant_id = $2 AND activo = true`,
 			item.ArticuloID, tenantID,
-		).Scan(&precioUnitario)
+		).Scan(&nombreArticulo, &precioUnitario)
 		if err != nil {
 			if errors.Is(err, pgx.ErrNoRows) {
 				return nil, fmt.Errorf("artículo %s no disponible: %w", item.ArticuloID, ErrValidation)
@@ -87,6 +92,7 @@ func (s *pgStore) Crear(ctx context.Context, input NuevoPedidoInput, sucursalID 
 			ID:             itemID,
 			PedidoID:       p.ID,
 			ArticuloID:     item.ArticuloID,
+			NombreArticulo: nombreArticulo,
 			Cantidad:       item.Cantidad,
 			PrecioUnitario: precioUnitario,
 			Notas:          item.Notas,
@@ -125,7 +131,49 @@ func (s *pgStore) ListarActivos(ctx context.Context, sucursalID, tenantID string
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+	for i := range pedidos {
+		items, err := s.listarItems(ctx, pedidos[i].ID)
+		if err != nil {
+			return nil, err
+		}
+		pedidos[i].Items = items
+	}
 	return pedidos, nil
+}
+
+func (s *pgStore) listarItems(ctx context.Context, pedidoID string) ([]PedidoItem, error) {
+	rows, err := db.Pool.Query(ctx,
+		`SELECT pi.id, pi.pedido_id, pi.articulo_id, a.nombre,
+		        pi.cantidad, pi.precio_unitario, COALESCE(pi.notas, '')
+		 FROM pedido_items pi
+		 JOIN articulos a ON a.id = pi.articulo_id
+		 WHERE pi.pedido_id = $1
+		 ORDER BY pi.id`, pedidoID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var items []PedidoItem
+	for rows.Next() {
+		var item PedidoItem
+		if err := rows.Scan(
+			&item.ID,
+			&item.PedidoID,
+			&item.ArticuloID,
+			&item.NombreArticulo,
+			&item.Cantidad,
+			&item.PrecioUnitario,
+			&item.Notas,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 func (s *pgStore) CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado string) (*Pedido, error) {

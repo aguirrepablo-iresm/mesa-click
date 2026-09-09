@@ -14,6 +14,7 @@ type Store interface {
 	Listar(ctx context.Context, tenantID string) ([]Mesa, error)
 	Crear(ctx context.Context, tenantID string, input MesaInput, qrToken string) (*Mesa, error)
 	Actualizar(ctx context.Context, id, tenantID string, u MesaUpdate) (*Mesa, error)
+	Cerrar(ctx context.Context, id, tenantID string) (*Mesa, error)
 	Eliminar(ctx context.Context, id, tenantID string) error
 	ObtenerPorQRToken(ctx context.Context, token string) (*MesaPublica, error)
 }
@@ -93,6 +94,43 @@ func (s *pgStore) Actualizar(ctx context.Context, id, tenantID string, u MesaUpd
 	return m, nil
 }
 
+func (s *pgStore) Cerrar(ctx context.Context, id, tenantID string) (*Mesa, error) {
+	tx, err := db.Pool.Begin(ctx)
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	m := &Mesa{}
+	err = tx.QueryRow(ctx,
+		`UPDATE mesas SET estado = 'inactiva'
+		 WHERE id = $1
+		   AND sucursal_id IN (SELECT id FROM sucursales WHERE tenant_id = $2)
+		 RETURNING id, sucursal_id, COALESCE(sector_id::text,''), numero, capacidad, qr_token, estado`,
+		id, tenantID,
+	).Scan(&m.ID, &m.SucursalID, &m.SectorID, &m.Numero, &m.Capacidad, &m.QRToken, &m.Estado)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+
+	if _, err = tx.Exec(ctx,
+		`UPDATE pedidos
+		 SET estado = 'cerrado', updated_at = now()
+		 WHERE mesa_id = $1 AND estado != 'cerrado'`,
+		id,
+	); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 func (s *pgStore) Eliminar(ctx context.Context, id, tenantID string) error {
 	tag, err := db.Pool.Exec(ctx,
 		`DELETE FROM mesas WHERE id = $1
@@ -109,11 +147,15 @@ func (s *pgStore) Eliminar(ctx context.Context, id, tenantID string) error {
 func (s *pgStore) ObtenerPorQRToken(ctx context.Context, token string) (*MesaPublica, error) {
 	mp := &MesaPublica{}
 	err := db.Pool.QueryRow(ctx,
-		`SELECT m.id, m.numero, m.sucursal_id, su.tenant_id
+		`SELECT m.id, m.numero, m.sucursal_id, su.tenant_id, m.estado,
+		        COALESCE(NULLIF(TRIM(t.nombre_fantasia), ''), NULLIF(TRIM(t.nombre), ''), NULLIF(TRIM(su.nombre), ''), 'Tu negocio'),
+		        t.logo_url, t.color_primario, t.estilo_visual
 		 FROM mesas m
 		 JOIN sucursales su ON su.id = m.sucursal_id
-		 WHERE m.qr_token = $1 AND m.estado = 'activa'`, token,
-	).Scan(&mp.ID, &mp.Numero, &mp.SucursalID, &mp.TenantID)
+		 JOIN tenants t ON t.id = su.tenant_id
+		 WHERE m.qr_token = $1`, token,
+	).Scan(&mp.ID, &mp.Numero, &mp.SucursalID, &mp.TenantID, &mp.Estado,
+		&mp.Nombre, &mp.LogoURL, &mp.ColorPrimario, &mp.EstiloVisual)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound

@@ -32,8 +32,13 @@ type MesaUpdate struct {
 }
 
 type MesaPublica struct {
-	ID         string `json:"id"`
-	Numero     int    `json:"numero"`
-	SucursalID string `json:"sucursal_id"`
-	TenantID   string `json:"tenant_id"`
+	ID            string  `json:"id"`
+	Numero        int     `json:"numero"`
+	SucursalID    string  `json:"sucursal_id"`
+	TenantID      string  `json:"tenant_id"`
+	Estado        string  `json:"estado"`
+	Nombre        string  `json:"nombre"`
+	LogoURL       *string `json:"logo_url,omitempty"`
+	ColorPrimario *string `json:"color_primario,omitempty"`
+	EstiloVisual  *string `json:"estilo_visual,omitempty"`
 }

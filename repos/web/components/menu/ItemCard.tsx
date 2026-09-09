@@ -15,21 +15,21 @@ interface Props {
 
 export default function ItemCard({ item, cantidad, onAgregar }: Props) {
   return (
-    <div className="bg-white rounded-lg border border-slate-200 p-16 flex items-start justify-between gap-12 hover:border-slate-300 transition-colors shadow-2xs">
-      <div className="flex-1 min-w-0">
-        <h3 className="text-14 font-medium text-slate-900">{item.nombre}</h3>
+    <div className="mesa-surface mesa-border flex w-full min-w-0 items-start justify-between gap-12 rounded-lg border p-16 shadow-2xs transition-colors hover:border-[var(--mesa-primary)]">
+      <div className="min-w-0 flex-1">
+        <h3 className="mesa-text break-words text-14 font-medium">{item.nombre}</h3>
         {item.descripcion && (
-          <p className="text-12 text-slate-500 mt-2 leading-relaxed">{item.descripcion}</p>
+          <p className="mesa-muted mt-2 max-w-full break-words whitespace-normal text-12 leading-relaxed [overflow-wrap:anywhere]">
+            {item.descripcion}
+          </p>
         )}
-        <p className="text-14 font-medium text-blue-600 mt-8 font-mono">${item.precio.toLocaleString()}</p>
+        <p className="mesa-primary mt-8 text-14 font-mono font-medium">${item.precio.toLocaleString()}</p>
       </div>
       <button
         onClick={onAgregar}
         aria-label={`Agregar ${item.nombre}`}
-        className={`flex-shrink-0 w-36 h-36 rounded-full flex items-center justify-center text-16 font-semibold transition-all active:scale-90 ${
-          cantidad > 0
-            ? 'bg-blue-600 text-white shadow-sm'
-            : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+        className={`mesa-primary-bg flex h-44 w-44 flex-shrink-0 items-center justify-center rounded-full border border-transparent text-16 font-semibold transition-all active:scale-90 ${
+          cantidad > 0 ? 'shadow-sm' : 'hover:brightness-95'
         }`}
       >
         {cantidad > 0 ? cantidad : '+'}

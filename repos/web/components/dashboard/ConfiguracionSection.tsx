@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { api, Tenant, Sucursal, getErrorMessage } from "@/lib/api";
+import { DEFAULT_MESA_PRIMARY } from "@/components/menu/BrandHeader";
 import EquipoSection from "./EquipoSection";
 
 /* ─────────────────────────── contenedor ─────────────────────────── */
@@ -372,7 +373,7 @@ type AparienciaForm = {
   logoUrl: string;
 };
 
-const COLOR_DEFAULT = "#F54927";
+const COLOR_DEFAULT = DEFAULT_MESA_PRIMARY;
 
 function esColorHex(valor: string) {
   return /^#[0-9a-fA-F]{6}$/.test(valor);
