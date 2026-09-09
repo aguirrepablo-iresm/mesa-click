@@ -33,6 +33,7 @@ type State = {
   vista: Vista;
   estadoPedido: EstadoPedido;
   cuentaSolicitada: boolean;
+  cuentaVersion: number;
   pedidoId: string | null;
 };
 
@@ -44,7 +45,7 @@ type Action =
   | { type: 'HYDRATE'; payload: State }
   | { type: 'CONFIRMAR_PEDIDO'; payload: { pedidoId: string; items: CartItem[] } }
   | { type: 'SET_ESTADO_PEDIDO'; payload: { pedidoId: string; estado: EstadoPedido } }
-  | { type: 'PEDIR_CUENTA' }
+  | { type: 'SYNC_CUENTA'; payload: { cuentaSolicitada: boolean; cuentaVersion: number } }
   | { type: 'RESET_SESSION' };
 
 const INITIAL_STATE: State = {
@@ -53,6 +54,7 @@ const INITIAL_STATE: State = {
   vista: 'carta',
   estadoPedido: 'recibido',
   cuentaSolicitada: false,
+  cuentaVersion: 1,
   pedidoId: null,
 };
 
@@ -119,8 +121,19 @@ function reducer(state: State, action: Action): State {
         estadoPedido:
           state.pedidoId === action.payload.pedidoId ? action.payload.estado : state.estadoPedido,
       };
-    case 'PEDIR_CUENTA':
-      return { ...state, cuentaSolicitada: true };
+    case 'SYNC_CUENTA': {
+      const cuentaCambio = state.cuentaVersion !== action.payload.cuentaVersion;
+      const tieneSesionAnterior = state.items.length > 0 || state.pedidos.length > 0 || state.cuentaSolicitada;
+      if (cuentaCambio && tieneSesionAnterior) {
+        return { ...INITIAL_STATE, cuentaVersion: action.payload.cuentaVersion };
+      }
+      return {
+        ...state,
+        cuentaSolicitada: action.payload.cuentaSolicitada,
+        cuentaVersion: action.payload.cuentaVersion,
+        vista: action.payload.cuentaSolicitada ? 'seguimiento' : state.vista,
+      };
+    }
     case 'RESET_SESSION':
       return { ...INITIAL_STATE };
     default:
@@ -204,6 +217,9 @@ function readStoredSession(raw: string): State | null {
           : [];
     const ultimoPedido = pedidos[pedidos.length - 1];
     const vista = isVista(parsed.vista) ? parsed.vista : 'carta';
+    const cuentaVersion = typeof parsed.cuentaVersion === 'number' && Number.isInteger(parsed.cuentaVersion) && parsed.cuentaVersion > 0
+      ? parsed.cuentaVersion
+      : 1;
 
     return {
       items,
@@ -212,6 +228,7 @@ function readStoredSession(raw: string): State | null {
       vista: pedidos.length > 0 && items.length === 0 ? 'seguimiento' : vista,
       estadoPedido: ultimoPedido?.estado ?? estadoPedido,
       cuentaSolicitada: parsed.cuentaSolicitada === true,
+      cuentaVersion,
       pedidoId: ultimoPedido?.id ?? pedidoId,
     };
   } catch {
@@ -279,6 +296,13 @@ export default function MesaPage() {
       try {
         const mesaActualizada = await api.obtenerMesaPorQR(token);
         setMesa(mesaActualizada);
+        dispatch({
+          type: 'SYNC_CUENTA',
+          payload: {
+            cuentaSolicitada: mesaActualizada.cuenta_solicitada,
+            cuentaVersion: mesaActualizada.cuenta_version,
+          },
+        });
       } catch (error) {
         console.warn('No se pudo actualizar el estado de la mesa:', error);
       }
@@ -333,6 +357,13 @@ export default function MesaPage() {
         const mesaApi = await api.obtenerMesaPorQR(currentToken);
         if (!isMounted) return;
         setMesa(mesaApi);
+        dispatch({
+          type: 'SYNC_CUENTA',
+          payload: {
+            cuentaSolicitada: mesaApi.cuenta_solicitada,
+            cuentaVersion: mesaApi.cuenta_version,
+          },
+        });
 
         // Cargar carta de la sucursal
         try {
@@ -436,7 +467,7 @@ export default function MesaPage() {
 
   // 3. Confirmar y enviar pedido a la API real (US-43)
   const handleConfirmarPedido = async () => {
-    if (!mesa || state.items.length === 0) return;
+    if (!mesa || state.items.length === 0 || state.cuentaSolicitada) return;
     setEnviandoPedido(true);
     const itemsEnviados = state.items;
 
@@ -469,6 +500,26 @@ export default function MesaPage() {
       alert("Error al enviar el pedido. Por favor intenta nuevamente.");
     } finally {
       setEnviandoPedido(false);
+    }
+  };
+
+  const handlePedirCuenta = async () => {
+    if (!token || !mesa || state.cuentaSolicitada) return;
+
+    try {
+      const mesaActualizada = await api.solicitarCuenta(token);
+      setMesa(mesaActualizada);
+      dispatch({
+        type: 'SYNC_CUENTA',
+        payload: {
+          cuentaSolicitada: mesaActualizada.cuenta_solicitada,
+          cuentaVersion: mesaActualizada.cuenta_version,
+        },
+      });
+    } catch (error) {
+      console.error('No se pudo solicitar la cuenta:', error);
+      alert('No se pudo solicitar la cuenta. Por favor intenta nuevamente.');
+      throw error;
     }
   };
 
@@ -543,7 +594,7 @@ export default function MesaPage() {
           cuentaSolicitada={state.cuentaSolicitada}
           mesa={mesa.numero}
           onAgregarMas={() => dispatch({ type: 'SET_VISTA', payload: 'carta' })}
-          onPedirCuenta={() => dispatch({ type: 'PEDIR_CUENTA' })}
+          onPedirCuenta={handlePedirCuenta}
         />
       </div>
     );
@@ -604,7 +655,7 @@ export default function MesaPage() {
                 type: 'SET_VISTA',
                 payload: totalItems > 0 ? 'carrito' : 'seguimiento',
               })}
-              disabled={enviandoPedido}
+              disabled={enviandoPedido || state.cuentaSolicitada}
               className="mesa-primary-bg flex min-h-64 w-full items-center rounded-xl px-20 py-12 font-medium shadow-xl transition-all active:scale-[0.98] disabled:opacity-50"
             >
               <div className="grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-10">

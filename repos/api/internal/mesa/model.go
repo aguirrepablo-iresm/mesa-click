@@ -7,16 +7,19 @@ var (
 	ErrNotFound        = errors.New("mesa no encontrada")
 	ErrValidation      = errors.New("datos inválidos")
 	ErrNumeroDuplicado = errors.New("ya existe una mesa con ese número")
+	ErrMesaInactiva    = errors.New("mesa inactiva")
 )
 
 type Mesa struct {
-	ID         string `json:"id"`
-	SucursalID string `json:"sucursal_id"`
-	SectorID   string `json:"sector_id,omitempty"`
-	Numero     int    `json:"numero"`
-	Capacidad  int    `json:"capacidad"`
-	QRToken    string `json:"qr_token"`
-	Estado     string `json:"estado"` // "activa" | "inactiva"
+	ID               string `json:"id"`
+	SucursalID       string `json:"sucursal_id"`
+	SectorID         string `json:"sector_id,omitempty"`
+	Numero           int    `json:"numero"`
+	Capacidad        int    `json:"capacidad"`
+	QRToken          string `json:"qr_token"`
+	Estado           string `json:"estado"` // "activa" | "inactiva"
+	CuentaSolicitada bool   `json:"cuenta_solicitada"`
+	CuentaVersion    int    `json:"cuenta_version"`
 }
 
 type MesaInput struct {
@@ -32,13 +35,15 @@ type MesaUpdate struct {
 }
 
 type MesaPublica struct {
-	ID            string  `json:"id"`
-	Numero        int     `json:"numero"`
-	SucursalID    string  `json:"sucursal_id"`
-	TenantID      string  `json:"tenant_id"`
-	Estado        string  `json:"estado"`
-	Nombre        string  `json:"nombre"`
-	LogoURL       *string `json:"logo_url,omitempty"`
-	ColorPrimario *string `json:"color_primario,omitempty"`
-	EstiloVisual  *string `json:"estilo_visual,omitempty"`
+	ID               string  `json:"id"`
+	Numero           int     `json:"numero"`
+	SucursalID       string  `json:"sucursal_id"`
+	TenantID         string  `json:"tenant_id"`
+	Estado           string  `json:"estado"`
+	CuentaSolicitada bool    `json:"cuenta_solicitada"`
+	CuentaVersion    int     `json:"cuenta_version"`
+	Nombre           string  `json:"nombre"`
+	LogoURL          *string `json:"logo_url,omitempty"`
+	ColorPrimario    *string `json:"color_primario,omitempty"`
+	EstiloVisual     *string `json:"estilo_visual,omitempty"`
 }

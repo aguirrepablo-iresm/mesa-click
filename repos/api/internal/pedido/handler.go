@@ -27,6 +27,10 @@ func (h *Handlers) Crear(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), http.StatusConflict)
 			return
 		}
+		if errors.Is(err, ErrCuentaSolicitada) {
+			jsonError(w, err.Error(), http.StatusConflict)
+			return
+		}
 		if errors.Is(err, ErrValidation) || errors.Is(err, ErrNotFound) {
 			jsonError(w, err.Error(), http.StatusBadRequest)
 			return

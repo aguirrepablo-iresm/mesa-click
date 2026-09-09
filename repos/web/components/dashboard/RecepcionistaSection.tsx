@@ -18,6 +18,7 @@ interface MesaGrupo {
   mesa: number;
   mesaId?: string;
   pedidos: PedidoVista[];
+  cuentaSolicitada: boolean;
 }
 
 const ESTADO_LABELS: Record<'recibido' | 'preparando' | 'listo', string> = {
@@ -120,7 +121,7 @@ function MesaCard({
     0,
   );
   const estadoMesa = calcularEstadoMesa(grupo.pedidos);
-  const cuentaSolicitada = grupo.pedidos.some(pedido => pedido.cuentaSolicitada);
+  const cuentaSolicitada = grupo.cuentaSolicitada;
 
   return (
     <div className={`overflow-hidden rounded-lg border bg-canvas-white ${cuentaSolicitada ? 'border-alert-red shadow-sm' : 'border-ash-graphite'}`}>
@@ -132,7 +133,7 @@ function MesaCard({
           </span>
           {cuentaSolicitada && (
             <span className="flex items-center gap-4 rounded bg-red-100/60 px-6 py-1 text-11 font-medium text-alert-red">
-              ⚠️ Pide cuenta
+              Cuenta solicitada
             </span>
           )}
         </div>
@@ -169,7 +170,7 @@ function MesaDetalleModal({
   onAvanzar,
   onCerrar,
   onTodoListo,
-  onCerrarMesa,
+  onCerrarCuenta,
   mesaAccionEnCurso,
 }: {
   grupo: MesaGrupo;
@@ -177,8 +178,8 @@ function MesaDetalleModal({
   onAvanzar: (id: string) => void;
   onCerrar: (id: string) => void;
   onTodoListo: (grupo: MesaGrupo) => void;
-  onCerrarMesa: (grupo: MesaGrupo) => void;
-  mesaAccionEnCurso: 'todo-listo' | 'cerrar' | null;
+  onCerrarCuenta: (grupo: MesaGrupo) => void;
+  mesaAccionEnCurso: 'todo-listo' | 'cerrar-cuenta' | null;
 }) {
   const total = grupo.pedidos.reduce(
     (sum, pedido) => sum + pedido.items.reduce((pedidoTotal, item) => pedidoTotal + item.precio * item.cantidad, 0),
@@ -254,12 +255,17 @@ function MesaDetalleModal({
           </button>
           <button
             type="button"
-            onClick={() => onCerrarMesa(grupo)}
+            onClick={() => onCerrarCuenta(grupo)}
             disabled={mesaAccionEnCurso !== null}
             className="min-h-44 flex-1 rounded-md bg-alert-red px-12 py-8 text-12 font-semibold text-canvas-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial"
           >
-            {mesaAccionEnCurso === 'cerrar' ? 'Cerrando...' : 'Cerrar mesa'}
+            {mesaAccionEnCurso === 'cerrar-cuenta' ? 'Cerrando...' : 'Cerrar cuenta'}
           </button>
+          {grupo.cuentaSolicitada && (
+            <span className="flex min-h-44 items-center justify-center rounded-md border border-alert-red bg-red-50 px-12 py-8 text-12 font-semibold text-alert-red sm:ml-auto">
+              Cuenta solicitada
+            </span>
+          )}
         </div>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
@@ -282,7 +288,8 @@ export default function RecepcionistaSection() {
   const [mesas, setMesas] = useState<Record<string, MesaAPI>>({});
   const [loading, setLoading] = useState(true);
   const [sseConectado, setSseConectado] = useState(false);
-  const [mesaAccionEnCurso, setMesaAccionEnCurso] = useState<'todo-listo' | 'cerrar' | null>(null);
+  const [mesaAccionEnCurso, setMesaAccionEnCurso] = useState<'todo-listo' | 'cerrar-cuenta' | null>(null);
+  const [mesaDetalleKey, setMesaDetalleKey] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
 
   const transformarPedidoApi = useCallback((p: PedidoAPI, mesasMap: Record<string, MesaAPI>): PedidoVista => {
@@ -302,7 +309,7 @@ export default function RecepcionistaSection() {
         precio: i.precio_unitario,
         nota: i.notas?.trim() || '',
       })),
-      cuentaSolicitada: false,
+      cuentaSolicitada: Boolean(mesasMap[p.mesa_id]?.cuenta_solicitada),
     };
   }, []);
 
@@ -399,6 +406,37 @@ export default function RecepcionistaSection() {
       }
     });
 
+    es.addEventListener('cuenta_solicitada', (e: MessageEvent) => {
+      try {
+        const data: MesaAPI = JSON.parse(e.data);
+        if (!data?.id) return;
+        setMesas(prev => ({
+          ...prev,
+          [data.id]: { ...prev[data.id], ...data, cuenta_solicitada: true },
+        }));
+        setPedidos(prev => prev.map(pedido =>
+          pedido.mesaId === data.id ? { ...pedido, cuentaSolicitada: true } : pedido,
+        ));
+      } catch (err) {
+        console.warn("Error parseando solicitud de cuenta SSE:", err);
+      }
+    });
+
+    es.addEventListener('cuenta_cerrada', (e: MessageEvent) => {
+      try {
+        const data: MesaAPI = JSON.parse(e.data);
+        if (!data?.id) return;
+        setMesas(prev => ({
+          ...prev,
+          [data.id]: { ...prev[data.id], ...data, cuenta_solicitada: false },
+        }));
+        setPedidos(prev => prev.filter(pedido => pedido.mesaId !== data.id));
+        setMesaDetalleKey(current => current === data.id ? null : current);
+      } catch (err) {
+        console.warn("Error parseando cierre de cuenta SSE:", err);
+      }
+    });
+
     es.onerror = () => {
       setSseConectado(false);
     };
@@ -462,32 +500,35 @@ export default function RecepcionistaSection() {
     }
   };
 
-  const cerrarMesa = async (grupo: MesaGrupo) => {
+  const cerrarCuenta = async (grupo: MesaGrupo) => {
     if (!grupo.mesaId) {
       alert('No se pudo identificar la mesa para cerrarla.');
       return;
     }
-    if (!window.confirm(`¿Seguro que deseas cerrar la Mesa ${grupo.mesa}? No se podrán realizar más pedidos hasta volver a activarla.`)) return;
+    if (!window.confirm(`¿Seguro que deseas cerrar la cuenta de la Mesa ${grupo.mesa}? Se finalizarán los pedidos actuales y la mesa quedará disponible para una nueva cuenta.`)) return;
 
-    setMesaAccionEnCurso('cerrar');
+    setMesaAccionEnCurso('cerrar-cuenta');
     try {
-      await api.cerrarMesa(grupo.mesaId);
+      const mesaActualizada = await api.cerrarCuenta(grupo.mesaId);
       setPedidos(prev => prev.filter(pedido => pedido.mesaId !== grupo.mesaId));
       setMesas(prev => ({
         ...prev,
-        [grupo.mesaId as string]: { ...prev[grupo.mesaId as string], estado: 'inactiva' },
+        [grupo.mesaId as string]: {
+          ...prev[grupo.mesaId as string],
+          ...mesaActualizada,
+          cuenta_solicitada: false,
+        },
       }));
       setMesaDetalleKey(null);
     } catch (err) {
-      console.error("Error al cerrar la mesa:", err);
-      alert('No se pudo cerrar la mesa. Intenta nuevamente.');
+      console.error("Error al cerrar la cuenta:", err);
+      alert('No se pudo cerrar la cuenta. Intenta nuevamente.');
     } finally {
       setMesaAccionEnCurso(null);
     }
   };
 
-  const [mesaDetalleKey, setMesaDetalleKey] = useState<string | null>(null);
-  const cerrarMesaDetalle = useCallback(() => setMesaDetalleKey(null), [setMesaDetalleKey]);
+  const cerrarMesaDetalle = useCallback(() => setMesaDetalleKey(null), []);
   const mesasAgrupadas = useMemo(() => {
     const grupos = new Map<string, MesaGrupo>();
 
@@ -499,14 +540,20 @@ export default function RecepcionistaSection() {
         return;
       }
 
-      grupos.set(key, { key, mesa: pedido.mesa, mesaId: pedido.mesaId, pedidos: [pedido] });
+      grupos.set(key, {
+        key,
+        mesa: pedido.mesa,
+        mesaId: pedido.mesaId,
+        pedidos: [pedido],
+        cuentaSolicitada: Boolean(pedido.mesaId && mesas[pedido.mesaId]?.cuenta_solicitada) || Boolean(pedido.cuentaSolicitada),
+      });
     });
 
     return Array.from(grupos.values());
-  }, [pedidos]);
+  }, [mesas, pedidos]);
   const mesaDetalle = mesasAgrupadas.find(grupo => grupo.key === mesaDetalleKey);
-  const conAlerta = mesasAgrupadas.filter(grupo => grupo.pedidos.some(pedido => pedido.cuentaSolicitada));
-  const sinAlerta = mesasAgrupadas.filter(grupo => !grupo.pedidos.some(pedido => pedido.cuentaSolicitada));
+  const conAlerta = mesasAgrupadas.filter(grupo => grupo.cuentaSolicitada);
+  const sinAlerta = mesasAgrupadas.filter(grupo => !grupo.cuentaSolicitada);
 
   return (
     <div className="p-16 sm:p-24 md:p-32 space-y-24 font-inter">
@@ -572,7 +619,7 @@ export default function RecepcionistaSection() {
           onAvanzar={avanzarEstado}
           onCerrar={cerrarPedido}
           onTodoListo={marcarMesaTodoLista}
-          onCerrarMesa={cerrarMesa}
+          onCerrarCuenta={cerrarCuenta}
           mesaAccionEnCurso={mesaAccionEnCurso}
         />
       )}

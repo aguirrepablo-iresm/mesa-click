@@ -242,6 +242,8 @@ export interface MesaAPI {
   capacidad: number;
   qr_token: string;
   estado: 'activa' | 'inactiva';
+  cuenta_solicitada: boolean;
+  cuenta_version: number;
   created_at: string;
   updated_at: string;
 }
@@ -264,6 +266,8 @@ export interface MesaPublica {
   sucursal_id: string;
   tenant_id: string;
   estado: 'activa' | 'inactiva';
+  cuenta_solicitada: boolean;
+  cuenta_version: number;
   nombre: string;
   logo_url?: string | null;
   color_primario?: string | null;
@@ -477,8 +481,8 @@ export const api = {
     });
   },
 
-  cerrarMesa: async (id: string) => {
-    return apiFetch<MesaAPI>(`/mesas/${encodeURIComponent(id)}/cerrar`, {
+  cerrarCuenta: async (id: string) => {
+    return apiFetch<MesaAPI>(`/mesas/${encodeURIComponent(id)}/cerrar-cuenta`, {
       method: 'POST',
     });
   },
@@ -522,6 +526,12 @@ export const api = {
   // 7. Flujo Público Comensal (US-42, US-43, US-44)
   obtenerMesaPorQR: async (qrToken: string) => {
     return apiFetch<MesaPublica>(`/publica/mesas/${encodeURIComponent(qrToken)}`);
+  },
+
+  solicitarCuenta: async (qrToken: string) => {
+    return apiFetch<MesaPublica>(`/publica/mesas/${encodeURIComponent(qrToken)}/cuenta`, {
+      method: 'POST',
+    });
   },
 
   obtenerCartaPublica: async (sucursalId: string) => {

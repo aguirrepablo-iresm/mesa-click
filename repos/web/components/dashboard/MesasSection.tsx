@@ -20,11 +20,13 @@ function getPublicAppOrigin(configuredOrigin?: string) {
 
 function QRCanvas({ token }: { token: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [publicUrl, setPublicUrl] = useState('');
 
   useEffect(() => {
     if (!canvasRef.current) return;
     const origin = getPublicAppOrigin(process.env.NEXT_PUBLIC_APP_URL);
     const url = `${origin}/mesa/${token}`;
+    setPublicUrl(url);
     QRCode.toCanvas(canvasRef.current, url, { width: 140, margin: 1 });
   }, [token]);
 
@@ -42,6 +44,17 @@ function QRCanvas({ token }: { token: string }) {
       <div className="bg-canvas-white p-4 rounded-md border border-ghost-fog flex items-center justify-center">
         <canvas ref={canvasRef} className="max-w-full h-auto rounded" />
       </div>
+      {publicUrl && (
+        <a
+          href={publicUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Abrir menú de la Mesa ${token} en una nueva pestaña`}
+          className="w-full break-all text-center text-10 font-mono text-sage-green underline decoration-sage-green/40 underline-offset-2 transition-colors hover:text-ash-graphite"
+        >
+          {publicUrl}
+        </a>
+      )}
       <button
         onClick={handleDownload}
         className="w-full px-8 py-6 text-12 font-medium text-plain-green-muted border border-plain-green-muted rounded-md hover:bg-ghost-fog transition-colors flex items-center justify-center gap-4"
@@ -274,11 +287,6 @@ export default function MesasSection() {
               <p className="text-9 font-mono text-sage-green text-center break-all truncate">
                 {mesa.qr_token}
               </p>
-              {process.env.NEXT_PUBLIC_APP_URL && (
-                <p className="text-10 font-mono text-sage-green text-center break-all">
-                  {`${process.env.NEXT_PUBLIC_APP_URL}/mesa/${mesa.qr_token}`}
-                </p>
-              )}
               <p className="text-11 text-sage-green text-center font-mono">
                 Capacidad: {mesa.capacidad} pers.
               </p>

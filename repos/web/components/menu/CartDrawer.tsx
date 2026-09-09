@@ -81,7 +81,7 @@ export default function CartDrawer({
             </div>
             <input
               className="mesa-subtle-surface mesa-muted mesa-border w-full rounded-md border px-12 py-8 text-12 outline-none transition-colors placeholder:text-slate-400 focus:border-[var(--mesa-primary)] focus:bg-[var(--mesa-surface)]"
-              placeholder="Nota para la cocina (ej: sin sal, hielo aparte)..."
+              placeholder="Nota para el equipo (ej: sin sal, hielo aparte)..."
               value={item.nota}
               onChange={e => onSetNota(item.id, e.target.value)}
             />
@@ -105,7 +105,7 @@ export default function CartDrawer({
           disabled={items.length === 0 || enviando}
           className="mesa-primary-bg flex min-h-52 w-full items-center justify-center gap-8 rounded-lg px-16 py-14 text-15 font-semibold shadow-md transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <span>{enviando ? 'Enviando pedido...' : 'Enviar pedido a cocina'}</span>
+          <span>{enviando ? 'Enviando pedido...' : 'Enviar pedido'}</span>
           <span className="text-16">→</span>
         </button>
       </div>

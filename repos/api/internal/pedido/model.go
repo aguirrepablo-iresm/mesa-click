@@ -6,9 +6,10 @@ import (
 )
 
 var (
-	ErrNotFound    = errors.New("pedido no encontrado")
-	ErrValidation  = errors.New("validación fallida")
-	ErrMesaCerrada = errors.New("mesa cerrada")
+	ErrNotFound         = errors.New("pedido no encontrado")
+	ErrValidation       = errors.New("validación fallida")
+	ErrMesaCerrada      = errors.New("mesa cerrada")
+	ErrCuentaSolicitada = errors.New("cuenta solicitada")
 )
 
 var EstadosValidos = []string{"recibido", "preparando", "listo", "cerrado"}

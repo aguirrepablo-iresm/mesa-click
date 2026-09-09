@@ -23,9 +23,10 @@ func NuevoStore() Store { return &pgStore{} }
 func (s *pgStore) ObtenerSucursalPorMesa(ctx context.Context, mesaID string) (string, error) {
 	var sucursalID string
 	var estado string
+	var cuentaSolicitada bool
 	err := db.Pool.QueryRow(ctx,
-		`SELECT sucursal_id, estado FROM mesas WHERE id = $1`, mesaID,
-	).Scan(&sucursalID, &estado)
+		`SELECT sucursal_id, estado, cuenta_solicitada FROM mesas WHERE id = $1`, mesaID,
+	).Scan(&sucursalID, &estado, &cuentaSolicitada)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return "", ErrNotFound
@@ -34,6 +35,9 @@ func (s *pgStore) ObtenerSucursalPorMesa(ctx context.Context, mesaID string) (st
 	}
 	if estado != "activa" {
 		return "", ErrMesaCerrada
+	}
+	if cuentaSolicitada {
+		return "", ErrCuentaSolicitada
 	}
 	return sucursalID, nil
 }
