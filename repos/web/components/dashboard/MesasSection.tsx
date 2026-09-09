@@ -3,16 +3,30 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import QRCode from "qrcode";
 import { api, MesaAPI, Sucursal, getErrorMessage } from "@/lib/api";
 
+function getPublicAppOrigin(configuredOrigin?: string) {
+  const configured = configuredOrigin?.replace(/\/+$/, "");
+
+  if (typeof window === "undefined") {
+    return configured || "";
+  }
+
+  const hostname = window.location.hostname.toLowerCase();
+  const isLoopback = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+
+  // Desde la red local, el origen actual es la única fuente confiable si la IP
+  // del equipo cambió desde el último build o desde que se imprimió el QR.
+  return isLoopback ? configured || window.location.origin : window.location.origin;
+}
+
 function QRCanvas({ token }: { token: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const qrBaseUrl = process.env.NEXT_PUBLIC_APP_URL;
 
   useEffect(() => {
     if (!canvasRef.current) return;
-    const origin = qrBaseUrl || (typeof window !== 'undefined' ? window.location.origin : '');
+    const origin = getPublicAppOrigin(process.env.NEXT_PUBLIC_APP_URL);
     const url = `${origin}/mesa/${token}`;
     QRCode.toCanvas(canvasRef.current, url, { width: 140, margin: 1 });
-  }, [qrBaseUrl, token]);
+  }, [token]);
 
   const handleDownload = () => {
     const canvas = canvasRef.current;

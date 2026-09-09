@@ -487,7 +487,7 @@ export default function RecepcionistaSection() {
   };
 
   const [mesaDetalleKey, setMesaDetalleKey] = useState<string | null>(null);
-  const cerrarMesaDetalle = useCallback(() => setMesaDetalleKey(null), []);
+  const cerrarMesaDetalle = useCallback(() => setMesaDetalleKey(null), [setMesaDetalleKey]);
   const mesasAgrupadas = useMemo(() => {
     const grupos = new Map<string, MesaGrupo>();
 
