@@ -28,6 +28,9 @@ func (svc *Service) Crear(ctx context.Context, input NuevoPedidoInput) (*Pedido,
 	}
 	sucursalID, err := svc.store.ObtenerSucursalPorMesa(ctx, input.MesaID)
 	if err != nil {
+		if errors.Is(err, ErrMesaCerrada) {
+			return nil, fmt.Errorf("mesa cerrada: %w", ErrMesaCerrada)
+		}
 		return nil, fmt.Errorf("mesa no encontrada: %w", ErrNotFound)
 	}
 	p, err := svc.store.Crear(ctx, input, sucursalID)

@@ -81,6 +81,22 @@ func (h *Handlers) Actualizar(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, m)
 }
 
+func (h *Handlers) Cerrar(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	id := r.PathValue("id")
+	m, err := h.svc.Cerrar(r.Context(), id, claims.TenantID)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			jsonError(w, "mesa no encontrada", http.StatusNotFound)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error cerrando mesa", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, m)
+}
+
 func (h *Handlers) Eliminar(w http.ResponseWriter, r *http.Request) {
 	claims := auth.ClaimsFromContext(r.Context())
 	id := r.PathValue("id")
@@ -98,6 +114,11 @@ func (h *Handlers) Eliminar(w http.ResponseWriter, r *http.Request) {
 
 func (h *Handlers) MesaPorQR(w http.ResponseWriter, r *http.Request) {
 	token := r.PathValue("qr_token")
+	if token == "" {
+		jsonError(w, "qr_token requerido", http.StatusBadRequest)
+		return
+	}
+
 	mp, err := h.svc.ObtenerPorQRToken(r.Context(), token)
 	if err != nil {
 		if errors.Is(err, ErrNotFound) {

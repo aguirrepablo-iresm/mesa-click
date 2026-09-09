@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { api, Tenant, Sucursal, getErrorMessage } from "@/lib/api";
+import { DEFAULT_MESA_PRIMARY } from "@/components/menu/BrandHeader";
 import EquipoSection from "./EquipoSection";
 
 /* ─────────────────────────── contenedor ─────────────────────────── */
@@ -177,12 +178,13 @@ function PillPrimaria({
 const RUBROS = ["Cafetería", "Bar", "Restaurante", "Cervecería", "Pizzería", "Otro"];
 
 function NegocioTab({ tenant }: { tenant: Tenant | null }) {
+  const rubro = tenant?.rubro;
   const rubroNormalizado = useMemo(() => {
-    if (!tenant?.rubro) return RUBROS[0];
-    const clean = tenant.rubro.toLowerCase().replace(/í/g, "i").replace(/é/g, "e");
+    if (!rubro) return RUBROS[0];
+    const clean = rubro.toLowerCase().replace(/í/g, "i").replace(/é/g, "e");
     const found = RUBROS.find((r) => r.toLowerCase().replace(/í/g, "i").replace(/é/g, "e") === clean);
     return found ?? RUBROS[0];
-  }, [tenant?.rubro]);
+  }, [rubro]);
 
   const fiscalData = (tenant?.datos_fiscales ?? {}) as Record<string, string>;
 
@@ -372,7 +374,7 @@ type AparienciaForm = {
   logoUrl: string;
 };
 
-const COLOR_DEFAULT = "#F54927";
+const COLOR_DEFAULT = DEFAULT_MESA_PRIMARY;
 
 function esColorHex(valor: string) {
   return /^#[0-9a-fA-F]{6}$/.test(valor);

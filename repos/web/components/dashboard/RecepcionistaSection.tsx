@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { api, PedidoAPI, Sucursal, MesaAPI } from "@/lib/api";
 
 export interface PedidoVista {
@@ -9,8 +9,15 @@ export interface PedidoVista {
   sucursalId?: string;
   timestamp: string;
   estado: 'recibido' | 'preparando' | 'listo';
-  items: Array<{ id: string; nombre: string; cantidad: number; precio: number }>;
+  items: Array<{ id: string; nombre: string; cantidad: number; precio: number; nota?: string }>;
   cuentaSolicitada?: boolean;
+}
+
+interface MesaGrupo {
+  key: string;
+  mesa: number;
+  mesaId?: string;
+  pedidos: PedidoVista[];
 }
 
 const ESTADO_LABELS: Record<'recibido' | 'preparando' | 'listo', string> = {
@@ -25,7 +32,17 @@ const ESTADO_STYLES: Record<'recibido' | 'preparando' | 'listo', string> = {
   listo: 'bg-success text-ash-graphite border-success',
 };
 
-function PedidoCard({
+function calcularEstadoMesa(pedidos: PedidoVista[]): PedidoVista['estado'] {
+  if (pedidos.length > 0 && pedidos.every(pedido => pedido.estado === 'listo')) {
+    return 'listo';
+  }
+  if (pedidos.some(pedido => pedido.estado === 'preparando')) {
+    return 'preparando';
+  }
+  return 'recibido';
+}
+
+function PedidoDetalle({
   pedido,
   onAvanzar,
   onCerrar,
@@ -35,47 +52,41 @@ function PedidoCard({
   onCerrar: (id: string) => void;
 }) {
   const total = pedido.items.reduce((sum, i) => sum + i.precio * i.cantidad, 0);
-  const esAlerta = pedido.cuentaSolicitada;
 
   return (
-    <div className={`border rounded-lg overflow-hidden bg-canvas-white ${esAlerta ? 'border-alert-red shadow-sm' : 'border-ash-graphite'}`}>
-      <div
-        className={`flex items-center justify-between px-16 sm:px-20 py-10 border-b ${
-          esAlerta ? 'bg-red-50 border-alert-red' : 'bg-vanilla-cream border-ash-graphite'
-        }`}
-      >
-        <div className="flex items-center gap-8 sm:gap-12 flex-wrap">
-          <span className="text-15 font-medium text-ash-graphite">Mesa {pedido.mesa}</span>
-          {esAlerta && (
-            <span className="text-11 sm:text-12 font-medium text-alert-red flex items-center gap-4 bg-red-100/60 px-6 py-1 rounded">
-              ⚠️ Pide cuenta
-            </span>
-          )}
-          <span className="text-11 sm:text-12 font-mono text-sage-green">{pedido.timestamp}</span>
+    <div className="border-t border-ghost-fog px-16 py-12 sm:px-20">
+      <div className="flex flex-wrap items-center justify-between gap-8">
+        <div className="flex items-center gap-8">
+          <span className="text-13 font-semibold text-ash-graphite">Pedido</span>
+          <span className="text-11 font-mono text-sage-green">{pedido.timestamp}</span>
         </div>
-        <span className={`px-10 py-3 text-11 font-medium rounded-md border shrink-0 ${ESTADO_STYLES[pedido.estado]}`}>
+        <span className={`shrink-0 rounded-md border px-10 py-3 text-11 font-medium ${ESTADO_STYLES[pedido.estado]}`}>
           {ESTADO_LABELS[pedido.estado]}
         </span>
       </div>
 
-      <div className="px-16 sm:px-20 py-12 space-y-6">
+      <div className="mt-12 space-y-8">
         {pedido.items.map(item => (
-          <div key={item.id} className="flex items-center justify-between text-13">
-            <span className="text-ash-graphite">{item.cantidad}× {item.nombre}</span>
-            <span className="font-mono text-sage-green">${(item.precio * item.cantidad).toLocaleString()}</span>
+          <div key={item.id} className="flex items-start justify-between gap-12 text-13">
+            <div className="min-w-0">
+              <p className="text-ash-graphite">{item.cantidad}× {item.nombre}</p>
+              {item.nota && <p className="mt-2 text-11 text-sage-green">Nota: {item.nota}</p>}
+            </div>
+            <span className="shrink-0 font-mono text-sage-green">${(item.precio * item.cantidad).toLocaleString()}</span>
           </div>
         ))}
-        <div className="flex items-center justify-between text-13 font-medium border-t border-ghost-fog pt-8 mt-4">
-          <span className="text-ash-graphite font-semibold">Total</span>
-          <span className="font-mono text-ash-graphite font-semibold">${total.toLocaleString()}</span>
-        </div>
       </div>
 
-      <div className="flex items-center gap-8 px-16 sm:px-20 py-12 border-t border-ghost-fog bg-canvas-white">
+      <div className="mt-12 flex items-center justify-between border-t border-ghost-fog pt-8 text-13 font-medium">
+        <span className="font-semibold text-ash-graphite">Total del pedido</span>
+        <span className="font-mono font-semibold text-ash-graphite">${total.toLocaleString()}</span>
+      </div>
+
+      <div className="mt-12 flex items-center gap-8">
         {pedido.estado !== 'listo' && (
           <button
             onClick={() => onAvanzar(pedido.id)}
-            className="flex-1 sm:flex-initial px-16 py-8 bg-plain-green text-canvas-white text-12 font-semibold rounded-md hover:opacity-90 active:scale-98 transition-all text-center"
+            className="flex min-h-44 flex-1 items-center justify-center rounded-md bg-plain-green px-16 py-8 text-center text-12 font-semibold text-canvas-white transition-all hover:opacity-90 active:scale-[0.98] sm:flex-initial"
           >
             {pedido.estado === 'recibido' ? '→ Preparando' : '→ Listo'}
           </button>
@@ -83,12 +94,184 @@ function PedidoCard({
         {pedido.estado === 'listo' && (
           <button
             onClick={() => onCerrar(pedido.id)}
-            className="flex-1 sm:flex-initial px-16 py-8 bg-ash-graphite text-canvas-white text-12 font-semibold rounded-md hover:opacity-90 active:scale-98 transition-all text-center"
+            className="flex min-h-44 flex-1 items-center justify-center rounded-md bg-ash-graphite px-16 py-8 text-center text-12 font-semibold text-canvas-white transition-all hover:opacity-90 active:scale-[0.98] sm:flex-initial"
           >
             Cerrar pedido
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+function MesaCard({
+  grupo,
+  onOpen,
+}: {
+  grupo: MesaGrupo;
+  onOpen: () => void;
+}) {
+  const total = grupo.pedidos.reduce(
+    (sum, pedido) => sum + pedido.items.reduce((pedidoTotal, item) => pedidoTotal + item.precio * item.cantidad, 0),
+    0,
+  );
+  const totalItems = grupo.pedidos.reduce(
+    (sum, pedido) => sum + pedido.items.reduce((pedidoItems, item) => pedidoItems + item.cantidad, 0),
+    0,
+  );
+  const estadoMesa = calcularEstadoMesa(grupo.pedidos);
+  const cuentaSolicitada = grupo.pedidos.some(pedido => pedido.cuentaSolicitada);
+
+  return (
+    <div className={`overflow-hidden rounded-lg border bg-canvas-white ${cuentaSolicitada ? 'border-alert-red shadow-sm' : 'border-ash-graphite'}`}>
+      <div className={`flex items-center justify-between gap-12 border-b px-16 py-10 sm:px-20 ${cuentaSolicitada ? 'border-alert-red bg-red-50' : 'border-ash-graphite bg-vanilla-cream'}`}>
+        <div className="flex min-w-0 flex-wrap items-center gap-8 sm:gap-12">
+          <span className="text-15 font-medium text-ash-graphite">Mesa {grupo.mesa}</span>
+          <span className="text-11 font-mono text-sage-green">
+            {grupo.pedidos.length} {grupo.pedidos.length === 1 ? 'pedido' : 'pedidos'} activos
+          </span>
+          {cuentaSolicitada && (
+            <span className="flex items-center gap-4 rounded bg-red-100/60 px-6 py-1 text-11 font-medium text-alert-red">
+              ⚠️ Pide cuenta
+            </span>
+          )}
+        </div>
+        <span className={`shrink-0 rounded-md border px-10 py-3 text-11 font-medium ${ESTADO_STYLES[estadoMesa]}`}>
+          {ESTADO_LABELS[estadoMesa]}
+        </span>
+      </div>
+
+      <div className="space-y-12 px-16 py-14 sm:px-20">
+        <div className="flex items-end justify-between gap-12">
+          <div>
+            <p className="text-13 font-medium text-ash-graphite">Resumen de la mesa</p>
+            <p className="mt-2 text-11 text-sage-green">{totalItems} {totalItems === 1 ? 'ítem solicitado' : 'ítems solicitados'}</p>
+          </div>
+          <span className="shrink-0 font-mono text-15 font-semibold text-ash-graphite">${total.toLocaleString()}</span>
+        </div>
+
+        <button
+          type="button"
+          onClick={onOpen}
+          className="flex min-h-44 w-full items-center justify-center gap-6 rounded-md border border-ash-graphite px-12 py-8 text-12 font-semibold text-ash-graphite transition-colors hover:bg-ghost-fog"
+        >
+          <span>Ver más</span>
+          <span aria-hidden="true">↓</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function MesaDetalleModal({
+  grupo,
+  onClose,
+  onAvanzar,
+  onCerrar,
+  onTodoListo,
+  onCerrarMesa,
+  mesaAccionEnCurso,
+}: {
+  grupo: MesaGrupo;
+  onClose: () => void;
+  onAvanzar: (id: string) => void;
+  onCerrar: (id: string) => void;
+  onTodoListo: (grupo: MesaGrupo) => void;
+  onCerrarMesa: (grupo: MesaGrupo) => void;
+  mesaAccionEnCurso: 'todo-listo' | 'cerrar' | null;
+}) {
+  const total = grupo.pedidos.reduce(
+    (sum, pedido) => sum + pedido.items.reduce((pedidoTotal, item) => pedidoTotal + item.precio * item.cantidad, 0),
+    0,
+  );
+  const totalItems = grupo.pedidos.reduce(
+    (sum, pedido) => sum + pedido.items.reduce((pedidoItems, item) => pedidoItems + item.cantidad, 0),
+    0,
+  );
+  const estadoMesa = calcularEstadoMesa(grupo.pedidos);
+  const todosListos = estadoMesa === 'listo';
+
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const closeWithEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') onClose();
+    };
+
+    document.body.style.overflow = 'hidden';
+    window.addEventListener('keydown', closeWithEscape);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', closeWithEscape);
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/75 p-12 sm:items-center sm:p-24"
+      role="presentation"
+      onMouseDown={event => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section
+        className="flex max-h-[calc(100vh-24px)] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-ash-graphite bg-canvas-white shadow-2xl sm:max-h-[calc(100vh-48px)]"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`mesa-detalle-${grupo.key}`}
+      >
+        <header className="flex shrink-0 items-center justify-between gap-12 border-b border-ash-graphite bg-vanilla-cream px-16 py-12 sm:px-20">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-8 sm:gap-12">
+              <h2 id={`mesa-detalle-${grupo.key}`} className="text-16 font-medium text-ash-graphite">
+                Mesa {grupo.mesa}
+              </h2>
+              <span className={`shrink-0 rounded-md border px-10 py-3 text-11 font-medium ${ESTADO_STYLES[estadoMesa]}`}>
+                {ESTADO_LABELS[estadoMesa]}
+              </span>
+            </div>
+            <p className="mt-2 text-11 font-mono text-sage-green">
+              {grupo.pedidos.length} {grupo.pedidos.length === 1 ? 'pedido activo' : 'pedidos activos'} · {totalItems} {totalItems === 1 ? 'ítem' : 'ítems'}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label={`Cerrar detalle de Mesa ${grupo.mesa}`}
+            className="flex h-44 w-44 shrink-0 items-center justify-center rounded-md border border-ash-graphite text-20 leading-none text-ash-graphite transition-colors hover:bg-ghost-fog"
+          >
+            ×
+          </button>
+        </header>
+
+        <div className="flex flex-wrap gap-8 border-b border-ghost-fog bg-canvas-white px-16 py-12 sm:px-20">
+          <button
+            type="button"
+            onClick={() => onTodoListo(grupo)}
+            disabled={todosListos || mesaAccionEnCurso !== null}
+            className="min-h-44 flex-1 rounded-md bg-success px-12 py-8 text-12 font-semibold text-ash-graphite transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial"
+          >
+            {mesaAccionEnCurso === 'todo-listo' ? 'Actualizando...' : 'Todo listo'}
+          </button>
+          <button
+            type="button"
+            onClick={() => onCerrarMesa(grupo)}
+            disabled={mesaAccionEnCurso !== null}
+            className="min-h-44 flex-1 rounded-md bg-alert-red px-12 py-8 text-12 font-semibold text-canvas-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial"
+          >
+            {mesaAccionEnCurso === 'cerrar' ? 'Cerrando...' : 'Cerrar mesa'}
+          </button>
+        </div>
+
+        <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="flex items-center justify-between gap-12 border-b border-ghost-fog px-16 py-14 sm:px-20">
+            <span className="text-13 font-medium text-ash-graphite">Total acumulado de la mesa</span>
+            <span className="shrink-0 font-mono text-16 font-semibold text-ash-graphite">${total.toLocaleString()}</span>
+          </div>
+          {grupo.pedidos.map(pedido => (
+            <PedidoDetalle key={pedido.id} pedido={pedido} onAvanzar={onAvanzar} onCerrar={onCerrar} />
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
@@ -99,6 +282,7 @@ export default function RecepcionistaSection() {
   const [mesas, setMesas] = useState<Record<string, MesaAPI>>({});
   const [loading, setLoading] = useState(true);
   const [sseConectado, setSseConectado] = useState(false);
+  const [mesaAccionEnCurso, setMesaAccionEnCurso] = useState<'todo-listo' | 'cerrar' | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
 
   const transformarPedidoApi = useCallback((p: PedidoAPI, mesasMap: Record<string, MesaAPI>): PedidoVista => {
@@ -113,9 +297,10 @@ export default function RecepcionistaSection() {
       estado: est,
       items: (p.items || []).map(i => ({
         id: i.id || i.articulo_id,
-        nombre: i.nombre_articulo || 'Artículo',
+        nombre: i.nombre_articulo?.trim() || 'Producto sin nombre',
         cantidad: i.cantidad,
         precio: i.precio_unitario,
+        nota: i.notas?.trim() || '',
       })),
       cuentaSolicitada: false,
     };
@@ -249,8 +434,79 @@ export default function RecepcionistaSection() {
     }
   };
 
-  const conAlerta = pedidos.filter(p => p.cuentaSolicitada);
-  const sinAlerta = pedidos.filter(p => !p.cuentaSolicitada);
+  const marcarMesaTodoLista = async (grupo: MesaGrupo) => {
+    const pendientes = grupo.pedidos.filter(pedido => pedido.estado !== 'listo');
+    if (pendientes.length === 0) return;
+    if (!window.confirm(`¿Seguro que deseas marcar como listos los ${pendientes.length} pedidos pendientes de la Mesa ${grupo.mesa}?`)) return;
+
+    setMesaAccionEnCurso('todo-listo');
+    try {
+      const resultados = await Promise.allSettled(
+        pendientes.map(pedido => api.cambiarEstadoPedido(pedido.id, 'listo')),
+      );
+      const pedidosActualizados = new Set(
+        pendientes.filter((_, index) => resultados[index].status === 'fulfilled').map(pedido => pedido.id),
+      );
+      setPedidos(prev => prev.map(pedido =>
+        pedidosActualizados.has(pedido.id) ? { ...pedido, estado: 'listo' } : pedido,
+      ));
+
+      if (resultados.some(resultado => resultado.status === 'rejected')) {
+        alert('Algunos pedidos no pudieron actualizarse. Revisa el estado de la mesa.');
+      }
+    } catch (err) {
+      console.error("Error al marcar la mesa como lista:", err);
+      alert('No se pudo actualizar el estado de la mesa.');
+    } finally {
+      setMesaAccionEnCurso(null);
+    }
+  };
+
+  const cerrarMesa = async (grupo: MesaGrupo) => {
+    if (!grupo.mesaId) {
+      alert('No se pudo identificar la mesa para cerrarla.');
+      return;
+    }
+    if (!window.confirm(`¿Seguro que deseas cerrar la Mesa ${grupo.mesa}? No se podrán realizar más pedidos hasta volver a activarla.`)) return;
+
+    setMesaAccionEnCurso('cerrar');
+    try {
+      await api.cerrarMesa(grupo.mesaId);
+      setPedidos(prev => prev.filter(pedido => pedido.mesaId !== grupo.mesaId));
+      setMesas(prev => ({
+        ...prev,
+        [grupo.mesaId as string]: { ...prev[grupo.mesaId as string], estado: 'inactiva' },
+      }));
+      setMesaDetalleKey(null);
+    } catch (err) {
+      console.error("Error al cerrar la mesa:", err);
+      alert('No se pudo cerrar la mesa. Intenta nuevamente.');
+    } finally {
+      setMesaAccionEnCurso(null);
+    }
+  };
+
+  const [mesaDetalleKey, setMesaDetalleKey] = useState<string | null>(null);
+  const cerrarMesaDetalle = useCallback(() => setMesaDetalleKey(null), [setMesaDetalleKey]);
+  const mesasAgrupadas = useMemo(() => {
+    const grupos = new Map<string, MesaGrupo>();
+
+    pedidos.forEach(pedido => {
+      const key = pedido.mesaId || `mesa-${pedido.mesa}`;
+      const grupo = grupos.get(key);
+      if (grupo) {
+        grupo.pedidos.push(pedido);
+        return;
+      }
+
+      grupos.set(key, { key, mesa: pedido.mesa, mesaId: pedido.mesaId, pedidos: [pedido] });
+    });
+
+    return Array.from(grupos.values());
+  }, [pedidos]);
+  const mesaDetalle = mesasAgrupadas.find(grupo => grupo.key === mesaDetalleKey);
+  const conAlerta = mesasAgrupadas.filter(grupo => grupo.pedidos.some(pedido => pedido.cuentaSolicitada));
+  const sinAlerta = mesasAgrupadas.filter(grupo => !grupo.pedidos.some(pedido => pedido.cuentaSolicitada));
 
   return (
     <div className="p-16 sm:p-24 md:p-32 space-y-24 font-inter">
@@ -258,7 +514,7 @@ export default function RecepcionistaSection() {
         <div>
           <h2 className="text-20 font-medium text-ash-graphite">Panel Recepcionista</h2>
           <p className="text-13 text-sage-green mt-2">
-            {pedidos.length} {pedidos.length === 1 ? 'pedido activo' : 'pedidos activos'} {loading && "(cargando...)"}
+            {mesasAgrupadas.length} {mesasAgrupadas.length === 1 ? 'mesa activa' : 'mesas activas'} · {pedidos.length} {pedidos.length === 1 ? 'pedido' : 'pedidos'} {loading && "(cargando...)"}
           </p>
         </div>
         <div className="flex items-center gap-8 self-start sm:self-auto bg-ghost-fog px-12 py-6 rounded-full border border-ash-graphite/10">
@@ -277,8 +533,12 @@ export default function RecepcionistaSection() {
             ⚠️ Solicitudes de cuenta
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
-            {conAlerta.map(p => (
-              <PedidoCard key={p.id} pedido={p} onAvanzar={avanzarEstado} onCerrar={cerrarPedido} />
+            {conAlerta.map(grupo => (
+              <MesaCard
+                key={grupo.key}
+                grupo={grupo}
+                onOpen={() => setMesaDetalleKey(grupo.key)}
+              />
             ))}
           </div>
         </div>
@@ -288,8 +548,12 @@ export default function RecepcionistaSection() {
         <div className="space-y-8">
           <p className="text-11 font-mono text-sage-green uppercase tracking-wider">Pedidos en curso</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
-            {sinAlerta.map(p => (
-              <PedidoCard key={p.id} pedido={p} onAvanzar={avanzarEstado} onCerrar={cerrarPedido} />
+            {sinAlerta.map(grupo => (
+              <MesaCard
+                key={grupo.key}
+                grupo={grupo}
+                onOpen={() => setMesaDetalleKey(grupo.key)}
+              />
             ))}
           </div>
         </div>
@@ -299,6 +563,18 @@ export default function RecepcionistaSection() {
         <div className="text-center py-40 text-sage-green text-13 bg-vanilla-cream rounded-lg border border-ash-graphite/20">
           No hay pedidos activos en este momento.
         </div>
+      )}
+
+      {mesaDetalle && (
+        <MesaDetalleModal
+          grupo={mesaDetalle}
+          onClose={cerrarMesaDetalle}
+          onAvanzar={avanzarEstado}
+          onCerrar={cerrarPedido}
+          onTodoListo={marcarMesaTodoLista}
+          onCerrarMesa={cerrarMesa}
+          mesaAccionEnCurso={mesaAccionEnCurso}
+        />
       )}
     </div>
   );

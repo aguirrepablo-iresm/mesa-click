@@ -3,12 +3,27 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import QRCode from "qrcode";
 import { api, MesaAPI, Sucursal, getErrorMessage } from "@/lib/api";
 
+function getPublicAppOrigin(configuredOrigin?: string) {
+  const configured = configuredOrigin?.replace(/\/+$/, "");
+
+  if (typeof window === "undefined") {
+    return configured || "";
+  }
+
+  const hostname = window.location.hostname.toLowerCase();
+  const isLoopback = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
+
+  // Desde la red local, el origen actual es la única fuente confiable si la IP
+  // del equipo cambió desde el último build o desde que se imprimió el QR.
+  return isLoopback ? configured || window.location.origin : window.location.origin;
+}
+
 function QRCanvas({ token }: { token: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
-    const origin = typeof window !== 'undefined' ? window.location.origin : '';
+    const origin = getPublicAppOrigin(process.env.NEXT_PUBLIC_APP_URL);
     const url = `${origin}/mesa/${token}`;
     QRCode.toCanvas(canvasRef.current, url, { width: 140, margin: 1 });
   }, [token]);
@@ -141,6 +156,17 @@ export default function MesasSection() {
     }
   };
 
+  const handleReactivarMesa = async (mesa: MesaAPI) => {
+    if (!confirm(`¿Seguro que deseas reactivar la Mesa ${mesa.numero}? Podrá recibir nuevos pedidos.`)) return;
+    try {
+      const actualizada = await api.actualizarMesa(mesa.id, { estado: 'activa' });
+      setMesas(prev => prev.map(item => item.id === mesa.id ? actualizada : item));
+    } catch (err: unknown) {
+      console.error("No se pudo reactivar mesa:", err);
+      setErrorMsg(getErrorMessage(err, 'Error al reactivar la mesa.'));
+    }
+  };
+
   return (
     <div className="p-24 md:p-32 space-y-24 font-inter">
       <div className="flex items-center justify-between">
@@ -218,9 +244,14 @@ export default function MesasSection() {
 
       <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-16">
         {mesas.map(mesa => (
-          <div key={mesa.id} className="border border-ash-graphite rounded-lg p-16 space-y-12 bg-canvas-white flex flex-col items-center">
+          <div key={mesa.id} className={`border rounded-lg p-16 space-y-12 bg-canvas-white flex flex-col items-center ${mesa.estado === 'inactiva' ? 'border-alert-red/60' : 'border-ash-graphite'}`}>
             <div className="flex items-center justify-between w-full">
-              <span className="text-15 font-medium text-ash-graphite">Mesa {mesa.numero}</span>
+              <div className="min-w-0">
+                <span className="text-15 font-medium text-ash-graphite">Mesa {mesa.numero}</span>
+                <span className={`mt-2 block text-10 font-mono uppercase ${mesa.estado === 'inactiva' ? 'text-alert-red' : 'text-sage-green'}`}>
+                  {mesa.estado === 'inactiva' ? 'Cerrada' : 'Activa'}
+                </span>
+              </div>
               <button
                 onClick={() => handleEliminarMesa(mesa.id)}
                 title="Eliminar mesa"
@@ -230,10 +261,24 @@ export default function MesasSection() {
               </button>
             </div>
             <QRCanvas token={mesa.qr_token} />
+            {mesa.estado === 'inactiva' && (
+              <button
+                type="button"
+                onClick={() => void handleReactivarMesa(mesa)}
+                className="min-h-44 w-full rounded-md border border-plain-green px-10 py-8 text-12 font-medium text-plain-green hover:bg-ghost-fog"
+              >
+                Reactivar mesa
+              </button>
+            )}
             <div className="space-y-2 w-full">
               <p className="text-9 font-mono text-sage-green text-center break-all truncate">
                 {mesa.qr_token}
               </p>
+              {process.env.NEXT_PUBLIC_APP_URL && (
+                <p className="text-10 font-mono text-sage-green text-center break-all">
+                  {`${process.env.NEXT_PUBLIC_APP_URL}/mesa/${mesa.qr_token}`}
+                </p>
+              )}
               <p className="text-11 text-sage-green text-center font-mono">
                 Capacidad: {mesa.capacidad} pers.
               </p>

@@ -1,11 +1,14 @@
 "use client";
-import { useReducer, useState, useEffect, useRef } from "react";
+import { useCallback, useReducer, useState, useEffect, useRef, type CSSProperties } from "react";
 import { useParams } from "next/navigation";
-import { api, CategoriaPublica, ArticuloPublico } from "@/lib/api";
+import { api } from "@/lib/api";
+import type { ArticuloPublico, CategoriaPublica, MesaPublica } from "@/lib/api";
 import CategoriaNav from "@/components/menu/CategoriaNav";
 import ItemCard from "@/components/menu/ItemCard";
 import CartDrawer from "@/components/menu/CartDrawer";
 import SeguimientoView from "@/components/menu/SeguimientoView";
+import BrandHeader, { buildMesaTheme } from "@/components/menu/BrandHeader";
+import type { MesaBranding } from "@/components/menu/BrandHeader";
 
 export type CartItem = {
   id: string;
@@ -18,8 +21,15 @@ export type CartItem = {
 export type EstadoPedido = 'recibido' | 'preparando' | 'listo' | 'cerrado';
 type Vista = 'carta' | 'carrito' | 'seguimiento';
 
+export type PedidoSesion = {
+  id: string;
+  items: CartItem[];
+  estado: EstadoPedido;
+};
+
 type State = {
   items: CartItem[];
+  pedidos: PedidoSesion[];
   vista: Vista;
   estadoPedido: EstadoPedido;
   cuentaSolicitada: boolean;
@@ -31,17 +41,22 @@ type Action =
   | { type: 'SET_CANTIDAD'; payload: { id: string; cantidad: number } }
   | { type: 'SET_NOTA'; payload: { id: string; nota: string } }
   | { type: 'SET_VISTA'; payload: Vista }
-  | { type: 'CONFIRMAR_PEDIDO'; payload?: { pedidoId?: string } }
-  | { type: 'SET_ESTADO_PEDIDO'; payload: EstadoPedido }
-  | { type: 'PEDIR_CUENTA' };
+  | { type: 'HYDRATE'; payload: State }
+  | { type: 'CONFIRMAR_PEDIDO'; payload: { pedidoId: string; items: CartItem[] } }
+  | { type: 'SET_ESTADO_PEDIDO'; payload: { pedidoId: string; estado: EstadoPedido } }
+  | { type: 'PEDIR_CUENTA' }
+  | { type: 'RESET_SESSION' };
 
 const INITIAL_STATE: State = {
   items: [],
+  pedidos: [],
   vista: 'carta',
   estadoPedido: 'recibido',
   cuentaSolicitada: false,
   pedidoId: null,
 };
+
+const SESSION_VERSION = 2;
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -79,19 +94,128 @@ function reducer(state: State, action: Action): State {
       };
     case 'SET_VISTA':
       return { ...state, vista: action.payload };
+    case 'HYDRATE':
+      return action.payload;
     case 'CONFIRMAR_PEDIDO':
       return {
         ...state,
+        items: [],
+        pedidos: [
+          ...state.pedidos,
+          { id: action.payload.pedidoId, items: action.payload.items, estado: 'recibido' },
+        ],
         vista: 'seguimiento',
         estadoPedido: 'recibido',
-        pedidoId: action.payload?.pedidoId || state.pedidoId,
+        pedidoId: action.payload.pedidoId,
       };
     case 'SET_ESTADO_PEDIDO':
-      return { ...state, estadoPedido: action.payload };
+      return {
+        ...state,
+        pedidos: state.pedidos.map(pedido =>
+          pedido.id === action.payload.pedidoId
+            ? { ...pedido, estado: action.payload.estado }
+            : pedido,
+        ),
+        estadoPedido:
+          state.pedidoId === action.payload.pedidoId ? action.payload.estado : state.estadoPedido,
+      };
     case 'PEDIR_CUENTA':
       return { ...state, cuentaSolicitada: true };
+    case 'RESET_SESSION':
+      return { ...INITIAL_STATE };
     default:
       return state;
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isVista(value: unknown): value is Vista {
+  return value === 'carta' || value === 'carrito' || value === 'seguimiento';
+}
+
+function isEstadoPedido(value: unknown): value is EstadoPedido {
+  return value === 'recibido' || value === 'preparando' || value === 'listo' || value === 'cerrado';
+}
+
+function parseCartItems(value: unknown): CartItem[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap((candidate) => {
+    if (!isRecord(candidate)) return [];
+    if (
+      typeof candidate.id !== 'string' ||
+      typeof candidate.nombre !== 'string' ||
+      typeof candidate.precio !== 'number' ||
+      !Number.isFinite(candidate.precio) ||
+      typeof candidate.cantidad !== 'number' ||
+      !Number.isInteger(candidate.cantidad) ||
+      candidate.cantidad <= 0 ||
+      typeof candidate.nota !== 'string'
+    ) {
+      return [];
+    }
+
+    return [{
+      id: candidate.id,
+      nombre: candidate.nombre,
+      precio: candidate.precio,
+      cantidad: candidate.cantidad,
+      nota: candidate.nota,
+    }];
+  });
+}
+
+function parsePedidoSessions(value: unknown): PedidoSesion[] {
+  if (!Array.isArray(value)) return [];
+
+  return value.flatMap((candidate) => {
+    if (!isRecord(candidate) || typeof candidate.id !== 'string' || !candidate.id.trim()) return [];
+    const items = parseCartItems(candidate.items);
+    const estado = isEstadoPedido(candidate.estado) ? candidate.estado : 'recibido';
+    if (items.length === 0) return [];
+
+    return [{ id: candidate.id, items, estado }];
+  });
+}
+
+function getSessionKey(token: string) {
+  return `mesa_click_session_${token}`;
+}
+
+function readStoredSession(raw: string): State | null {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!isRecord(parsed) || (parsed.version !== 1 && parsed.version !== SESSION_VERSION)) return null;
+
+    const pedidoId = typeof parsed.pedidoId === 'string' && parsed.pedidoId.trim() ? parsed.pedidoId : null;
+    const estadoPedido = isEstadoPedido(parsed.estadoPedido) ? parsed.estadoPedido : 'recibido';
+    const items = parseCartItems(parsed.items);
+    const pedidosGuardados = parsePedidoSessions(parsed.pedidos);
+    const pedidoItemsAnteriores = parseCartItems(parsed.pedidoItems);
+    const pedidos = pedidosGuardados.length > 0
+      ? pedidosGuardados
+      : pedidoId && pedidoItemsAnteriores.length > 0
+        ? [{ id: pedidoId, items: pedidoItemsAnteriores, estado: estadoPedido }]
+        : pedidoId && items.length > 0
+          ? [{ id: pedidoId, items, estado: estadoPedido }]
+          : [];
+    const ultimoPedido = pedidos[pedidos.length - 1];
+    const vista = isVista(parsed.vista) ? parsed.vista : 'carta';
+
+    return {
+      items,
+      pedidos,
+      // Una sesión con pedidos y sin carrito vuelve al resumen para mostrar el total acumulado.
+      vista: pedidos.length > 0 && items.length === 0 ? 'seguimiento' : vista,
+      estadoPedido: ultimoPedido?.estado ?? estadoPedido,
+      cuentaSolicitada: parsed.cuentaSolicitada === true,
+      pedidoId: ultimoPedido?.id ?? pedidoId,
+    };
+  } catch {
+    return null;
   }
 }
 
@@ -109,53 +233,110 @@ interface MenuCategoryView {
 
 export default function MesaPage() {
   const params = useParams();
-  const token = params.token as string;
+  const rawToken = params.token;
+  const token = Array.isArray(rawToken) ? rawToken[0] : rawToken;
 
-  const [mesa, setMesa] = useState<{ id: string; numero: number; sucursal_id?: string } | null>(null);
+  const [mesa, setMesa] = useState<MesaPublica | null>(null);
   const [menu, setMenu] = useState<MenuCategoryView[]>([]);
   const [categoriaActiva, setCategoriaActiva] = useState<string>('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => Boolean(token));
   const [enviandoPedido, setEnviandoPedido] = useState(false);
 
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
-  const eventSourceRef = useRef<EventSource | null>(null);
+  const skipNextPersistRef = useRef(false);
+  const hydratedTokenRef = useRef<string | null>(null);
 
-  // 1. Cargar datos de mesa y carta (US-42)
+  // Hidratar antes de persistir evita sobrescribir una sesión existente con el estado inicial.
+  useEffect(() => {
+    if (!token) return;
+
+    // Evita que el efecto de persistencia sobrescriba la sesión antes de hidratarla.
+    skipNextPersistRef.current = true;
+    dispatch({ type: 'RESET_SESSION' });
+
+    try {
+      const key = getSessionKey(token);
+      const rawSession = window.localStorage.getItem(key);
+      if (rawSession) {
+        const restored = readStoredSession(rawSession);
+        if (restored) {
+          dispatch({ type: 'HYDRATE', payload: restored });
+        } else {
+          window.localStorage.removeItem(key);
+        }
+      }
+    } catch (error) {
+      console.warn('No se pudo restaurar la sesión de la mesa:', error);
+    }
+
+    hydratedTokenRef.current = token;
+  }, [token]);
+
+  useEffect(() => {
+    if (!token || !mesa || mesa.estado === 'inactiva') return;
+
+    const actualizarEstadoMesa = async () => {
+      try {
+        const mesaActualizada = await api.obtenerMesaPorQR(token);
+        setMesa(mesaActualizada);
+      } catch (error) {
+        console.warn('No se pudo actualizar el estado de la mesa:', error);
+      }
+    };
+
+    const intervalId = window.setInterval(() => {
+      void actualizarEstadoMesa();
+    }, 15000);
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void actualizarEstadoMesa();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [mesa, token]);
+
+  useEffect(() => {
+    if (!token || hydratedTokenRef.current !== token) return;
+    if (skipNextPersistRef.current) {
+      skipNextPersistRef.current = false;
+      return;
+    }
+
+    try {
+      window.localStorage.setItem(
+        getSessionKey(token),
+        JSON.stringify({ version: SESSION_VERSION, ...state }),
+      );
+    } catch (error) {
+      console.warn('No se pudo guardar la sesión de la mesa:', error);
+    }
+  }, [state, token]);
+
+  // 1. Cargar datos de mesa y carta (US-42 + branding US-53)
   useEffect(() => {
     let isMounted = true;
+    if (!token) {
+      return () => {
+        isMounted = false;
+      };
+    }
+    const currentToken = token;
 
     async function cargarDatos() {
       try {
         setLoading(true);
-        let mesaInfo: { id: string; numero: number; sucursal_id: string } | null = null;
-        try {
-          const mesaApi = await api.obtenerMesaPorQR(token);
-          if (mesaApi) {
-            mesaInfo = {
-              id: mesaApi.id,
-              numero: mesaApi.numero,
-              sucursal_id: mesaApi.sucursal_id,
-            };
-          }
-        } catch (err) {
-          console.error("Error cargando mesa por QR:", err);
-        }
-
-        if (!mesaInfo) {
-          if (isMounted) {
-            setMesa(null);
-            setLoading(false);
-          }
-          return;
-        }
-
-        if (isMounted) {
-          setMesa(mesaInfo);
-        }
+        const mesaApi = await api.obtenerMesaPorQR(currentToken);
+        if (!isMounted) return;
+        setMesa(mesaApi);
 
         // Cargar carta de la sucursal
         try {
-          const cartaResp = await api.obtenerCartaPublica(mesaInfo.sucursal_id);
+          const cartaResp = await api.obtenerCartaPublica(mesaApi.sucursal_id);
           if (cartaResp && cartaResp.categorias && cartaResp.categorias.length > 0) {
             const formateadas: MenuCategoryView[] = cartaResp.categorias.map((c: CategoriaPublica) => ({
               id: c.id,
@@ -182,6 +363,9 @@ export default function MesaPage() {
         if (isMounted) {
           setMenu([]);
         }
+      } catch (error) {
+        console.error("Error cargando mesa por QR:", error);
+        if (isMounted) setMesa(null);
       } finally {
         if (isMounted) {
           setLoading(false);
@@ -189,71 +373,99 @@ export default function MesaPage() {
       }
     }
 
-    if (token) {
-      cargarDatos();
-    }
+    void cargarDatos();
 
     return () => {
       isMounted = false;
     };
   }, [token]);
 
-  // 2. Conectar SSE para seguimiento en tiempo real (US-44)
-  useEffect(() => {
-    if (state.vista !== 'seguimiento' || !state.pedidoId) {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
-      }
-      return;
-    }
-
-    const url = api.obtenerEventosPedidoUrl(state.pedidoId);
-    const es = new EventSource(url);
-    eventSourceRef.current = es;
-
-    es.addEventListener('pedido_actualizado', (e: MessageEvent) => {
+  const limpiarSesionMesa = useCallback(() => {
+    if (token) {
       try {
-        const data = JSON.parse(e.data);
-        if (data && data.estado) {
-          dispatch({ type: 'SET_ESTADO_PEDIDO', payload: data.estado as EstadoPedido });
-        }
-      } catch (err) {
-        console.warn("Error parseando evento SSE de pedido:", err);
+        window.localStorage.removeItem(getSessionKey(token));
+      } catch (error) {
+        console.warn('No se pudo limpiar la sesión de la mesa:', error);
       }
-    });
+    }
+    skipNextPersistRef.current = true;
+    dispatch({ type: 'RESET_SESSION' });
+  }, [token]);
 
-    es.onerror = () => {
-      // Reconexión automática del navegador
-    };
+  useEffect(() => {
+    if (mesa?.estado === 'inactiva') {
+      limpiarSesionMesa();
+    }
+  }, [limpiarSesionMesa, mesa?.estado]);
+
+  // 2. Mantener un canal SSE por cada pedido abierto de la mesa.
+  useEffect(() => {
+    const eventSources = state.pedidos
+      .filter(pedido => pedido.estado !== 'cerrado')
+      .map(pedido => {
+        const eventSource = new EventSource(api.obtenerEventosPedidoUrl(pedido.id));
+        eventSource.addEventListener('pedido_actualizado', (event: MessageEvent<string>) => {
+          try {
+            const payload: unknown = JSON.parse(event.data);
+            if (!isRecord(payload) || !isEstadoPedido(payload.estado)) return;
+            dispatch({
+              type: 'SET_ESTADO_PEDIDO',
+              payload: { pedidoId: pedido.id, estado: payload.estado },
+            });
+          } catch (error) {
+            console.warn('Error parseando evento SSE de pedido:', error);
+          }
+        });
+
+        eventSource.onerror = () => {
+          // EventSource reintenta la conexión automáticamente.
+        };
+        return eventSource;
+      });
 
     return () => {
-      es.close();
-      eventSourceRef.current = null;
+      eventSources.forEach(eventSource => eventSource.close());
     };
-  }, [state.vista, state.pedidoId]);
+  }, [state.pedidos]);
+
+  useEffect(() => {
+    if (state.pedidos.length > 0 && state.pedidos.every(pedido => pedido.estado === 'cerrado')) {
+      limpiarSesionMesa();
+    }
+  }, [limpiarSesionMesa, state.pedidos]);
 
   // 3. Confirmar y enviar pedido a la API real (US-43)
   const handleConfirmarPedido = async () => {
-    if (!mesa) return;
+    if (!mesa || state.items.length === 0) return;
     setEnviandoPedido(true);
+    const itemsEnviados = state.items;
 
     try {
       const resp = await api.crearPedido({
         mesa_id: mesa.id,
-        items: state.items.map(i => ({
-          articulo_id: i.id,
-          cantidad: i.cantidad,
-          notas: i.nota,
+        items: itemsEnviados.map(item => ({
+          articulo_id: item.id,
+          cantidad: item.cantidad,
+          notas: item.nota,
         })),
       });
 
-      dispatch({
-        type: 'CONFIRMAR_PEDIDO',
-        payload: { pedidoId: resp?.id },
-      });
+      if (!resp.id) throw new Error('La API no devolvió el identificador del pedido.');
+      dispatch({ type: 'CONFIRMAR_PEDIDO', payload: { pedidoId: resp.id, items: itemsEnviados } });
     } catch (err) {
       console.error("No se pudo enviar el pedido a la API:", err);
+      try {
+        if (token) {
+          const mesaActualizada = await api.obtenerMesaPorQR(token);
+          if (mesaActualizada.estado === 'inactiva') {
+            setMesa(mesaActualizada);
+            alert("La mesa fue cerrada y ya no acepta nuevos pedidos.");
+            return;
+          }
+        }
+      } catch {
+        // Mantener el mensaje genérico si no se puede confirmar el estado de la mesa.
+      }
       alert("Error al enviar el pedido. Por favor intenta nuevamente.");
     } finally {
       setEnviandoPedido(false);
@@ -262,71 +474,101 @@ export default function MesaPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 font-inter">
-        <span className="material-symbols-outlined text-36 text-blue-600 animate-spin">
+      <div className="mesa-background flex min-h-screen flex-col items-center justify-center font-inter">
+        <span className="material-symbols-outlined mesa-primary animate-spin text-36">
           progress_activity
         </span>
-        <p className="text-slate-500 text-13 mt-12">Cargando menú de la mesa...</p>
+        <p className="mesa-muted mt-12 text-13">Cargando menú de la mesa...</p>
       </div>
     );
   }
 
   if (!mesa) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-slate-50 p-24 text-center font-inter">
-        <span className="material-symbols-outlined text-48 text-slate-400">table_restaurant</span>
-        <h2 className="text-16 font-medium text-slate-800 mt-12">Mesa no encontrada</h2>
-        <p className="text-slate-500 text-13 mt-4 max-w-xs">
+      <div className="mesa-background flex min-h-screen flex-col items-center justify-center p-24 text-center font-inter">
+        <span className="material-symbols-outlined mesa-subtle-text text-48">table_restaurant</span>
+        <h2 className="mesa-text mt-12 text-16 font-medium">Mesa no encontrada</h2>
+        <p className="mesa-muted mt-4 max-w-xs text-13">
           El código QR escaneado no coincide con ninguna mesa activa.
         </p>
       </div>
     );
   }
 
+  const branding: MesaBranding = mesa;
+  const theme = buildMesaTheme(branding);
+  const themeStyle = theme.style as CSSProperties;
+  const mesaCerrada = mesa.estado === 'inactiva';
   const totalItems = state.items.reduce((n, i) => n + i.cantidad, 0);
   const totalPrecio = state.items.reduce((n, i) => n + i.precio * i.cantidad, 0);
+  const itemsPedido = state.pedidos.flatMap(pedido => pedido.items);
+  const totalItemsPedido = itemsPedido.reduce((n, i) => n + i.cantidad, 0);
+  const totalPrecioPedido = itemsPedido.reduce((n, i) => n + i.precio * i.cantidad, 0);
+  const estadoPedidoActual = state.pedidos.some(pedido => pedido.estado === 'recibido')
+    ? 'recibido'
+    : state.pedidos.some(pedido => pedido.estado === 'preparando')
+      ? 'preparando'
+      : state.pedidos.length > 0
+        ? 'listo'
+        : state.estadoPedido;
+  const todosLosPedidosListos = state.pedidos.length > 0 && state.pedidos.every(pedido => pedido.estado === 'listo');
   const categoriaSeleccionada = menu.find(c => c.id === categoriaActiva) || menu[0];
   const categoriaItems = categoriaSeleccionada?.items ?? [];
 
+  if (mesaCerrada) {
+    return (
+      <div className="mesa-page min-h-screen font-inter" data-estilo-visual={theme.visualStyle} style={themeStyle}>
+        <BrandHeader branding={branding} mesa={mesa.numero} title="Mesa cerrada" />
+        <main className="mx-auto flex min-h-[calc(100vh-68px)] max-w-lg items-center px-16 py-24">
+          <div className="mesa-surface mesa-border w-full rounded-lg border p-24 text-center shadow-2xs">
+            <span className="material-symbols-outlined mesa-primary text-40">check_circle</span>
+            <h2 className="mesa-text mt-12 text-18 font-semibold">Esta mesa está cerrada</h2>
+            <p className="mesa-muted mt-8 text-13 leading-relaxed">
+              Ya no se pueden realizar nuevos pedidos en esta mesa. Consultá al personal del local si necesitás ayuda.
+            </p>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
   if (state.vista === 'seguimiento') {
     return (
-      <SeguimientoView
-        items={state.items}
-        estadoPedido={state.estadoPedido}
-        cuentaSolicitada={state.cuentaSolicitada}
-        mesa={mesa.numero}
-        onAgregarMas={() => dispatch({ type: 'SET_VISTA', payload: 'carta' })}
-        onPedirCuenta={() => dispatch({ type: 'PEDIR_CUENTA' })}
-      />
+      <div className="mesa-page" data-estilo-visual={theme.visualStyle} style={themeStyle}>
+        <SeguimientoView
+          branding={branding}
+          items={itemsPedido.length > 0 ? itemsPedido : state.items}
+          estadoPedido={estadoPedidoActual}
+          todosListos={todosLosPedidosListos}
+          cuentaSolicitada={state.cuentaSolicitada}
+          mesa={mesa.numero}
+          onAgregarMas={() => dispatch({ type: 'SET_VISTA', payload: 'carta' })}
+          onPedirCuenta={() => dispatch({ type: 'PEDIR_CUENTA' })}
+        />
+      </div>
     );
   }
 
   if (state.vista === 'carrito') {
     return (
-      <CartDrawer
-        items={state.items}
-        totalPrecio={totalPrecio}
-        onSetCantidad={(id, cantidad) => dispatch({ type: 'SET_CANTIDAD', payload: { id, cantidad } })}
-        onSetNota={(id, nota) => dispatch({ type: 'SET_NOTA', payload: { id, nota } })}
-        onVolver={() => dispatch({ type: 'SET_VISTA', payload: 'carta' })}
-        onConfirmar={handleConfirmarPedido}
-      />
+      <div className="mesa-page" data-estilo-visual={theme.visualStyle} style={themeStyle}>
+        <CartDrawer
+          branding={branding}
+          items={state.items}
+          totalPrecio={totalPrecio}
+          enviando={enviandoPedido}
+          onSetCantidad={(id, cantidad) => dispatch({ type: 'SET_CANTIDAD', payload: { id, cantidad } })}
+          onSetNota={(id, nota) => dispatch({ type: 'SET_NOTA', payload: { id, nota } })}
+          onVolver={() => dispatch({ type: 'SET_VISTA', payload: 'carta' })}
+          onConfirmar={handleConfirmarPedido}
+        />
+      </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-80 font-inter">
-      <header className="bg-white border-b border-slate-200 px-16 py-12 sticky top-0 z-10">
-        <div className="max-w-lg mx-auto flex items-center justify-between">
-          <div>
-            <p className="text-11 text-slate-500 font-mono uppercase tracking-wider">Mesa {mesa.numero}</p>
-            <h1 className="text-16 font-medium text-slate-900">Menú Digital</h1>
-          </div>
-          <span className="px-8 py-3 bg-green-50 text-green-700 text-11 font-mono rounded border border-green-200">
-            En vivo
-          </span>
-        </div>
-      </header>
+    <div className="mesa-page min-h-screen pb-80 font-inter" data-estilo-visual={theme.visualStyle} style={themeStyle}>
+      <BrandHeader branding={branding} mesa={mesa.numero} />
 
       <div className="max-w-lg mx-auto">
         <CategoriaNav
@@ -334,7 +576,7 @@ export default function MesaPage() {
           activa={categoriaActiva}
           onSelect={setCategoriaActiva}
         />
-        <div className="px-16 space-y-12">
+        <div className="space-y-12 px-16 pt-12">
           {categoriaItems.filter(i => i.disponible).map(item => (
             <ItemCard
               key={item.id}
@@ -347,26 +589,43 @@ export default function MesaPage() {
           ))}
 
           {categoriaItems.length === 0 && (
-            <div className="text-center py-40 text-slate-400 text-13">
+            <div className="mesa-subtle-text py-40 text-center text-13">
               No hay artículos disponibles en esta categoría.
             </div>
           )}
         </div>
       </div>
 
-      {totalItems > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 p-16 z-20 pointer-events-none">
-          <div className="max-w-lg mx-auto pointer-events-auto">
+      {(totalItems > 0 || state.pedidos.length > 0) && (
+        <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-20 p-16">
+          <div className="pointer-events-auto mx-auto max-w-lg">
             <button
-              onClick={() => dispatch({ type: 'SET_VISTA', payload: 'carrito' })}
+              onClick={() => dispatch({
+                type: 'SET_VISTA',
+                payload: totalItems > 0 ? 'carrito' : 'seguimiento',
+              })}
               disabled={enviandoPedido}
-              className="w-full bg-blue-600 hover:bg-blue-700 active:scale-98 text-white px-20 py-14 rounded-xl shadow-xl flex items-center justify-between font-medium transition-all"
+              className="mesa-primary-bg flex min-h-64 w-full items-center rounded-xl px-20 py-12 font-medium shadow-xl transition-all active:scale-[0.98] disabled:opacity-50"
             >
-              <div className="flex items-center gap-8">
-                <span className="text-16">🛒</span>
-                <span className="text-14 font-semibold">{totalItems} {totalItems === 1 ? 'ítem' : 'ítems'}</span>
+              <div className="grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-10">
+                <span className="text-16" aria-hidden="true">🛒</span>
+                <div className="min-w-0 text-left leading-tight">
+                  <span className="block truncate text-14 font-semibold">
+                    {totalItems > 0 ? 'Ver carrito' : 'Ver mi pedido'}
+                  </span>
+                  <span className="mt-2 block truncate text-11 opacity-80">
+                    {totalItems > 0
+                      ? `Pedido actual: ${totalItems} ${totalItems === 1 ? 'ítem' : 'ítems'}`
+                      : `Total: ${totalItemsPedido} ítems`}
+                  </span>
+                </div>
+                <div className="flex shrink-0 items-center gap-8 text-right">
+                  <span className="text-14 font-mono font-semibold">
+                    ${totalItems > 0 ? totalPrecio.toLocaleString() : totalPrecioPedido.toLocaleString()}
+                  </span>
+                  <span className="text-18" aria-hidden="true">→</span>
+                </div>
               </div>
-              <span className="text-14 font-mono font-semibold">${totalPrecio.toLocaleString()} · Ver carrito →</span>
             </button>
           </div>
         </div>

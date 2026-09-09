@@ -241,7 +241,7 @@ export interface MesaAPI {
   numero: number;
   capacidad: number;
   qr_token: string;
-  activa: boolean;
+  estado: 'activa' | 'inactiva';
   created_at: string;
   updated_at: string;
 }
@@ -263,6 +263,11 @@ export interface MesaPublica {
   numero: number;
   sucursal_id: string;
   tenant_id: string;
+  estado: 'activa' | 'inactiva';
+  nombre: string;
+  logo_url?: string | null;
+  color_primario?: string | null;
+  estilo_visual?: 'claro' | 'oscuro' | null;
 }
 
 export interface ArticuloPublico {
@@ -469,6 +474,12 @@ export const api = {
     return apiFetch<MesaAPI>(`/mesas/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
+    });
+  },
+
+  cerrarMesa: async (id: string) => {
+    return apiFetch<MesaAPI>(`/mesas/${encodeURIComponent(id)}/cerrar`, {
+      method: 'POST',
     });
   },
 

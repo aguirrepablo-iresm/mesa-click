@@ -23,6 +23,10 @@ func (h *Handlers) Crear(w http.ResponseWriter, r *http.Request) {
 	}
 	p, err := h.svc.Crear(r.Context(), input)
 	if err != nil {
+		if errors.Is(err, ErrMesaCerrada) {
+			jsonError(w, err.Error(), http.StatusConflict)
+			return
+		}
 		if errors.Is(err, ErrValidation) || errors.Is(err, ErrNotFound) {
 			jsonError(w, err.Error(), http.StatusBadRequest)
 			return

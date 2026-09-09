@@ -124,6 +124,7 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.Handle("GET /mesas", auth.Requerir(http.HandlerFunc(mesaH.Listar)))
 	mux.Handle("POST /mesas", auth.Requerir(http.HandlerFunc(mesaH.Crear)))
 	mux.Handle("PATCH /mesas/{id}", auth.Requerir(http.HandlerFunc(mesaH.Actualizar)))
+	mux.Handle("POST /mesas/{id}/cerrar", auth.Requerir(http.HandlerFunc(mesaH.Cerrar)))
 	mux.Handle("DELETE /mesas/{id}", auth.Requerir(http.HandlerFunc(mesaH.Eliminar)))
 
 	// Pedidos

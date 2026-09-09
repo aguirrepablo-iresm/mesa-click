@@ -95,8 +95,10 @@
   --font-display: var(--font-anton), "Arial Narrow", system-ui, sans-serif; /* sustituto de Foggy */
 
   /* Border Radius */
+  --radius-sm: 4px;
   --radius-md: 8px;
   --radius-lg: 8px;
+  --radius-xl: 12px;
 }
 
 :root {
@@ -108,14 +110,14 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter);
-  letter-spacing: 0.01em;
+  letter-spacing: 0;
   -webkit-font-smoothing: antialiased;
 }
 
 /* Base Headings */
 h1, h2, h3, h4, h5, h6 {
   font-weight: 600;
-  letter-spacing: -0.005em;
+  letter-spacing: 0;
 }
 
 /* Display headline — condensada, sólo para hero / titulares grandes */
@@ -160,4 +162,102 @@ input:focus, select:focus, textarea:focus {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* WCAG 2.1 AA: keep touch controls easy to hit and keyboard focus visible. */
+:where(button, [role="button"], input, select, textarea, summary) {
+  min-width: 44px;
+  min-height: 44px;
+}
+
+:where(button, [role="button"], a, input, select, textarea, summary):focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+button,
+[role="button"] {
+  touch-action: manipulation;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Theme surface for the public table flow. The values are injected per tenant. */
+.mesa-page {
+  background-color: var(--mesa-background, #f8fafc);
+  color: var(--mesa-text, #0f172a);
+}
+
+.mesa-background {
+  background-color: var(--mesa-background, #f8fafc);
+}
+
+.mesa-header {
+  background-color: var(--mesa-header, var(--mesa-surface, #ffffff));
+}
+
+.mesa-surface {
+  background-color: var(--mesa-surface, #ffffff);
+}
+
+.mesa-subtle-surface {
+  background-color: var(--mesa-subtle-surface, #f1f5f9);
+}
+
+.mesa-text {
+  color: var(--mesa-text, #0f172a);
+}
+
+.mesa-muted {
+  color: var(--mesa-muted, #475569);
+}
+
+.mesa-subtle-text {
+  color: var(--mesa-subtle-text, #64748b);
+}
+
+.mesa-primary {
+  color: var(--mesa-primary, #f54927);
+}
+
+.mesa-primary-bg {
+  background-color: var(--mesa-primary, #f54927);
+  color: var(--mesa-primary-contrast, #ffffff);
+}
+
+.mesa-primary-bg:hover {
+  filter: brightness(0.92);
+}
+
+.mesa-primary-contrast {
+  color: var(--mesa-primary-contrast, #ffffff);
+}
+
+.mesa-primary-soft {
+  background-color: var(--mesa-primary-soft, rgba(37, 99, 235, 0.14));
+}
+
+.mesa-border {
+  border-color: var(--mesa-border, #cbd5e1);
+}
+
+.mesa-live {
+  background: rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.38);
+  color: #047857;
+}
+
+[data-estilo-visual="oscuro"] .mesa-live {
+  background: rgba(52, 211, 153, 0.16);
+  border-color: rgba(110, 231, 183, 0.48);
+  color: #a7f3d0;
 }

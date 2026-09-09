@@ -20,6 +20,9 @@ func (m *mockStore) Crear(ctx context.Context, tenantID string, input mesa.MesaI
 func (m *mockStore) Actualizar(ctx context.Context, id, tenantID string, u mesa.MesaUpdate) (*mesa.Mesa, error) {
 	return &mesa.Mesa{ID: id}, nil
 }
+func (m *mockStore) Cerrar(ctx context.Context, id, tenantID string) (*mesa.Mesa, error) {
+	return &mesa.Mesa{ID: id, Estado: "inactiva"}, nil
+}
 func (m *mockStore) Eliminar(ctx context.Context, id, tenantID string) error { return nil }
 func (m *mockStore) ObtenerPorQRToken(ctx context.Context, token string) (*mesa.MesaPublica, error) {
 	return &mesa.MesaPublica{ID: "m-1"}, nil

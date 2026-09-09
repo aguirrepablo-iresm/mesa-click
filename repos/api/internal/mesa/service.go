@@ -38,6 +38,10 @@ func (svc *Service) Actualizar(ctx context.Context, id, tenantID string, u MesaU
 	return svc.store.Actualizar(ctx, id, tenantID, u)
 }
 
+func (svc *Service) Cerrar(ctx context.Context, id, tenantID string) (*Mesa, error) {
+	return svc.store.Cerrar(ctx, id, tenantID)
+}
+
 func (svc *Service) Eliminar(ctx context.Context, id, tenantID string) error {
 	return svc.store.Eliminar(ctx, id, tenantID)
 }

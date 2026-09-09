@@ -6,8 +6,9 @@ import (
 )
 
 var (
-	ErrNotFound  = errors.New("pedido no encontrado")
-	ErrValidation = errors.New("validación fallida")
+	ErrNotFound    = errors.New("pedido no encontrado")
+	ErrValidation  = errors.New("validación fallida")
+	ErrMesaCerrada = errors.New("mesa cerrada")
 )
 
 var EstadosValidos = []string{"recibido", "preparando", "listo", "cerrado"}
@@ -33,7 +34,7 @@ type PedidoItem struct {
 }
 
 type NuevoPedidoInput struct {
-	MesaID string          `json:"mesa_id"`
+	MesaID string           `json:"mesa_id"`
 	Items  []NuevoItemInput `json:"items"`
 }
 

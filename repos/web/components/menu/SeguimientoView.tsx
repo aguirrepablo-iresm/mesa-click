@@ -1,8 +1,12 @@
-import { CartItem, EstadoPedido } from "@/app/mesa/[token]/page";
+import type { CartItem, EstadoPedido } from "@/app/mesa/[token]/page";
+import BrandHeader from "./BrandHeader";
+import type { MesaBranding } from "./BrandHeader";
 
 interface Props {
+  branding: MesaBranding;
   items: CartItem[];
   estadoPedido: EstadoPedido;
+  todosListos: boolean;
   cuentaSolicitada: boolean;
   mesa: number;
   onAgregarMas: () => void;
@@ -26,8 +30,10 @@ const DEMORA_LABELS: Record<EstadoPedido, string> = {
 };
 
 export default function SeguimientoView({
+  branding,
   items,
   estadoPedido,
+  todosListos,
   cuentaSolicitada,
   mesa,
   onAgregarMas,
@@ -37,24 +43,13 @@ export default function SeguimientoView({
   const pasoActual = PASOS.indexOf(estadoPedido);
 
   return (
-    <div className="min-h-screen bg-slate-50 font-inter pb-32">
-      <header className="bg-white border-b border-slate-200 px-16 py-14 shadow-2xs">
-        <div className="max-w-lg mx-auto flex items-center justify-between">
-          <div>
-            <p className="text-11 text-slate-500 font-mono uppercase tracking-wider">Mesa {mesa}</p>
-            <h1 className="text-16 font-medium text-slate-900">Estado de tu pedido</h1>
-          </div>
-          <div className="flex items-center gap-6 px-10 py-4 bg-green-50 text-green-700 text-11 font-mono rounded-full border border-green-200">
-            <span className="w-6 h-6 rounded-full bg-green-500 animate-pulse" />
-            <span>En vivo</span>
-          </div>
-        </div>
-      </header>
+    <div className="mesa-background min-h-screen pb-32 font-inter">
+      <BrandHeader branding={branding} mesa={mesa} title="Estado de tu pedido" />
 
       <div className="max-w-lg mx-auto px-16 py-20 space-y-16">
         {/* Stepper Card */}
-        <div className="bg-white rounded-lg border border-slate-200 p-20 space-y-16 shadow-2xs">
-          <h2 className="text-14 font-medium text-slate-900">Progreso del pedido</h2>
+        <div className="mesa-surface mesa-border space-y-16 rounded-lg border p-20 shadow-2xs">
+          <h2 className="mesa-text text-14 font-medium">Progreso del pedido</h2>
           <div className="space-y-16">
             {PASOS.map((paso, i) => {
               const activo = i === pasoActual;
@@ -63,11 +58,11 @@ export default function SeguimientoView({
                 <div key={paso} className="flex items-start gap-14">
                   <div
                     className={`w-28 h-28 rounded-full flex items-center justify-center flex-shrink-0 text-13 font-semibold mt-1 transition-all ${
-                      completado
-                        ? 'bg-green-500 text-white shadow-xs'
+                    completado
+                        ? 'bg-emerald-500 text-white shadow-xs'
                         : activo
-                        ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20 ring-4 ring-blue-100'
-                        : 'bg-slate-100 text-slate-400'
+                        ? 'mesa-primary-bg shadow-md ring-4 ring-[var(--mesa-primary-soft)]'
+                        : 'mesa-subtle-surface mesa-subtle-text'
                     }`}
                   >
                     {completado ? '✓' : i + 1}
@@ -76,16 +71,16 @@ export default function SeguimientoView({
                     <p
                       className={`text-14 font-medium ${
                         activo
-                          ? 'text-slate-900 font-semibold'
+                          ? 'mesa-text font-semibold'
                           : completado
-                          ? 'text-green-700'
-                          : 'text-slate-400'
+                          ? 'text-emerald-700'
+                          : 'mesa-subtle-text'
                       }`}
                     >
                       {PASO_LABELS[paso]}
                     </p>
                     {activo && (
-                      <p className="text-12 text-blue-600 font-medium mt-2 bg-blue-50 px-8 py-2 rounded inline-block">
+                      <p className="mesa-primary mesa-primary-soft mt-2 inline-block rounded px-8 py-2 text-12 font-medium">
                         {DEMORA_LABELS[paso]}
                       </p>
                     )}
@@ -96,28 +91,40 @@ export default function SeguimientoView({
           </div>
         </div>
 
+        {todosListos && (
+          <div className="mesa-primary-soft mesa-border rounded-lg border px-16 py-14 text-center shadow-xs">
+            <p className="mesa-primary text-14 font-semibold">✓ No hay pedidos pendientes</p>
+            <p className="mesa-muted mt-2 text-12">Todos los pedidos de esta mesa están listos.</p>
+          </div>
+        )}
+
         {/* Resumen del pedido */}
-        <div className="bg-white rounded-lg border border-slate-200 p-20 space-y-10 shadow-2xs">
-          <h3 className="text-13 font-medium text-slate-900">Resumen de la comanda</h3>
-          <div className="divide-y divide-slate-100">
-            {items.map(item => (
-              <div key={item.id} className="py-6 flex justify-between text-13 text-slate-700">
+        <div className="mesa-surface mesa-border space-y-10 rounded-lg border p-20 shadow-2xs">
+          <h3 className="mesa-text text-13 font-medium">Resumen de la mesa</h3>
+          <div className="divide-y divide-[var(--mesa-border)]">
+            {items.map((item, index) => (
+              <div key={`${item.id}-${index}`} className="mesa-muted flex justify-between py-6 text-13">
                 <span>{item.cantidad}× {item.nombre}</span>
-                <span className="font-mono text-slate-900 font-medium">${(item.precio * item.cantidad).toLocaleString()}</span>
+                <span className="mesa-text font-mono font-medium">${(item.precio * item.cantidad).toLocaleString()}</span>
               </div>
             ))}
           </div>
-          <div className="flex justify-between text-14 font-semibold text-slate-900 border-t border-slate-200 pt-10">
+          <div className="mesa-text flex justify-between border-t pt-10 text-14 font-semibold mesa-border">
             <span>Total</span>
-            <span className="font-mono text-blue-600 font-semibold">${total.toLocaleString()}</span>
+            <span className="mesa-primary font-mono font-semibold">${total.toLocaleString()}</span>
           </div>
         </div>
 
         {/* Acciones */}
         <div className="space-y-10 pt-4">
+          <div className="mesa-primary-soft mesa-border w-full rounded-lg border py-16 text-center shadow-xs">
+            <p className="mesa-primary text-14 font-semibold">✓ Pedido realizado con éxito</p>
+            <p className="mesa-muted mt-2 text-12">Tu pedido fue enviado a cocina para su preparación.</p>
+          </div>
+
           <button
             onClick={onAgregarMas}
-            className="w-full py-12 border border-slate-300 text-slate-700 text-13 font-medium rounded-lg hover:bg-white active:scale-98 transition-all flex items-center justify-center gap-6 shadow-2xs"
+            className="mesa-surface mesa-muted mesa-border flex min-h-52 w-full items-center justify-center gap-6 rounded-lg border py-12 text-13 font-medium shadow-2xs transition-all hover:border-[var(--mesa-primary)] active:scale-[0.98]"
           >
             <span className="text-16 font-semibold">+</span>
             <span>Agregar más ítems</span>
@@ -126,15 +133,15 @@ export default function SeguimientoView({
           {!cuentaSolicitada ? (
             <button
               onClick={onPedirCuenta}
-              className="w-full py-14 bg-slate-900 text-white text-14 font-semibold rounded-lg hover:bg-slate-800 active:scale-98 transition-all flex items-center justify-center gap-6 shadow-md"
+              className="mesa-primary-bg flex min-h-52 w-full items-center justify-center gap-6 rounded-lg py-14 text-14 font-semibold shadow-md transition-all active:scale-[0.98]"
             >
               <span>Pedir la cuenta</span>
               <span className="text-16">🧾</span>
             </button>
           ) : (
-            <div className="w-full py-16 bg-green-50 border border-green-200 rounded-lg text-center shadow-xs animate-in fade-in">
-              <p className="text-14 font-semibold text-green-800">✓ El mozo fue notificado</p>
-              <p className="text-12 text-green-700 mt-2">Enseguida se acerca con el ticket a tu mesa.</p>
+            <div className="mesa-primary-soft mesa-border w-full rounded-lg border py-16 text-center shadow-xs animate-in fade-in">
+              <p className="mesa-primary text-14 font-semibold">✓ Solicitud de cuenta enviada</p>
+              <p className="mesa-muted mt-2 text-12">La cuenta queda asociada a todos los pedidos de esta mesa.</p>
             </div>
           )}
         </div>
