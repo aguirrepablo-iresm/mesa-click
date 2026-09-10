@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { api, PedidoAPI, Sucursal, MesaAPI } from "@/lib/api";
+import { EmptyState, Skeleton, useToast } from "@/components/ui";
 
 export interface PedidoVista {
   id: string;
@@ -283,6 +284,7 @@ function MesaDetalleModal({
 }
 
 export default function RecepcionistaSection() {
+  const toast = useToast();
   const [pedidos, setPedidos] = useState<PedidoVista[]>([]);
   const [sucursal, setSucursal] = useState<Sucursal | null>(null);
   const [mesas, setMesas] = useState<Record<string, MesaAPI>>({});
@@ -458,6 +460,7 @@ export default function RecepcionistaSection() {
       setPedidos(prev =>
         prev.map(p => (p.id === pedidoId ? { ...p, estado: nextEstado } : p))
       );
+      toast.success('Estado actualizado.');
     } catch (err) {
       console.error("Error al cambiar estado del pedido:", err);
     }
@@ -467,6 +470,7 @@ export default function RecepcionistaSection() {
     try {
       await api.cambiarEstadoPedido(pedidoId, 'cerrado');
       setPedidos(prev => prev.filter(p => p.id !== pedidoId));
+      toast.success('Pedido cerrado y entregado.');
     } catch (err) {
       console.error("Error al cerrar pedido:", err);
     }
@@ -490,11 +494,13 @@ export default function RecepcionistaSection() {
       ));
 
       if (resultados.some(resultado => resultado.status === 'rejected')) {
-        alert('Algunos pedidos no pudieron actualizarse. Revisa el estado de la mesa.');
+        toast.error('Algunos pedidos no pudieron actualizarse. Revisa el estado de la mesa.');
+      } else {
+        toast.success('Todos los pedidos marcados como listos.');
       }
     } catch (err) {
       console.error("Error al marcar la mesa como lista:", err);
-      alert('No se pudo actualizar el estado de la mesa.');
+      toast.error('No se pudo actualizar el estado de la mesa.');
     } finally {
       setMesaAccionEnCurso(null);
     }
@@ -502,7 +508,7 @@ export default function RecepcionistaSection() {
 
   const cerrarCuenta = async (grupo: MesaGrupo) => {
     if (!grupo.mesaId) {
-      alert('No se pudo identificar la mesa para cerrarla.');
+      toast.error('No se pudo identificar la mesa para cerrarla.');
       return;
     }
     if (!window.confirm(`¿Seguro que deseas cerrar la cuenta de la Mesa ${grupo.mesa}? Se finalizarán los pedidos actuales y la mesa quedará disponible para una nueva cuenta.`)) return;
@@ -520,9 +526,10 @@ export default function RecepcionistaSection() {
         },
       }));
       setMesaDetalleKey(null);
+      toast.success('Cuenta cerrada correctamente.');
     } catch (err) {
       console.error("Error al cerrar la cuenta:", err);
-      alert('No se pudo cerrar la cuenta. Intenta nuevamente.');
+      toast.error('No se pudo cerrar la cuenta. Intenta nuevamente.');
     } finally {
       setMesaAccionEnCurso(null);
     }
@@ -561,7 +568,10 @@ export default function RecepcionistaSection() {
         <div>
           <h2 className="text-20 font-medium text-ash-graphite">Panel Recepcionista</h2>
           <p className="text-13 text-sage-green mt-2">
-            {mesasAgrupadas.length} {mesasAgrupadas.length === 1 ? 'mesa activa' : 'mesas activas'} · {pedidos.length} {pedidos.length === 1 ? 'pedido' : 'pedidos'} {loading && "(cargando...)"}
+            {loading 
+              ? 'Cargando pedidos...' 
+              : `${mesasAgrupadas.length} ${mesasAgrupadas.length === 1 ? 'mesa activa' : 'mesas activas'} · ${pedidos.length} ${pedidos.length === 1 ? 'pedido' : 'pedidos'}`
+            }
           </p>
         </div>
         <div className="flex items-center gap-8 self-start sm:self-auto bg-ghost-fog px-12 py-6 rounded-full border border-ash-graphite/10">
@@ -574,7 +584,22 @@ export default function RecepcionistaSection() {
         </div>
       </div>
 
-      {conAlerta.length > 0 && (
+      {loading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
+          {[1, 2, 3].map(i => (
+            <div key={i} className="border border-ash-graphite rounded-lg overflow-hidden bg-canvas-white">
+              <Skeleton className="h-40 w-full rounded-none" />
+              <div className="p-16 space-y-8">
+                <Skeleton className="h-12 w-3/4" />
+                <Skeleton className="h-12 w-1/2" />
+                <Skeleton className="h-12 w-2/3" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {!loading && conAlerta.length > 0 && (
         <div className="space-y-8">
           <p className="text-11 font-mono text-alert-red uppercase tracking-wider font-semibold">
             ⚠️ Solicitudes de cuenta
@@ -591,7 +616,7 @@ export default function RecepcionistaSection() {
         </div>
       )}
 
-      {sinAlerta.length > 0 && (
+      {!loading && sinAlerta.length > 0 && (
         <div className="space-y-8">
           <p className="text-11 font-mono text-sage-green uppercase tracking-wider">Pedidos en curso</p>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
@@ -606,10 +631,16 @@ export default function RecepcionistaSection() {
         </div>
       )}
 
-      {pedidos.length === 0 && !loading && (
-        <div className="text-center py-40 text-sage-green text-13 bg-vanilla-cream rounded-lg border border-ash-graphite/20">
-          No hay pedidos activos en este momento.
-        </div>
+      {!loading && pedidos.length === 0 && (
+        <EmptyState
+          icon={sseConectado ? "receipt_long" : "wifi_off"}
+          title="Sin pedidos activos"
+          description={
+            sseConectado
+              ? "Cuando un cliente haga un pedido o pida la cuenta, aparecerá aquí en tiempo real."
+              : "Conectando al canal en vivo..."
+          }
+        />
       )}
 
       {mesaDetalle && (

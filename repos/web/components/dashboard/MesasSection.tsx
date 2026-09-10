@@ -2,21 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import QRCode from "qrcode";
 import { api, MesaAPI, Sucursal, getErrorMessage } from "@/lib/api";
-
-function getPublicAppOrigin(configuredOrigin?: string) {
-  const configured = configuredOrigin?.replace(/\/+$/, "");
-
-  if (typeof window === "undefined") {
-    return configured || "";
-  }
-
-  const hostname = window.location.hostname.toLowerCase();
-  const isLoopback = hostname === "localhost" || hostname === "127.0.0.1" || hostname === "[::1]";
-
-  // Desde la red local, el origen actual es la única fuente confiable si la IP
-  // del equipo cambió desde el último build o desde que se imprimió el QR.
-  return isLoopback ? configured || window.location.origin : window.location.origin;
-}
+import { EmptyState, Skeleton, useToast } from "@/components/ui";
 
 function QRCanvas({ token }: { token: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -24,7 +10,7 @@ function QRCanvas({ token }: { token: string }) {
 
   useEffect(() => {
     if (!canvasRef.current) return;
-    const origin = getPublicAppOrigin(process.env.NEXT_PUBLIC_APP_URL);
+    const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const url = `${origin}/mesa/${token}`;
     setPublicUrl(url);
     QRCode.toCanvas(canvasRef.current, url, { width: 140, margin: 1 });
@@ -67,6 +53,7 @@ function QRCanvas({ token }: { token: string }) {
 }
 
 export default function MesasSection() {
+  const toast = useToast();
   const [mesas, setMesas] = useState<MesaAPI[]>([]);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -153,6 +140,7 @@ export default function MesasSection() {
       setNuevoNumero('');
       setNuevaCapacidad('4');
       setMostrarFormMesa(false);
+      toast.success('Mesa creada correctamente.');
     } catch (err: unknown) {
       setErrorMsg(getErrorMessage(err, 'Error al crear la mesa.'));
     }
@@ -163,20 +151,10 @@ export default function MesasSection() {
     try {
       await api.eliminarMesa(id);
       setMesas(prev => prev.filter(m => m.id !== id));
+      toast.success('Mesa eliminada.');
     } catch (err: unknown) {
       console.error("No se pudo eliminar mesa:", err);
       setErrorMsg(getErrorMessage(err, 'Error al eliminar la mesa.'));
-    }
-  };
-
-  const handleReactivarMesa = async (mesa: MesaAPI) => {
-    if (!confirm(`¿Seguro que deseas reactivar la Mesa ${mesa.numero}? Podrá recibir nuevos pedidos.`)) return;
-    try {
-      const actualizada = await api.actualizarMesa(mesa.id, { estado: 'activa' });
-      setMesas(prev => prev.map(item => item.id === mesa.id ? actualizada : item));
-    } catch (err: unknown) {
-      console.error("No se pudo reactivar mesa:", err);
-      setErrorMsg(getErrorMessage(err, 'Error al reactivar la mesa.'));
     }
   };
 
@@ -186,7 +164,7 @@ export default function MesasSection() {
         <div>
           <h2 className="text-20 font-medium text-ash-graphite">Mesas & Códigos QR</h2>
           <p className="text-13 text-sage-green mt-4">
-            {mesas.length} mesas configuradas con QR activo {loading && "(cargando...)"}
+            {loading ? 'Cargando mesas...' : `${mesas.length} mesas configuradas con QR activo`}
           </p>
         </div>
         <button
@@ -255,50 +233,58 @@ export default function MesasSection() {
         </form>
       )}
 
-      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-16">
-        {mesas.map(mesa => (
-          <div key={mesa.id} className={`border rounded-lg p-16 space-y-12 bg-canvas-white flex flex-col items-center ${mesa.estado === 'inactiva' ? 'border-alert-red/60' : 'border-ash-graphite'}`}>
-            <div className="flex items-center justify-between w-full">
-              <div className="min-w-0">
-                <span className="text-15 font-medium text-ash-graphite">Mesa {mesa.numero}</span>
-                <span className={`mt-2 block text-10 font-mono uppercase ${mesa.estado === 'inactiva' ? 'text-alert-red' : 'text-sage-green'}`}>
-                  {mesa.estado === 'inactiva' ? 'Cerrada' : 'Activa'}
-                </span>
-              </div>
-              <button
-                onClick={() => handleEliminarMesa(mesa.id)}
-                title="Eliminar mesa"
-                className="p-4 text-12 text-alert-red hover:opacity-70"
-              >
-                ✕
-              </button>
+      {/* Skeleton de carga */}
+      {loading && (
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-16">
+          {[1, 2, 3, 4].map(i => (
+            <div key={i} className="border border-ash-graphite rounded-lg p-16 space-y-12 bg-canvas-white">
+              <Skeleton className="h-14 w-2/3" />
+              <Skeleton className="h-140 w-full" />
+              <Skeleton className="h-10 w-1/2 mx-auto" />
             </div>
-            <QRCanvas token={mesa.qr_token} />
-            {mesa.estado === 'inactiva' && (
-              <button
-                type="button"
-                onClick={() => void handleReactivarMesa(mesa)}
-                className="min-h-44 w-full rounded-md border border-plain-green px-10 py-8 text-12 font-medium text-plain-green hover:bg-ghost-fog"
-              >
-                Reactivar mesa
-              </button>
-            )}
-            <div className="space-y-2 w-full">
-              <p className="text-9 font-mono text-sage-green text-center break-all truncate">
-                {mesa.qr_token}
-              </p>
-              <p className="text-11 text-sage-green text-center font-mono">
-                Capacidad: {mesa.capacidad} pers.
-              </p>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {mesas.length === 0 && !loading && (
-        <div className="text-center py-40 text-sage-green text-13">
-          No hay mesas registradas. Creá la primera para generar los códigos QR.
+          ))}
         </div>
+      )}
+
+      {/* Grid de mesas */}
+      {!loading && (
+        <>
+          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-16">
+            {mesas.map(mesa => (
+              <div key={mesa.id} className="border border-ash-graphite rounded-lg p-16 space-y-12 bg-canvas-white flex flex-col items-center">
+                <div className="flex items-center justify-between w-full">
+                  <span className="text-15 font-medium text-ash-graphite">Mesa {mesa.numero}</span>
+                  <button
+                    onClick={() => handleEliminarMesa(mesa.id)}
+                    title="Eliminar mesa"
+                    className="p-4 text-12 text-alert-red hover:opacity-70"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <QRCanvas token={mesa.qr_token} />
+                <div className="space-y-2 w-full">
+                  <p className="text-9 font-mono text-sage-green text-center break-all truncate">
+                    {mesa.qr_token}
+                  </p>
+                  <p className="text-11 text-sage-green text-center font-mono">
+                    Capacidad: {mesa.capacidad} pers.
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {mesas.length === 0 && (
+            <EmptyState
+              icon="table_restaurant"
+              title="No hay mesas configuradas"
+              description="Creá tu primera mesa para generar el código QR que los clientes escanean."
+              actionLabel="Nueva Mesa"
+              onAction={() => { setErrorMsg(''); setMostrarFormMesa(true); }}
+            />
+          )}
+        </>
       )}
     </div>
   );
