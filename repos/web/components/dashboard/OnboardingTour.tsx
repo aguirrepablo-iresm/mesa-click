@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useToast } from "@/components/ui";
 
 export interface TourStep {
   id: string;
@@ -91,6 +92,7 @@ interface OnboardingTourProps {
     section: "carta" | "mesas" | "recepcionista" | "configuracion"
   ) => void;
   tenantName?: string;
+  tenantId?: string;
 }
 
 export default function OnboardingTour({
@@ -99,8 +101,10 @@ export default function OnboardingTour({
   activeSection,
   onNavigateSection,
   tenantName,
+  tenantId,
 }: OnboardingTourProps) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const toast = useToast();
 
   // Sincronizar sección activa al cambiar de paso
   const goToStep = useCallback(
@@ -163,10 +167,14 @@ export default function OnboardingTour({
     if (typeof window !== "undefined") {
       try {
         localStorage.setItem(TOUR_STORAGE_KEY, "true");
+        if (tenantId) {
+          localStorage.setItem(`mesaclick_tour_seen_${tenantId}`, "true");
+        }
       } catch (err) {
         console.warn("No se pudo guardar estado del tour:", err);
       }
     }
+    toast.success("¡Recorrido completado! Podés volver a hacerlo cuando quieras desde 'Hacer el recorrido de nuevo'.");
     onClose();
   };
 
@@ -174,10 +182,14 @@ export default function OnboardingTour({
     if (typeof window !== "undefined") {
       try {
         localStorage.setItem(TOUR_STORAGE_KEY, "true");
+        if (tenantId) {
+          localStorage.setItem(`mesaclick_tour_seen_${tenantId}`, "true");
+        }
       } catch (err) {
         console.warn("No se pudo guardar estado del tour:", err);
       }
     }
+    toast.info("Recorrido omitido. Podés volver a hacerlo cuando quieras con el botón 'Hacer el recorrido de nuevo'.");
     onClose();
   };
 
@@ -206,9 +218,12 @@ export default function OnboardingTour({
               </span>
             </div>
             <div>
-              <div className="flex items-center gap-8">
+              <div className="flex items-center gap-8 flex-wrap">
                 <span className="inline-flex items-center px-8 py-2 rounded-full text-10 font-bold uppercase tracking-wider bg-ash-graphite text-canvas-white">
                   {currentStep.badge}
+                </span>
+                <span className="inline-flex items-center px-8 py-2 rounded-full text-10 font-mono font-medium tracking-wide bg-vanilla-cream border border-concrete text-deep-forest">
+                  Recorrido Opcional
                 </span>
                 {tenantName && (
                   <span className="text-11 font-mono text-sage-green truncate max-w-160">
@@ -228,7 +243,7 @@ export default function OnboardingTour({
             onClick={handleSkip}
             className="text-sage-green hover:text-ash-graphite p-4 rounded-md hover:bg-vanilla-cream transition-colors cursor-pointer"
             aria-label="Cerrar y omitir tour"
-            title="Cerrar tour"
+            title="Cerrar recorrido (es opcional)"
           >
             <span className="material-symbols-outlined text-20">close</span>
           </button>
@@ -270,7 +285,17 @@ export default function OnboardingTour({
         </div>
 
         {/* Contenido Principal */}
-        <div className="px-20 py-16 space-y-16 overflow-y-auto max-h-[60vh]">
+        <div className="px-20 py-16 space-y-14 overflow-y-auto max-h-[60vh]">
+          {/* Mensaje de cortesía sobre la naturaleza opcional */}
+          <div className="flex items-center gap-8 py-6 px-10 bg-ghost-fog border border-concrete/70 rounded text-11 text-sage-green">
+            <span className="material-symbols-outlined text-16 text-stone shrink-0">
+              visibility
+            </span>
+            <span>
+              Este recorrido es <strong>opcional</strong>. Podés avanzar para conocer los módulos o salir en cualquier momento. Siempre podés volver a hacerlo con el botón <strong>&apos;Hacer el recorrido de nuevo&apos;</strong>.
+            </span>
+          </div>
+
           <div>
             <p className="text-12 font-medium text-sage-green uppercase tracking-wide">
               {currentStep.subtitle}
@@ -310,15 +335,15 @@ export default function OnboardingTour({
         </div>
 
         {/* Pie de navegación y acciones */}
-        <div className="px-20 py-16 border-t border-concrete/60 bg-vanilla-cream/30 flex items-center justify-between gap-12 shrink-0">
+        <div className="px-20 py-16 border-t border-concrete/60 bg-vanilla-cream/30 flex flex-col sm:flex-row items-center justify-between gap-12 shrink-0">
           <button
             onClick={handleSkip}
             className="text-12 font-medium text-sage-green hover:text-ash-graphite transition-colors underline decoration-dotted underline-offset-4 cursor-pointer"
           >
-            Omitir tour
+            Omitir recorrido (podés hacerlo luego)
           </button>
 
-          <div className="flex items-center gap-8">
+          <div className="flex items-center gap-8 w-full sm:w-auto justify-end">
             {currentStepIndex > 0 && (
               <button
                 onClick={handlePrev}
