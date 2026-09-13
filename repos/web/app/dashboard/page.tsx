@@ -100,16 +100,7 @@ export default function DashboardPage() {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-12 sm:gap-16">
-          <button
-            onClick={() => setIsTourOpen(true)}
-            className="flex items-center gap-6 px-10 py-5 text-12 font-medium text-ash-graphite border border-concrete hover:border-plain-green hover:bg-vanilla-cream rounded-md transition-all cursor-pointer"
-            title="Hacer el recorrido guiado de nuevo"
-            aria-label="Hacer el recorrido guiado de nuevo"
-          >
-            <span className="material-symbols-outlined text-16 text-ash-graphite">replay</span>
-            <span className="hidden sm:inline">Hacer el recorrido de nuevo</span>
-          </button>
+        <div className="flex items-center gap-16">
           <button className="material-symbols-outlined text-ash-graphite hover:text-plain-green transition-colors text-20">
             notifications
           </button>
@@ -130,7 +121,7 @@ export default function DashboardPage() {
                   </div>
                   <UserMenuItem icon="account_circle" label="Perfil" />
                   <div onClick={() => { setIsTourOpen(true); setIsUserMenuOpen(false); }}>
-                    <UserMenuItem icon="replay" label="Hacer el recorrido de nuevo" />
+                    <UserMenuItem icon="school" label="Recorrido tutorial" />
                   </div>
                   <div className="mt-8 pt-8 border-t border-ghost-fog">
                     <div onClick={handleLogout}>
@@ -204,8 +195,8 @@ export default function DashboardPage() {
               }}
             />
             <NavItem
-              icon="replay"
-              label="Hacer recorrido de nuevo"
+              icon="school"
+              label="Recorrido tutorial"
               expanded={true}
               dataTour="nav-tour"
               onClick={() => {
@@ -245,8 +236,8 @@ export default function DashboardPage() {
               onClick={() => setActiveSection("configuracion")}
             />
             <NavItem
-              icon="replay"
-              label="Hacer recorrido de nuevo"
+              icon="school"
+              label="Recorrido tutorial"
               expanded={isExpanded}
               dataTour="nav-tour"
               onClick={() => setIsTourOpen(true)}
