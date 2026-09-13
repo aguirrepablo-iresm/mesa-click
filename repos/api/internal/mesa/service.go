@@ -5,6 +5,8 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
+
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/notificacion"
 )
 
 type Service struct {
@@ -38,8 +40,13 @@ func (svc *Service) Actualizar(ctx context.Context, id, tenantID string, u MesaU
 	return svc.store.Actualizar(ctx, id, tenantID, u)
 }
 
-func (svc *Service) Cerrar(ctx context.Context, id, tenantID string) (*Mesa, error) {
-	return svc.store.Cerrar(ctx, id, tenantID)
+func (svc *Service) CerrarCuenta(ctx context.Context, id, tenantID string) (*Mesa, error) {
+	m, err := svc.store.CerrarCuenta(ctx, id, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	notificacion.Instancia.Publicar(fmt.Sprintf("sucursal:%s", m.SucursalID), "cuenta_cerrada", m)
+	return m, nil
 }
 
 func (svc *Service) Eliminar(ctx context.Context, id, tenantID string) error {
@@ -48,6 +55,15 @@ func (svc *Service) Eliminar(ctx context.Context, id, tenantID string) error {
 
 func (svc *Service) ObtenerPorQRToken(ctx context.Context, token string) (*MesaPublica, error) {
 	return svc.store.ObtenerPorQRToken(ctx, token)
+}
+
+func (svc *Service) SolicitarCuentaPorQRToken(ctx context.Context, token string) (*MesaPublica, error) {
+	mp, err := svc.store.SolicitarCuentaPorQRToken(ctx, token)
+	if err != nil {
+		return nil, err
+	}
+	notificacion.Instancia.Publicar(fmt.Sprintf("sucursal:%s", mp.SucursalID), "cuenta_solicitada", mp)
+	return mp, nil
 }
 
 func generarQRToken() (string, error) {

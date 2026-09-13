@@ -31,6 +31,9 @@ func (svc *Service) Crear(ctx context.Context, input NuevoPedidoInput) (*Pedido,
 		if errors.Is(err, ErrMesaCerrada) {
 			return nil, fmt.Errorf("mesa cerrada: %w", ErrMesaCerrada)
 		}
+		if errors.Is(err, ErrCuentaSolicitada) {
+			return nil, fmt.Errorf("la cuenta ya fue solicitada: %w", ErrCuentaSolicitada)
+		}
 		return nil, fmt.Errorf("mesa no encontrada: %w", ErrNotFound)
 	}
 	p, err := svc.store.Crear(ctx, input, sucursalID)

@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { CartItem, EstadoPedido } from "@/app/mesa/[token]/page";
 import BrandHeader from "./BrandHeader";
 import type { MesaBranding } from "./BrandHeader";
@@ -10,7 +11,7 @@ interface Props {
   cuentaSolicitada: boolean;
   mesa: number;
   onAgregarMas: () => void;
-  onPedirCuenta: () => void;
+  onPedirCuenta: () => Promise<void> | void;
 }
 
 const PASOS: EstadoPedido[] = ['recibido', 'preparando', 'listo'];
@@ -39,8 +40,22 @@ export default function SeguimientoView({
   onAgregarMas,
   onPedirCuenta,
 }: Props) {
+  const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
+  const [solicitandoCuenta, setSolicitandoCuenta] = useState(false);
   const total = items.reduce((n, i) => n + i.precio * i.cantidad, 0);
   const pasoActual = PASOS.indexOf(estadoPedido);
+
+  const confirmarSolicitudCuenta = async () => {
+    setSolicitandoCuenta(true);
+    try {
+      await onPedirCuenta();
+      setMostrarConfirmacion(false);
+    } catch {
+      // El flujo que invoca la API muestra el error al comensal.
+    } finally {
+      setSolicitandoCuenta(false);
+    }
+  };
 
   return (
     <div className="mesa-background min-h-screen pb-32 font-inter">
@@ -117,22 +132,26 @@ export default function SeguimientoView({
 
         {/* Acciones */}
         <div className="space-y-10 pt-4">
-          <div className="mesa-primary-soft mesa-border w-full rounded-lg border py-16 text-center shadow-xs">
-            <p className="mesa-primary text-14 font-semibold">✓ Pedido realizado con éxito</p>
-            <p className="mesa-muted mt-2 text-12">Tu pedido fue enviado a cocina para su preparación.</p>
-          </div>
+          {items.length > 0 && (
+            <div className="mesa-primary-soft mesa-border w-full rounded-lg border py-16 text-center shadow-xs">
+              <p className="mesa-primary text-14 font-semibold">✓ Pedido realizado con éxito</p>
+              <p className="mesa-muted mt-2 text-12">Nuestro equipo ya está trabajando en tu pedido.</p>
+            </div>
+          )}
 
-          <button
-            onClick={onAgregarMas}
-            className="mesa-surface mesa-muted mesa-border flex min-h-52 w-full items-center justify-center gap-6 rounded-lg border py-12 text-13 font-medium shadow-2xs transition-all hover:border-[var(--mesa-primary)] active:scale-[0.98]"
-          >
-            <span className="text-16 font-semibold">+</span>
-            <span>Agregar más ítems</span>
-          </button>
+          {!cuentaSolicitada && (
+            <button
+              onClick={onAgregarMas}
+              className="mesa-surface mesa-muted mesa-border flex min-h-52 w-full items-center justify-center gap-6 rounded-lg border py-12 text-13 font-medium shadow-2xs transition-all hover:border-[var(--mesa-primary)] active:scale-[0.98]"
+            >
+              <span className="text-16 font-semibold">+</span>
+              <span>Agregar más ítems</span>
+            </button>
+          )}
 
           {!cuentaSolicitada ? (
             <button
-              onClick={onPedirCuenta}
+              onClick={() => setMostrarConfirmacion(true)}
               className="mesa-primary-bg flex min-h-52 w-full items-center justify-center gap-6 rounded-lg py-14 text-14 font-semibold shadow-md transition-all active:scale-[0.98]"
             >
               <span>Pedir la cuenta</span>
@@ -146,6 +165,50 @@ export default function SeguimientoView({
           )}
         </div>
       </div>
+
+      {mostrarConfirmacion && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-16"
+          role="presentation"
+          onMouseDown={event => {
+            if (event.target === event.currentTarget && !solicitandoCuenta) {
+              setMostrarConfirmacion(false);
+            }
+          }}
+        >
+          <section
+            className="mesa-surface mesa-border w-full max-w-sm rounded-xl border p-20 shadow-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirmar-cuenta-titulo"
+          >
+            <h2 id="confirmar-cuenta-titulo" className="mesa-text text-16 font-semibold">
+              ¿Solicitar la cuenta?
+            </h2>
+            <p className="mesa-muted mt-8 text-13 leading-relaxed">
+              Una vez solicitada, no vas a poder agregar más ítems a esta cuenta. El mozo confirmará el cierre cuando se realice el pago.
+            </p>
+            <div className="mt-20 flex flex-col-reverse gap-8 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setMostrarConfirmacion(false)}
+                disabled={solicitandoCuenta}
+                className="mesa-surface mesa-muted mesa-border min-h-44 rounded-md border px-14 py-8 text-13 font-medium disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => void confirmarSolicitudCuenta()}
+                disabled={solicitandoCuenta}
+                className="mesa-primary-bg min-h-44 rounded-md px-14 py-8 text-13 font-semibold disabled:opacity-50"
+              >
+                {solicitandoCuenta ? 'Enviando...' : 'Sí, solicitar cuenta'}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

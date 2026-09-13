@@ -124,7 +124,9 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.Handle("GET /mesas", auth.Requerir(http.HandlerFunc(mesaH.Listar)))
 	mux.Handle("POST /mesas", auth.Requerir(http.HandlerFunc(mesaH.Crear)))
 	mux.Handle("PATCH /mesas/{id}", auth.Requerir(http.HandlerFunc(mesaH.Actualizar)))
-	mux.Handle("POST /mesas/{id}/cerrar", auth.Requerir(http.HandlerFunc(mesaH.Cerrar)))
+	mux.Handle("POST /mesas/{id}/cerrar-cuenta", auth.Requerir(http.HandlerFunc(mesaH.CerrarCuenta)))
+	// Alias temporal para clientes anteriores: ahora cierra la cuenta sin inhabilitar la mesa.
+	mux.Handle("POST /mesas/{id}/cerrar", auth.Requerir(http.HandlerFunc(mesaH.CerrarCuenta)))
 	mux.Handle("DELETE /mesas/{id}", auth.Requerir(http.HandlerFunc(mesaH.Eliminar)))
 
 	// Pedidos
@@ -143,6 +145,7 @@ func registrarRutas(mux *http.ServeMux) {
 	// Públicos (sin auth — cliente con QR)
 	mux.HandleFunc("GET /publica/sucursales/{sucursal_id}/carta", cartaH.CartaPublica)
 	mux.HandleFunc("GET /publica/mesas/{qr_token}", mesaH.MesaPorQR)
+	mux.HandleFunc("POST /publica/mesas/{qr_token}/cuenta", mesaH.SolicitarCuenta)
 }
 
 func handlerHealth(w http.ResponseWriter, r *http.Request) {

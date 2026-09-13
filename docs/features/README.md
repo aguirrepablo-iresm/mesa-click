@@ -10,9 +10,9 @@
 | Métrica | Valor |
 |---|---|
 | **Total de User Stories** | **31 US** (US-50 a US-80) |
-| **Completadas** | **3** (10%) |
+| **Completadas** | **4** (13%) |
 | **En Curso** | **0** |
-| **Pendientes** | **28** |
+| **Pendientes** | **27** |
 | **Sprint Actual** | **Sprint 11 (07/09 – 13/09/2026)** |
 
 ---
@@ -53,7 +53,7 @@
 | ID | Tipo | Título | Estado | Asignado | Archivo |
 |---|---|---|---|---|---|
 | **US-53** | `Frontend` | Rediseño UI/UX Base y Sistema de Diseño Accesible | 📋 Pendiente | Por asignar | [Ver detalle](sprint-11/US-53-rediseno-ui-base-accesibilidad.md) |
-| **US-54** | `Frontend` | Estados Vacíos, Skeletons de Carga y Microinteracciones | 📋 Pendiente | Por asignar | [Ver detalle](sprint-11/US-54-estados-vacio-carga-error.md) |
+| **US-54** | `Frontend` | Estados Vacíos, Skeletons de Carga y Microinteracciones | ✅ Resuelta | Antigravity (AI Agent) | [Ver detalle](sprint-11/US-54-estados-vacio-carga-error.md) |
 | **US-55** | `Integración` | Tour Interactivo de Onboarding para Administrador | 📋 Pendiente | Por asignar | [Ver detalle](sprint-11/US-55-tour-onboarding-admin.md) |
 
 ### 📌 Sprint 12: Mobile-First Comensal (14/09 – 20/09/2026)

@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { api, UsuarioAPI, getErrorMessage } from "@/lib/api";
+import { EmptyState, Skeleton, useToast } from "@/components/ui";
 
 type RolUsuario = 'admin' | 'encargado' | 'mozo' | 'cocina';
 type RolInvitable = 'encargado' | 'mozo' | 'cocina';
@@ -20,6 +21,7 @@ const ROL_DESCRIPTIONS: Record<RolInvitable, string> = {
 };
 
 export default function EquipoSection({ embedded = false }: { embedded?: boolean }) {
+  const toast = useToast();
   const [equipo, setEquipo] = useState<UsuarioAPI[]>([]);
   const [loading, setLoading] = useState(true);
   const [actualizandoId, setActualizandoId] = useState<string | null>(null);
@@ -79,8 +81,11 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
         setInvitacionLink(linkInvitacion);
       }
       setForm({ nombre: '', email: '', rol: 'mozo' });
+      toast.success('Invitación generada. Compartí el magic link con el nuevo miembro.');
     } catch (err: unknown) {
-      setError(getErrorMessage(err, 'Error al invitar al usuario.'));
+      const msg = getErrorMessage(err, 'Error al invitar al usuario.');
+      setError(msg);
+      toast.error(msg);
     }
   };
 
@@ -88,10 +93,12 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
     if (!confirm('¿Seguro que deseas eliminar a este miembro del equipo?')) return;
     try {
       await api.eliminarUsuario(id);
+      setEquipo(prev => prev.filter(u => u.id !== id));
+      toast.success('Miembro eliminado del equipo.');
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'No se pudo eliminar el usuario.'));
+      const msg = getErrorMessage(err, 'No se pudo eliminar el usuario.');
+      toast.error(msg);
     }
-    setEquipo(prev => prev.filter(u => u.id !== id));
   };
 
   const handleCambiarRol = async (id: string, nuevoRol: RolUsuario) => {
@@ -99,8 +106,10 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
       setActualizandoId(id);
       await api.actualizarUsuario(id, { rol: nuevoRol });
       setEquipo(prev => prev.map(u => (u.id === id ? { ...u, rol: nuevoRol } : u)));
+      toast.success('Rol actualizado.');
     } catch (err: unknown) {
-      alert(getErrorMessage(err, 'No se pudo actualizar el rol del usuario.'));
+      const msg = getErrorMessage(err, 'No se pudo actualizar el rol del usuario.');
+      toast.error(msg);
     } finally {
       setActualizandoId(null);
     }
@@ -124,46 +133,76 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
           <p className="text-11 font-mono text-sage-green uppercase tracking-wider">Miembros actuales</p>
           <p className="text-11 text-sage-green text-right whitespace-nowrap">{miembrosLabel}</p>
         </div>
-        <div className="divide-y divide-ghost-fog">
-          {equipo.map(u => (
-            <div key={u.id} className="flex items-center justify-between px-20 py-12">
-              <div>
-                <p className="text-13 font-medium text-ash-graphite">{u.nombre}</p>
-                <p className="text-12 text-sage-green font-mono">{u.email}</p>
+
+        {/* Skeleton de carga */}
+        {loading && (
+          <div className="divide-y divide-ghost-fog">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="flex items-center justify-between px-20 py-12">
+                <div className="space-y-6">
+                  <Skeleton className="h-12 w-48" />
+                  <Skeleton className="h-10 w-64" />
+                </div>
+                <Skeleton className="h-20 w-20" />
               </div>
-              <div className="flex items-center gap-12">
-                {u.rol === 'admin' ? (
-                  <span className="px-8 py-2 text-11 font-medium text-sage-green bg-vanilla-cream border border-ghost-fog rounded-md">
-                    Admin
-                  </span>
-                ) : (
-                  <select
-                    value={u.rol}
-                    disabled={actualizandoId === u.id}
-                    onChange={(e) => void handleCambiarRol(u.id, e.target.value as RolUsuario)}
-                    className="h-28 px-6 text-11 rounded border border-ash-graphite bg-canvas-white outline-none focus:border-plain-green cursor-pointer disabled:opacity-50"
-                  >
-                    <option value="encargado">Encargado</option>
-                    <option value="mozo">Mozo / Recepcionista</option>
-                    <option value="cocina">Cocina (KDS)</option>
-                  </select>
-                )}
-                {u.rol !== 'admin' && (
-                  <button
-                    onClick={() => handleEliminarUsuario(u.id)}
-                    className="text-12 text-alert-red hover:opacity-70"
-                    title="Eliminar usuario"
-                  >
-                    ✕
-                  </button>
-                )}
+            ))}
+          </div>
+        )}
+
+        {/* Lista de miembros */}
+        {!loading && (
+          <div className="divide-y divide-ghost-fog">
+            {equipo.map(u => (
+              <div key={u.id} className="flex items-center justify-between px-20 py-12">
+                <div>
+                  <p className="text-13 font-medium text-ash-graphite">{u.nombre}</p>
+                  <p className="text-12 text-sage-green font-mono">{u.email}</p>
+                </div>
+                <div className="flex items-center gap-12">
+                  {u.rol === 'admin' ? (
+                    <span className="px-8 py-2 text-11 font-medium text-sage-green bg-vanilla-cream border border-ghost-fog rounded-md">
+                      Admin
+                    </span>
+                  ) : (
+                    <select
+                      value={u.rol}
+                      disabled={actualizandoId === u.id}
+                      onChange={(e) => void handleCambiarRol(u.id, e.target.value as RolUsuario)}
+                      className="h-28 px-6 text-11 rounded border border-ash-graphite bg-canvas-white outline-none focus:border-plain-green cursor-pointer disabled:opacity-50"
+                    >
+                      <option value="encargado">Encargado</option>
+                      <option value="mozo">Mozo / Recepcionista</option>
+                      <option value="cocina">Cocina (KDS)</option>
+                    </select>
+                  )}
+                  {u.rol !== 'admin' && (
+                    <button
+                      onClick={() => handleEliminarUsuario(u.id)}
+                      className="text-12 text-alert-red hover:opacity-70"
+                      title="Eliminar usuario"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty state */}
+        {equipo.length === 0 && !loading && (
+          <EmptyState
+            icon="group_add"
+            title="No hay miembros en el equipo"
+            description="Invitá a quienes atienden la sucursal para que entren con su magic link."
+            actionLabel="Invitar miembro"
+            onAction={() => document.getElementById('form-invitar')?.scrollIntoView({ behavior: 'smooth' })}
+          />
+        )}
       </div>
 
-      <div className="border border-ash-graphite rounded-lg overflow-hidden bg-canvas-white">
+      <div id="form-invitar" className="border border-ash-graphite rounded-lg overflow-hidden bg-canvas-white">
         <div className="px-20 py-10 bg-vanilla-cream border-b border-ash-graphite">
           <p className="text-11 font-mono text-sage-green uppercase tracking-wider">Invitar nuevo miembro</p>
         </div>
