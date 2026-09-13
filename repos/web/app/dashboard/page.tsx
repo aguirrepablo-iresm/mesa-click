@@ -9,6 +9,7 @@ import ConfiguracionSection from "@/components/dashboard/ConfiguracionSection";
 import Logo from "@/components/brand/Logo";
 import { api, cerrarSesion, estaAutenticado, Tenant } from "@/lib/api";
 import { ToastProvider } from "@/components/ui";
+import OnboardingTour from "@/components/dashboard/OnboardingTour";
 
 type Section = 'carta' | 'mesas' | 'recepcionista' | 'configuracion';
 
@@ -33,6 +34,7 @@ export default function DashboardPage() {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [tenant, setTenant] = useState<Tenant | null>(null);
+  const [isTourOpen, setIsTourOpen] = useState(false);
 
   useEffect(() => {
     async function loadTenant() {
@@ -46,6 +48,21 @@ export default function DashboardPage() {
       }
     }
     loadTenant();
+
+    // Detección automática en primer ingreso del admin
+    if (typeof window !== "undefined") {
+      try {
+        const tourDone = localStorage.getItem("mesaclick_admin_tour_completed");
+        if (!tourDone) {
+          const timer = setTimeout(() => {
+            setIsTourOpen(true);
+          }, 600);
+          return () => clearTimeout(timer);
+        }
+      } catch (err) {
+        console.warn("No se pudo verificar estado del tour:", err);
+      }
+    }
   }, []);
 
   const handleLogout = () => {
@@ -81,7 +98,16 @@ export default function DashboardPage() {
             </span>
           )}
         </div>
-        <div className="flex items-center gap-16">
+        <div className="flex items-center gap-12 sm:gap-16">
+          <button
+            onClick={() => setIsTourOpen(true)}
+            className="flex items-center gap-6 px-10 py-5 text-12 font-medium text-ash-graphite border border-concrete hover:border-plain-green hover:bg-vanilla-cream rounded-md transition-all cursor-pointer"
+            title="Ver tour interactivo guiado"
+            aria-label="Ver tour interactivo guiado"
+          >
+            <span className="material-symbols-outlined text-16 text-ash-graphite">explore</span>
+            <span className="hidden sm:inline">Tour guiado</span>
+          </button>
           <button className="material-symbols-outlined text-ash-graphite hover:text-plain-green transition-colors text-20">
             notifications
           </button>
@@ -101,6 +127,9 @@ export default function DashboardPage() {
                     <p className="text-11 font-mono text-sage-green truncate">Sesión activa</p>
                   </div>
                   <UserMenuItem icon="account_circle" label="Perfil" />
+                  <div onClick={() => { setIsTourOpen(true); setIsUserMenuOpen(false); }}>
+                    <UserMenuItem icon="explore" label="Tour guiado" />
+                  </div>
                   <div className="mt-8 pt-8 border-t border-ghost-fog">
                     <div onClick={handleLogout}>
                       <UserMenuItem icon="logout" label="Salir" isDanger />
@@ -152,6 +181,7 @@ export default function DashboardPage() {
                 label={s.label}
                 active={activeSection === s.id}
                 expanded={true}
+                dataTour={`nav-${s.id}`}
                 onClick={() => {
                   setActiveSection(s.id);
                   setIsExpanded(false);
@@ -165,12 +195,22 @@ export default function DashboardPage() {
               label="Configuración"
               active={activeSection === "configuracion"}
               expanded={true}
+              dataTour="nav-configuracion"
               onClick={() => {
                 setActiveSection("configuracion");
                 setIsExpanded(false);
               }}
             />
-            <NavItem icon="help_outline" label="Ayuda" expanded={true} />
+            <NavItem
+              icon="help_outline"
+              label="Tour guiado"
+              expanded={true}
+              dataTour="nav-tour"
+              onClick={() => {
+                setIsTourOpen(true);
+                setIsExpanded(false);
+              }}
+            />
           </div>
         </aside>
 
@@ -188,6 +228,7 @@ export default function DashboardPage() {
                 label={s.label}
                 active={activeSection === s.id}
                 expanded={isExpanded}
+                dataTour={`nav-${s.id}`}
                 onClick={() => setActiveSection(s.id)}
               />
             ))}
@@ -198,9 +239,16 @@ export default function DashboardPage() {
               label="Configuración"
               active={activeSection === "configuracion"}
               expanded={isExpanded}
+              dataTour="nav-configuracion"
               onClick={() => setActiveSection("configuracion")}
             />
-            <NavItem icon="help_outline" label="Ayuda" expanded={isExpanded} />
+            <NavItem
+              icon="help_outline"
+              label="Tour guiado"
+              expanded={isExpanded}
+              dataTour="nav-tour"
+              onClick={() => setIsTourOpen(true)}
+            />
           </div>
         </aside>
 
@@ -208,6 +256,14 @@ export default function DashboardPage() {
           {renderSection(activeSection)}
         </main>
       </div>
+
+      <OnboardingTour
+        isOpen={isTourOpen}
+        onClose={() => setIsTourOpen(false)}
+        activeSection={activeSection}
+        onNavigateSection={setActiveSection}
+        tenantName={tenant?.nombre}
+      />
     </div>
     </ToastProvider>
   );
@@ -219,15 +275,18 @@ function NavItem({
   active = false,
   expanded = false,
   onClick,
+  dataTour,
 }: {
   icon: string;
   label: string;
   active?: boolean;
   expanded?: boolean;
   onClick?: () => void;
+  dataTour?: string;
 }) {
   return (
     <div
+      data-tour={dataTour}
       title={!expanded ? label : undefined}
       onClick={onClick}
       className={`flex items-center rounded-md cursor-pointer transition-all ${
