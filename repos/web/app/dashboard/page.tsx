@@ -42,27 +42,29 @@ export default function DashboardPage() {
         try {
           const t = await api.obtenerMiTenant();
           setTenant(t);
+
+          // Si el usuario registrado aún no vio el recorrido para este tenant en esta versión
+          if (typeof window !== "undefined") {
+            try {
+              const tenantTourKey = `mesaclick_tour_seen_${t.id}`;
+              const globalTourKey = "mesaclick_admin_tour_completed";
+              const seen = localStorage.getItem(tenantTourKey) || localStorage.getItem(globalTourKey);
+              if (!seen) {
+                const timer = setTimeout(() => {
+                  setIsTourOpen(true);
+                }, 600);
+                return () => clearTimeout(timer);
+              }
+            } catch (err) {
+              console.warn("No se pudo verificar estado del tour:", err);
+            }
+          }
         } catch (err) {
           console.warn("No se pudo cargar tenant:", err);
         }
       }
     }
     loadTenant();
-
-    // Detección automática en primer ingreso del admin
-    if (typeof window !== "undefined") {
-      try {
-        const tourDone = localStorage.getItem("mesaclick_admin_tour_completed");
-        if (!tourDone) {
-          const timer = setTimeout(() => {
-            setIsTourOpen(true);
-          }, 600);
-          return () => clearTimeout(timer);
-        }
-      } catch (err) {
-        console.warn("No se pudo verificar estado del tour:", err);
-      }
-    }
   }, []);
 
   const handleLogout = () => {
@@ -102,11 +104,11 @@ export default function DashboardPage() {
           <button
             onClick={() => setIsTourOpen(true)}
             className="flex items-center gap-6 px-10 py-5 text-12 font-medium text-ash-graphite border border-concrete hover:border-plain-green hover:bg-vanilla-cream rounded-md transition-all cursor-pointer"
-            title="Ver tour interactivo guiado"
-            aria-label="Ver tour interactivo guiado"
+            title="Hacer el recorrido guiado de nuevo"
+            aria-label="Hacer el recorrido guiado de nuevo"
           >
-            <span className="material-symbols-outlined text-16 text-ash-graphite">explore</span>
-            <span className="hidden sm:inline">Tour guiado</span>
+            <span className="material-symbols-outlined text-16 text-ash-graphite">replay</span>
+            <span className="hidden sm:inline">Hacer el recorrido de nuevo</span>
           </button>
           <button className="material-symbols-outlined text-ash-graphite hover:text-plain-green transition-colors text-20">
             notifications
@@ -128,7 +130,7 @@ export default function DashboardPage() {
                   </div>
                   <UserMenuItem icon="account_circle" label="Perfil" />
                   <div onClick={() => { setIsTourOpen(true); setIsUserMenuOpen(false); }}>
-                    <UserMenuItem icon="explore" label="Tour guiado" />
+                    <UserMenuItem icon="replay" label="Hacer el recorrido de nuevo" />
                   </div>
                   <div className="mt-8 pt-8 border-t border-ghost-fog">
                     <div onClick={handleLogout}>
@@ -202,8 +204,8 @@ export default function DashboardPage() {
               }}
             />
             <NavItem
-              icon="help_outline"
-              label="Tour guiado"
+              icon="replay"
+              label="Hacer recorrido de nuevo"
               expanded={true}
               dataTour="nav-tour"
               onClick={() => {
@@ -243,8 +245,8 @@ export default function DashboardPage() {
               onClick={() => setActiveSection("configuracion")}
             />
             <NavItem
-              icon="help_outline"
-              label="Tour guiado"
+              icon="replay"
+              label="Hacer recorrido de nuevo"
               expanded={isExpanded}
               dataTour="nav-tour"
               onClick={() => setIsTourOpen(true)}
@@ -263,6 +265,7 @@ export default function DashboardPage() {
         activeSection={activeSection}
         onNavigateSection={setActiveSection}
         tenantName={tenant?.nombre}
+        tenantId={tenant?.id}
       />
     </div>
     </ToastProvider>
