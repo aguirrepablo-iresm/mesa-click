@@ -3,8 +3,8 @@
 > **Sprint**: Sprint 11 (07/09 – 13/09/2026)  
 > **Épica**: Rediseño UI/UX Base & Onboarding Guiado  
 > **Tipo**: `Integración`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
+> **Estado**: ✅ **Resuelta**  
+> **Asignado a**: Antigravity (AI Agent)  
 > **Rama de trabajo**: `feat/US-55-tour-onboarding-admin`  
 
 ---
@@ -17,19 +17,19 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Detección automática del primer ingreso del admin con modal o popover interactivo.
-- [ ] Tour guiado en 4 pasos principales: 1) Configurar negocio/sucursal, 2) Crear mesas y generar QR, 3) Cargar la carta digital, 4) Ver pedidos en vivo.
-- [ ] Permite avanzar, retroceder u omitir el tour en cualquier momento.
-- [ ] Botón accesible permanente en la cabecera / menú: 'Ver tour guiado' para reactivarlo.
+- [x] Detección automática del primer ingreso del admin con modal o popover interactivo.
+- [x] Tour guiado en 4 pasos principales: 1) Configurar negocio/sucursal, 2) Crear mesas y generar QR, 3) Cargar la carta digital, 4) Ver pedidos en vivo.
+- [x] Permite avanzar, retroceder u omitir el tour en cualquier momento.
+- [x] Botón accesible permanente en la cabecera / menú: 'Ver tour guiado' para reactivarlo.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Implementar componente de overlay/tour interactivo con pasos destacados.
-- [ ] Persistir estado de tour completado (localStorage y/o perfil tenant).
-- [ ] Añadir acceso directo en el header o barra de navegación para relanzar el tour.
-- [ ] Validar responsive para que funcione en pantallas táctiles y escritorio.
+- [x] Implementar componente de overlay/tour interactivo con pasos destacados.
+- [x] Persistir estado de tour completado (localStorage y/o perfil tenant).
+- [x] Añadir acceso directo en el header o barra de navegación para relanzar el tour.
+- [x] Validar responsive para que funcione en pantallas táctiles y escritorio.
 
 ---
 
