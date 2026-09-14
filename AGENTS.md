@@ -14,7 +14,7 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
    - `docs/flows/happy-path-cliente.md` — flujo del cliente / comensal
 
 3. **Consultar el Status Report más reciente** para ver bloqueantes o decisiones pendientes:
-   - `docs/presentations/parte-2/status-report-06.html`
+   - `docs/presentations/parte-2/status-report-07.html`
 
 > No implementar nada que no esté cubierto por una US del sprint en curso. Si hay dudas, preguntar antes de avanzar.
 
@@ -39,7 +39,7 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
 | | |
 |---|---|
 | **Fase actual** | Fase 4 — Evolución, Monetización & Analítica (2do Cuatrimestre) |
-| **Sprint en curso** | **Sprint 11 (Rediseño UI/UX Base & Onboarding guiado)** — sprints semanales (S10 a S19, 31/08 → 08/11/2026) |
+| **Sprint en curso** | **Sprint 12 (Mobile-First Comensal & Pedidos Colaborativos)** — sprints semanales (S10 a S19, 31/08 → 08/11/2026) |
 | **Objetivo Fase 4** | Llevar Mesa CLICK a nivel comercial: SaaS Freemium (Free vs Pro), Mobile-First comensal, carga masiva CSV/Excel, KDS de cocina, disponibilidad/franjas horarias, métricas y analítica de negocio |
 
 ### Sprints detallados
@@ -56,8 +56,8 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
 | 8 | Integración flujo cliente y recepcionista en tiempo real | ✓ Completado |
 | 9 | QA end-to-end, polish responsive y deploy a producción | ✓ Completado |
 | 10 | Configuración avanzada de cuenta (perfil, fiscal, horarios/turnos) · 31/08–06/09 | ✓ Completado |
-| 11 | Rediseño UI/UX Base & Onboarding guiado (tour interactivo) · 07/09–13/09 | ⚡ En Curso |
-| 12 | Mobile-First Comensal (sticky, bottom-sheet, personalización) · 14/09–20/09 | 📋 Planificado |
+| 11 | Rediseño UI/UX Base & Onboarding guiado (tour interactivo) · 07/09–13/09 | ✓ Completado |
+| 12 | Mobile-First Comensal (sticky, bottom-sheet, personalización, pedidos colaborativos) · 14/09–20/09 | ⚡ En Curso |
 | 13 | Carga masiva CSV/Excel & ajuste porcentual de precios · 21/09–27/09 | 📋 Planificado |
 | 14 | Disponibilidad de ítems (86) & menús por franja horaria · 28/09–04/10 | 📋 Planificado |
 | 15 | Kitchen Display System (KDS) & impresión de comandas térmicas · 05/10–11/10 | 📋 Planificado |

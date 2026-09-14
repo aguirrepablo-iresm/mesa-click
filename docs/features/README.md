@@ -9,11 +9,11 @@
 
 | Métrica | Valor |
 |---|---|
-| **Total de User Stories** | **31 US** (US-50 a US-80) |
-| **Completadas** | **4** (13%) |
+| **Total de User Stories** | **32 US** (US-50 a US-81) |
+| **Completadas** | **6** (19%) |
 | **En Curso** | **0** |
-| **Pendientes** | **27** |
-| **Sprint Actual** | **Sprint 11 (07/09 – 13/09/2026)** |
+| **Pendientes** | **26** |
+| **Sprint Actual** | **Sprint 12 (14/09 – 20/09/2026)** |
 
 ---
 
@@ -52,7 +52,7 @@
 
 | ID | Tipo | Título | Estado | Asignado | Archivo |
 |---|---|---|---|---|---|
-| **US-53** | `Frontend` | Rediseño UI/UX Base y Sistema de Diseño Accesible | 📋 Pendiente | Por asignar | [Ver detalle](sprint-11/US-53-rediseno-ui-base-accesibilidad.md) |
+| **US-53** | `Frontend / Fullstack` | Rediseño UI/UX Base, Sistema Accesible y Experiencia Mobile Comensal | ✅ Resuelta | Mateo Silvestrin / Equipo Mesa CLICK | [Ver detalle](sprint-11/US-53-rediseno-ui-base-accesibilidad.md) |
 | **US-54** | `Frontend` | Estados Vacíos, Skeletons de Carga y Microinteracciones | ✅ Resuelta | Antigravity (AI Agent) | [Ver detalle](sprint-11/US-54-estados-vacio-carga-error.md) |
 | **US-55** | `Integración` | Tour Interactivo de Onboarding para Administrador | ✅ Resuelta | Antigravity (AI Agent) | [Ver detalle](sprint-11/US-55-tour-onboarding-admin.md) |
 
@@ -62,6 +62,7 @@
 |---|---|---|---|---|---|
 | **US-56** | `Frontend` | Navegación Mobile Táctil con Categorías Sticky y Carrito Bottom-Sheet | 📋 Pendiente | Por asignar | [Ver detalle](sprint-12/US-56-navegacion-mobile-categorias-carrito.md) |
 | **US-57** | `Frontend` | Personalización de Platos con Variantes, Opciones y Notas Libres | 📋 Pendiente | Por asignar | [Ver detalle](sprint-12/US-57-personalizacion-platos-variantes.md) |
+| **US-81** | `Integración` | Pedidos Colaborativos en Mesa con Identificación de Comensal y División de Cuenta | 📋 Pendiente | Por asignar | [Ver detalle](sprint-12/US-81-pedidos-colaborativos-mesa.md) |
 
 ### 📌 Sprint 13: Carga Masiva CSV/Excel & Ajuste de Precios (21/09 – 27/09/2026)
 

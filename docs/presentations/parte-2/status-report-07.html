@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Status Report #6 — Mesa CLICK (Cierre Sprint 10 & Kickoff Sprint 11)</title>
+<title>Status Report #7 — Mesa CLICK (Cierre Sprint 11 & Kickoff Sprint 12)</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -351,8 +351,8 @@
         Exportar PDF
       </button>
       <div class="report-title">
-        <h1>Project Status Report #6</h1>
-        <div class="sub">Cierre Sprint 10, Desglose de US & Kickoff Sprint 11 · 07/09/2026</div>
+        <h1>Project Status Report #7</h1>
+        <div class="sub">Cierre Sprint 11, Incorporación US-81 & Kickoff Sprint 12 · 14/09/2026</div>
       </div>
     </div>
   </div>
@@ -365,7 +365,7 @@
     </div>
     <div class="meta-card">
       <div class="meta-label">Fecha de Corte</div>
-      <div class="meta-val">07 de septiembre de 2026 · Sprint 11 (semana 2 de 10)</div>
+      <div class="meta-val">14 de septiembre de 2026 · Sprint 12 (semana 3 de 10)</div>
     </div>
     <div class="meta-card">
       <div class="meta-label">Integrantes</div>
@@ -382,56 +382,55 @@
       <div class="rag-info">
         <div class="rag-dim">Tiempo (Schedule)</div>
         <div class="rag-status green">Verde (En Plan)</div>
-        <div class="rag-note"><b>Sprint 10 cerrado en tiempo y forma (06/09)</b> con deuda técnica de backend y persistencia 100% resuelta. El <b>Sprint 11 arranca en fecha hoy 07/09</b> sin desvíos en el cronograma general hacia el 08/11.</div>
+        <div class="rag-note"><b>Sprint 11 cerrado en tiempo (13/09)</b> con 100% de entregables aprobados y mergeados (US-53, US-54, US-55). El <b>Sprint 12 arranca en fecha hoy 14/09</b> sin desvíos en el cronograma hacia la entrega final del 08/11.</div>
       </div>
     </div>
     <div class="rag-card green">
       <div class="rag-dot green">●</div>
       <div class="rag-info">
         <div class="rag-dim">Alcance (Scope)</div>
-        <div class="rag-status green">Verde (31 US Desglosadas y Asignables)</div>
-        <div class="rag-note">Se integró la propuesta de Martín (Reseñas al local & Smart Google Funnel como <b>US-79</b> y <b>US-80</b> en Sprint 18). Se estructuró <span class="chip">docs/features/</span> con 31 archivos individuales y tablero Kanban listo para trabajo en paralelo de los 3 devs.</div>
+        <div class="rag-status green">Verde (32 US Totales · 6 Completadas / 19%)</div>
+        <div class="rag-note">Se sumó al Sprint 12 la <b>US-81 (Pedidos Colaborativos en Mesa con Identificación de Comensal en Cookie y División de Cuenta)</b>. El backlog general cuenta con 32 US especificadas y listas para ejecución paralela.</div>
       </div>
     </div>
     <div class="rag-card green">
       <div class="rag-dot green">●</div>
       <div class="rag-info">
         <div class="rag-dim">Riesgo & Calidad</div>
-        <div class="rag-status green">Verde (Bajo Riesgo · 100% Tests Verdes)</div>
-        <div class="rag-note">Nuevos endpoints <span class="chip">PATCH /tenants/me</span> y <span class="chip">PATCH /usuarios/{id}</span> integrados en Go con logs estructurados <span class="chip">slog</span>. Suite completa de Go (<span class="chip">go test ./...</span>) y build de Next.js (<span class="chip">npm run build</span>) pasando al 100%.</div>
+        <div class="rag-status green">Verde (Bajo Riesgo · 100% Builds & Tests Verdes)</div>
+        <div class="rag-note">Onboarding implementado como widget compacto no invasivo sin overlay modal molesto. Frontend Next.js (<span class="chip">npm run build</span>) y backend Go (<span class="chip">go test ./...</span>) compilando de forma limpia en <span class="chip">qa</span> y <span class="chip">main</span>.</div>
       </div>
     </div>
   </div>
   </div><!-- /rpt-section -->
 
-  <!-- Logros Sprint 10 y Novedades -->
+  <!-- Logros Sprint 11 y Novedades -->
   <div class="rpt-section">
   <div class="sec-label" style="margin-top:16px;">Resultados y Novedades del Proyecto</div>
   <div class="content-grid">
 
     <div class="c-card">
-      <div class="c-card-head">Cierre Sprint 10 — Entregables Completados</div>
+      <div class="c-card-head">Cierre Sprint 11 — Entregables Completados</div>
       <div class="c-card-body">
-        <div class="sprint-tag green">Sprint 10 (31/08 – 06/09) · 100% Resuelto ✓</div>
+        <div class="sprint-tag green">Sprint 11 (07/09 – 13/09) · 100% Resuelto ✓</div>
         <ul>
-          <li><span class="dot-green">✓</span><span><b>US-50 (Front):</b> Pestaña de Ajustes/Configuración con perfil comercial completo, selector de logo interactivo, datos fiscales de facturación y URL de Google Reviews.</span></li>
-          <li><span class="dot-green">✓</span><span><b>US-51 (Back):</b> Migración SQL <span class="chip">014_alter_tenants_settings.sql</span>; endpoints <span class="chip">PATCH /tenants/me</span> y <span class="chip">PATCH /usuarios/{id}</span> (roles y branding). Rol <span class="chip">cocina</span> agregado al schema.</span></li>
-          <li><span class="dot-green">✓</span><span><b>US-52 (Int):</b> Configuración de días y turnos de atención por sucursal persistidos en backend y vinculados a la disponibilidad de la carta.</span></li>
-          <li><span class="dot-green">✓</span><span><b>Gestión de Equipo:</b> Selector de cambio de rol en vivo por usuario y capacidad de invitar personal de cocina para el KDS.</span></li>
-          <li><span class="dot-green">✓</span><span><b>Integración & Deploy:</b> Código integrado en rama <span class="chip">qa</span> listo para pase a producción en Render.</span></li>
+          <li><span class="dot-green">✓</span><span><b>US-53 (Front / Fullstack):</b> Rediseño UI/UX base y sistema accesible (WCAG 2.1 AA). Persistencia de sesión de mesa (<span class="chip">mesa_click_session_${token}</span>) en comensal para evitar pérdidas de comanda ante recarga (<span class="chip">F5</span>), reconexión automática a SSE y migración SQL <span class="chip">015_alter_mesas_account.sql</span>.</span></li>
+          <li><span class="dot-green">✓</span><span><b>US-54 (Front):</b> Componentes de Empty States con microinteracciones y CTAs contextuales, skeletons animados con efecto shimmer para cartas y mesas, y feedback visual ante errores de red.</span></li>
+          <li><span class="dot-green">✓</span><span><b>US-55 (Int):</b> Tour interactivo de onboarding guiado para administradores mediante widget flotante compacto abajo a la derecha (<span class="chip">TourWidget.tsx</span>), sin desenfoque invasivo, pasos esenciales guiados y acceso tutorial permanente desde el menú de perfil.</span></li>
+          <li><span class="dot-green">✓</span><span><b>Integración Continua:</b> Todo el sprint integrado y validado en rama <span class="chip">main</span> para despliegue productivo en Render.</span></li>
         </ul>
       </div>
     </div>
 
     <div class="c-card">
-      <div class="c-card-head">Innovaciones de Negocio & Metodología de Equipo</div>
+      <div class="c-card-head">Innovaciones de Negocio & Novedades Sprint 12</div>
       <div class="c-card-body">
         <div class="sprint-tag blue">Aportes del Equipo & Organización</div>
         <ul>
-          <li><span class="dot-blue">⭐</span><span><b>Smart Google Review Funnel (Propuesta Martín Oviedo):</b> Los comensales que califiquen con 4-5★ reciben un CTA de 1 tap para recomendar el comercio en Google Maps (Place ID); las valoraciones de 1-3★ quedan privadas en el local para alertas tempranas de servicio (US-79 y US-80).</span></li>
-          <li><span class="dot-blue">📁</span><span><b>Seguimiento US por US en <span class="chip">docs/features/</span>:</b> Cada una de las 31 historias cuenta con un archivo Markdown individual (<span class="chip">US-XX.md</span>) con DoD, checklist técnico y rama sugerida.</span></li>
-          <li><span class="dot-blue">👥</span><span><b>Trabajo en Paralelo (3 Desarrolladores):</b> Pablo, Martín y Mateo cuentan con asignación unívoca y protocolo de branching desde <span class="chip">qa</span> para evitar bloqueos mutuos.</span></li>
-          <li><span class="dot-blue">📊</span><span><b>Tablero Kanban Central:</b> <span class="chip">docs/features/README.md</span> sincronizado como fuente única de la verdad del estado de avance.</span></li>
+          <li><span class="dot-blue">⭐</span><span><b>Nueva US-81 (Pedidos Colaborativos en Mesa):</b> Múltiples comensales pueden escanear el mismo QR simultáneamente, identificarse con su nombre (almacenado en cookie de sesión de mesa) y ver los pedidos de la mesa en tiempo real. Permite al comensal y mozo ver quién pidió cada ítem y ofrece división de cuenta (total consolidada vs. separada por comensal).</span></li>
+          <li><span class="dot-blue">📱</span><span><b>Mobile-First Comensal en Foco:</b> El Sprint 12 se focaliza en la experiencia táctil comensal de smartphones: categorías sticky, carrito bottom-sheet y personalización de ítems con variantes y notas a cocina.</span></li>
+          <li><span class="dot-blue">🚀</span><span><b>Ritmo de Entrega Sostenido:</b> 2 semanas de sprints completadas con 100% de éxito (6 US de 32 resueltas, 19% de la Fase 4 alcanzado).</span></li>
+          <li><span class="dot-blue">📋</span><span><b>Metodología Ágil:</b> Tablero Kanban en <span class="chip">docs/features/README.md</span> y presentaciones de seguimiento actualizadas en sincronía.</span></li>
         </ul>
       </div>
     </div>
@@ -448,12 +447,12 @@
         <tr>
           <th class="g-lbl g-lbl-col">Épica / Sprint</th>
           <th class="gth"><span class="sn">S10</span><span class="sd">31/08–06/09</span><span style="display:block; font-size:8px; color:var(--green); font-weight:700; margin-top:2px;">✓ CERRADO</span></th>
+          <th class="gth"><span class="sn">S11</span><span class="sd">07/09–13/09</span><span style="display:block; font-size:8px; color:var(--green); font-weight:700; margin-top:2px;">✓ CERRADO</span></th>
           <th class="gth today">
-            <span class="sn">S11</span>
-            <span class="sd">07/09–13/09</span>
+            <span class="sn">S12</span>
+            <span class="sd">14/09–20/09</span>
             <span class="today-arrow">▲ EN CURSO</span>
           </th>
-          <th class="gth"><span class="sn">S12</span><span class="sd">14/09–20/09</span></th>
           <th class="gth"><span class="sn">S13</span><span class="sd">21/09–27/09</span></th>
           <th class="gth"><span class="sn">S14</span><span class="sd">28/09–04/10</span></th>
           <th class="gth"><span class="sn">S15</span><span class="sd">05/10–11/10</span></th>
@@ -475,13 +474,13 @@
         <tr>
           <td class="g-lbl">Rediseño UI/UX Base & Onboarding Guiado</td>
           <td class="g-cell bar-empty"></td>
-          <td class="g-cell bar-wip">En Curso</td>
+          <td class="g-cell bar-done">Completado ✓</td>
           <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
         </tr>
         <tr>
-          <td class="g-lbl">Mobile-First Comensal</td>
+          <td class="g-lbl">Mobile-First Comensal & Pedidos Colaborativos</td>
           <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
-          <td class="g-cell bar-plan">Plan.</td>
+          <td class="g-cell bar-wip">En Curso</td>
           <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
         </tr>
         <tr>
@@ -529,27 +528,27 @@
     </table>
 
     <div class="legend">
-      <div class="li"><div class="sq sq-done"></div> Sprint Completado (S10 ✓)</div>
-      <div class="li"><div class="sq sq-wip"></div> Sprint en Curso (S11 Activo)</div>
-      <div class="li"><div class="sq sq-plan"></div> Sprints Planificados (S12–S19)</div>
-      <div class="hoy-badge">● SEMANA 2 · SPRINT 11 EN CURSO</div>
+      <div class="li"><div class="sq sq-done"></div> Sprints Completados (S10 y S11 ✓)</div>
+      <div class="li"><div class="sq sq-wip"></div> Sprint en Curso (S12 Activo)</div>
+      <div class="li"><div class="sq sq-plan"></div> Sprints Planificados (S13–S19)</div>
+      <div class="hoy-badge">● SEMANA 3 · SPRINT 12 EN CURSO</div>
     </div>
   </div>
   </div><!-- /rpt-section -->
 
-  <!-- Próximos pasos / Foco Sprint 11 -->
+  <!-- Próximos pasos / Foco Sprint 12 -->
   <div class="rpt-section">
-  <div class="sec-label" style="margin-top:16px;">Foco de la Semana — Sprint 11 (07/09 – 13/09)</div>
+  <div class="sec-label" style="margin-top:16px;">Foco de la Semana — Sprint 12 (14/09 – 20/09)</div>
   <div class="c-card">
     <div class="c-card-body">
-      <div class="sprint-tag">Rediseño UI/UX Base & Onboarding Guiado</div>
+      <div class="sprint-tag">Mobile-First Comensal & Pedidos Colaborativos</div>
       <ul>
-        <li><span class="dot-blue">▸</span><span><b>US-53 (Front):</b> Rediseño UI/UX Base y Sistema de Diseño Accesible con contraste WCAG 2.1 AA, tokens consistentes de Tailwind y tap targets de al menos 44x44px.</span></li>
-        <li><span class="dot-blue">▸</span><span><b>US-54 (Front):</b> Tratamiento visual enriquecido para estados vacíos (empty states) con CTA directo, skeletons de carga fluidos y microinteracciones consistentes.</span></li>
-        <li><span class="dot-blue">▸</span><span><b>US-55 (Int):</b> Tour interactivo guiado de primer ingreso para nuevos administradores (Sucursales → Mesas & QR → Carta → Pedidos) con reactivación permanente desde Ayuda.</span></li>
+        <li><span class="dot-blue">▸</span><span><b>US-56 (Front):</b> Navegación Mobile Táctil con Categorías Sticky y Carrito Bottom-Sheet deslizable para pedidos confortables con una sola mano (tap targets &ge; 48px).</span></li>
+        <li><span class="dot-blue">▸</span><span><b>US-57 (Front):</b> Personalización de Platos con Variantes, Opciones y Notas Libres mediante modal táctil, cálculo de agregados en vivo e indicaciones especiales a cocina.</span></li>
+        <li><span class="dot-blue">▸</span><span><b>US-81 (Int):</b> Pedidos Colaborativos en Mesa con Identificación de Comensal en Cookie, Trazabilidad de cada ítem en la comanda del Mozo/Recepcionista y División de Cuenta (total vs. por persona).</span></li>
       </ul>
       <div style="margin-top: 14px; font-size: 11.5px; color: var(--text3); line-height: 1.5;">
-        <b>Asignación para la reunión:</b> cada desarrollador toma 1 US del Sprint 11 en <span class="chip">docs/features/sprint-11/</span>, crea su rama <span class="chip">feat/US-XX-...</span> desde <span class="chip">qa</span> y se valida con build limpio antes del cierre del viernes.
+        <b>Asignación para la semana:</b> Los desarrolladores toman las US en <span class="chip">docs/features/sprint-12/</span>, crean sus ramas <span class="chip">feat/US-XX-...</span> a partir de <span class="chip">qa</span> y se valida con build limpio antes de integrar.
       </div>
     </div>
   </div>
@@ -564,14 +563,9 @@
         📋 Tablero de User Stories (docs/features)
       </a>
     </div>
-    <div style="display: flex; gap: 14px; align-items: center;">
-      <a href="status-report-05.html" class="no-print" style="font-size: 12.5px; color: var(--text3); text-decoration: none; font-weight: 600; font-family: 'DM Mono', monospace;">
-        ← Ver Status Report #5 (Anterior)
-      </a>
-      <a href="status-report-07.html" class="no-print" style="font-size: 12.5px; color: var(--green); text-decoration: none; font-weight: 600; font-family: 'DM Mono', monospace;">
-        Ver Status Report #7 (Siguiente) →
-      </a>
-    </div>
+    <a href="status-report-06.html" class="no-print" style="font-size: 12.5px; color: var(--text3); text-decoration: none; font-weight: 600; font-family: 'DM Mono', monospace;">
+      Ver Status Report #6 (Anterior) →
+    </a>
   </div>
 
   <div style="margin-top: 10px; text-align: right;">
