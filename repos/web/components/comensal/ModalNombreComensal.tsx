@@ -23,6 +23,10 @@ export default function ModalNombreComensal({
     onConfirmar(nombre.trim());
   };
 
+  const accionesClassName = editando
+    ? "mt-20 flex flex-col-reverse gap-8 sm:flex-row sm:justify-end"
+    : "mt-20 flex justify-center";
+
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/80 p-12 sm:items-center sm:p-24">
       <section
@@ -59,7 +63,7 @@ export default function ModalNombreComensal({
           className="mesa-surface mesa-text mesa-border mt-6 min-h-48 w-full rounded-lg border px-14 py-10 text-16 outline-none focus:border-[var(--mesa-primary)]"
         />
 
-        <div className="mt-20 flex flex-col-reverse gap-8 sm:flex-row sm:justify-end">
+        <div className={accionesClassName}>
           {editando && onCancelar && (
             <button
               type="button"
@@ -73,7 +77,9 @@ export default function ModalNombreComensal({
             type="button"
             onClick={confirmar}
             disabled={!nombreValido}
-            className="mesa-primary-bg min-h-48 rounded-md px-18 py-10 text-14 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+            className={`mesa-primary-bg min-h-48 rounded-md px-18 py-10 text-14 font-semibold disabled:cursor-not-allowed disabled:opacity-50 ${
+              editando ? "w-full sm:w-auto" : "w-full sm:max-w-[280px]"
+            }`}
           >
             {editando ? "Guardar" : "Comenzar a pedir"}
           </button>

@@ -51,10 +51,6 @@ export default function SeguimientoView({
   const total = items.reduce((n, i) => n + i.precio * i.cantidad, 0);
   const pasoActual = PASOS.indexOf(estadoPedido);
   const gruposComensales = useMemo(() => agruparPorComensal(items), [items]);
-  const etiquetaPorComensal = useMemo(
-    () => new Map(gruposComensales.map(grupo => [grupo.id, grupo.etiqueta])),
-    [gruposComensales],
-  );
 
   const confirmarSolicitudCuenta = async () => {
     setSolicitandoCuenta(true);
@@ -160,21 +156,12 @@ export default function SeguimientoView({
 
           {modoCuenta === 'mesa' ? (
             <div className="divide-y divide-[var(--mesa-border)]">
-              {items.map((item, index) => {
-                const comensalKey = item.comensalId?.trim() || 'mesa-sin-identificar';
-                const etiqueta = etiquetaPorComensal.get(comensalKey) || item.comensalNombre || 'Mesa';
-                return (
-                  <div key={`${item.id}-${index}`} className="mesa-muted flex items-start justify-between gap-10 py-8 text-13">
-                    <div className="min-w-0">
-                      <span>{item.cantidad}× {item.nombre}</span>
-                      <span className="mesa-primary-soft mesa-primary mt-3 block w-fit rounded-full px-7 py-2 text-10 font-medium">
-                        {etiqueta}
-                      </span>
-                    </div>
-                    <span className="mesa-text shrink-0 font-mono font-medium">${(item.precio * item.cantidad).toLocaleString()}</span>
-                  </div>
-                );
-              })}
+              {items.map((item, index) => (
+                <div key={`${item.id}-${index}`} className="mesa-muted flex items-start justify-between gap-10 py-8 text-13">
+                  <span className="min-w-0">{item.cantidad}× {item.nombre}</span>
+                  <span className="mesa-text shrink-0 font-mono font-medium">${(item.precio * item.cantidad).toLocaleString()}</span>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="space-y-10">

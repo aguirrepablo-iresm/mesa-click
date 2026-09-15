@@ -123,6 +123,7 @@ export default function BrandHeader({
   onCambiarComensal,
 }: BrandHeaderProps) {
   const nombre = branding.nombre.trim() || "Tu negocio";
+  const comensalControlClassName = "mesa-muted mesa-border flex min-h-44 w-[96px] shrink-0 flex-col items-center justify-center overflow-hidden rounded-lg border px-8 py-6 text-center text-11";
 
   return (
     <header className={`${sticky ? "sticky top-0 z-20" : ""} mesa-header mesa-border min-h-[68px] border-b px-16 py-12`}>
@@ -135,15 +136,19 @@ export default function BrandHeader({
             <p className="mesa-muted mt-2 text-12">Mesa {mesa}</p>
           </div>
         </div>
-        {comensalNombre && onCambiarComensal && (
+        {comensalNombre && (
           <button
             type="button"
             onClick={onCambiarComensal}
-            className="mesa-muted mesa-border min-h-44 max-w-[148px] shrink-0 rounded-lg border px-10 py-6 text-right text-11 transition-colors hover:border-[var(--mesa-primary)]"
-            aria-label={`Comensal ${comensalNombre}. Cambiar nombre`}
+            disabled={!onCambiarComensal}
+            className={`${comensalControlClassName} transition-colors enabled:hover:border-[var(--mesa-primary)] disabled:cursor-not-allowed`}
+            aria-label={onCambiarComensal
+              ? `Comensal ${comensalNombre}. Cambiar nombre`
+              : `Comensal ${comensalNombre}. No se puede cambiar el nombre porque la cuenta ya fue solicitada`}
+            title={comensalNombre}
           >
-            <span className="block truncate font-medium">{comensalNombre}</span>
-            <span className="mesa-primary block">Cambiar</span>
+            <span className="block w-full truncate font-medium">{comensalNombre}</span>
+            <span className="mesa-primary block">{onCambiarComensal ? "Cambiar" : "Cuenta Cerrada"}</span>
           </button>
         )}
       </div>

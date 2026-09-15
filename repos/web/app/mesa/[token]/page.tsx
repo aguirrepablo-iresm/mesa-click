@@ -652,7 +652,7 @@ export default function MesaPage() {
   };
 
   const handleGuardarComensal = (nombre: string) => {
-    if (!mesa) return;
+    if (!mesa || state.cuentaSolicitada) return;
     const identidad = comensal
       ? { ...comensal, nombre: nombre.trim(), cuentaVersion: mesa.cuenta_version }
       : createComensalIdentity(nombre, mesa.cuenta_version);
@@ -705,7 +705,7 @@ export default function MesaPage() {
     && state.pedidos.every(pedido => pedido.estado === 'listo' || pedido.estado === 'cerrado');
   const categoriaSeleccionada = menu.find(c => c.id === categoriaActiva) || menu[0];
   const categoriaItems = categoriaSeleccionada?.items ?? [];
-  const modalNombreComensal = identidadLista && (!comensal || editandoComensal) ? (
+  const modalNombreComensal = identidadLista && !state.cuentaSolicitada && (!comensal || editandoComensal) ? (
     <ModalNombreComensal
       nombreInicial={comensal?.nombre}
       editando={editandoComensal && Boolean(comensal)}
@@ -742,7 +742,7 @@ export default function MesaPage() {
           cuentaSolicitada={state.cuentaSolicitada}
           mesa={mesa.numero}
           comensalNombre={comensal?.nombre}
-          onCambiarComensal={() => setEditandoComensal(true)}
+          onCambiarComensal={state.cuentaSolicitada ? undefined : () => setEditandoComensal(true)}
           onAgregarMas={() => dispatch({ type: 'SET_VISTA', payload: 'carta' })}
           onPedirCuenta={handlePedirCuenta}
         />
@@ -775,7 +775,7 @@ export default function MesaPage() {
         branding={branding}
         mesa={mesa.numero}
         comensalNombre={comensal?.nombre}
-        onCambiarComensal={() => setEditandoComensal(true)}
+        onCambiarComensal={state.cuentaSolicitada ? undefined : () => setEditandoComensal(true)}
       />
 
       <div className="max-w-lg mx-auto">
