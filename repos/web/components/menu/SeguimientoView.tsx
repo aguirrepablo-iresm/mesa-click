@@ -59,6 +59,8 @@ export default function SeguimientoView({
     }
     return agruparPorComensal(items, nombresActuales);
   }, [comensalId, comensalNombre, items]);
+  const aliasesRegistrados = gruposComensales.filter(grupo => grupo.tieneAlias);
+  const todosConAlias = gruposComensales.length > 0 && aliasesRegistrados.length === gruposComensales.length;
 
   const confirmarSolicitudCuenta = async () => {
     setSolicitandoCuenta(true);
@@ -162,6 +164,23 @@ export default function SeguimientoView({
             </button>
           </div>
 
+          {modoCuenta === 'comensales' && !todosConAlias && (
+            <div className="mesa-primary-soft mesa-border rounded-lg border p-12" role="status">
+              <p className="mesa-text text-12 font-semibold">No todos los comensales ingresaron un alias.</p>
+              <p className="mesa-muted mt-3 text-11">La cuenta por persona se habilitará cuando todos estén identificados.</p>
+              <div className="mt-8 flex flex-wrap items-center gap-6">
+                <span className="mesa-muted text-10 font-medium">Alias registrados:</span>
+                {aliasesRegistrados.length > 0 ? aliasesRegistrados.map(grupo => (
+                  <span key={grupo.id} className="mesa-surface mesa-border rounded-full border px-8 py-3 text-10 font-medium">
+                    {grupo.etiqueta}
+                  </span>
+                )) : (
+                  <span className="mesa-muted text-10">Ninguno todavía</span>
+                )}
+              </div>
+            </div>
+          )}
+
           {modoCuenta === 'mesa' ? (
             <div className="divide-y divide-[var(--mesa-border)]">
               {items.map((item, index) => (
@@ -171,7 +190,7 @@ export default function SeguimientoView({
                 </div>
               ))}
             </div>
-          ) : (
+          ) : todosConAlias ? (
             <div className="space-y-10">
               {gruposComensales.map(grupo => (
                 <section key={grupo.id} className="mesa-subtle-surface mesa-border rounded-lg border p-12">
@@ -190,7 +209,7 @@ export default function SeguimientoView({
                 </section>
               ))}
             </div>
-          )}
+          ) : null}
           <div className="mesa-text flex justify-between border-t pt-10 text-14 font-semibold mesa-border">
             <span>Total</span>
             <span className="mesa-primary font-mono font-semibold">${total.toLocaleString()}</span>

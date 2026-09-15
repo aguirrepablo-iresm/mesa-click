@@ -33,7 +33,7 @@ func (svc *Service) Crear(ctx context.Context, input NuevoPedidoInput) (*Pedido,
 		if !uuidValido(item.ComensalID) {
 			return nil, fmt.Errorf("comensal_id inválido para artículo %s: %w", item.ArticuloID, ErrValidation)
 		}
-		if item.ComensalNombre == "" || utf8.RuneCountInString(item.ComensalNombre) > 100 {
+		if utf8.RuneCountInString(item.ComensalNombre) > 100 {
 			return nil, fmt.Errorf("comensal_nombre inválido para artículo %s: %w", item.ArticuloID, ErrValidation)
 		}
 	}

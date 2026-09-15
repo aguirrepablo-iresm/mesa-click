@@ -662,6 +662,15 @@ export default function MesaPage() {
     setIdentidadLista(true);
   };
 
+  const handleContinuarSinAlias = () => {
+    if (!mesa || state.cuentaSolicitada) return;
+    const identidad = createComensalIdentity("", mesa.cuenta_version);
+    saveComensalIdentity(identidad, mesa.id);
+    setComensal(identidad);
+    setEditandoComensal(false);
+    setIdentidadLista(true);
+  };
+
   if (loading) {
     return (
       <div className="mesa-background flex min-h-screen flex-col items-center justify-center font-inter">
@@ -711,6 +720,7 @@ export default function MesaPage() {
       editando={editandoComensal && Boolean(comensal)}
       onConfirmar={handleGuardarComensal}
       onCancelar={comensal ? () => setEditandoComensal(false) : undefined}
+      onContinuarSinAlias={!comensal ? handleContinuarSinAlias : undefined}
     />
   ) : null;
 

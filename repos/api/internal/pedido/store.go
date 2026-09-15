@@ -101,7 +101,7 @@ func (s *pgStore) Crear(ctx context.Context, input NuevoPedidoInput, sucursalID 
 			`INSERT INTO pedido_items (
 				pedido_id, articulo_id, cantidad, precio_unitario, notas, comensal_id, comensal_nombre
 			)
-			 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
+			 VALUES ($1, $2, $3, $4, $5, $6, NULLIF($7, '')) RETURNING id`,
 			p.ID, item.ArticuloID, item.Cantidad, precioUnitario, item.Notas,
 			item.ComensalID, item.ComensalNombre,
 		).Scan(&itemID)

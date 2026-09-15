@@ -68,6 +68,30 @@ func TestCrear_ComensalInvalido_Error(t *testing.T) {
 	}
 }
 
+func TestCrear_SinAlias_ConservaIdentidadAnonima(t *testing.T) {
+	store := &mockStore{}
+	svc := pedido.NuevoService(store)
+
+	_, err := svc.Crear(context.Background(), pedido.NuevoPedidoInput{
+		MesaID: "mesa-1",
+		Items: []pedido.NuevoItemInput{{
+			ArticuloID:     "articulo-1",
+			Cantidad:       1,
+			ComensalID:     "47dc8c9e-fb98-44d7-80a1-b598addc1e8a",
+			ComensalNombre: "",
+		}},
+	})
+	if err != nil {
+		t.Fatalf("un comensal sin alias debe poder pedir: %v", err)
+	}
+	if got := store.crearInput.Items[0].ComensalID; got == "" {
+		t.Fatal("el pedido sin alias debe conservar el UUID del comensal")
+	}
+	if got := store.crearInput.Items[0].ComensalNombre; got != "" {
+		t.Fatalf("el alias vacío debe conservarse vacío: got %q", got)
+	}
+}
+
 func TestCrear_DosComensalesMismoNombre_ConservaIDsDistintos(t *testing.T) {
 	store := &mockStore{}
 	svc := pedido.NuevoService(store)

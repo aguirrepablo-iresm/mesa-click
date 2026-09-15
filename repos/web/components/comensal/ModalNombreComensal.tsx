@@ -7,6 +7,7 @@ interface Props {
   editando?: boolean;
   onConfirmar: (nombre: string) => void;
   onCancelar?: () => void;
+  onContinuarSinAlias?: () => void;
 }
 
 export default function ModalNombreComensal({
@@ -14,6 +15,7 @@ export default function ModalNombreComensal({
   editando = false,
   onConfirmar,
   onCancelar,
+  onContinuarSinAlias,
 }: Props) {
   const [nombre, setNombre] = useState(nombreInicial);
   const nombreValido = nombre.trim().length > 0;
@@ -25,7 +27,7 @@ export default function ModalNombreComensal({
 
   const accionesClassName = editando
     ? "mt-20 flex flex-col-reverse gap-8 sm:flex-row sm:justify-end"
-    : "mt-20 flex justify-center";
+    : "mt-20 flex flex-col items-center gap-8";
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/80 p-12 sm:items-center sm:p-24">
@@ -39,7 +41,7 @@ export default function ModalNombreComensal({
           👋
         </div>
         <h2 id="nombre-comensal-titulo" className="mesa-text mt-16 text-18 font-semibold">
-          {editando ? "Cambiar nombre" : "¿Cómo te llamás?"}
+          {editando ? (nombreInicial.trim() ? "Cambiar nombre" : "Ingresar nombre") : "¿Cómo te llamás?"}
         </h2>
         <p className="mesa-muted mt-6 text-13 leading-relaxed">
           Usaremos este nombre para identificar tus consumos dentro de esta mesa.
@@ -63,6 +65,12 @@ export default function ModalNombreComensal({
           className="mesa-surface mesa-text mesa-border mt-6 min-h-48 w-full rounded-lg border px-14 py-10 text-16 outline-none focus:border-[var(--mesa-primary)]"
         />
 
+        {!editando && (
+          <p className="mesa-subtle-text mt-10 text-10 leading-relaxed">
+            Al continuar, autorizás una cookie funcional durante 24 h para recordar tu alias y mejorar los pedidos compartidos.
+          </p>
+        )}
+
         <div className={accionesClassName}>
           {editando && onCancelar && (
             <button
@@ -83,6 +91,15 @@ export default function ModalNombreComensal({
           >
             {editando ? "Guardar" : "Comenzar a pedir"}
           </button>
+          {!editando && onContinuarSinAlias && (
+            <button
+              type="button"
+              onClick={onContinuarSinAlias}
+              className="mesa-muted min-h-44 px-12 py-8 text-12 font-medium underline-offset-4 hover:underline"
+            >
+              Continuar sin alias
+            </button>
+          )}
         </div>
       </section>
     </div>

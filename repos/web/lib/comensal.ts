@@ -2,9 +2,11 @@ export interface ComensalIdentity {
   id: string;
   nombre: string;
   cuentaVersion: number;
+  consentimientoVersion: number;
 }
 
 const COOKIE_MAX_AGE_SECONDS = 24 * 60 * 60;
+const CONSENTIMIENTO_VERSION = 1;
 
 function cookieName(mesaId: string) {
   return `mesa_click_comensal_${mesaId}`;
@@ -32,8 +34,8 @@ export function getComensalIdentity(mesaId: string, cuentaVersion: number): Come
       || typeof parsed.id !== "string"
       || !parsed.id.trim()
       || typeof parsed.nombre !== "string"
-      || !parsed.nombre.trim()
       || parsed.cuentaVersion !== cuentaVersion
+      || parsed.consentimientoVersion !== CONSENTIMIENTO_VERSION
     ) {
       clearComensalIdentity(mesaId);
       return null;
@@ -43,6 +45,7 @@ export function getComensalIdentity(mesaId: string, cuentaVersion: number): Come
       id: parsed.id,
       nombre: parsed.nombre.trim(),
       cuentaVersion,
+      consentimientoVersion: CONSENTIMIENTO_VERSION,
     };
   } catch {
     clearComensalIdentity(mesaId);
@@ -67,5 +70,6 @@ export function createComensalIdentity(nombre: string, cuentaVersion: number): C
     id: crypto.randomUUID(),
     nombre: nombre.trim(),
     cuentaVersion,
+    consentimientoVersion: CONSENTIMIENTO_VERSION,
   };
 }

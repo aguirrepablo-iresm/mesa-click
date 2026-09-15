@@ -123,6 +123,7 @@ export default function BrandHeader({
   onCambiarComensal,
 }: BrandHeaderProps) {
   const nombre = branding.nombre.trim() || "Tu negocio";
+  const aliasComensal = comensalNombre?.trim() || "";
   const comensalControlClassName = "mesa-muted mesa-border flex min-h-44 w-[96px] shrink-0 flex-col items-center justify-center overflow-hidden rounded-lg border px-8 py-6 text-center text-11";
 
   return (
@@ -136,19 +137,22 @@ export default function BrandHeader({
             <p className="mesa-muted mt-2 text-12">Mesa {mesa}</p>
           </div>
         </div>
-        {comensalNombre && (
+        {comensalNombre !== undefined && (
           <button
             type="button"
             onClick={onCambiarComensal}
             disabled={!onCambiarComensal}
             className={`${comensalControlClassName} transition-colors enabled:hover:border-[var(--mesa-primary)] disabled:cursor-not-allowed`}
             aria-label={onCambiarComensal
-              ? `Comensal ${comensalNombre}. Cambiar nombre`
-              : `Comensal ${comensalNombre}. No se puede cambiar el nombre porque la cuenta ya fue solicitada`}
-            title={comensalNombre}
+              ? (aliasComensal ? `Comensal ${aliasComensal}. Cambiar nombre` : "Ingresar nombre")
+              : `Comensal ${aliasComensal || "sin alias"}. No se puede cambiar el nombre porque la cuenta ya fue solicitada`}
+            title={aliasComensal || "Ingresar nombre"}
           >
-            <span className="block w-full truncate font-medium">{comensalNombre}</span>
-            <span className="mesa-primary block">{onCambiarComensal ? "Cambiar" : "Cuenta Cerrada"}</span>
+            {aliasComensal && <span className="block w-full truncate font-medium">{aliasComensal}</span>}
+            {!aliasComensal && !onCambiarComensal && <span className="block w-full truncate font-medium">Sin alias</span>}
+            <span className="mesa-primary block">
+              {onCambiarComensal ? (aliasComensal ? "Cambiar" : "Ingresar nombre") : "Cuenta Cerrada"}
+            </span>
           </button>
         )}
       </div>

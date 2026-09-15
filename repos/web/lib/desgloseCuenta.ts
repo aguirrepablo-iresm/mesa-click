@@ -9,6 +9,7 @@ export interface GrupoComensal<T extends ConsumoIdentificado> {
   id: string;
   nombre: string;
   etiqueta: string;
+  tieneAlias: boolean;
   items: T[];
   subtotal: number;
 }
@@ -21,10 +22,15 @@ export function agruparPorComensal<T extends ConsumoIdentificado>(
 
   items.forEach(item => {
     const id = item.comensalId?.trim() || "mesa-sin-identificar";
-    const nombre = nombresActuales.get(id)?.trim() || item.comensalNombre?.trim() || "Mesa";
+    const alias = nombresActuales.get(id)?.trim() || item.comensalNombre?.trim() || "";
+    const tieneAlias = alias.length > 0;
+    const nombre = alias || "Sin alias";
     const existente = grupos.get(id);
     if (existente) {
-      existente.nombre = nombre;
+      if (tieneAlias) {
+        existente.nombre = nombre;
+        existente.tieneAlias = true;
+      }
       existente.items.push(item);
       existente.subtotal += item.precio * item.cantidad;
       return;
@@ -33,6 +39,7 @@ export function agruparPorComensal<T extends ConsumoIdentificado>(
     grupos.set(id, {
       id,
       nombre,
+      tieneAlias,
       items: [item],
       subtotal: item.precio * item.cantidad,
     });
