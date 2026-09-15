@@ -302,12 +302,15 @@ export interface PedidoItemAPI {
   cantidad: number;
   precio_unitario: number;
   notas?: string;
+  comensal_id?: string;
+  comensal_nombre?: string;
 }
 
 export interface PedidoAPI {
   id: string;
   mesa_id: string;
   sucursal_id: string;
+  cuenta_version: number;
   estado: 'recibido' | 'preparando' | 'listo' | 'cerrado';
   items?: PedidoItemAPI[];
   created_at: string;
@@ -320,6 +323,8 @@ export interface NuevoPedidoInput {
     articulo_id: string;
     cantidad: number;
     notas?: string;
+    comensal_id: string;
+    comensal_nombre: string;
   }>;
 }
 
@@ -545,6 +550,10 @@ export const api = {
     });
   },
 
+  listarPedidosMesa: async (qrToken: string) => {
+    return apiFetch<PedidoAPI[]>(`/publica/mesas/${encodeURIComponent(qrToken)}/pedidos`);
+  },
+
   // 8. Recepcionista & SSE (US-44, US-45)
   listarPedidosActivos: async (sucursalId: string) => {
     return apiFetch<PedidoAPI[]>(`/pedidos?sucursal_id=${encodeURIComponent(sucursalId)}`);
@@ -559,6 +568,10 @@ export const api = {
 
   obtenerEventosPedidoUrl: (pedidoId: string) => {
     return `${API_BASE_URL}/pedidos/${encodeURIComponent(pedidoId)}/eventos`;
+  },
+
+  obtenerEventosMesaUrl: (mesaId: string) => {
+    return `${API_BASE_URL}/publica/mesas/${encodeURIComponent(mesaId)}/eventos`;
   },
 
   obtenerEventosSucursalUrl: (sucursalId: string) => {

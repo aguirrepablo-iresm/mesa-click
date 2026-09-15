@@ -141,10 +141,12 @@ func registrarRutas(mux *http.ServeMux) {
 	notificacionH := notificacion.NuevosHandlers()
 	mux.Handle("GET /sucursales/{sucursal_id}/eventos", auth.Requerir(http.HandlerFunc(notificacionH.EventosSucursal)))
 	mux.HandleFunc("GET /pedidos/{id}/eventos", notificacionH.EventosPedido)
+	mux.HandleFunc("GET /publica/mesas/{mesa_id}/eventos", notificacionH.EventosMesa)
 
 	// Públicos (sin auth — cliente con QR)
 	mux.HandleFunc("GET /publica/sucursales/{sucursal_id}/carta", cartaH.CartaPublica)
 	mux.HandleFunc("GET /publica/mesas/{qr_token}", mesaH.MesaPorQR)
+	mux.HandleFunc("GET /publica/mesas/{qr_token}/pedidos", pedidoH.ListarCuentaActual)
 	mux.HandleFunc("POST /publica/mesas/{qr_token}/cuenta", mesaH.SolicitarCuenta)
 }
 

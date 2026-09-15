@@ -3,8 +3,10 @@
 > **Sprint**: Sprint 12 (14/09 – 20/09/2026)  
 > **Épica**: Mobile-First Comensal  
 > **Tipo**: `Integración` (Fullstack: Frontend Comensal + Dashboard + Backend)  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
+> **Estado**: ⚡ **En Curso**
+>
+> **Asignado a**: Mateo Silvestrin
+>
 > **Rama de trabajo**: `feat/US-81-pedidos-colaborativos-mesa`  
 
 ---
@@ -21,13 +23,13 @@
 
 ### CA-1: Identificación de Comensal & Persistencia en Cookie
 - Al ingresar a la URL de la mesa (`/mesa/[token]`), si no existe una identificación previa para esa mesa, se muestra un modal o diálogo bloqueante amigable solicitando el nombre o alias (ej. "Pablo", "Sofi").
-- El nombre ingresado se guarda en una cookie local (`mesa_click_comensal_${mesaId}`) o storage de sesión, con expiración mientras dure la sesión de la mesa.
+- La identidad anónima (`comensal_id` UUID + nombre visible) se guarda en una cookie local (`mesa_click_comensal_${mesaId}`), vinculada a la versión vigente de la cuenta.
 - Al recargar la página o volver a escanear el QR desde el mismo teléfono, el comensal no debe volver a ingresar su nombre.
 - Se proporciona una opción visible y discreta en la cabecera para modificar el nombre ("Comensal: Pablo · Cambiar") en caso de error tipográfico.
 
 ### CA-2: Carrito y Pedido Colaborativo Multi-usuario en Tiempo Real
 - Varios comensales pueden escanear el mismo código QR en simultáneo y ordenar desde sus respectivos dispositivos.
-- Cada ítem agregado y confirmado en el pedido de la mesa viaja etiquetado con el `comensal_nombre` correspondiente.
+- Cada ítem agregado y confirmado en el pedido de la mesa viaja etiquetado con el `comensal_id` anónimo y el `comensal_nombre` visible correspondientes.
 - A través del canal de tiempo real (SSE), todos los comensales sentados en la misma mesa visualizan la comanda grupal actualizada al instante con los ítems que van sumando sus acompañantes.
 
 ### CA-3: Trazabilidad Visual en Comensal y Dashboard de Mozo / Recepcionista
@@ -46,51 +48,53 @@
 ## 3. Checklist de Tareas Técnicas
 
 ### 🔹 Backend (`repos/api` - Go)
-- [ ] **Migración DB**: Crear migración SQL para agregar la columna `comensal_nombre VARCHAR(100)` (o `TEXT`) a la tabla `pedido_items`.
-- [ ] **Modelos Go**:
-  - Actualizar struct `PedidoItem` con campo `ComensalNombre string \`json:"comensal_nombre,omitempty"\``.
-  - Actualizar `NuevoItemInput` para recibir `ComensalNombre` desde el frontend comensal.
-- [ ] **Store & Repositorio**:
+- [x] **Migración DB**: Agregar `comensal_id UUID` y `comensal_nombre VARCHAR(100)` a `pedido_items`, y asociar los pedidos a la versión vigente de la cuenta.
+- [x] **Modelos Go**:
+  - [x] Actualizar struct `PedidoItem` con `ComensalID` y `ComensalNombre`.
+  - [x] Actualizar `NuevoItemInput` para recibir la identidad desde el frontend comensal.
+- [x] **Store & Repositorio**:
   - Ajustar `InsertItem` y querys `SELECT` en `internal/pedido/store.go` para persistir y recuperar `comensal_nombre`.
-- [ ] **SSE / Tiempo Real**:
+- [x] **SSE / Tiempo Real**:
   - Asegurar que el evento emitido a través del canal SSE de pedidos incluya el `comensal_nombre` en cada ítem para sincronizar a todos los clientes conectados a la mesa.
-- [ ] **Lógica de Cuenta**:
-  - Retornar o facilitar la agregación de montos por `comensal_nombre` en la consulta del estado de cuenta de la mesa.
-- [ ] **Tests**:
+- [x] **Lógica de Cuenta**:
+  - Retornar los consumos de la cuenta vigente y facilitar la agregación por `comensal_id`, sin mezclar nombres iguales.
+- [x] **Tests**:
   - Tests unitarios en `internal/pedido/service_test.go` verificando la correcta asignación y persistencia del comensal por ítem.
 
 ### 🔹 Frontend Comensal (`repos/web` - Next.js)
-- [ ] **Modal de Bienvenida / Nombre**:
+- [x] **Modal de Bienvenida / Nombre**:
   - Diseñar componente `ModalNombreComensal.tsx` con input táctil y botón de confirmación rápida ("Comenzar a pedir").
-- [ ] **Gestión de Cookies de Sesión**:
-  - Implementar helper `getComensalName(mesaToken)` y `setComensalName(mesaToken, name)` mediante cookies / cookies-next para persistir la sesión.
-- [ ] **Integración en Carrito**:
+- [x] **Gestión de Cookies de Sesión**:
+  - Implementar helpers de identidad de comensal mediante cookies para persistir la sesión por mesa y `cuenta_version`.
+- [x] **Integración en Carrito**:
   - Enviar el nombre del comensal activo en el payload de `api.crearPedido` para cada línea de producto.
-- [ ] **Vista Grupal Colaborativa**:
+- [x] **Vista Grupal Colaborativa**:
   - Mostrar en la vista de seguimiento `/mesa/[token]` los ítems agrupados o etiquetados por comensal con actualización reactiva por SSE.
-- [ ] **Selector de Cuenta (Unificada / Dividida)**:
-  - Componente de desglose de cuenta con tabs/toggle: "Cuenta de la Mesa" vs. "Por Persona" calculando subtotales por nombre.
+- [x] **Selector de Cuenta (Unificada / Dividida)**:
+  - Componente de desglose de cuenta con tabs/toggle: "Cuenta de la Mesa" vs. "Por Persona" calculando subtotales por identidad anónima.
 
 ### 🔹 Frontend Dashboard Recepcionista (`repos/web/app/dashboard`)
-- [ ] **Visualización en Comanda**:
+- [x] **Visualización en Comanda**:
   - Añadir etiqueta visual (chip/badge) con el nombre del comensal al lado de cada ítem en las tarjetas de pedidos activos.
-- [ ] **Soporte de Cobro Separado**:
+- [x] **Soporte de Cobro Separado**:
   - Permitir al recepcionista visualizar el subtotal de cada comensal al momento de marcar el pedido/mesa como cobrado.
 
 ---
 
 ## 4. Archivos Clave Involucrados
 
-- `repos/api/migrations/013_add_comensal_nombre_to_pedido_items.sql`
+- `repos/api/migrations/016_add_comensal_pedidos_colaborativos.sql`
 - `repos/api/internal/pedido/model.go`
 - `repos/api/internal/pedido/store.go`
 - `repos/api/internal/pedido/service.go`
 - `repos/api/internal/pedido/service_test.go`
 - `repos/web/app/mesa/[token]/page.tsx`
 - `repos/web/components/comensal/ModalNombreComensal.tsx`
-- `repos/web/components/comensal/DesgloseCuentaModal.tsx`
-- `repos/web/app/dashboard/page.tsx`
+- `repos/web/components/menu/SeguimientoView.tsx`
+- `repos/web/components/dashboard/RecepcionistaSection.tsx`
 - `repos/web/lib/api.ts`
+- `repos/web/lib/comensal.ts`
+- `repos/web/lib/desgloseCuenta.ts`
 
 ---
 

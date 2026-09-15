@@ -110,9 +110,18 @@ interface BrandHeaderProps {
   mesa: number;
   title?: string;
   sticky?: boolean;
+  comensalNombre?: string;
+  onCambiarComensal?: () => void;
 }
 
-export default function BrandHeader({ branding, mesa, title, sticky = true }: BrandHeaderProps) {
+export default function BrandHeader({
+  branding,
+  mesa,
+  title,
+  sticky = true,
+  comensalNombre,
+  onCambiarComensal,
+}: BrandHeaderProps) {
   const nombre = branding.nombre.trim() || "Tu negocio";
 
   return (
@@ -126,6 +135,17 @@ export default function BrandHeader({ branding, mesa, title, sticky = true }: Br
             <p className="mesa-muted mt-2 text-12">Mesa {mesa}</p>
           </div>
         </div>
+        {comensalNombre && onCambiarComensal && (
+          <button
+            type="button"
+            onClick={onCambiarComensal}
+            className="mesa-muted mesa-border min-h-44 max-w-[148px] shrink-0 rounded-lg border px-10 py-6 text-right text-11 transition-colors hover:border-[var(--mesa-primary)]"
+            aria-label={`Comensal ${comensalNombre}. Cambiar nombre`}
+          >
+            <span className="block truncate font-medium">{comensalNombre}</span>
+            <span className="mesa-primary block">Cambiar</span>
+          </button>
+        )}
       </div>
     </header>
   );

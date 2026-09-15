@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { CartItem, EstadoPedido } from "@/app/mesa/[token]/page";
+import { agruparPorComensal } from "@/lib/desgloseCuenta";
 import BrandHeader from "./BrandHeader";
 import type { MesaBranding } from "./BrandHeader";
 
@@ -10,6 +11,8 @@ interface Props {
   todosListos: boolean;
   cuentaSolicitada: boolean;
   mesa: number;
+  comensalNombre?: string;
+  onCambiarComensal?: () => void;
   onAgregarMas: () => void;
   onPedirCuenta: () => Promise<void> | void;
 }
@@ -37,13 +40,21 @@ export default function SeguimientoView({
   todosListos,
   cuentaSolicitada,
   mesa,
+  comensalNombre,
+  onCambiarComensal,
   onAgregarMas,
   onPedirCuenta,
 }: Props) {
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [solicitandoCuenta, setSolicitandoCuenta] = useState(false);
+  const [modoCuenta, setModoCuenta] = useState<'mesa' | 'comensales'>('mesa');
   const total = items.reduce((n, i) => n + i.precio * i.cantidad, 0);
   const pasoActual = PASOS.indexOf(estadoPedido);
+  const gruposComensales = useMemo(() => agruparPorComensal(items), [items]);
+  const etiquetaPorComensal = useMemo(
+    () => new Map(gruposComensales.map(grupo => [grupo.id, grupo.etiqueta])),
+    [gruposComensales],
+  );
 
   const confirmarSolicitudCuenta = async () => {
     setSolicitandoCuenta(true);
@@ -59,7 +70,13 @@ export default function SeguimientoView({
 
   return (
     <div className="mesa-background min-h-screen pb-32 font-inter">
-      <BrandHeader branding={branding} mesa={mesa} title="Estado de tu pedido" />
+      <BrandHeader
+        branding={branding}
+        mesa={mesa}
+        title="Estado de la mesa"
+        comensalNombre={comensalNombre}
+        onCambiarComensal={onCambiarComensal}
+      />
 
       <div className="max-w-lg mx-auto px-16 py-20 space-y-16">
         {/* Stepper Card */}
@@ -115,15 +132,70 @@ export default function SeguimientoView({
 
         {/* Resumen del pedido */}
         <div className="mesa-surface mesa-border space-y-10 rounded-lg border p-20 shadow-2xs">
-          <h3 className="mesa-text text-13 font-medium">Resumen de la mesa</h3>
-          <div className="divide-y divide-[var(--mesa-border)]">
-            {items.map((item, index) => (
-              <div key={`${item.id}-${index}`} className="mesa-muted flex justify-between py-6 text-13">
-                <span>{item.cantidad}× {item.nombre}</span>
-                <span className="mesa-text font-mono font-medium">${(item.precio * item.cantidad).toLocaleString()}</span>
-              </div>
-            ))}
+          <div className="flex items-center justify-between gap-12">
+            <h3 className="mesa-text text-13 font-medium">Resumen de la cuenta</h3>
+            <span className="mesa-muted text-11">{gruposComensales.length} {gruposComensales.length === 1 ? 'comensal' : 'comensales'}</span>
           </div>
+
+          <div className="mesa-subtle-surface grid grid-cols-2 rounded-lg p-2" role="tablist" aria-label="Modo de cuenta">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={modoCuenta === 'mesa'}
+              onClick={() => setModoCuenta('mesa')}
+              className={`min-h-44 rounded-md px-8 text-12 font-medium transition-colors ${modoCuenta === 'mesa' ? 'mesa-surface mesa-text shadow-xs' : 'mesa-muted'}`}
+            >
+              Cuenta de la mesa
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={modoCuenta === 'comensales'}
+              onClick={() => setModoCuenta('comensales')}
+              className={`min-h-44 rounded-md px-8 text-12 font-medium transition-colors ${modoCuenta === 'comensales' ? 'mesa-surface mesa-text shadow-xs' : 'mesa-muted'}`}
+            >
+              Por persona
+            </button>
+          </div>
+
+          {modoCuenta === 'mesa' ? (
+            <div className="divide-y divide-[var(--mesa-border)]">
+              {items.map((item, index) => {
+                const comensalKey = item.comensalId?.trim() || 'mesa-sin-identificar';
+                const etiqueta = etiquetaPorComensal.get(comensalKey) || item.comensalNombre || 'Mesa';
+                return (
+                  <div key={`${item.id}-${index}`} className="mesa-muted flex items-start justify-between gap-10 py-8 text-13">
+                    <div className="min-w-0">
+                      <span>{item.cantidad}× {item.nombre}</span>
+                      <span className="mesa-primary-soft mesa-primary mt-3 block w-fit rounded-full px-7 py-2 text-10 font-medium">
+                        {etiqueta}
+                      </span>
+                    </div>
+                    <span className="mesa-text shrink-0 font-mono font-medium">${(item.precio * item.cantidad).toLocaleString()}</span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="space-y-10">
+              {gruposComensales.map(grupo => (
+                <section key={grupo.id} className="mesa-subtle-surface mesa-border rounded-lg border p-12">
+                  <div className="flex items-center justify-between gap-10">
+                    <span className="mesa-text text-13 font-semibold">{grupo.etiqueta}</span>
+                    <span className="mesa-primary shrink-0 font-mono text-14 font-semibold">${grupo.subtotal.toLocaleString()}</span>
+                  </div>
+                  <div className="mesa-muted mt-8 space-y-4 text-12">
+                    {grupo.items.map((item, index) => (
+                      <div key={`${item.id}-${index}`} className="flex justify-between gap-8">
+                        <span>{item.cantidad}× {item.nombre}</span>
+                        <span className="shrink-0 font-mono">${(item.precio * item.cantidad).toLocaleString()}</span>
+                      </div>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
           <div className="mesa-text flex justify-between border-t pt-10 text-14 font-semibold mesa-border">
             <span>Total</span>
             <span className="mesa-primary font-mono font-semibold">${total.toLocaleString()}</span>

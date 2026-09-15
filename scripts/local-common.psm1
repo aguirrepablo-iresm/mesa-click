@@ -254,7 +254,7 @@ SMTP_PORT=587
 SMTP_USER=
 SMTP_PASS=
 SMTP_FROM=
-"@ | Set-Content -Encoding UTF8 $envPath
+"@ | Set-Content -Encoding ASCII $envPath
 }
 
 function Ensure-WebDeps {

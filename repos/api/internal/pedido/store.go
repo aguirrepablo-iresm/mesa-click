@@ -10,39 +10,41 @@ import (
 )
 
 type Store interface {
-	Crear(ctx context.Context, input NuevoPedidoInput, sucursalID string) (*Pedido, error)
+	Crear(ctx context.Context, input NuevoPedidoInput, sucursalID string, cuentaVersion int) (*Pedido, error)
 	ListarActivos(ctx context.Context, sucursalID, tenantID string) ([]Pedido, error)
+	ListarCuentaActualPorQR(ctx context.Context, qrToken string) ([]Pedido, error)
 	CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado string) (*Pedido, error)
-	ObtenerSucursalPorMesa(ctx context.Context, mesaID string) (string, error)
+	ObtenerSucursalPorMesa(ctx context.Context, mesaID string) (string, int, error)
 }
 
 type pgStore struct{}
 
 func NuevoStore() Store { return &pgStore{} }
 
-func (s *pgStore) ObtenerSucursalPorMesa(ctx context.Context, mesaID string) (string, error) {
+func (s *pgStore) ObtenerSucursalPorMesa(ctx context.Context, mesaID string) (string, int, error) {
 	var sucursalID string
 	var estado string
 	var cuentaSolicitada bool
+	var cuentaVersion int
 	err := db.Pool.QueryRow(ctx,
-		`SELECT sucursal_id, estado, cuenta_solicitada FROM mesas WHERE id = $1`, mesaID,
-	).Scan(&sucursalID, &estado, &cuentaSolicitada)
+		`SELECT sucursal_id, estado, cuenta_solicitada, cuenta_version FROM mesas WHERE id = $1`, mesaID,
+	).Scan(&sucursalID, &estado, &cuentaSolicitada, &cuentaVersion)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return "", ErrNotFound
+			return "", 0, ErrNotFound
 		}
-		return "", fmt.Errorf("error obteniendo sucursal por mesa: %w", err)
+		return "", 0, fmt.Errorf("error obteniendo sucursal por mesa: %w", err)
 	}
 	if estado != "activa" {
-		return "", ErrMesaCerrada
+		return "", 0, ErrMesaCerrada
 	}
 	if cuentaSolicitada {
-		return "", ErrCuentaSolicitada
+		return "", 0, ErrCuentaSolicitada
 	}
-	return sucursalID, nil
+	return sucursalID, cuentaVersion, nil
 }
 
-func (s *pgStore) Crear(ctx context.Context, input NuevoPedidoInput, sucursalID string) (*Pedido, error) {
+func (s *pgStore) Crear(ctx context.Context, input NuevoPedidoInput, sucursalID string, cuentaVersion int) (*Pedido, error) {
 	tx, err := db.Pool.Begin(ctx)
 	if err != nil {
 		return nil, err
@@ -51,12 +53,24 @@ func (s *pgStore) Crear(ctx context.Context, input NuevoPedidoInput, sucursalID 
 
 	p := &Pedido{}
 	err = tx.QueryRow(ctx,
-		`INSERT INTO pedidos (mesa_id, sucursal_id, estado)
-		 VALUES ($1, $2, 'recibido')
-		 RETURNING id, mesa_id, sucursal_id, estado, created_at, updated_at`,
-		input.MesaID, sucursalID,
-	).Scan(&p.ID, &p.MesaID, &p.SucursalID, &p.Estado, &p.CreatedAt, &p.UpdatedAt)
+		`INSERT INTO pedidos (mesa_id, sucursal_id, cuenta_version, estado)
+		 SELECT $1, $2, $3, 'recibido'
+		 WHERE EXISTS (
+			SELECT 1
+			FROM mesas
+			WHERE id = $1
+			  AND sucursal_id = $2
+			  AND estado = 'activa'
+			  AND cuenta_solicitada = false
+			  AND cuenta_version = $3
+		 )
+		 RETURNING id, mesa_id, sucursal_id, cuenta_version, estado, created_at, updated_at`,
+		input.MesaID, sucursalID, cuentaVersion,
+	).Scan(&p.ID, &p.MesaID, &p.SucursalID, &p.CuentaVersion, &p.Estado, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrCuentaSolicitada
+		}
 		return nil, fmt.Errorf("error creando pedido: %w", err)
 	}
 
@@ -84,9 +98,12 @@ func (s *pgStore) Crear(ctx context.Context, input NuevoPedidoInput, sucursalID 
 
 		var itemID string
 		err = tx.QueryRow(ctx,
-			`INSERT INTO pedido_items (pedido_id, articulo_id, cantidad, precio_unitario, notas)
-			 VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+			`INSERT INTO pedido_items (
+				pedido_id, articulo_id, cantidad, precio_unitario, notas, comensal_id, comensal_nombre
+			)
+			 VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
 			p.ID, item.ArticuloID, item.Cantidad, precioUnitario, item.Notas,
+			item.ComensalID, item.ComensalNombre,
 		).Scan(&itemID)
 		if err != nil {
 			return nil, fmt.Errorf("error insertando item: %w", err)
@@ -100,6 +117,8 @@ func (s *pgStore) Crear(ctx context.Context, input NuevoPedidoInput, sucursalID 
 			Cantidad:       item.Cantidad,
 			PrecioUnitario: precioUnitario,
 			Notas:          item.Notas,
+			ComensalID:     item.ComensalID,
+			ComensalNombre: item.ComensalNombre,
 		})
 	}
 
@@ -110,24 +129,46 @@ func (s *pgStore) Crear(ctx context.Context, input NuevoPedidoInput, sucursalID 
 }
 
 func (s *pgStore) ListarActivos(ctx context.Context, sucursalID, tenantID string) ([]Pedido, error) {
-	rows, err := db.Pool.Query(ctx,
-		`SELECT p.id, p.mesa_id, p.sucursal_id, p.estado, p.created_at, p.updated_at
+	return s.listarPedidos(ctx,
+		`SELECT p.id, p.mesa_id, p.sucursal_id, p.cuenta_version, p.estado, p.created_at, p.updated_at
 		 FROM pedidos p
 		 JOIN sucursales su ON su.id = p.sucursal_id
+		 JOIN mesas m ON m.id = p.mesa_id
 		 WHERE p.sucursal_id = $1
 		   AND su.tenant_id = $2
-		   AND p.estado != 'cerrado'
-		 ORDER BY p.created_at`,
-		sucursalID, tenantID)
+		   AND p.cuenta_version = m.cuenta_version
+		 ORDER BY p.created_at`, sucursalID, tenantID)
+}
+
+func (s *pgStore) ListarCuentaActualPorQR(ctx context.Context, qrToken string) ([]Pedido, error) {
+	return s.listarPedidos(ctx,
+		`SELECT p.id, p.mesa_id, p.sucursal_id, p.cuenta_version, p.estado, p.created_at, p.updated_at
+		 FROM pedidos p
+		 JOIN mesas m ON m.id = p.mesa_id
+		 WHERE m.qr_token = $1
+		   AND p.cuenta_version = m.cuenta_version
+		 ORDER BY p.created_at`, qrToken)
+}
+
+func (s *pgStore) listarPedidos(ctx context.Context, query string, args ...any) ([]Pedido, error) {
+	rows, err := db.Pool.Query(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var pedidos []Pedido
+	pedidos := make([]Pedido, 0)
 	for rows.Next() {
 		var p Pedido
-		if err := rows.Scan(&p.ID, &p.MesaID, &p.SucursalID, &p.Estado, &p.CreatedAt, &p.UpdatedAt); err != nil {
+		if err := rows.Scan(
+			&p.ID,
+			&p.MesaID,
+			&p.SucursalID,
+			&p.CuentaVersion,
+			&p.Estado,
+			&p.CreatedAt,
+			&p.UpdatedAt,
+		); err != nil {
 			return nil, err
 		}
 		pedidos = append(pedidos, p)
@@ -148,7 +189,8 @@ func (s *pgStore) ListarActivos(ctx context.Context, sucursalID, tenantID string
 func (s *pgStore) listarItems(ctx context.Context, pedidoID string) ([]PedidoItem, error) {
 	rows, err := db.Pool.Query(ctx,
 		`SELECT pi.id, pi.pedido_id, pi.articulo_id, a.nombre,
-		        pi.cantidad, pi.precio_unitario, COALESCE(pi.notas, '')
+		        pi.cantidad, pi.precio_unitario, COALESCE(pi.notas, ''),
+		        COALESCE(pi.comensal_id::text, ''), COALESCE(pi.comensal_nombre, '')
 		 FROM pedido_items pi
 		 JOIN articulos a ON a.id = pi.articulo_id
 		 WHERE pi.pedido_id = $1
@@ -169,6 +211,8 @@ func (s *pgStore) listarItems(ctx context.Context, pedidoID string) ([]PedidoIte
 			&item.Cantidad,
 			&item.PrecioUnitario,
 			&item.Notas,
+			&item.ComensalID,
+			&item.ComensalNombre,
 		); err != nil {
 			return nil, err
 		}
@@ -186,9 +230,9 @@ func (s *pgStore) CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado s
 		`UPDATE pedidos SET estado = $1, updated_at = now()
 		 WHERE id = $2
 		   AND sucursal_id IN (SELECT id FROM sucursales WHERE tenant_id = $3)
-		 RETURNING id, mesa_id, sucursal_id, estado, created_at, updated_at`,
+		 RETURNING id, mesa_id, sucursal_id, cuenta_version, estado, created_at, updated_at`,
 		nuevoEstado, id, tenantID,
-	).Scan(&p.ID, &p.MesaID, &p.SucursalID, &p.Estado, &p.CreatedAt, &p.UpdatedAt)
+	).Scan(&p.ID, &p.MesaID, &p.SucursalID, &p.CuentaVersion, &p.Estado, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound

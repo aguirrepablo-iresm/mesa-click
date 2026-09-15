@@ -46,6 +46,7 @@ func (svc *Service) CerrarCuenta(ctx context.Context, id, tenantID string) (*Mes
 		return nil, err
 	}
 	notificacion.Instancia.Publicar(fmt.Sprintf("sucursal:%s", m.SucursalID), "cuenta_cerrada", m)
+	notificacion.Instancia.Publicar(fmt.Sprintf("mesa:%s", m.ID), "cuenta_cerrada", m)
 	return m, nil
 }
 
@@ -63,6 +64,7 @@ func (svc *Service) SolicitarCuentaPorQRToken(ctx context.Context, token string)
 		return nil, err
 	}
 	notificacion.Instancia.Publicar(fmt.Sprintf("sucursal:%s", mp.SucursalID), "cuenta_solicitada", mp)
+	notificacion.Instancia.Publicar(fmt.Sprintf("mesa:%s", mp.ID), "cuenta_solicitada", mp)
 	return mp, nil
 }
 

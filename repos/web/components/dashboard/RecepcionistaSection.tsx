@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { api, PedidoAPI, Sucursal, MesaAPI } from "@/lib/api";
+import { agruparPorComensal } from "@/lib/desgloseCuenta";
 import { EmptyState, Skeleton, useToast } from "@/components/ui";
 
 export interface PedidoVista {
@@ -10,8 +11,17 @@ export interface PedidoVista {
   sucursalId?: string;
   timestamp: string;
   estado: 'recibido' | 'preparando' | 'listo';
-  items: Array<{ id: string; nombre: string; cantidad: number; precio: number; nota?: string }>;
+  items: Array<{
+    id: string;
+    nombre: string;
+    cantidad: number;
+    precio: number;
+    nota?: string;
+    comensalId?: string;
+    comensalNombre?: string;
+  }>;
   cuentaSolicitada?: boolean;
+  finalizado?: boolean;
 }
 
 interface MesaGrupo {
@@ -48,10 +58,12 @@ function PedidoDetalle({
   pedido,
   onAvanzar,
   onCerrar,
+  etiquetaPorComensal,
 }: {
   pedido: PedidoVista;
   onAvanzar: (id: string) => void;
   onCerrar: (id: string) => void;
+  etiquetaPorComensal: Map<string, string>;
 }) {
   const total = pedido.items.reduce((sum, i) => sum + i.precio * i.cantidad, 0);
 
@@ -72,6 +84,9 @@ function PedidoDetalle({
           <div key={item.id} className="flex items-start justify-between gap-12 text-13">
             <div className="min-w-0">
               <p className="text-ash-graphite">{item.cantidad}× {item.nombre}</p>
+              <span className="mt-3 inline-block rounded-full bg-vanilla-cream px-7 py-2 text-10 font-medium text-plain-green">
+                {etiquetaPorComensal.get(item.comensalId?.trim() || 'mesa-sin-identificar') || item.comensalNombre || 'Mesa'}
+              </span>
               {item.nota && <p className="mt-2 text-11 text-sage-green">Nota: {item.nota}</p>}
             </div>
             <span className="shrink-0 font-mono text-sage-green">${(item.precio * item.cantidad).toLocaleString()}</span>
@@ -85,7 +100,7 @@ function PedidoDetalle({
       </div>
 
       <div className="mt-12 flex items-center gap-8">
-        {pedido.estado !== 'listo' && (
+        {pedido.estado !== 'listo' && !pedido.finalizado && (
           <button
             onClick={() => onAvanzar(pedido.id)}
             className="flex min-h-44 flex-1 items-center justify-center rounded-md bg-plain-green px-16 py-8 text-center text-12 font-semibold text-canvas-white transition-all hover:opacity-90 active:scale-[0.98] sm:flex-initial"
@@ -93,13 +108,18 @@ function PedidoDetalle({
             {pedido.estado === 'recibido' ? '→ Preparando' : '→ Listo'}
           </button>
         )}
-        {pedido.estado === 'listo' && (
+        {pedido.estado === 'listo' && !pedido.finalizado && (
           <button
             onClick={() => onCerrar(pedido.id)}
             className="flex min-h-44 flex-1 items-center justify-center rounded-md bg-ash-graphite px-16 py-8 text-center text-12 font-semibold text-canvas-white transition-all hover:opacity-90 active:scale-[0.98] sm:flex-initial"
           >
             Cerrar pedido
           </button>
+        )}
+        {pedido.finalizado && (
+          <span className="flex min-h-44 items-center rounded-md border border-success bg-success/20 px-12 py-8 text-12 font-semibold text-ash-graphite">
+            Pedido entregado
+          </span>
         )}
       </div>
     </div>
@@ -192,6 +212,14 @@ function MesaDetalleModal({
   );
   const estadoMesa = calcularEstadoMesa(grupo.pedidos);
   const todosListos = estadoMesa === 'listo';
+  const gruposComensales = useMemo(
+    () => agruparPorComensal(grupo.pedidos.flatMap(pedido => pedido.items)),
+    [grupo.pedidos],
+  );
+  const etiquetaPorComensal = useMemo(
+    () => new Map(gruposComensales.map(comensal => [comensal.id, comensal.etiqueta])),
+    [gruposComensales],
+  );
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
@@ -274,8 +302,34 @@ function MesaDetalleModal({
             <span className="text-13 font-medium text-ash-graphite">Total acumulado de la mesa</span>
             <span className="shrink-0 font-mono text-16 font-semibold text-ash-graphite">${total.toLocaleString()}</span>
           </div>
+          {gruposComensales.length > 0 && (
+            <div className="border-b border-ghost-fog px-16 py-14 sm:px-20">
+              <h3 className="text-13 font-semibold text-ash-graphite">Cuenta por comensal</h3>
+              <div className="mt-10 grid gap-8 sm:grid-cols-2">
+                {gruposComensales.map(comensal => (
+                  <div key={comensal.id} className="rounded-lg border border-ghost-fog bg-vanilla-cream px-12 py-10">
+                    <div className="flex items-center justify-between gap-8">
+                      <span className="text-12 font-semibold text-ash-graphite">{comensal.etiqueta}</span>
+                      <span className="shrink-0 font-mono text-13 font-semibold text-plain-green">
+                        ${comensal.subtotal.toLocaleString()}
+                      </span>
+                    </div>
+                    <p className="mt-2 text-10 text-sage-green">
+                      {comensal.items.reduce((cantidad, item) => cantidad + item.cantidad, 0)} ítems
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {grupo.pedidos.map(pedido => (
-            <PedidoDetalle key={pedido.id} pedido={pedido} onAvanzar={onAvanzar} onCerrar={onCerrar} />
+            <PedidoDetalle
+              key={pedido.id}
+              pedido={pedido}
+              onAvanzar={onAvanzar}
+              onCerrar={onCerrar}
+              etiquetaPorComensal={etiquetaPorComensal}
+            />
           ))}
         </div>
       </section>
@@ -304,12 +358,15 @@ export default function RecepcionistaSection() {
       sucursalId: p.sucursal_id,
       timestamp: p.created_at ? new Date(p.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       estado: est,
+      finalizado: p.estado === 'cerrado',
       items: (p.items || []).map(i => ({
         id: i.id || i.articulo_id,
         nombre: i.nombre_articulo?.trim() || 'Producto sin nombre',
         cantidad: i.cantidad,
         precio: i.precio_unitario,
         nota: i.notas?.trim() || '',
+        comensalId: i.comensal_id,
+        comensalNombre: i.comensal_nombre?.trim() || undefined,
       })),
       cuentaSolicitada: Boolean(mesasMap[p.mesa_id]?.cuenta_solicitada),
     };
@@ -336,9 +393,7 @@ export default function RecepcionistaSection() {
         try {
           const pedidosApi = await api.listarPedidosActivos(primSuc.id);
           if (pedidosApi && pedidosApi.length >= 0) {
-            const formateados = pedidosApi
-              .filter(p => p.estado !== 'cerrado')
-              .map(p => transformarPedidoApi(p, sMap));
+            const formateados = pedidosApi.map(p => transformarPedidoApi(p, sMap));
             setPedidos(formateados);
             return;
           }
@@ -391,17 +446,17 @@ export default function RecepcionistaSection() {
       try {
         const data: PedidoAPI = JSON.parse(e.data);
         if (data && data.id) {
-          if (data.estado === 'cerrado') {
-            setPedidos(prev => prev.filter(p => p.id !== data.id));
-          } else {
-            setPedidos(prev =>
-              prev.map(p =>
-                p.id === data.id
-                  ? { ...p, estado: data.estado as 'recibido' | 'preparando' | 'listo' }
-                  : p
-              )
-            );
-          }
+          setPedidos(prev =>
+            prev.map(p =>
+              p.id === data.id
+                ? {
+                    ...p,
+                    estado: data.estado === 'cerrado' ? 'listo' : data.estado,
+                    finalizado: data.estado === 'cerrado',
+                  }
+                : p
+            )
+          );
         }
       } catch (err) {
         console.warn("Error parseando pedido_actualizado SSE:", err);
@@ -469,7 +524,9 @@ export default function RecepcionistaSection() {
   const cerrarPedido = async (pedidoId: string) => {
     try {
       await api.cambiarEstadoPedido(pedidoId, 'cerrado');
-      setPedidos(prev => prev.filter(p => p.id !== pedidoId));
+      setPedidos(prev => prev.map(p => (
+        p.id === pedidoId ? { ...p, estado: 'listo', finalizado: true } : p
+      )));
       toast.success('Pedido cerrado y entregado.');
     } catch (err) {
       console.error("Error al cerrar pedido:", err);

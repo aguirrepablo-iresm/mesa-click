@@ -60,6 +60,21 @@ func (h *Handlers) ListarActivos(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, pedidos)
 }
 
+func (h *Handlers) ListarCuentaActual(w http.ResponseWriter, r *http.Request) {
+	qrToken := r.PathValue("qr_token")
+	pedidos, err := h.svc.ListarCuentaActualPorQR(r.Context(), qrToken)
+	if err != nil {
+		if errors.Is(err, ErrValidation) {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error listando cuenta actual de mesa", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, pedidos)
+}
+
 func (h *Handlers) CambiarEstado(w http.ResponseWriter, r *http.Request) {
 	claims := auth.ClaimsFromContext(r.Context())
 	id := r.PathValue("id")

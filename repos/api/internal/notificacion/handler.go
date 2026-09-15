@@ -95,3 +95,45 @@ func (h *Handlers) EventosPedido(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 }
+
+func (h *Handlers) EventosMesa(w http.ResponseWriter, r *http.Request) {
+	mesaID := r.PathValue("mesa_id")
+	if mesaID == "" {
+		http.Error(w, "mesa_id requerido", http.StatusBadRequest)
+		return
+	}
+
+	flusher, ok := w.(http.Flusher)
+	if !ok {
+		http.Error(w, "SSE no soportado", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	canal := fmt.Sprintf("mesa:%s", mesaID)
+	ch, desuscribir := Instancia.Suscribir(canal)
+	defer desuscribir()
+
+	slog.InfoContext(r.Context(), "comensal conectado a eventos de mesa", "mesa_id", mesaID)
+
+	fmt.Fprintf(w, "event: ping\ndata: conectado\n\n")
+	flusher.Flush()
+
+	for {
+		select {
+		case ev, ok := <-ch:
+			if !ok {
+				return
+			}
+			fmt.Fprintf(w, "event: %s\ndata: %s\n\n", ev.Nombre, ev.Data)
+			flusher.Flush()
+		case <-r.Context().Done():
+			slog.InfoContext(r.Context(), "comensal desconectado de eventos de mesa", "mesa_id", mesaID)
+			return
+		}
+	}
+}

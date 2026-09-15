@@ -142,9 +142,11 @@ func TestIntegracion_FlujoCompletoPedido(t *testing.T) {
 	t.Log("Creando pedido desde el cliente...")
 	itemsInput := []pedido.NuevoItemInput{
 		{
-			ArticuloID: createdArt.ID,
-			Cantidad:   2,
-			Notas:      "sin gas",
+			ArticuloID:     createdArt.ID,
+			Cantidad:       2,
+			Notas:          "sin gas",
+			ComensalID:     "47dc8c9e-fb98-44d7-80a1-b598addc1e8a",
+			ComensalNombre: "Mateo",
 		},
 	}
 	createdPedido, err := pedidoSvc.Crear(ctx, pedido.NuevoPedidoInput{

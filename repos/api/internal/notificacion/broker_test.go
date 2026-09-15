@@ -109,6 +109,28 @@ func TestHandlers_EventosPedido_SSEConnect(t *testing.T) {
 	}
 }
 
+func TestHandlers_EventosMesa_SSEConnect(t *testing.T) {
+	handlers := notificacion.NuevosHandlers()
+
+	req := httptest.NewRequest("GET", "/publica/mesas/mesa-123/eventos", nil)
+	req.SetPathValue("mesa_id", "mesa-123")
+
+	ctx, cancel := context.WithCancel(req.Context())
+	req = req.WithContext(ctx)
+	w := httptest.NewRecorder()
+
+	go func() {
+		handlers.EventosMesa(w, req)
+	}()
+
+	body := esperarPing(t, w)
+	cancel()
+
+	if !strings.Contains(body, "event: ping") || !strings.Contains(body, "data: conectado") {
+		t.Errorf("no se recibió el ping de conexión inicial para mesa. Body: %q", body)
+	}
+}
+
 func esperarPing(t *testing.T, w *httptest.ResponseRecorder) string {
 	t.Helper()
 

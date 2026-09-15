@@ -2,8 +2,11 @@ package pedido
 
 import (
 	"context"
+	"encoding/hex"
 	"errors"
 	"fmt"
+	"strings"
+	"unicode/utf8"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/notificacion"
 )
@@ -21,12 +24,20 @@ func (svc *Service) Crear(ctx context.Context, input NuevoPedidoInput) (*Pedido,
 	if len(input.Items) == 0 {
 		return nil, fmt.Errorf("el pedido debe tener al menos un ítem: %w", ErrValidation)
 	}
-	for _, item := range input.Items {
+	for i := range input.Items {
+		item := &input.Items[i]
 		if item.Cantidad <= 0 {
 			return nil, fmt.Errorf("cantidad inválida para artículo %s: %w", item.ArticuloID, ErrValidation)
 		}
+		item.ComensalNombre = strings.TrimSpace(item.ComensalNombre)
+		if !uuidValido(item.ComensalID) {
+			return nil, fmt.Errorf("comensal_id inválido para artículo %s: %w", item.ArticuloID, ErrValidation)
+		}
+		if item.ComensalNombre == "" || utf8.RuneCountInString(item.ComensalNombre) > 100 {
+			return nil, fmt.Errorf("comensal_nombre inválido para artículo %s: %w", item.ArticuloID, ErrValidation)
+		}
 	}
-	sucursalID, err := svc.store.ObtenerSucursalPorMesa(ctx, input.MesaID)
+	sucursalID, cuentaVersion, err := svc.store.ObtenerSucursalPorMesa(ctx, input.MesaID)
 	if err != nil {
 		if errors.Is(err, ErrMesaCerrada) {
 			return nil, fmt.Errorf("mesa cerrada: %w", ErrMesaCerrada)
@@ -36,19 +47,30 @@ func (svc *Service) Crear(ctx context.Context, input NuevoPedidoInput) (*Pedido,
 		}
 		return nil, fmt.Errorf("mesa no encontrada: %w", ErrNotFound)
 	}
-	p, err := svc.store.Crear(ctx, input, sucursalID)
+	p, err := svc.store.Crear(ctx, input, sucursalID, cuentaVersion)
 	if err != nil {
+		if errors.Is(err, ErrCuentaSolicitada) {
+			return nil, fmt.Errorf("la cuenta ya fue solicitada o cerrada: %w", ErrCuentaSolicitada)
+		}
 		return nil, err
 	}
 
 	// Notificar en tiempo real al recepcionista de la sucursal
 	notificacion.Instancia.Publicar(fmt.Sprintf("sucursal:%s", p.SucursalID), "pedido_creado", p)
+	notificacion.Instancia.Publicar(fmt.Sprintf("mesa:%s", p.MesaID), "pedido_creado", p)
 
 	return p, nil
 }
 
 func (svc *Service) ListarActivos(ctx context.Context, sucursalID, tenantID string) ([]Pedido, error) {
 	return svc.store.ListarActivos(ctx, sucursalID, tenantID)
+}
+
+func (svc *Service) ListarCuentaActualPorQR(ctx context.Context, qrToken string) ([]Pedido, error) {
+	if strings.TrimSpace(qrToken) == "" {
+		return nil, fmt.Errorf("qr_token requerido: %w", ErrValidation)
+	}
+	return svc.store.ListarCuentaActualPorQR(ctx, qrToken)
 }
 
 func (svc *Service) CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado string) (*Pedido, error) {
@@ -66,8 +88,18 @@ func (svc *Service) CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado
 	// Notificar en tiempo real al comensal (pedido) y al recepcionista (sucursal)
 	notificacion.Instancia.Publicar(fmt.Sprintf("pedido:%s", p.ID), "pedido_actualizado", p)
 	notificacion.Instancia.Publicar(fmt.Sprintf("sucursal:%s", p.SucursalID), "pedido_actualizado", p)
+	notificacion.Instancia.Publicar(fmt.Sprintf("mesa:%s", p.MesaID), "pedido_actualizado", p)
 
 	return p, nil
+}
+
+func uuidValido(value string) bool {
+	if len(value) != 36 || value[8] != '-' || value[13] != '-' || value[18] != '-' || value[23] != '-' {
+		return false
+	}
+	compacto := strings.ReplaceAll(value, "-", "")
+	_, err := hex.DecodeString(compacto)
+	return err == nil
 }
 
 func estadoValido(estado string) bool {

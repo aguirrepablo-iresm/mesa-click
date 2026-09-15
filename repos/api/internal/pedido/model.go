@@ -15,13 +15,14 @@ var (
 var EstadosValidos = []string{"recibido", "preparando", "listo", "cerrado"}
 
 type Pedido struct {
-	ID         string       `json:"id"`
-	MesaID     string       `json:"mesa_id"`
-	SucursalID string       `json:"sucursal_id"`
-	Estado     string       `json:"estado"`
-	Items      []PedidoItem `json:"items,omitempty"`
-	CreatedAt  time.Time    `json:"created_at"`
-	UpdatedAt  time.Time    `json:"updated_at"`
+	ID            string       `json:"id"`
+	MesaID        string       `json:"mesa_id"`
+	SucursalID    string       `json:"sucursal_id"`
+	CuentaVersion int          `json:"cuenta_version"`
+	Estado        string       `json:"estado"`
+	Items         []PedidoItem `json:"items,omitempty"`
+	CreatedAt     time.Time    `json:"created_at"`
+	UpdatedAt     time.Time    `json:"updated_at"`
 }
 
 type PedidoItem struct {
@@ -32,6 +33,8 @@ type PedidoItem struct {
 	Cantidad       int     `json:"cantidad"`
 	PrecioUnitario float64 `json:"precio_unitario"`
 	Notas          string  `json:"notas,omitempty"`
+	ComensalID     string  `json:"comensal_id,omitempty"`
+	ComensalNombre string  `json:"comensal_nombre,omitempty"`
 }
 
 type NuevoPedidoInput struct {
@@ -40,9 +43,11 @@ type NuevoPedidoInput struct {
 }
 
 type NuevoItemInput struct {
-	ArticuloID string `json:"articulo_id"`
-	Cantidad   int    `json:"cantidad"`
-	Notas      string `json:"notas"`
+	ArticuloID     string `json:"articulo_id"`
+	Cantidad       int    `json:"cantidad"`
+	Notas          string `json:"notas"`
+	ComensalID     string `json:"comensal_id"`
+	ComensalNombre string `json:"comensal_nombre"`
 }
 
 type CambiarEstadoInput struct {

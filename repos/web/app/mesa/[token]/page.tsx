@@ -2,7 +2,15 @@
 import { useCallback, useReducer, useState, useEffect, useRef, type CSSProperties } from "react";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
-import type { ArticuloPublico, CategoriaPublica, MesaPublica } from "@/lib/api";
+import type { ArticuloPublico, CategoriaPublica, MesaPublica, PedidoAPI } from "@/lib/api";
+import {
+  clearComensalIdentity,
+  createComensalIdentity,
+  getComensalIdentity,
+  saveComensalIdentity,
+  type ComensalIdentity,
+} from "@/lib/comensal";
+import ModalNombreComensal from "@/components/comensal/ModalNombreComensal";
 import CategoriaNav from "@/components/menu/CategoriaNav";
 import ItemCard from "@/components/menu/ItemCard";
 import CartDrawer from "@/components/menu/CartDrawer";
@@ -16,6 +24,8 @@ export type CartItem = {
   precio: number;
   cantidad: number;
   nota: string;
+  comensalId?: string;
+  comensalNombre?: string;
 };
 
 export type EstadoPedido = 'recibido' | 'preparando' | 'listo' | 'cerrado';
@@ -44,6 +54,8 @@ type Action =
   | { type: 'SET_VISTA'; payload: Vista }
   | { type: 'HYDRATE'; payload: State }
   | { type: 'CONFIRMAR_PEDIDO'; payload: { pedidoId: string; items: CartItem[] } }
+  | { type: 'SET_PEDIDOS'; payload: PedidoSesion[] }
+  | { type: 'UPSERT_PEDIDO'; payload: PedidoSesion }
   | { type: 'SET_ESTADO_PEDIDO'; payload: { pedidoId: string; estado: EstadoPedido } }
   | { type: 'SYNC_CUENTA'; payload: { cuentaSolicitada: boolean; cuentaVersion: number } }
   | { type: 'RESET_SESSION' };
@@ -103,12 +115,31 @@ function reducer(state: State, action: Action): State {
         ...state,
         items: [],
         pedidos: [
-          ...state.pedidos,
+          ...state.pedidos.filter(pedido => pedido.id !== action.payload.pedidoId),
           { id: action.payload.pedidoId, items: action.payload.items, estado: 'recibido' },
         ],
         vista: 'seguimiento',
         estadoPedido: 'recibido',
         pedidoId: action.payload.pedidoId,
+      };
+    case 'SET_PEDIDOS': {
+      const ultimoPedido = action.payload[action.payload.length - 1];
+      return {
+        ...state,
+        pedidos: action.payload,
+        pedidoId: ultimoPedido?.id ?? null,
+        estadoPedido: ultimoPedido?.estado ?? state.estadoPedido,
+      };
+    }
+    case 'UPSERT_PEDIDO':
+      return {
+        ...state,
+        pedidos: [
+          ...state.pedidos.filter(pedido => pedido.id !== action.payload.id),
+          action.payload,
+        ],
+        pedidoId: action.payload.id,
+        estadoPedido: action.payload.estado,
       };
     case 'SET_ESTADO_PEDIDO':
       return {
@@ -171,14 +202,39 @@ function parseCartItems(value: unknown): CartItem[] {
       return [];
     }
 
+    const comensalId = typeof candidate.comensalId === 'string' && candidate.comensalId.trim()
+      ? candidate.comensalId
+      : undefined;
+    const comensalNombre = typeof candidate.comensalNombre === 'string' && candidate.comensalNombre.trim()
+      ? candidate.comensalNombre.trim()
+      : undefined;
+
     return [{
       id: candidate.id,
       nombre: candidate.nombre,
       precio: candidate.precio,
       cantidad: candidate.cantidad,
       nota: candidate.nota,
+      comensalId,
+      comensalNombre,
     }];
   });
+}
+
+function pedidoApiToSession(pedido: PedidoAPI): PedidoSesion {
+  return {
+    id: pedido.id,
+    estado: pedido.estado,
+    items: (pedido.items ?? []).map(item => ({
+      id: item.articulo_id,
+      nombre: item.nombre_articulo?.trim() || 'Producto sin nombre',
+      precio: item.precio_unitario,
+      cantidad: item.cantidad,
+      nota: item.notas?.trim() || '',
+      comensalId: item.comensal_id,
+      comensalNombre: item.comensal_nombre?.trim() || undefined,
+    })),
+  };
 }
 
 function parsePedidoSessions(value: unknown): PedidoSesion[] {
@@ -258,10 +314,28 @@ export default function MesaPage() {
   const [categoriaActiva, setCategoriaActiva] = useState<string>('');
   const [loading, setLoading] = useState(() => Boolean(token));
   const [enviandoPedido, setEnviandoPedido] = useState(false);
+  const [comensal, setComensal] = useState<ComensalIdentity | null>(null);
+  const [identidadLista, setIdentidadLista] = useState(false);
+  const [editandoComensal, setEditandoComensal] = useState(false);
 
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
   const skipNextPersistRef = useRef(false);
   const hydratedTokenRef = useRef<string | null>(null);
+
+  const sincronizarPedidosMesa = useCallback(async () => {
+    if (!token) return;
+    try {
+      const pedidosApi = await api.listarPedidosMesa(token);
+      dispatch({
+        type: 'SET_PEDIDOS',
+        payload: (pedidosApi ?? []).map(pedidoApiToSession),
+      });
+    } catch (error) {
+      console.warn('No se pudo sincronizar la cuenta de la mesa:', error);
+    }
+  }, [token]);
+  const mesaId = mesa?.id;
+  const mesaEstado = mesa?.estado;
 
   // Hidratar antes de persistir evita sobrescribir una sesión existente con el estado inicial.
   useEffect(() => {
@@ -290,12 +364,21 @@ export default function MesaPage() {
   }, [token]);
 
   useEffect(() => {
-    if (!token || !mesa || mesa.estado === 'inactiva') return;
+    if (!token || !mesaId || mesaEstado === 'inactiva') return;
 
     const actualizarEstadoMesa = async () => {
       try {
         const mesaActualizada = await api.obtenerMesaPorQR(token);
         setMesa(mesaActualizada);
+        const identidad = mesaActualizada.estado === 'inactiva'
+          ? null
+          : getComensalIdentity(mesaActualizada.id, mesaActualizada.cuenta_version);
+        if (mesaActualizada.estado === 'inactiva') {
+          clearComensalIdentity(mesaActualizada.id);
+        }
+        setComensal(identidad);
+        if (!identidad) setEditandoComensal(false);
+        setIdentidadLista(true);
         dispatch({
           type: 'SYNC_CUENTA',
           payload: {
@@ -303,6 +386,8 @@ export default function MesaPage() {
             cuentaVersion: mesaActualizada.cuenta_version,
           },
         });
+
+        await sincronizarPedidosMesa();
       } catch (error) {
         console.warn('No se pudo actualizar el estado de la mesa:', error);
       }
@@ -322,7 +407,7 @@ export default function MesaPage() {
       window.clearInterval(intervalId);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
-  }, [mesa, token]);
+  }, [mesaEstado, mesaId, sincronizarPedidosMesa, token]);
 
   useEffect(() => {
     if (!token || hydratedTokenRef.current !== token) return;
@@ -357,6 +442,15 @@ export default function MesaPage() {
         const mesaApi = await api.obtenerMesaPorQR(currentToken);
         if (!isMounted) return;
         setMesa(mesaApi);
+        const identidad = mesaApi.estado === 'inactiva'
+          ? null
+          : getComensalIdentity(mesaApi.id, mesaApi.cuenta_version);
+        if (mesaApi.estado === 'inactiva') {
+          clearComensalIdentity(mesaApi.id);
+        }
+        setComensal(identidad);
+        setEditandoComensal(false);
+        setIdentidadLista(true);
         dispatch({
           type: 'SYNC_CUENTA',
           payload: {
@@ -364,6 +458,8 @@ export default function MesaPage() {
             cuentaVersion: mesaApi.cuenta_version,
           },
         });
+
+        await sincronizarPedidosMesa();
 
         // Cargar carta de la sucursal
         try {
@@ -409,67 +505,97 @@ export default function MesaPage() {
     return () => {
       isMounted = false;
     };
-  }, [token]);
+  }, [sincronizarPedidosMesa, token]);
 
-  const limpiarSesionMesa = useCallback(() => {
-    if (token) {
+  // 2. Un único canal SSE compartido permite ver los pedidos de toda la mesa.
+  useEffect(() => {
+    if (!mesaId || !token) return;
+
+    const eventSource = new EventSource(api.obtenerEventosMesaUrl(mesaId));
+    eventSource.onopen = () => {
+      // SSE no conserva historial: al conectar o reconectar recuperamos el snapshot actual.
+      void sincronizarPedidosMesa();
+    };
+
+    eventSource.addEventListener('pedido_creado', (event: MessageEvent<string>) => {
       try {
-        window.localStorage.removeItem(getSessionKey(token));
+        const payload: unknown = JSON.parse(event.data);
+        if (!isRecord(payload) || typeof payload.id !== 'string' || !isEstadoPedido(payload.estado)) return;
+        dispatch({ type: 'UPSERT_PEDIDO', payload: pedidoApiToSession(payload as unknown as PedidoAPI) });
       } catch (error) {
-        console.warn('No se pudo limpiar la sesión de la mesa:', error);
+        console.warn('Error parseando pedido_creado de mesa:', error);
       }
-    }
-    skipNextPersistRef.current = true;
-    dispatch({ type: 'RESET_SESSION' });
-  }, [token]);
+    });
 
-  useEffect(() => {
-    if (mesa?.estado === 'inactiva') {
-      limpiarSesionMesa();
-    }
-  }, [limpiarSesionMesa, mesa?.estado]);
-
-  // 2. Mantener un canal SSE por cada pedido abierto de la mesa.
-  useEffect(() => {
-    const eventSources = state.pedidos
-      .filter(pedido => pedido.estado !== 'cerrado')
-      .map(pedido => {
-        const eventSource = new EventSource(api.obtenerEventosPedidoUrl(pedido.id));
-        eventSource.addEventListener('pedido_actualizado', (event: MessageEvent<string>) => {
-          try {
-            const payload: unknown = JSON.parse(event.data);
-            if (!isRecord(payload) || !isEstadoPedido(payload.estado)) return;
-            dispatch({
-              type: 'SET_ESTADO_PEDIDO',
-              payload: { pedidoId: pedido.id, estado: payload.estado },
-            });
-          } catch (error) {
-            console.warn('Error parseando evento SSE de pedido:', error);
-          }
+    eventSource.addEventListener('pedido_actualizado', (event: MessageEvent<string>) => {
+      try {
+        const payload: unknown = JSON.parse(event.data);
+        if (!isRecord(payload) || typeof payload.id !== 'string' || !isEstadoPedido(payload.estado)) return;
+        dispatch({
+          type: 'SET_ESTADO_PEDIDO',
+          payload: { pedidoId: payload.id, estado: payload.estado },
         });
+      } catch (error) {
+        console.warn('Error parseando pedido_actualizado de mesa:', error);
+      }
+    });
 
-        eventSource.onerror = () => {
-          // EventSource reintenta la conexión automáticamente.
-        };
-        return eventSource;
-      });
+    const sincronizarCuentaDesdeEvento = (event: MessageEvent<string>) => {
+      try {
+        const payload: unknown = JSON.parse(event.data);
+        if (
+          !isRecord(payload)
+          || typeof payload.cuenta_solicitada !== 'boolean'
+          || typeof payload.cuenta_version !== 'number'
+        ) return;
+
+        setMesa(actual => actual ? {
+          ...actual,
+          cuenta_solicitada: payload.cuenta_solicitada as boolean,
+          cuenta_version: payload.cuenta_version as number,
+        } : actual);
+        if (mesaId) {
+          const identidad = getComensalIdentity(mesaId, payload.cuenta_version);
+          setComensal(identidad);
+          setEditandoComensal(false);
+          setIdentidadLista(true);
+        }
+        dispatch({
+          type: 'SYNC_CUENTA',
+          payload: {
+            cuentaSolicitada: payload.cuenta_solicitada,
+            cuentaVersion: payload.cuenta_version,
+          },
+        });
+      } catch (error) {
+        console.warn('Error parseando evento de cuenta de mesa:', error);
+      }
+    };
+
+    eventSource.addEventListener('cuenta_solicitada', sincronizarCuentaDesdeEvento);
+    eventSource.addEventListener('cuenta_cerrada', sincronizarCuentaDesdeEvento);
+    eventSource.onerror = () => {
+      // EventSource reintenta automáticamente y onopen recupera el snapshot.
+    };
 
     return () => {
-      eventSources.forEach(eventSource => eventSource.close());
+      eventSource.close();
     };
-  }, [state.pedidos]);
-
-  useEffect(() => {
-    if (state.pedidos.length > 0 && state.pedidos.every(pedido => pedido.estado === 'cerrado')) {
-      limpiarSesionMesa();
-    }
-  }, [limpiarSesionMesa, state.pedidos]);
+  }, [mesaId, sincronizarPedidosMesa, token]);
 
   // 3. Confirmar y enviar pedido a la API real (US-43)
   const handleConfirmarPedido = async () => {
     if (!mesa || state.items.length === 0 || state.cuentaSolicitada) return;
+    if (!comensal) {
+      setEditandoComensal(false);
+      return;
+    }
     setEnviandoPedido(true);
-    const itemsEnviados = state.items;
+    const itemsEnviados = state.items.map(item => ({
+      ...item,
+      comensalId: comensal.id,
+      comensalNombre: comensal.nombre,
+    }));
 
     try {
       const resp = await api.crearPedido({
@@ -478,6 +604,8 @@ export default function MesaPage() {
           articulo_id: item.id,
           cantidad: item.cantidad,
           notas: item.nota,
+          comensal_id: comensal.id,
+          comensal_nombre: comensal.nombre,
         })),
       });
 
@@ -523,6 +651,17 @@ export default function MesaPage() {
     }
   };
 
+  const handleGuardarComensal = (nombre: string) => {
+    if (!mesa) return;
+    const identidad = comensal
+      ? { ...comensal, nombre: nombre.trim(), cuentaVersion: mesa.cuenta_version }
+      : createComensalIdentity(nombre, mesa.cuenta_version);
+    saveComensalIdentity(identidad, mesa.id);
+    setComensal(identidad);
+    setEditandoComensal(false);
+    setIdentidadLista(true);
+  };
+
   if (loading) {
     return (
       <div className="mesa-background flex min-h-screen flex-col items-center justify-center font-inter">
@@ -562,9 +701,18 @@ export default function MesaPage() {
       : state.pedidos.length > 0
         ? 'listo'
         : state.estadoPedido;
-  const todosLosPedidosListos = state.pedidos.length > 0 && state.pedidos.every(pedido => pedido.estado === 'listo');
+  const todosLosPedidosListos = state.pedidos.length > 0
+    && state.pedidos.every(pedido => pedido.estado === 'listo' || pedido.estado === 'cerrado');
   const categoriaSeleccionada = menu.find(c => c.id === categoriaActiva) || menu[0];
   const categoriaItems = categoriaSeleccionada?.items ?? [];
+  const modalNombreComensal = identidadLista && (!comensal || editandoComensal) ? (
+    <ModalNombreComensal
+      nombreInicial={comensal?.nombre}
+      editando={editandoComensal && Boolean(comensal)}
+      onConfirmar={handleGuardarComensal}
+      onCancelar={comensal ? () => setEditandoComensal(false) : undefined}
+    />
+  ) : null;
 
   if (mesaCerrada) {
     return (
@@ -593,9 +741,12 @@ export default function MesaPage() {
           todosListos={todosLosPedidosListos}
           cuentaSolicitada={state.cuentaSolicitada}
           mesa={mesa.numero}
+          comensalNombre={comensal?.nombre}
+          onCambiarComensal={() => setEditandoComensal(true)}
           onAgregarMas={() => dispatch({ type: 'SET_VISTA', payload: 'carta' })}
           onPedirCuenta={handlePedirCuenta}
         />
+        {modalNombreComensal}
       </div>
     );
   }
@@ -613,13 +764,19 @@ export default function MesaPage() {
           onVolver={() => dispatch({ type: 'SET_VISTA', payload: 'carta' })}
           onConfirmar={handleConfirmarPedido}
         />
+        {modalNombreComensal}
       </div>
     );
   }
 
   return (
     <div className="mesa-page min-h-screen pb-80 font-inter" data-estilo-visual={theme.visualStyle} style={themeStyle}>
-      <BrandHeader branding={branding} mesa={mesa.numero} />
+      <BrandHeader
+        branding={branding}
+        mesa={mesa.numero}
+        comensalNombre={comensal?.nombre}
+        onCambiarComensal={() => setEditandoComensal(true)}
+      />
 
       <div className="max-w-lg mx-auto">
         <CategoriaNav
@@ -662,7 +819,7 @@ export default function MesaPage() {
                 <span className="text-16" aria-hidden="true">🛒</span>
                 <div className="min-w-0 text-left leading-tight">
                   <span className="block truncate text-14 font-semibold">
-                    {totalItems > 0 ? 'Ver carrito' : 'Ver mi pedido'}
+                    {totalItems > 0 ? 'Ver carrito' : 'Ver pedido de la mesa'}
                   </span>
                   <span className="mt-2 block truncate text-11 opacity-80">
                     {totalItems > 0
@@ -681,6 +838,7 @@ export default function MesaPage() {
           </div>
         </div>
       )}
+      {modalNombreComensal}
     </div>
   );
 }
