@@ -741,6 +741,7 @@ export default function MesaPage() {
           todosListos={todosLosPedidosListos}
           cuentaSolicitada={state.cuentaSolicitada}
           mesa={mesa.numero}
+          comensalId={comensal?.id}
           comensalNombre={comensal?.nombre}
           onCambiarComensal={state.cuentaSolicitada ? undefined : () => setEditandoComensal(true)}
           onAgregarMas={() => dispatch({ type: 'SET_VISTA', payload: 'carta' })}

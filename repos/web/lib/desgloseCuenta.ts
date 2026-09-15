@@ -13,12 +13,15 @@ export interface GrupoComensal<T extends ConsumoIdentificado> {
   subtotal: number;
 }
 
-export function agruparPorComensal<T extends ConsumoIdentificado>(items: T[]): GrupoComensal<T>[] {
+export function agruparPorComensal<T extends ConsumoIdentificado>(
+  items: T[],
+  nombresActuales: ReadonlyMap<string, string> = new Map(),
+): GrupoComensal<T>[] {
   const grupos = new Map<string, Omit<GrupoComensal<T>, "etiqueta">>();
 
   items.forEach(item => {
     const id = item.comensalId?.trim() || "mesa-sin-identificar";
-    const nombre = item.comensalNombre?.trim() || "Mesa";
+    const nombre = nombresActuales.get(id)?.trim() || item.comensalNombre?.trim() || "Mesa";
     const existente = grupos.get(id);
     if (existente) {
       existente.nombre = nombre;

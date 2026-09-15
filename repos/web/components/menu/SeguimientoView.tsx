@@ -11,6 +11,7 @@ interface Props {
   todosListos: boolean;
   cuentaSolicitada: boolean;
   mesa: number;
+  comensalId?: string;
   comensalNombre?: string;
   onCambiarComensal?: () => void;
   onAgregarMas: () => void;
@@ -40,6 +41,7 @@ export default function SeguimientoView({
   todosListos,
   cuentaSolicitada,
   mesa,
+  comensalId,
   comensalNombre,
   onCambiarComensal,
   onAgregarMas,
@@ -50,7 +52,13 @@ export default function SeguimientoView({
   const [modoCuenta, setModoCuenta] = useState<'mesa' | 'comensales'>('mesa');
   const total = items.reduce((n, i) => n + i.precio * i.cantidad, 0);
   const pasoActual = PASOS.indexOf(estadoPedido);
-  const gruposComensales = useMemo(() => agruparPorComensal(items), [items]);
+  const gruposComensales = useMemo(() => {
+    const nombresActuales = new Map<string, string>();
+    if (comensalId?.trim() && comensalNombre?.trim()) {
+      nombresActuales.set(comensalId.trim(), comensalNombre.trim());
+    }
+    return agruparPorComensal(items, nombresActuales);
+  }, [comensalId, comensalNombre, items]);
 
   const confirmarSolicitudCuenta = async () => {
     setSolicitandoCuenta(true);
