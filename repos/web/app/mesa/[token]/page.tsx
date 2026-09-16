@@ -13,7 +13,7 @@ import {
 import ModalNombreComensal from "@/components/comensal/ModalNombreComensal";
 import CategoriaNav from "@/components/menu/CategoriaNav";
 import ItemCard from "@/components/menu/ItemCard";
-import CartDrawer from "@/components/menu/CartDrawer";
+import CartBottomSheet from "@/components/menu/CartBottomSheet";
 import SeguimientoView from "@/components/menu/SeguimientoView";
 import BrandHeader, { buildMesaTheme } from "@/components/menu/BrandHeader";
 import type { MesaBranding } from "@/components/menu/BrandHeader";
@@ -29,7 +29,7 @@ export type CartItem = {
 };
 
 export type EstadoPedido = 'recibido' | 'preparando' | 'listo' | 'cerrado';
-type Vista = 'carta' | 'carrito' | 'seguimiento';
+type Vista = 'carta' | 'seguimiento';
 
 export type PedidoSesion = {
   id: string;
@@ -70,7 +70,7 @@ const INITIAL_STATE: State = {
   pedidoId: null,
 };
 
-const SESSION_VERSION = 2;
+const SESSION_VERSION = 3;
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
@@ -177,7 +177,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isVista(value: unknown): value is Vista {
-  return value === 'carta' || value === 'carrito' || value === 'seguimiento';
+  return value === 'carta' || value === 'seguimiento';
 }
 
 function isEstadoPedido(value: unknown): value is EstadoPedido {
@@ -257,7 +257,7 @@ function getSessionKey(token: string) {
 function readStoredSession(raw: string): State | null {
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (!isRecord(parsed) || (parsed.version !== 1 && parsed.version !== SESSION_VERSION)) return null;
+    if (!isRecord(parsed) || (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== SESSION_VERSION)) return null;
 
     const pedidoId = typeof parsed.pedidoId === 'string' && parsed.pedidoId.trim() ? parsed.pedidoId : null;
     const estadoPedido = isEstadoPedido(parsed.estadoPedido) ? parsed.estadoPedido : 'recibido';
@@ -272,7 +272,8 @@ function readStoredSession(raw: string): State | null {
           ? [{ id: pedidoId, items, estado: estadoPedido }]
           : [];
     const ultimoPedido = pedidos[pedidos.length - 1];
-    const vista = isVista(parsed.vista) ? parsed.vista : 'carta';
+    const rawVista = parsed.vista;
+    const vista: Vista = rawVista === 'carrito' ? 'carta' : (isVista(rawVista) ? rawVista : 'carta');
     const cuentaVersion = typeof parsed.cuentaVersion === 'number' && Number.isInteger(parsed.cuentaVersion) && parsed.cuentaVersion > 0
       ? parsed.cuentaVersion
       : 1;
@@ -312,6 +313,8 @@ export default function MesaPage() {
   const [mesa, setMesa] = useState<MesaPublica | null>(null);
   const [menu, setMenu] = useState<MenuCategoryView[]>([]);
   const [categoriaActiva, setCategoriaActiva] = useState<string>('');
+  const [carritoAbierto, setCarritoAbierto] = useState(false);
+  const isManualScrollRef = useRef(false);
   const [loading, setLoading] = useState(() => Boolean(token));
   const [enviandoPedido, setEnviandoPedido] = useState(false);
   const [comensal, setComensal] = useState<ComensalIdentity | null>(null);
@@ -321,6 +324,55 @@ export default function MesaPage() {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
   const skipNextPersistRef = useRef(false);
   const hydratedTokenRef = useRef<string | null>(null);
+
+  // Scroll-spy: resalta automáticamente la categoría visible según el scroll vertical
+  useEffect(() => {
+    if (menu.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      entries => {
+        if (isManualScrollRef.current) return;
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            const catId = entry.target.id.replace('categoria-', '');
+            setCategoriaActiva(catId);
+            const navBtn = document.getElementById(`nav-cat-${catId}`);
+            if (navBtn) {
+              navBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+            break;
+          }
+        }
+      },
+      {
+        rootMargin: '-120px 0px -60% 0px',
+        threshold: 0,
+      }
+    );
+
+    menu.forEach(cat => {
+      const el = document.getElementById(`categoria-${cat.id}`);
+      if (el) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  }, [menu]);
+
+  const handleSeleccionarCategoria = (catId: string) => {
+    setCategoriaActiva(catId);
+    isManualScrollRef.current = true;
+    const el = document.getElementById(`categoria-${catId}`);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+    const navBtn = document.getElementById(`nav-cat-${catId}`);
+    if (navBtn) {
+      navBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+    window.setTimeout(() => {
+      isManualScrollRef.current = false;
+    }, 800);
+  };
 
   const sincronizarPedidosMesa = useCallback(async () => {
     if (!token) return;
@@ -611,6 +663,7 @@ export default function MesaPage() {
 
       if (!resp.id) throw new Error('La API no devolvió el identificador del pedido.');
       dispatch({ type: 'CONFIRMAR_PEDIDO', payload: { pedidoId: resp.id, items: itemsEnviados } });
+      setCarritoAbierto(false);
     } catch (err) {
       console.error("No se pudo enviar el pedido a la API:", err);
       try {
@@ -712,8 +765,6 @@ export default function MesaPage() {
         : state.estadoPedido;
   const todosLosPedidosListos = state.pedidos.length > 0
     && state.pedidos.every(pedido => pedido.estado === 'listo' || pedido.estado === 'cerrado');
-  const categoriaSeleccionada = menu.find(c => c.id === categoriaActiva) || menu[0];
-  const categoriaItems = categoriaSeleccionada?.items ?? [];
   const modalNombreComensal = identidadLista && !state.cuentaSolicitada && (!comensal || editandoComensal) ? (
     <ModalNombreComensal
       nombreInicial={comensal?.nombre}
@@ -762,24 +813,6 @@ export default function MesaPage() {
     );
   }
 
-  if (state.vista === 'carrito') {
-    return (
-      <div className="mesa-page" data-estilo-visual={theme.visualStyle} style={themeStyle}>
-        <CartDrawer
-          branding={branding}
-          items={state.items}
-          totalPrecio={totalPrecio}
-          enviando={enviandoPedido}
-          onSetCantidad={(id, cantidad) => dispatch({ type: 'SET_CANTIDAD', payload: { id, cantidad } })}
-          onSetNota={(id, nota) => dispatch({ type: 'SET_NOTA', payload: { id, nota } })}
-          onVolver={() => dispatch({ type: 'SET_VISTA', payload: 'carta' })}
-          onConfirmar={handleConfirmarPedido}
-        />
-        {modalNombreComensal}
-      </div>
-    );
-  }
-
   return (
     <div className="mesa-page min-h-screen pb-80 font-inter" data-estilo-visual={theme.visualStyle} style={themeStyle}>
       <BrandHeader
@@ -792,24 +825,45 @@ export default function MesaPage() {
       <div className="max-w-lg mx-auto">
         <CategoriaNav
           categorias={menu}
-          activa={categoriaActiva}
-          onSelect={setCategoriaActiva}
+          activa={categoriaActiva || menu[0]?.id || ''}
+          onSelect={handleSeleccionarCategoria}
         />
-        <div className="space-y-12 px-16 pt-12">
-          {categoriaItems.filter(i => i.disponible).map(item => (
-            <ItemCard
-              key={item.id}
-              item={item}
-              cantidad={state.items.find(i => i.id === item.id)?.cantidad ?? 0}
-              onAgregar={() =>
-                dispatch({ type: 'ADD_ITEM', payload: { id: item.id, nombre: item.nombre, precio: item.precio } })
-              }
-            />
-          ))}
+        <div className="space-y-24 px-16 pt-16">
+          {menu.map(cat => {
+            const itemsDisponibles = cat.items.filter(i => i.disponible);
+            return (
+              <section
+                key={cat.id}
+                id={`categoria-${cat.id}`}
+                className="scroll-mt-[132px] space-y-12"
+              >
+                <div className="border-b mesa-border pb-6">
+                  <h2 className="mesa-text text-16 font-semibold tracking-tight">{cat.nombre}</h2>
+                </div>
+                <div className="space-y-12">
+                  {itemsDisponibles.map(item => (
+                    <ItemCard
+                      key={item.id}
+                      item={item}
+                      cantidad={state.items.find(i => i.id === item.id)?.cantidad ?? 0}
+                      onAgregar={() =>
+                        dispatch({ type: 'ADD_ITEM', payload: { id: item.id, nombre: item.nombre, precio: item.precio } })
+                      }
+                    />
+                  ))}
+                  {itemsDisponibles.length === 0 && (
+                    <div className="mesa-subtle-text py-16 text-center text-12">
+                      No hay artículos disponibles en esta categoría.
+                    </div>
+                  )}
+                </div>
+              </section>
+            );
+          })}
 
-          {categoriaItems.length === 0 && (
+          {menu.length === 0 && (
             <div className="mesa-subtle-text py-40 text-center text-13">
-              No hay artículos disponibles en esta categoría.
+              No hay categorías cargadas en la carta.
             </div>
           )}
         </div>
@@ -819,10 +873,13 @@ export default function MesaPage() {
         <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-20 p-16">
           <div className="pointer-events-auto mx-auto max-w-lg">
             <button
-              onClick={() => dispatch({
-                type: 'SET_VISTA',
-                payload: totalItems > 0 ? 'carrito' : 'seguimiento',
-              })}
+              onClick={() => {
+                if (totalItems > 0) {
+                  setCarritoAbierto(true);
+                } else {
+                  dispatch({ type: 'SET_VISTA', payload: 'seguimiento' });
+                }
+              }}
               disabled={enviandoPedido || state.cuentaSolicitada}
               className="mesa-primary-bg flex min-h-64 w-full items-center rounded-xl px-20 py-12 font-medium shadow-xl transition-all active:scale-[0.98] disabled:opacity-50"
             >
@@ -849,6 +906,19 @@ export default function MesaPage() {
           </div>
         </div>
       )}
+
+      <CartBottomSheet
+        branding={branding}
+        items={state.items}
+        totalPrecio={totalPrecio}
+        enviando={enviandoPedido}
+        isOpen={carritoAbierto}
+        onClose={() => setCarritoAbierto(false)}
+        onSetCantidad={(id, cantidad) => dispatch({ type: 'SET_CANTIDAD', payload: { id, cantidad } })}
+        onSetNota={(id, nota) => dispatch({ type: 'SET_NOTA', payload: { id, nota } })}
+        onConfirmar={handleConfirmarPedido}
+      />
+
       {modalNombreComensal}
     </div>
   );
