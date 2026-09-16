@@ -10,9 +10,9 @@
 | Métrica | Valor |
 |---|---|
 | **Total de User Stories** | **32 US** (US-50 a US-81) |
-| **Completadas** | **7** (22%) |
+| **Completadas** | **8** (25%) |
 | **En Curso** | **1** |
-| **Pendientes** | **24** |
+| **Pendientes** | **23** |
 | **Sprint Actual** | **Sprint 12 (14/09 – 20/09/2026)** |
 
 ---
@@ -61,7 +61,7 @@
 | ID | Tipo | Título | Estado | Asignado | Archivo |
 |---|---|---|---|---|---|
 | **US-56** | `Frontend` | Navegación Mobile Táctil con Categorías Sticky y Carrito Bottom-Sheet | ✅ Resuelta | Antigravity | [Ver detalle](sprint-12/US-56-navegacion-mobile-categorias-carrito.md) |
-| **US-57** | `Frontend` | Personalización de Platos con Variantes, Opciones y Notas Libres | 📋 Pendiente | Por asignar | [Ver detalle](sprint-12/US-57-personalizacion-platos-variantes.md) |
+| **US-57** | `Frontend` | Personalización de Platos con Variantes, Opciones y Notas Libres | ✅ Resuelta | Antigravity | [Ver detalle](sprint-12/US-57-personalizacion-platos-variantes.md) |
 | **US-81** | `Integración` | Pedidos Colaborativos en Mesa con Identificación de Comensal y División de Cuenta | ⚡ En Curso | Mateo Silvestrin | [Ver detalle](sprint-12/US-81-pedidos-colaborativos-mesa.md) |
 
 ### 📌 Sprint 13: Carga Masiva CSV/Excel & Ajuste de Precios (21/09 – 27/09/2026)

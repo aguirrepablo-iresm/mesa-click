@@ -36,6 +36,11 @@ func (svc *Service) Crear(ctx context.Context, input NuevoPedidoInput) (*Pedido,
 		if utf8.RuneCountInString(item.ComensalNombre) > 100 {
 			return nil, fmt.Errorf("comensal_nombre inválido para artículo %s: %w", item.ArticuloID, ErrValidation)
 		}
+		for _, vID := range item.Variantes {
+			if strings.TrimSpace(vID) == "" {
+				return nil, fmt.Errorf("variante_id no puede estar vacío: %w", ErrValidation)
+			}
+		}
 	}
 	sucursalID, cuentaVersion, err := svc.store.ObtenerSucursalPorMesa(ctx, input.MesaID)
 	if err != nil {

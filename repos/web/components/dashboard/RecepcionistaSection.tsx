@@ -19,6 +19,7 @@ export interface PedidoVista {
     nota?: string;
     comensalId?: string;
     comensalNombre?: string;
+    variantes?: Array<{ variante_id: string; nombre: string; precio_adicional: number }>;
   }>;
   cuentaSolicitada?: boolean;
   finalizado?: boolean;
@@ -83,7 +84,12 @@ function PedidoDetalle({
         {pedido.items.map(item => (
           <div key={item.id} className="flex items-start justify-between gap-12 text-13">
             <div className="min-w-0">
-              <p className="text-ash-graphite">{item.cantidad}× {item.nombre}</p>
+              <p className="text-ash-graphite font-medium">{item.cantidad}× {item.nombre}</p>
+              {item.variantes && item.variantes.length > 0 && (
+                <p className="mt-2 text-11 text-plain-green-muted font-medium">
+                  {item.variantes.map(v => v.nombre).join(", ")}
+                </p>
+              )}
               <span className="mt-3 inline-block rounded-full bg-vanilla-cream px-7 py-2 text-10 font-medium text-plain-green">
                 {etiquetaPorComensal.get(item.comensalId?.trim() || 'mesa-sin-identificar') || item.comensalNombre || 'Mesa'}
               </span>
@@ -367,6 +373,7 @@ export default function RecepcionistaSection() {
         nota: i.notas?.trim() || '',
         comensalId: i.comensal_id,
         comensalNombre: i.comensal_nombre?.trim() || undefined,
+        variantes: i.variantes,
       })),
       cuentaSolicitada: Boolean(mesasMap[p.mesa_id]?.cuenta_solicitada),
     };

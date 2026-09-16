@@ -16,14 +16,41 @@ type Categoria struct {
 }
 
 type Articulo struct {
-	ID          string  `json:"id"`
-	TenantID    string  `json:"tenant_id,omitempty"`
-	CategoriaID string  `json:"categoria_id"`
-	Nombre      string  `json:"nombre"`
-	Descripcion string  `json:"descripcion,omitempty"`
-	Precio      float64 `json:"precio"`
-	FotoURL     string  `json:"foto_url,omitempty"`
-	Activo      bool    `json:"activo"`
+	ID          string     `json:"id"`
+	TenantID    string     `json:"tenant_id,omitempty"`
+	CategoriaID string     `json:"categoria_id"`
+	Nombre      string     `json:"nombre"`
+	Descripcion string     `json:"descripcion,omitempty"`
+	Precio      float64    `json:"precio"`
+	FotoURL     string     `json:"foto_url,omitempty"`
+	Activo      bool       `json:"activo"`
+	Variantes   []Variante `json:"variantes,omitempty"`
+}
+
+type Variante struct {
+	ID              string  `json:"id"`
+	ArticuloID      string  `json:"articulo_id"`
+	Nombre          string  `json:"nombre"`
+	PrecioAdicional float64 `json:"precio_adicional"`
+	Grupo           *string `json:"grupo,omitempty"`
+	SeleccionUnica  bool    `json:"seleccion_unica"`
+	Orden           int     `json:"orden"`
+}
+
+type CrearVarianteInput struct {
+	Nombre          string  `json:"nombre"`
+	PrecioAdicional float64 `json:"precio_adicional"`
+	Grupo           *string `json:"grupo,omitempty"`
+	SeleccionUnica  bool    `json:"seleccion_unica"`
+	Orden           int     `json:"orden"`
+}
+
+type ActualizarVarianteInput struct {
+	Nombre          *string  `json:"nombre,omitempty"`
+	PrecioAdicional *float64 `json:"precio_adicional,omitempty"`
+	Grupo           *string  `json:"grupo,omitempty"`
+	SeleccionUnica  *bool    `json:"seleccion_unica,omitempty"`
+	Orden           *int     `json:"orden,omitempty"`
 }
 
 type CategoriaInput struct {

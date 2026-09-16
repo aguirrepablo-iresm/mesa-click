@@ -151,6 +151,85 @@ func (h *Handlers) CartaPublica(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, c)
 }
 
+func (h *Handlers) ListarVariantes(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	articuloID := r.PathValue("id")
+	variantes, err := h.svc.ListarVariantes(r.Context(), articuloID, claims.TenantID)
+	if err != nil {
+		slog.ErrorContext(r.Context(), "error listando variantes", "err", err)
+		jsonError(w, "error listando variantes", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, variantes)
+}
+
+func (h *Handlers) CrearVariante(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	articuloID := r.PathValue("id")
+	var input CrearVarianteInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		jsonError(w, "body inválido", http.StatusBadRequest)
+		return
+	}
+	v, err := h.svc.CrearVariante(r.Context(), articuloID, claims.TenantID, input)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			jsonError(w, "artículo no encontrado", http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, ErrValidation) {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error creando variante", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(v)
+}
+
+func (h *Handlers) ActualizarVariante(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	id := r.PathValue("id")
+	var input ActualizarVarianteInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		jsonError(w, "body inválido", http.StatusBadRequest)
+		return
+	}
+	v, err := h.svc.ActualizarVariante(r.Context(), id, claims.TenantID, input)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			jsonError(w, "variante no encontrada", http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, ErrValidation) {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error actualizando variante", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, v)
+}
+
+func (h *Handlers) EliminarVariante(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	id := r.PathValue("id")
+	if err := h.svc.EliminarVariante(r.Context(), id, claims.TenantID); err != nil {
+		if errors.Is(err, ErrNotFound) {
+			jsonError(w, "variante no encontrada", http.StatusNotFound)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error eliminando variante", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
 func jsonOK(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(v)

@@ -2,9 +2,9 @@
 
 > **Sprint**: Sprint 12 (14/09 – 20/09/2026)  
 > **Épica**: Mobile-First Comensal  
-> **Tipo**: `Frontend`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
+> **Tipo**: `Frontend / Fullstack`  
+> **Estado**: ✅ **Resuelta**  
+> **Asignado a**: Antigravity  
 > **Rama de trabajo**: `feat/US-57-personalizacion-platos`  
 
 ---
@@ -17,18 +17,18 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Al seleccionar un ítem con opciones, se abre un diálogo modal de personalización.
-- [ ] Soporte para opciones mutuamente excluyentes (radio: término de cocción, tamaño) y múltiples (checkbox: aderezos, extras).
-- [ ] Actualización del subtotal en vivo según los agregados seleccionados.
-- [ ] Campo de notas libres para indicaciones especiales a cocina (ej. 'sin cebolla').
+- [x] Al seleccionar un ítem con opciones, se abre un diálogo modal de personalización.
+- [x] Soporte para opciones mutuamente excluyentes (radio: término de cocción, tamaño) y múltiples (checkbox: aderezos, extras).
+- [x] Actualización del subtotal en vivo según los agregados seleccionados.
+- [x] Campo de notas libres para indicaciones especiales a cocina (ej. 'sin cebolla').
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Extender tipo y estructura de datos de ítems en carrito para incluir opciones y notas.
-- [ ] Crear modal interactivo de personalización de producto.
-- [ ] Adaptar envío de ítems en `api.crearPedido` enviando las opciones y aclaraciones.
+- [x] Extender tipo y estructura de datos de ítems en carrito para incluir opciones y notas.
+- [x] Crear modal interactivo de personalización de producto.
+- [x] Adaptar envío de ítems en `api.crearPedido` enviando las opciones y aclaraciones.
 
 ---
 
