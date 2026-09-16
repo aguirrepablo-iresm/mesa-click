@@ -18,6 +18,11 @@ type Store interface {
 	ActualizarArticulo(ctx context.Context, id, tenantID string, u ArticuloUpdate) (*Articulo, error)
 	EliminarArticulo(ctx context.Context, id, tenantID string) error
 	ObtenerCartaPublica(ctx context.Context, sucursalID string) (*CartaPublica, error)
+
+	ListarVariantes(ctx context.Context, articuloID, tenantID string) ([]Variante, error)
+	CrearVariante(ctx context.Context, articuloID, tenantID string, input CrearVarianteInput) (*Variante, error)
+	ActualizarVariante(ctx context.Context, id, tenantID string, input ActualizarVarianteInput) (*Variante, error)
+	EliminarVariante(ctx context.Context, id, tenantID string) error
 }
 
 type pgStore struct{}
@@ -84,6 +89,13 @@ func (s *pgStore) ListarArticulos(ctx context.Context, tenantID string) ([]Artic
 		arts = append(arts, a)
 	}
 	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	artPtrs := make([]*Articulo, len(arts))
+	for i := range arts {
+		artPtrs[i] = &arts[i]
+	}
+	if err := s.cargarVariantesPunteros(ctx, artPtrs); err != nil {
 		return nil, err
 	}
 	return arts, nil
@@ -174,9 +186,140 @@ func (s *pgStore) ObtenerCartaPublica(ctx context.Context, sucursalID string) (*
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+
+	var allArts []*Articulo
+	for _, cat := range catMap {
+		for i := range cat.Articulos {
+			allArts = append(allArts, &cat.Articulos[i])
+		}
+	}
+	if err := s.cargarVariantesPunteros(ctx, allArts); err != nil {
+		return nil, err
+	}
+
 	resultado := &CartaPublica{}
 	for _, id := range orden {
 		resultado.Categorias = append(resultado.Categorias, *catMap[id])
 	}
 	return resultado, nil
+}
+
+func (s *pgStore) cargarVariantesPunteros(ctx context.Context, articulos []*Articulo) error {
+	if len(articulos) == 0 {
+		return nil
+	}
+	ids := make([]string, len(articulos))
+	artMap := make(map[string]*Articulo, len(articulos))
+	for i, a := range articulos {
+		ids[i] = a.ID
+		artMap[a.ID] = a
+	}
+
+	rows, err := db.Pool.Query(ctx,
+		`SELECT id, articulo_id, nombre, precio_adicional, grupo, seleccion_unica, orden
+		 FROM variantes
+		 WHERE articulo_id = ANY($1)
+		 ORDER BY grupo NULLS LAST, orden, nombre`,
+		ids,
+	)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var v Variante
+		if err := rows.Scan(&v.ID, &v.ArticuloID, &v.Nombre, &v.PrecioAdicional, &v.Grupo, &v.SeleccionUnica, &v.Orden); err != nil {
+			return err
+		}
+		if a, ok := artMap[v.ArticuloID]; ok {
+			a.Variantes = append(a.Variantes, v)
+		}
+	}
+	return rows.Err()
+}
+
+func (s *pgStore) ListarVariantes(ctx context.Context, articuloID, tenantID string) ([]Variante, error) {
+	rows, err := db.Pool.Query(ctx,
+		`SELECT v.id, v.articulo_id, v.nombre, v.precio_adicional, v.grupo, v.seleccion_unica, v.orden
+		 FROM variantes v
+		 JOIN articulos a ON a.id = v.articulo_id
+		 WHERE v.articulo_id = $1 AND a.tenant_id = $2
+		 ORDER BY v.grupo NULLS LAST, v.orden, v.nombre`,
+		articuloID, tenantID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	variantes := make([]Variante, 0)
+	for rows.Next() {
+		var v Variante
+		if err := rows.Scan(&v.ID, &v.ArticuloID, &v.Nombre, &v.PrecioAdicional, &v.Grupo, &v.SeleccionUnica, &v.Orden); err != nil {
+			return nil, err
+		}
+		variantes = append(variantes, v)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return variantes, nil
+}
+
+func (s *pgStore) CrearVariante(ctx context.Context, articuloID, tenantID string, input CrearVarianteInput) (*Variante, error) {
+	v := &Variante{}
+	err := db.Pool.QueryRow(ctx,
+		`INSERT INTO variantes (articulo_id, nombre, precio_adicional, grupo, seleccion_unica, orden)
+		 SELECT $1, $2, $3, $4, $5, $6
+		 WHERE EXISTS (SELECT 1 FROM articulos WHERE id = $1 AND tenant_id = $7)
+		 RETURNING id, articulo_id, nombre, precio_adicional, grupo, seleccion_unica, orden`,
+		articuloID, input.Nombre, input.PrecioAdicional, input.Grupo, input.SeleccionUnica, input.Orden, tenantID,
+	).Scan(&v.ID, &v.ArticuloID, &v.Nombre, &v.PrecioAdicional, &v.Grupo, &v.SeleccionUnica, &v.Orden)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return v, nil
+}
+
+func (s *pgStore) ActualizarVariante(ctx context.Context, id, tenantID string, input ActualizarVarianteInput) (*Variante, error) {
+	v := &Variante{}
+	err := db.Pool.QueryRow(ctx,
+		`UPDATE variantes v
+		 SET nombre = COALESCE($3, v.nombre),
+		     precio_adicional = COALESCE($4, v.precio_adicional),
+		     grupo = COALESCE($5, v.grupo),
+		     seleccion_unica = COALESCE($6, v.seleccion_unica),
+		     orden = COALESCE($7, v.orden)
+		 FROM articulos a
+		 WHERE v.id = $1 AND v.articulo_id = a.id AND a.tenant_id = $2
+		 RETURNING v.id, v.articulo_id, v.nombre, v.precio_adicional, v.grupo, v.seleccion_unica, v.orden`,
+		id, tenantID, input.Nombre, input.PrecioAdicional, input.Grupo, input.SeleccionUnica, input.Orden,
+	).Scan(&v.ID, &v.ArticuloID, &v.Nombre, &v.PrecioAdicional, &v.Grupo, &v.SeleccionUnica, &v.Orden)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return v, nil
+}
+
+func (s *pgStore) EliminarVariante(ctx context.Context, id, tenantID string) error {
+	tag, err := db.Pool.Exec(ctx,
+		`DELETE FROM variantes v
+		 USING articulos a
+		 WHERE v.id = $1 AND v.articulo_id = a.id AND a.tenant_id = $2`,
+		id, tenantID,
+	)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
 }

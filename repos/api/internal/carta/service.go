@@ -57,3 +57,40 @@ func (svc *Service) EliminarArticulo(ctx context.Context, id, tenantID string) e
 func (svc *Service) ObtenerCartaPublica(ctx context.Context, sucursalID string) (*CartaPublica, error) {
 	return svc.store.ObtenerCartaPublica(ctx, sucursalID)
 }
+
+func (svc *Service) ListarVariantes(ctx context.Context, articuloID, tenantID string) ([]Variante, error) {
+	if articuloID == "" {
+		return nil, fmt.Errorf("articulo_id requerido: %w", ErrValidation)
+	}
+	return svc.store.ListarVariantes(ctx, articuloID, tenantID)
+}
+
+func (svc *Service) CrearVariante(ctx context.Context, articuloID, tenantID string, input CrearVarianteInput) (*Variante, error) {
+	if articuloID == "" {
+		return nil, fmt.Errorf("articulo_id requerido: %w", ErrValidation)
+	}
+	if input.Nombre == "" {
+		return nil, fmt.Errorf("nombre requerido: %w", ErrValidation)
+	}
+	if input.PrecioAdicional < 0 {
+		return nil, fmt.Errorf("precio_adicional no puede ser negativo: %w", ErrValidation)
+	}
+	return svc.store.CrearVariante(ctx, articuloID, tenantID, input)
+}
+
+func (svc *Service) ActualizarVariante(ctx context.Context, id, tenantID string, input ActualizarVarianteInput) (*Variante, error) {
+	if id == "" {
+		return nil, fmt.Errorf("id requerido: %w", ErrValidation)
+	}
+	if input.PrecioAdicional != nil && *input.PrecioAdicional < 0 {
+		return nil, fmt.Errorf("precio_adicional no puede ser negativo: %w", ErrValidation)
+	}
+	return svc.store.ActualizarVariante(ctx, id, tenantID, input)
+}
+
+func (svc *Service) EliminarVariante(ctx context.Context, id, tenantID string) error {
+	if id == "" {
+		return fmt.Errorf("id requerido: %w", ErrValidation)
+	}
+	return svc.store.EliminarVariante(ctx, id, tenantID)
+}

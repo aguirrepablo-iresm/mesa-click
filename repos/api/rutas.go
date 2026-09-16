@@ -115,6 +115,10 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.Handle("GET /carta/articulos", auth.Requerir(http.HandlerFunc(cartaH.ListarArticulos)))
 	mux.Handle("POST /carta/articulos", auth.Requerir(http.HandlerFunc(cartaH.CrearArticulo)))
 	mux.Handle("PATCH /carta/articulos/{id}", auth.Requerir(http.HandlerFunc(cartaH.ActualizarArticulo)))
+	mux.Handle("GET /carta/articulos/{id}/variantes", auth.Requerir(http.HandlerFunc(cartaH.ListarVariantes)))
+	mux.Handle("POST /carta/articulos/{id}/variantes", auth.Requerir(http.HandlerFunc(cartaH.CrearVariante)))
+	mux.Handle("PATCH /carta/variantes/{id}", auth.Requerir(http.HandlerFunc(cartaH.ActualizarVariante)))
+	mux.Handle("DELETE /carta/variantes/{id}", auth.Requerir(http.HandlerFunc(cartaH.EliminarVariante)))
 	mux.Handle("DELETE /carta/articulos/{id}", auth.Requerir(http.HandlerFunc(cartaH.EliminarArticulo)))
 
 	// Mesas (admin — protegidas)

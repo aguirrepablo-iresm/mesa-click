@@ -2,7 +2,7 @@
 import { useCallback, useReducer, useState, useEffect, useRef, type CSSProperties } from "react";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
-import type { ArticuloPublico, CategoriaPublica, MesaPublica, PedidoAPI } from "@/lib/api";
+import type { ArticuloPublico, CategoriaPublica, MesaPublica, PedidoAPI, VariantePublica } from "@/lib/api";
 import {
   clearComensalIdentity,
   createComensalIdentity,
@@ -11,6 +11,7 @@ import {
   type ComensalIdentity,
 } from "@/lib/comensal";
 import ModalNombreComensal from "@/components/comensal/ModalNombreComensal";
+import ModalPersonalizacion from "@/components/menu/ModalPersonalizacion";
 import CategoriaNav from "@/components/menu/CategoriaNav";
 import ItemCard from "@/components/menu/ItemCard";
 import CartBottomSheet from "@/components/menu/CartBottomSheet";
@@ -20,10 +21,13 @@ import type { MesaBranding } from "@/components/menu/BrandHeader";
 
 export type CartItem = {
   id: string;
+  articuloId: string;
   nombre: string;
   precio: number;
+  precioBase?: number;
   cantidad: number;
   nota: string;
+  variantes?: VariantePublica[];
   comensalId?: string;
   comensalNombre?: string;
 };
@@ -48,7 +52,19 @@ type State = {
 };
 
 type Action =
-  | { type: 'ADD_ITEM'; payload: { id: string; nombre: string; precio: number } }
+  | {
+      type: 'ADD_ITEM';
+      payload: {
+        id?: string;
+        articuloId: string;
+        nombre: string;
+        precio: number;
+        precioBase?: number;
+        cantidad?: number;
+        nota?: string;
+        variantes?: VariantePublica[];
+      };
+    }
   | { type: 'SET_CANTIDAD'; payload: { id: string; cantidad: number } }
   | { type: 'SET_NOTA'; payload: { id: string; nota: string } }
   | { type: 'SET_VISTA'; payload: Vista }
@@ -72,21 +88,41 @@ const INITIAL_STATE: State = {
 
 const SESSION_VERSION = 3;
 
+function generarLineKey(articuloId: string, variantes?: VariantePublica[], nota?: string): string {
+  const vKeys = (variantes ?? []).map(v => v.id).sort().join('-');
+  const n = (nota ?? '').trim();
+  return `${articuloId}_${vKeys}_${n}`;
+}
+
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'ADD_ITEM': {
-      const exists = state.items.find(i => i.id === action.payload.id);
+      const lineKey = action.payload.id || generarLineKey(action.payload.articuloId, action.payload.variantes, action.payload.nota);
+      const exists = state.items.find(i => i.id === lineKey);
+      const cantidadToAdd = action.payload.cantidad && action.payload.cantidad > 0 ? action.payload.cantidad : 1;
       if (exists) {
         return {
           ...state,
           items: state.items.map(i =>
-            i.id === action.payload.id ? { ...i, cantidad: i.cantidad + 1 } : i
+            i.id === lineKey ? { ...i, cantidad: i.cantidad + cantidadToAdd } : i
           ),
         };
       }
       return {
         ...state,
-        items: [...state.items, { ...action.payload, cantidad: 1, nota: '' }],
+        items: [
+          ...state.items,
+          {
+            id: lineKey,
+            articuloId: action.payload.articuloId,
+            nombre: action.payload.nombre,
+            precio: action.payload.precio,
+            precioBase: action.payload.precioBase ?? action.payload.precio,
+            cantidad: cantidadToAdd,
+            nota: action.payload.nota ?? '',
+            variantes: action.payload.variantes,
+          },
+        ],
       };
     }
     case 'SET_CANTIDAD':
@@ -202,6 +238,10 @@ function parseCartItems(value: unknown): CartItem[] {
       return [];
     }
 
+    const articuloId = typeof candidate.articuloId === 'string' && candidate.articuloId.trim()
+      ? candidate.articuloId
+      : candidate.id;
+
     const comensalId = typeof candidate.comensalId === 'string' && candidate.comensalId.trim()
       ? candidate.comensalId
       : undefined;
@@ -209,12 +249,31 @@ function parseCartItems(value: unknown): CartItem[] {
       ? candidate.comensalNombre.trim()
       : undefined;
 
+    let variantes: VariantePublica[] | undefined;
+    if (Array.isArray(candidate.variantes)) {
+      variantes = candidate.variantes.flatMap(v => {
+        if (!isRecord(v) || typeof v.id !== 'string' || typeof v.nombre !== 'string') return [];
+        return [{
+          id: v.id,
+          articulo_id: typeof v.articulo_id === 'string' ? v.articulo_id : articuloId,
+          nombre: v.nombre,
+          precio_adicional: typeof v.precio_adicional === 'number' ? v.precio_adicional : 0,
+          grupo: typeof v.grupo === 'string' ? v.grupo : undefined,
+          seleccion_unica: Boolean(v.seleccion_unica),
+          orden: typeof v.orden === 'number' ? v.orden : 0,
+        }];
+      });
+    }
+
     return [{
       id: candidate.id,
+      articuloId,
       nombre: candidate.nombre,
       precio: candidate.precio,
+      precioBase: typeof candidate.precioBase === 'number' ? candidate.precioBase : undefined,
       cantidad: candidate.cantidad,
       nota: candidate.nota,
+      variantes,
       comensalId,
       comensalNombre,
     }];
@@ -226,13 +285,22 @@ function pedidoApiToSession(pedido: PedidoAPI): PedidoSesion {
     id: pedido.id,
     estado: pedido.estado,
     items: (pedido.items ?? []).map(item => ({
-      id: item.articulo_id,
+      id: item.id || item.articulo_id,
+      articuloId: item.articulo_id,
       nombre: item.nombre_articulo?.trim() || 'Producto sin nombre',
       precio: item.precio_unitario,
       cantidad: item.cantidad,
       nota: item.notas?.trim() || '',
       comensalId: item.comensal_id,
       comensalNombre: item.comensal_nombre?.trim() || undefined,
+      variantes: item.variantes?.map(v => ({
+        id: v.variante_id,
+        articulo_id: item.articulo_id,
+        nombre: v.nombre,
+        precio_adicional: v.precio_adicional,
+        seleccion_unica: false,
+        orden: 0,
+      })),
     })),
   };
 }
@@ -302,6 +370,7 @@ interface MenuCategoryView {
     descripcion?: string;
     precio: number;
     disponible: boolean;
+    variantes?: VariantePublica[];
   }>;
 }
 
@@ -314,6 +383,13 @@ export default function MesaPage() {
   const [menu, setMenu] = useState<MenuCategoryView[]>([]);
   const [categoriaActiva, setCategoriaActiva] = useState<string>('');
   const [carritoAbierto, setCarritoAbierto] = useState(false);
+  const [itemParaPersonalizar, setItemParaPersonalizar] = useState<{
+    id: string;
+    nombre: string;
+    descripcion?: string;
+    precio: number;
+    variantes?: VariantePublica[];
+  } | null>(null);
   const isManualScrollRef = useRef(false);
   const [loading, setLoading] = useState(() => Boolean(token));
   const [enviandoPedido, setEnviandoPedido] = useState(false);
@@ -526,6 +602,7 @@ export default function MesaPage() {
                 descripcion: a.descripcion,
                 precio: a.precio,
                 disponible: a.activo !== false,
+                variantes: a.variantes,
               })),
             }));
 
@@ -635,6 +712,53 @@ export default function MesaPage() {
     };
   }, [mesaId, sincronizarPedidosMesa, token]);
 
+  const handleIntentarAgregarItem = (item: {
+    id: string;
+    nombre: string;
+    descripcion?: string;
+    precio: number;
+    variantes?: VariantePublica[];
+  }) => {
+    if (item.variantes && item.variantes.length > 0) {
+      setItemParaPersonalizar(item);
+    } else {
+      dispatch({
+        type: 'ADD_ITEM',
+        payload: {
+          articuloId: item.id,
+          nombre: item.nombre,
+          precio: item.precio,
+          precioBase: item.precio,
+        },
+      });
+    }
+  };
+
+  const handleConfirmarPersonalizacion = (
+    cantidad: number,
+    variantesSeleccionadas: VariantePublica[],
+    nota: string,
+  ) => {
+    if (!itemParaPersonalizar) return;
+    const precioBase = itemParaPersonalizar.precio;
+    const recargos = variantesSeleccionadas.reduce((acc, v) => acc + (v.precio_adicional || 0), 0);
+    const precioUnitario = precioBase + recargos;
+
+    dispatch({
+      type: 'ADD_ITEM',
+      payload: {
+        articuloId: itemParaPersonalizar.id,
+        nombre: itemParaPersonalizar.nombre,
+        precio: precioUnitario,
+        precioBase,
+        cantidad,
+        nota,
+        variantes: variantesSeleccionadas,
+      },
+    });
+    setItemParaPersonalizar(null);
+  };
+
   // 3. Confirmar y enviar pedido a la API real (US-43)
   const handleConfirmarPedido = async () => {
     if (!mesa || state.items.length === 0 || state.cuentaSolicitada) return;
@@ -653,11 +777,12 @@ export default function MesaPage() {
       const resp = await api.crearPedido({
         mesa_id: mesa.id,
         items: itemsEnviados.map(item => ({
-          articulo_id: item.id,
+          articulo_id: item.articuloId,
           cantidad: item.cantidad,
           notas: item.nota,
           comensal_id: comensal.id,
           comensal_nombre: comensal.nombre,
+          variantes: item.variantes?.map(v => v.id) ?? [],
         })),
       });
 
@@ -845,10 +970,8 @@ export default function MesaPage() {
                     <ItemCard
                       key={item.id}
                       item={item}
-                      cantidad={state.items.find(i => i.id === item.id)?.cantidad ?? 0}
-                      onAgregar={() =>
-                        dispatch({ type: 'ADD_ITEM', payload: { id: item.id, nombre: item.nombre, precio: item.precio } })
-                      }
+                      cantidad={state.items.filter(i => i.articuloId === item.id).reduce((sum, i) => sum + i.cantidad, 0)}
+                      onAgregar={() => handleIntentarAgregarItem(item)}
                     />
                   ))}
                   {itemsDisponibles.length === 0 && (
@@ -918,6 +1041,15 @@ export default function MesaPage() {
         onSetNota={(id, nota) => dispatch({ type: 'SET_NOTA', payload: { id, nota } })}
         onConfirmar={handleConfirmarPedido}
       />
+
+      {itemParaPersonalizar && (
+        <ModalPersonalizacion
+          articulo={itemParaPersonalizar}
+          isOpen={Boolean(itemParaPersonalizar)}
+          onClose={() => setItemParaPersonalizar(null)}
+          onConfirmar={handleConfirmarPersonalizacion}
+        />
+      )}
 
       {modalNombreComensal}
     </div>

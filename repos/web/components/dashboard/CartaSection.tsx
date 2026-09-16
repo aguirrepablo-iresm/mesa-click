@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { api, CategoriaAPI, ArticuloAPI, getErrorMessage } from "@/lib/api";
+import { api, CategoriaAPI, ArticuloAPI, getErrorMessage, type VariantePublica } from "@/lib/api";
 import { EmptyState, Skeleton, useToast } from "@/components/ui";
 
 export interface CategoriaConItems extends CategoriaAPI {
@@ -20,6 +20,19 @@ export default function CartaSection() {
   const [nuevoItem, setNuevoItem] = useState<NuevoItemForm>({ nombre: '', descripcion: '', precio: '' });
   const [nuevoItemErrors, setNuevoItemErrors] = useState<NuevoItemErrors>({});
   const [errorMsg, setErrorMsg] = useState('');
+  const [articuloVariantesAbierto, setArticuloVariantesAbierto] = useState<string | null>(null);
+  const [nuevaVariante, setNuevaVariante] = useState<{
+    nombre: string;
+    grupo: string;
+    precioAdicional: string;
+    seleccionUnica: boolean;
+  }>({
+    nombre: '',
+    grupo: '',
+    precioAdicional: '0',
+    seleccionUnica: false,
+  });
+  const [guardandoVariante, setGuardandoVariante] = useState(false);
 
   const cargarCarta = useCallback(async () => {
     try {
@@ -173,6 +186,79 @@ export default function CartaSection() {
     }
   };
 
+  const agregarVariante = async (catId: string, articuloId: string) => {
+    if (!nuevaVariante.nombre.trim()) {
+      toast.error('Ingresá el nombre de la opción.');
+      return;
+    }
+    const precio = parseFloat(nuevaVariante.precioAdicional || '0');
+    if (isNaN(precio) || precio < 0) {
+      toast.error('El precio adicional debe ser 0 o mayor.');
+      return;
+    }
+
+    try {
+      setGuardandoVariante(true);
+      const creada = await api.crearVariante(articuloId, {
+        nombre: nuevaVariante.nombre.trim(),
+        grupo: nuevaVariante.grupo.trim() || undefined,
+        precio_adicional: precio,
+        seleccion_unica: nuevaVariante.seleccionUnica,
+      });
+
+      setCategorias(prev =>
+        prev.map(c =>
+          c.id === catId
+            ? {
+                ...c,
+                items: c.items.map(i =>
+                  i.id === articuloId
+                    ? { ...i, variantes: [...(i.variantes || []), creada] }
+                    : i
+                ),
+              }
+            : c
+        )
+      );
+
+      setNuevaVariante(prev => ({
+        nombre: '',
+        grupo: prev.grupo,
+        precioAdicional: '0',
+        seleccionUnica: prev.seleccionUnica,
+      }));
+      toast.success('Opción agregada.');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Error al agregar opción.'));
+    } finally {
+      setGuardandoVariante(false);
+    }
+  };
+
+  const eliminarVariante = async (catId: string, articuloId: string, varianteId: string) => {
+    if (!confirm('¿Eliminar esta opción?')) return;
+    try {
+      await api.eliminarVariante(varianteId);
+      setCategorias(prev =>
+        prev.map(c =>
+          c.id === catId
+            ? {
+                ...c,
+                items: c.items.map(i =>
+                  i.id === articuloId
+                    ? { ...i, variantes: (i.variantes || []).filter(v => v.id !== varianteId) }
+                    : i
+                ),
+              }
+            : c
+        )
+      );
+      toast.success('Opción eliminada.');
+    } catch (err: unknown) {
+      toast.error(getErrorMessage(err, 'Error al eliminar opción.'));
+    }
+  };
+
   const totalItems = categorias.reduce((n, c) => n + c.items.length, 0);
 
   return (
@@ -282,48 +368,182 @@ export default function CartaSection() {
                   const visible = item.activo !== false;
 
                   return (
-                  <div key={item.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-10 px-16 sm:px-20 py-12">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-8 flex-wrap">
-                        <span className="text-13 font-medium text-ash-graphite">{item.nombre}</span>
-                        {!visible && (
-                          <span className="px-6 py-1 text-10 font-medium bg-vanilla-cream text-sage-green rounded-md border border-ghost-fog">
-                            No disponible
-                          </span>
+                  <div key={item.id} className="border-b last:border-b-0 border-ghost-fog">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-10 px-16 sm:px-20 py-12">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-8 flex-wrap">
+                          <span className="text-13 font-medium text-ash-graphite">{item.nombre}</span>
+                          {!visible && (
+                            <span className="px-6 py-1 text-10 font-medium bg-vanilla-cream text-sage-green rounded-md border border-ghost-fog">
+                              No disponible
+                            </span>
+                          )}
+                          {item.variantes && item.variantes.length > 0 && (
+                            <span className="px-6 py-1 text-10 font-medium bg-ghost-fog text-ash-graphite rounded-md border border-ash-graphite/20">
+                              {item.variantes.length} {item.variantes.length === 1 ? 'opción' : 'opciones'}
+                            </span>
+                          )}
+                        </div>
+                        {item.descripcion && (
+                          <p className="text-12 text-sage-green line-clamp-2 mt-2">{item.descripcion}</p>
                         )}
                       </div>
-                      {item.descripcion && (
-                        <p className="text-12 text-sage-green line-clamp-2 mt-2">{item.descripcion}</p>
-                      )}
-                    </div>
-                    <div className="flex items-center justify-between sm:justify-end gap-16 shrink-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-ghost-fog/60">
-                      <span className="text-13 font-medium text-ash-graphite font-mono">
-                        ${item.precio.toLocaleString()}
-                      </span>
-                      <div className="flex items-center gap-12">
-                        <button
-                          onClick={() => toggleDisponible(cat.id, item)}
-                          className={`inline-flex items-center gap-4 px-8 py-4 text-11 font-medium rounded-md border transition-colors ${
-                            visible
-                              ? "text-plain-green-muted border-plain-green-muted bg-ghost-fog hover:bg-canvas-white"
-                              : "text-sage-green border-ghost-fog bg-vanilla-cream hover:bg-ghost-fog"
-                          }`}
-                          title={visible ? "Ocultar del menú público" : "Mostrar en el menú público"}
-                        >
-                          <span className="material-symbols-outlined text-16">
-                            {visible ? "visibility" : "visibility_off"}
-                          </span>
-                          {visible ? 'Visible en menú' : 'Oculto en menú'}
-                        </button>
-                        <button
-                          onClick={() => eliminarItem(cat.id, item.id)}
-                          className="p-4 text-12 text-alert-red hover:opacity-70 font-medium"
-                          title="Eliminar artículo"
-                        >
-                          ✕
-                        </button>
+                      <div className="flex items-center justify-between sm:justify-end gap-16 shrink-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-ghost-fog/60">
+                        <span className="text-13 font-medium text-ash-graphite font-mono">
+                          ${item.precio.toLocaleString()}
+                        </span>
+                        <div className="flex items-center gap-12">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (articuloVariantesAbierto === item.id) {
+                                setArticuloVariantesAbierto(null);
+                              } else {
+                                setArticuloVariantesAbierto(item.id);
+                                setNuevaVariante({ nombre: '', grupo: '', precioAdicional: '0', seleccionUnica: false });
+                              }
+                            }}
+                            className={`inline-flex items-center gap-4 px-8 py-4 text-11 font-medium rounded-md border transition-colors ${
+                              articuloVariantesAbierto === item.id
+                                ? "text-canvas-white bg-plain-green border-plain-green"
+                                : (item.variantes && item.variantes.length > 0)
+                                  ? "text-plain-green-muted border-plain-green-muted bg-ghost-fog hover:bg-canvas-white"
+                                  : "text-sage-green border-ghost-fog bg-vanilla-cream hover:bg-ghost-fog"
+                            }`}
+                            title="Gestionar opciones y variantes"
+                          >
+                            <span className="material-symbols-outlined text-16">tune</span>
+                            <span>Opciones{item.variantes && item.variantes.length > 0 ? ` (${item.variantes.length})` : ''}</span>
+                          </button>
+                          <button
+                            onClick={() => toggleDisponible(cat.id, item)}
+                            className={`inline-flex items-center gap-4 px-8 py-4 text-11 font-medium rounded-md border transition-colors ${
+                              visible
+                                ? "text-plain-green-muted border-plain-green-muted bg-ghost-fog hover:bg-canvas-white"
+                                : "text-sage-green border-ghost-fog bg-vanilla-cream hover:bg-ghost-fog"
+                            }`}
+                            title={visible ? "Ocultar del menú público" : "Mostrar en el menú público"}
+                          >
+                            <span className="material-symbols-outlined text-16">
+                              {visible ? "visibility" : "visibility_off"}
+                            </span>
+                            {visible ? 'Visible en menú' : 'Oculto en menú'}
+                          </button>
+                          <button
+                            onClick={() => eliminarItem(cat.id, item.id)}
+                            className="p-4 text-12 text-alert-red hover:opacity-70 font-medium"
+                            title="Eliminar artículo"
+                          >
+                            ✕
+                          </button>
+                        </div>
                       </div>
                     </div>
+
+                    {/* Subpanel de variantes y personalización */}
+                    {articuloVariantesAbierto === item.id && (
+                      <div className="px-16 sm:px-20 py-14 bg-ghost-fog/80 border-t border-ghost-fog space-y-12">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-6">
+                            <span className="material-symbols-outlined text-16 text-ash-graphite">tune</span>
+                            <h4 className="text-12 font-semibold text-ash-graphite">
+                              Opciones y Variantes de &ldquo;{item.nombre}&rdquo;
+                            </h4>
+                          </div>
+                          <span className="text-11 text-sage-green">
+                            {item.variantes?.length ?? 0} {item.variantes?.length === 1 ? 'opción configurada' : 'opciones configuradas'}
+                          </span>
+                        </div>
+
+                        {/* Lista de variantes existentes */}
+                        {item.variantes && item.variantes.length > 0 ? (
+                          <div className="space-y-6">
+                            {item.variantes.map(v => (
+                              <div
+                                key={v.id}
+                                className="flex items-center justify-between gap-8 bg-canvas-white px-12 py-8 rounded-md border border-ash-graphite/20 text-12"
+                              >
+                                <div className="flex items-center gap-8 min-w-0">
+                                  <span className="px-6 py-2 text-10 font-medium bg-vanilla-cream text-ash-graphite rounded border border-ghost-fog">
+                                    {v.grupo || 'General'}
+                                  </span>
+                                  <span className="font-medium text-ash-graphite truncate">{v.nombre}</span>
+                                  <span className="text-10 text-sage-green">
+                                    ({v.seleccion_unica ? 'Radio · Única' : 'Checkbox · Múltiple'})
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-10 shrink-0">
+                                  <span className="font-mono font-medium text-ash-graphite">
+                                    {v.precio_adicional > 0 ? `+$${v.precio_adicional.toLocaleString()}` : 'Sin cargo'}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => eliminarVariante(cat.id, item.id, v.id)}
+                                    className="text-alert-red hover:opacity-75 p-2 font-medium"
+                                    title="Eliminar opción"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <p className="text-12 text-sage-green italic">
+                            No hay opciones agregadas aún. Añadí términos de cocción, tamaños o extras debajo.
+                          </p>
+                        )}
+
+                        {/* Formulario para agregar variante */}
+                        <div className="bg-canvas-white p-12 rounded-md border border-ash-graphite/40 space-y-10">
+                          <div className="text-11 font-semibold text-ash-graphite">
+                            + Agregar nueva opción
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                            <input
+                              className="px-10 py-6 text-12 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
+                              placeholder="Nombre (ej: Jugoso, Cheddar) *"
+                              value={nuevaVariante.nombre}
+                              onChange={e => setNuevaVariante(p => ({ ...p, nombre: e.target.value }))}
+                            />
+                            <input
+                              className="px-10 py-6 text-12 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
+                              placeholder="Grupo (ej: Término, Extras)"
+                              value={nuevaVariante.grupo}
+                              onChange={e => setNuevaVariante(p => ({ ...p, grupo: e.target.value }))}
+                            />
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              className="px-10 py-6 text-12 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
+                              placeholder="Precio adicional ($)"
+                              value={nuevaVariante.precioAdicional}
+                              onChange={e => setNuevaVariante(p => ({ ...p, precioAdicional: e.target.value }))}
+                            />
+                          </div>
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 pt-2">
+                            <label className="flex items-center gap-6 text-12 text-ash-graphite cursor-pointer select-none">
+                              <input
+                                type="checkbox"
+                                checked={nuevaVariante.seleccionUnica}
+                                onChange={e => setNuevaVariante(p => ({ ...p, seleccionUnica: e.target.checked }))}
+                                className="rounded border-ash-graphite text-plain-green focus:ring-plain-green"
+                              />
+                              <span>Selección única (excluyente dentro del grupo / radio)</span>
+                            </label>
+                            <button
+                              type="button"
+                              disabled={guardandoVariante}
+                              onClick={() => agregarVariante(cat.id, item.id)}
+                              className="px-14 py-6 bg-plain-green text-canvas-white text-12 font-medium rounded-md hover:opacity-90 disabled:opacity-50 whitespace-nowrap self-end sm:self-auto"
+                            >
+                              {guardandoVariante ? 'Guardando...' : 'Agregar opción'}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   );
                 })}

@@ -189,7 +189,26 @@ export default function CartBottomSheet({
           {items.map(item => (
             <div key={item.id} className="mesa-surface mesa-border space-y-10 rounded-lg border p-14 shadow-2xs">
               <div className="flex items-start justify-between gap-8">
-                <span className="mesa-text text-14 font-medium leading-snug">{item.nombre}</span>
+                <div className="min-w-0 flex-1">
+                  <span className="mesa-text text-14 font-medium leading-snug">{item.nombre}</span>
+                  {item.variantes && item.variantes.length > 0 && (
+                    <div className="mt-4 flex flex-wrap gap-4">
+                      {item.variantes.map(v => (
+                        <span
+                          key={v.id}
+                          className="inline-flex items-center gap-2 rounded-md bg-slate-100 px-6 py-2 text-11 text-slate-700"
+                        >
+                          <span>{v.nombre}</span>
+                          {v.precio_adicional > 0 && (
+                            <span className="font-mono text-10 font-semibold opacity-75">
+                              +${v.precio_adicional.toLocaleString()}
+                            </span>
+                          )}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <span className="mesa-text text-14 font-mono font-semibold shrink-0">
                   ${(item.precio * item.cantidad).toLocaleString()}
                 </span>

@@ -218,6 +218,16 @@ export interface CategoriaAPI {
   updated_at: string;
 }
 
+export interface VariantePublica {
+  id: string;
+  articulo_id: string;
+  nombre: string;
+  precio_adicional: number;
+  grupo?: string;
+  seleccion_unica: boolean;
+  orden: number;
+}
+
 export interface ArticuloAPI {
   id: string;
   tenant_id: string;
@@ -230,7 +240,7 @@ export interface ArticuloAPI {
   orden: number;
   created_at: string;
   updated_at: string;
-  variantes?: Array<{ id: string; nombre: string; precio: number }>;
+  variantes?: VariantePublica[];
 }
 
 export interface MesaAPI {
@@ -281,6 +291,7 @@ export interface ArticuloPublico {
   precio: number;
   foto_url?: string;
   activo: boolean;
+  variantes?: VariantePublica[];
 }
 
 export interface CategoriaPublica {
@@ -294,6 +305,12 @@ export interface CartaPublicaResponse {
   categorias: CategoriaPublica[];
 }
 
+export interface PedidoItemVarianteAPI {
+  variante_id: string;
+  nombre: string;
+  precio_adicional: number;
+}
+
 export interface PedidoItemAPI {
   id: string;
   pedido_id: string;
@@ -304,6 +321,7 @@ export interface PedidoItemAPI {
   notas?: string;
   comensal_id?: string;
   comensal_nombre?: string;
+  variantes?: PedidoItemVarianteAPI[];
 }
 
 export interface PedidoAPI {
@@ -325,6 +343,7 @@ export interface NuevoPedidoInput {
     notas?: string;
     comensal_id: string;
     comensal_nombre: string;
+    variantes?: string[];
   }>;
 }
 
@@ -458,6 +477,42 @@ export const api = {
 
   eliminarArticulo: async (id: string) => {
     return apiFetch<void>(`/carta/articulos/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
+  listarVariantes: async (articuloId: string) => {
+    return apiFetch<VariantePublica[]>(`/carta/articulos/${articuloId}/variantes`);
+  },
+
+  crearVariante: async (articuloId: string, data: {
+    nombre: string;
+    precio_adicional: number;
+    grupo?: string;
+    seleccion_unica?: boolean;
+    orden?: number;
+  }) => {
+    return apiFetch<VariantePublica>(`/carta/articulos/${articuloId}/variantes`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  actualizarVariante: async (id: string, data: {
+    nombre?: string;
+    precio_adicional?: number;
+    grupo?: string;
+    seleccion_unica?: boolean;
+    orden?: number;
+  }) => {
+    return apiFetch<VariantePublica>(`/carta/variantes/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  eliminarVariante: async (id: string) => {
+    return apiFetch<void>(`/carta/variantes/${id}`, {
       method: 'DELETE',
     });
   },
