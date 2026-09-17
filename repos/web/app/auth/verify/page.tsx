@@ -15,8 +15,13 @@ function VerifyContent() {
   const [errorMsg, setErrorMsg] = useState(
     token ? "" : "No se proporcionó ningún token de autenticación."
   );
+  
+  const intentadoRef = React.useRef(false);
+
   useEffect(() => {
     if (!token) return;
+    if (intentadoRef.current) return;
+    intentadoRef.current = true;
 
     let isMounted = true;
 
