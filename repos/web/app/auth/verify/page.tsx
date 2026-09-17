@@ -1,12 +1,11 @@
 "use client";
 
 import React, { useEffect, useState, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { api, getErrorMessage } from "@/lib/api";
 
 function VerifyContent() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
 
@@ -16,37 +15,42 @@ function VerifyContent() {
   const [errorMsg, setErrorMsg] = useState(
     token ? "" : "No se proporcionó ningún token de autenticación."
   );
-
   useEffect(() => {
-    if (!token) {
-      return;
-    }
+    if (!token) return;
 
     let isMounted = true;
 
     async function verificar() {
       try {
-        await api.verificarToken(token!);
-        if (isMounted) {
-          setEstado("exito");
-          setTimeout(() => {
-            router.push("/dashboard");
-          }, 1200);
-        }
+        console.log('[AuthVerify] Verificando token con la API...', token);
+        const res = await api.verificarToken(token!);
+        
+        if (!isMounted) return;
+        
+        console.log('[AuthVerify] Verificación exitosa:', res);
+        setEstado("exito");
+        setTimeout(() => {
+          if (isMounted) {
+            console.log('[AuthVerify] Redirigiendo a /dashboard...');
+            window.location.href = "/dashboard";
+          }
+        }, 800);
       } catch (err: unknown) {
-        if (isMounted) {
-          setEstado("error");
-          setErrorMsg(getErrorMessage(err, "El token es inválido o ha expirado."));
-        }
+        if (!isMounted) return;
+        
+        console.log('[AuthVerify] Error catch disparado:', err);
+        console.error('[AuthVerify] Error verificando token:', err);
+        setEstado("error");
+        setErrorMsg(getErrorMessage(err, "El token es inválido o ha expirado."));
       }
     }
 
-    verificar();
+    void verificar();
 
     return () => {
       isMounted = false;
     };
-  }, [token, router]);
+  }, [token]);
 
   return (
     <div className="w-full max-w-sm bg-canvas-white p-32 rounded-lg border border-ash-graphite text-center space-y-20 font-inter">

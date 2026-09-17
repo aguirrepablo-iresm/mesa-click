@@ -126,44 +126,42 @@ export default function ModalPersonalizacion({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-xs transition-opacity sm:items-center sm:p-16"
+      className="fixed inset-0 z-50 flex flex-col bg-[var(--mesa-background)] sm:items-center sm:p-16"
       role="dialog"
       aria-modal="true"
       aria-labelledby="modal-personalizacion-title"
-      onClick={e => {
-        if (e.target === e.currentTarget) onClose();
-      }}
     >
       <div
-        className="mesa-background flex max-h-[90vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border-t mesa-border shadow-2xl animate-in slide-in-from-bottom duration-200 sm:rounded-2xl sm:border"
-        onClick={e => e.stopPropagation()}
+        className="flex w-full h-full max-w-lg flex-col overflow-hidden animate-in slide-in-from-right duration-200 sm:rounded-2xl sm:border mesa-border shadow-2xl bg-[var(--mesa-background)]"
       >
         {/* Header con nombre del artículo y cerrar */}
-        <header className="flex shrink-0 items-start justify-between border-b mesa-border p-16">
-          <div className="min-w-0 flex-1 pr-12">
-            <h2 id="modal-personalizacion-title" className="mesa-text text-18 font-semibold leading-tight">
-              {articulo.nombre}
-            </h2>
-            {articulo.descripcion && (
-              <p className="mesa-muted mt-4 text-12 leading-relaxed">
-                {articulo.descripcion}
-              </p>
-            )}
-            <p className="mesa-primary mt-6 text-14 font-mono font-medium">
-              ${articulo.precio.toLocaleString()}
-            </p>
-          </div>
+        <header className="flex shrink-0 items-center gap-12 border-b mesa-border p-16">
           <button
             onClick={onClose}
-            aria-label="Cerrar personalización"
-            className="mesa-muted mesa-subtle-surface flex h-48 w-48 shrink-0 items-center justify-center rounded-full text-18 font-medium transition-colors hover:text-[var(--mesa-primary)]"
+            aria-label="Volver"
+            className="mesa-muted mesa-subtle-surface flex h-40 w-40 shrink-0 items-center justify-center rounded-full text-18 font-medium transition-colors hover:text-[var(--mesa-primary)]"
           >
-            ✕
+            ←
           </button>
+          <div className="min-w-0 flex-1">
+            <h2 id="modal-personalizacion-title" className="mesa-text text-18 font-semibold leading-tight truncate">
+              {articulo.nombre}
+            </h2>
+          </div>
         </header>
 
         {/* Opciones y grupos */}
         <div className="min-h-0 flex-1 overflow-y-auto p-16 space-y-20 overscroll-contain">
+          {articulo.descripcion && (
+            <div className="pb-4 border-b mesa-border mb-4">
+              <p className="mesa-muted text-14 leading-relaxed">
+                {articulo.descripcion}
+              </p>
+              <p className="mesa-primary mt-6 text-16 font-mono font-medium">
+                ${articulo.precio.toLocaleString()}
+              </p>
+            </div>
+          )}
           {grupos.map(grupo => (
             <div key={grupo.nombre} className="space-y-8">
               <div className="flex items-center justify-between">

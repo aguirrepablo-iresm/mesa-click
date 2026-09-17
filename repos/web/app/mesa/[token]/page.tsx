@@ -401,53 +401,17 @@ export default function MesaPage() {
   const skipNextPersistRef = useRef(false);
   const hydratedTokenRef = useRef<string | null>(null);
 
-  // Scroll-spy: resalta automáticamente la categoría visible según el scroll vertical
-  useEffect(() => {
-    if (menu.length === 0) return;
-
-    const observer = new IntersectionObserver(
-      entries => {
-        if (isManualScrollRef.current) return;
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const catId = entry.target.id.replace('categoria-', '');
-            setCategoriaActiva(catId);
-            const navBtn = document.getElementById(`nav-cat-${catId}`);
-            if (navBtn) {
-              navBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-            }
-            break;
-          }
-        }
-      },
-      {
-        rootMargin: '-120px 0px -60% 0px',
-        threshold: 0,
-      }
-    );
-
-    menu.forEach(cat => {
-      const el = document.getElementById(`categoria-${cat.id}`);
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, [menu]);
-
   const handleSeleccionarCategoria = (catId: string) => {
     setCategoriaActiva(catId);
-    isManualScrollRef.current = true;
-    const el = document.getElementById(`categoria-${catId}`);
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
+    
+    // Solo scrollear el navbar para mantener visible el botón seleccionado
     const navBtn = document.getElementById(`nav-cat-${catId}`);
     if (navBtn) {
       navBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
-    window.setTimeout(() => {
-      isManualScrollRef.current = false;
-    }, 800);
+    
+    // Opcional: hacer scroll suave hacia arriba por si estaban muy abajo en la categoría anterior
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const sincronizarPedidosMesa = useCallback(async () => {
@@ -954,13 +918,13 @@ export default function MesaPage() {
           onSelect={handleSeleccionarCategoria}
         />
         <div className="space-y-24 px-16 pt-16">
-          {menu.map(cat => {
+          {menu.filter(cat => cat.id === categoriaActiva).map(cat => {
             const itemsDisponibles = cat.items.filter(i => i.disponible);
             return (
               <section
                 key={cat.id}
                 id={`categoria-${cat.id}`}
-                className="scroll-mt-[132px] space-y-12"
+                className="space-y-12 animate-in fade-in duration-200"
               >
                 <div className="border-b mesa-border pb-6">
                   <h2 className="mesa-text text-16 font-semibold tracking-tight">{cat.nombre}</h2>

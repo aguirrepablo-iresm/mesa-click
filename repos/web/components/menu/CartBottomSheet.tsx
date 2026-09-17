@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, type TouchEvent, type PointerEvent } from "react";
 import type { CartItem } from "@/app/mesa/[token]/page";
-import { BrandMark } from "./BrandHeader";
 import type { MesaBranding } from "./BrandHeader";
 
 interface Props {
@@ -138,7 +137,7 @@ export default function CartBottomSheet({
           transform: dragY > 0 ? `translateY(${dragY}px)` : "translateY(0)",
           transition: isDragging ? "none" : "transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)",
         }}
-        className="mesa-background flex max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border-t border-x mesa-border shadow-2xl animate-in slide-in-from-bottom duration-200"
+        className="mesa-background flex h-[95vh] max-h-[95vh] w-full max-w-lg flex-col overflow-hidden rounded-t-2xl border-t border-x mesa-border shadow-2xl animate-in slide-in-from-bottom duration-200"
         onClick={e => e.stopPropagation()}
       >
         {/* Barra superior / Drag Handle */}
@@ -154,30 +153,35 @@ export default function CartBottomSheet({
           <div className="h-4 w-36 rounded-full bg-slate-400/60 transition-colors" />
         </div>
 
-        {/* Header del carrito */}
-        <header className="flex shrink-0 items-center justify-between border-b mesa-border px-16 py-10">
-          <div className="flex items-center gap-10 min-w-0">
-            <BrandMark branding={branding} className="h-36 w-36 shrink-0" />
-            <div className="min-w-0">
-              <h2 id="cart-bottom-sheet-title" className="mesa-text text-15 font-semibold leading-tight truncate">
-                Tu pedido
-              </h2>
-              <span className="mesa-muted text-11 font-mono">
-                {items.length} {items.length === 1 ? "ítem" : "ítems"}
-              </span>
-            </div>
+        {/* Header del carrito (ahora toda el área superior permite arrastrar para cerrar) */}
+        <header
+          className="flex shrink-0 items-center justify-between border-b mesa-border p-16 touch-pan-x"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+        >
+          <div className="flex items-center gap-10 min-w-0 flex-1">
+            <h2 id="cart-bottom-sheet-title" className="mesa-text text-18 font-semibold leading-tight truncate">
+              Tu pedido
+            </h2>
+            <span className="mesa-muted text-13 font-medium whitespace-nowrap">
+              ({items.length} {items.length === 1 ? "ítem" : "ítems"})
+            </span>
           </div>
-          <div className="flex items-center gap-8">
+          <div className="flex shrink-0 items-center gap-4">
             <button
               onClick={onClose}
-              className="mesa-primary min-h-48 px-10 text-12 font-medium hover:underline flex items-center"
+              className="mesa-primary text-13 font-medium px-8 py-8 whitespace-nowrap active:scale-95 transition-transform"
             >
               + Agregar más
             </button>
             <button
               onClick={onClose}
               aria-label="Cerrar carrito"
-              className="mesa-muted mesa-subtle-surface flex h-48 w-48 items-center justify-center rounded-full text-18 font-medium transition-colors hover:text-[var(--mesa-primary)]"
+              className="mesa-muted flex h-44 w-44 items-center justify-center rounded-full text-20 transition-colors hover:text-[var(--mesa-primary)] active:scale-90"
             >
               ✕
             </button>
