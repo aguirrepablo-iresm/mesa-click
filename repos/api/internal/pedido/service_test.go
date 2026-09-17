@@ -155,3 +155,45 @@ func TestCrear_SinItems_Error(t *testing.T) {
 		t.Fatal("esperaba error por pedido sin items")
 	}
 }
+
+func TestCrear_VarianteVacia_Error(t *testing.T) {
+	svc := pedido.NuevoService(&mockStore{})
+	_, err := svc.Crear(context.Background(), pedido.NuevoPedidoInput{
+		MesaID: "mesa-1",
+		Items: []pedido.NuevoItemInput{
+			{
+				ArticuloID:     "art-1",
+				Cantidad:       1,
+				ComensalID:     "47dc8c9e-fb98-44d7-80a1-b598addc1e8a",
+				ComensalNombre: "Mateo",
+				Variantes:      []string{"  "},
+			},
+		},
+	})
+	if err == nil {
+		t.Fatal("esperaba error por variante_id vacío")
+	}
+}
+
+func TestCrear_ConVariantes_Exito(t *testing.T) {
+	store := &mockStore{}
+	svc := pedido.NuevoService(store)
+	_, err := svc.Crear(context.Background(), pedido.NuevoPedidoInput{
+		MesaID: "mesa-1",
+		Items: []pedido.NuevoItemInput{
+			{
+				ArticuloID:     "art-1",
+				Cantidad:       2,
+				ComensalID:     "47dc8c9e-fb98-44d7-80a1-b598addc1e8a",
+				ComensalNombre: "Mateo",
+				Variantes:      []string{"var-1", "var-2"},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+	if len(store.crearInput.Items[0].Variantes) != 2 {
+		t.Fatalf("esperaba 2 variantes, obtuve %d", len(store.crearInput.Items[0].Variantes))
+	}
+}

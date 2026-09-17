@@ -96,6 +96,39 @@ func (s *pgStore) Crear(ctx context.Context, input NuevoPedidoInput, sucursalID 
 			return nil, fmt.Errorf("error obteniendo artículo: %w", err)
 		}
 
+		var itemVariantes []PedidoItemVariante
+		if len(item.Variantes) > 0 {
+			vRows, err := tx.Query(ctx,
+				`SELECT v.id, v.nombre, v.precio_adicional
+				 FROM variantes v
+				 JOIN articulos a ON a.id = v.articulo_id
+				 WHERE v.id = ANY($1) AND v.articulo_id = $2 AND a.tenant_id = $3`,
+				item.Variantes, item.ArticuloID, tenantID,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("error validando variantes: %w", err)
+			}
+			defer vRows.Close()
+
+			for vRows.Next() {
+				var piv PedidoItemVariante
+				if err := vRows.Scan(&piv.VarianteID, &piv.Nombre, &piv.PrecioAdicional); err != nil {
+					return nil, err
+				}
+				itemVariantes = append(itemVariantes, piv)
+			}
+			if err := vRows.Err(); err != nil {
+				return nil, err
+			}
+			if len(itemVariantes) != len(item.Variantes) {
+				return nil, fmt.Errorf("variantes inválidas para artículo %s: %w", item.ArticuloID, ErrValidation)
+			}
+
+			for _, v := range itemVariantes {
+				precioUnitario += v.PrecioAdicional
+			}
+		}
+
 		var itemID string
 		err = tx.QueryRow(ctx,
 			`INSERT INTO pedido_items (
@@ -109,6 +142,16 @@ func (s *pgStore) Crear(ctx context.Context, input NuevoPedidoInput, sucursalID 
 			return nil, fmt.Errorf("error insertando item: %w", err)
 		}
 
+		for _, v := range itemVariantes {
+			_, err = tx.Exec(ctx,
+				`INSERT INTO pedido_item_variantes (pedido_item_id, variante_id) VALUES ($1, $2)`,
+				itemID, v.VarianteID,
+			)
+			if err != nil {
+				return nil, fmt.Errorf("error guardando variante del item: %w", err)
+			}
+		}
+
 		p.Items = append(p.Items, PedidoItem{
 			ID:             itemID,
 			PedidoID:       p.ID,
@@ -119,6 +162,7 @@ func (s *pgStore) Crear(ctx context.Context, input NuevoPedidoInput, sucursalID 
 			Notas:          item.Notas,
 			ComensalID:     item.ComensalID,
 			ComensalNombre: item.ComensalNombre,
+			Variantes:      itemVariantes,
 		})
 	}
 
@@ -221,6 +265,45 @@ func (s *pgStore) listarItems(ctx context.Context, pedidoID string) ([]PedidoIte
 	if err := rows.Err(); err != nil {
 		return nil, err
 	}
+
+	if len(items) > 0 {
+		itemIDs := make([]string, len(items))
+		itemMap := make(map[string]*PedidoItem, len(items))
+		for i := range items {
+			itemIDs[i] = items[i].ID
+			itemMap[items[i].ID] = &items[i]
+		}
+
+		vRows, err := db.Pool.Query(ctx,
+			`SELECT piv.pedido_item_id, v.id, v.nombre, v.precio_adicional
+			 FROM pedido_item_variantes piv
+			 JOIN variantes v ON v.id = piv.variante_id
+			 WHERE piv.pedido_item_id = ANY($1)
+			 ORDER BY v.grupo NULLS LAST, v.orden, v.nombre`,
+			itemIDs,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error listando variantes de items: %w", err)
+		}
+		defer vRows.Close()
+
+		for vRows.Next() {
+			var (
+				itemID  string
+				pivItem PedidoItemVariante
+			)
+			if err := vRows.Scan(&itemID, &pivItem.VarianteID, &pivItem.Nombre, &pivItem.PrecioAdicional); err != nil {
+				return nil, err
+			}
+			if pi, ok := itemMap[itemID]; ok {
+				pi.Variantes = append(pi.Variantes, pivItem)
+			}
+		}
+		if err := vRows.Err(); err != nil {
+			return nil, err
+		}
+	}
+
 	return items, nil
 }
 

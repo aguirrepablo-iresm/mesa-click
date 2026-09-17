@@ -185,7 +185,19 @@ export default function SeguimientoView({
             <div className="divide-y divide-[var(--mesa-border)]">
               {items.map((item, index) => (
                 <div key={`${item.id}-${index}`} className="mesa-muted flex items-start justify-between gap-10 py-8 text-13">
-                  <span className="min-w-0">{item.cantidad}× {item.nombre}</span>
+                  <div className="min-w-0">
+                    <span>{item.cantidad}× {item.nombre}</span>
+                    {item.variantes && item.variantes.length > 0 && (
+                      <p className="mt-2 text-11 text-slate-500">
+                        {item.variantes.map(v => v.nombre).join(", ")}
+                      </p>
+                    )}
+                    {item.nota && (
+                      <p className="mt-1 text-11 italic text-slate-400">
+                        Nota: {item.nota}
+                      </p>
+                    )}
+                  </div>
                   <span className="mesa-text shrink-0 font-mono font-medium">${(item.precio * item.cantidad).toLocaleString()}</span>
                 </div>
               ))}
@@ -201,7 +213,19 @@ export default function SeguimientoView({
                   <div className="mesa-muted mt-8 space-y-4 text-12">
                     {grupo.items.map((item, index) => (
                       <div key={`${item.id}-${index}`} className="flex justify-between gap-8">
-                        <span>{item.cantidad}× {item.nombre}</span>
+                        <div className="min-w-0">
+                          <span>{item.cantidad}× {item.nombre}</span>
+                          {item.variantes && item.variantes.length > 0 && (
+                            <p className="text-10 text-slate-500">
+                              {item.variantes.map(v => v.nombre).join(", ")}
+                            </p>
+                          )}
+                          {item.nota && (
+                            <p className="text-10 italic text-slate-400">
+                              Nota: {item.nota}
+                            </p>
+                          )}
+                        </div>
                         <span className="shrink-0 font-mono">${(item.precio * item.cantidad).toLocaleString()}</span>
                       </div>
                     ))}

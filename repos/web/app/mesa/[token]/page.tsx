@@ -2,7 +2,7 @@
 import { useCallback, useReducer, useState, useEffect, useRef, type CSSProperties } from "react";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
-import type { ArticuloPublico, CategoriaPublica, MesaPublica, PedidoAPI } from "@/lib/api";
+import type { ArticuloPublico, CategoriaPublica, MesaPublica, PedidoAPI, VariantePublica } from "@/lib/api";
 import {
   clearComensalIdentity,
   createComensalIdentity,
@@ -11,25 +11,29 @@ import {
   type ComensalIdentity,
 } from "@/lib/comensal";
 import ModalNombreComensal from "@/components/comensal/ModalNombreComensal";
+import ModalPersonalizacion from "@/components/menu/ModalPersonalizacion";
 import CategoriaNav from "@/components/menu/CategoriaNav";
 import ItemCard from "@/components/menu/ItemCard";
-import CartDrawer from "@/components/menu/CartDrawer";
+import CartBottomSheet from "@/components/menu/CartBottomSheet";
 import SeguimientoView from "@/components/menu/SeguimientoView";
 import BrandHeader, { buildMesaTheme } from "@/components/menu/BrandHeader";
 import type { MesaBranding } from "@/components/menu/BrandHeader";
 
 export type CartItem = {
   id: string;
+  articuloId: string;
   nombre: string;
   precio: number;
+  precioBase?: number;
   cantidad: number;
   nota: string;
+  variantes?: VariantePublica[];
   comensalId?: string;
   comensalNombre?: string;
 };
 
 export type EstadoPedido = 'recibido' | 'preparando' | 'listo' | 'cerrado';
-type Vista = 'carta' | 'carrito' | 'seguimiento';
+type Vista = 'carta' | 'seguimiento';
 
 export type PedidoSesion = {
   id: string;
@@ -48,7 +52,19 @@ type State = {
 };
 
 type Action =
-  | { type: 'ADD_ITEM'; payload: { id: string; nombre: string; precio: number } }
+  | {
+      type: 'ADD_ITEM';
+      payload: {
+        id?: string;
+        articuloId: string;
+        nombre: string;
+        precio: number;
+        precioBase?: number;
+        cantidad?: number;
+        nota?: string;
+        variantes?: VariantePublica[];
+      };
+    }
   | { type: 'SET_CANTIDAD'; payload: { id: string; cantidad: number } }
   | { type: 'SET_NOTA'; payload: { id: string; nota: string } }
   | { type: 'SET_VISTA'; payload: Vista }
@@ -70,23 +86,43 @@ const INITIAL_STATE: State = {
   pedidoId: null,
 };
 
-const SESSION_VERSION = 2;
+const SESSION_VERSION = 3;
+
+function generarLineKey(articuloId: string, variantes?: VariantePublica[], nota?: string): string {
+  const vKeys = (variantes ?? []).map(v => v.id).sort().join('-');
+  const n = (nota ?? '').trim();
+  return `${articuloId}_${vKeys}_${n}`;
+}
 
 function reducer(state: State, action: Action): State {
   switch (action.type) {
     case 'ADD_ITEM': {
-      const exists = state.items.find(i => i.id === action.payload.id);
+      const lineKey = action.payload.id || generarLineKey(action.payload.articuloId, action.payload.variantes, action.payload.nota);
+      const exists = state.items.find(i => i.id === lineKey);
+      const cantidadToAdd = action.payload.cantidad && action.payload.cantidad > 0 ? action.payload.cantidad : 1;
       if (exists) {
         return {
           ...state,
           items: state.items.map(i =>
-            i.id === action.payload.id ? { ...i, cantidad: i.cantidad + 1 } : i
+            i.id === lineKey ? { ...i, cantidad: i.cantidad + cantidadToAdd } : i
           ),
         };
       }
       return {
         ...state,
-        items: [...state.items, { ...action.payload, cantidad: 1, nota: '' }],
+        items: [
+          ...state.items,
+          {
+            id: lineKey,
+            articuloId: action.payload.articuloId,
+            nombre: action.payload.nombre,
+            precio: action.payload.precio,
+            precioBase: action.payload.precioBase ?? action.payload.precio,
+            cantidad: cantidadToAdd,
+            nota: action.payload.nota ?? '',
+            variantes: action.payload.variantes,
+          },
+        ],
       };
     }
     case 'SET_CANTIDAD':
@@ -177,7 +213,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 function isVista(value: unknown): value is Vista {
-  return value === 'carta' || value === 'carrito' || value === 'seguimiento';
+  return value === 'carta' || value === 'seguimiento';
 }
 
 function isEstadoPedido(value: unknown): value is EstadoPedido {
@@ -202,6 +238,10 @@ function parseCartItems(value: unknown): CartItem[] {
       return [];
     }
 
+    const articuloId = typeof candidate.articuloId === 'string' && candidate.articuloId.trim()
+      ? candidate.articuloId
+      : candidate.id;
+
     const comensalId = typeof candidate.comensalId === 'string' && candidate.comensalId.trim()
       ? candidate.comensalId
       : undefined;
@@ -209,12 +249,31 @@ function parseCartItems(value: unknown): CartItem[] {
       ? candidate.comensalNombre.trim()
       : undefined;
 
+    let variantes: VariantePublica[] | undefined;
+    if (Array.isArray(candidate.variantes)) {
+      variantes = candidate.variantes.flatMap(v => {
+        if (!isRecord(v) || typeof v.id !== 'string' || typeof v.nombre !== 'string') return [];
+        return [{
+          id: v.id,
+          articulo_id: typeof v.articulo_id === 'string' ? v.articulo_id : articuloId,
+          nombre: v.nombre,
+          precio_adicional: typeof v.precio_adicional === 'number' ? v.precio_adicional : 0,
+          grupo: typeof v.grupo === 'string' ? v.grupo : undefined,
+          seleccion_unica: Boolean(v.seleccion_unica),
+          orden: typeof v.orden === 'number' ? v.orden : 0,
+        }];
+      });
+    }
+
     return [{
       id: candidate.id,
+      articuloId,
       nombre: candidate.nombre,
       precio: candidate.precio,
+      precioBase: typeof candidate.precioBase === 'number' ? candidate.precioBase : undefined,
       cantidad: candidate.cantidad,
       nota: candidate.nota,
+      variantes,
       comensalId,
       comensalNombre,
     }];
@@ -226,13 +285,22 @@ function pedidoApiToSession(pedido: PedidoAPI): PedidoSesion {
     id: pedido.id,
     estado: pedido.estado,
     items: (pedido.items ?? []).map(item => ({
-      id: item.articulo_id,
+      id: item.id || item.articulo_id,
+      articuloId: item.articulo_id,
       nombre: item.nombre_articulo?.trim() || 'Producto sin nombre',
       precio: item.precio_unitario,
       cantidad: item.cantidad,
       nota: item.notas?.trim() || '',
       comensalId: item.comensal_id,
       comensalNombre: item.comensal_nombre?.trim() || undefined,
+      variantes: item.variantes?.map(v => ({
+        id: v.variante_id,
+        articulo_id: item.articulo_id,
+        nombre: v.nombre,
+        precio_adicional: v.precio_adicional,
+        seleccion_unica: false,
+        orden: 0,
+      })),
     })),
   };
 }
@@ -257,7 +325,7 @@ function getSessionKey(token: string) {
 function readStoredSession(raw: string): State | null {
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (!isRecord(parsed) || (parsed.version !== 1 && parsed.version !== SESSION_VERSION)) return null;
+    if (!isRecord(parsed) || (parsed.version !== 1 && parsed.version !== 2 && parsed.version !== SESSION_VERSION)) return null;
 
     const pedidoId = typeof parsed.pedidoId === 'string' && parsed.pedidoId.trim() ? parsed.pedidoId : null;
     const estadoPedido = isEstadoPedido(parsed.estadoPedido) ? parsed.estadoPedido : 'recibido';
@@ -272,7 +340,8 @@ function readStoredSession(raw: string): State | null {
           ? [{ id: pedidoId, items, estado: estadoPedido }]
           : [];
     const ultimoPedido = pedidos[pedidos.length - 1];
-    const vista = isVista(parsed.vista) ? parsed.vista : 'carta';
+    const rawVista = parsed.vista;
+    const vista: Vista = rawVista === 'carrito' ? 'carta' : (isVista(rawVista) ? rawVista : 'carta');
     const cuentaVersion = typeof parsed.cuentaVersion === 'number' && Number.isInteger(parsed.cuentaVersion) && parsed.cuentaVersion > 0
       ? parsed.cuentaVersion
       : 1;
@@ -301,6 +370,7 @@ interface MenuCategoryView {
     descripcion?: string;
     precio: number;
     disponible: boolean;
+    variantes?: VariantePublica[];
   }>;
 }
 
@@ -312,6 +382,15 @@ export default function MesaPage() {
   const [mesa, setMesa] = useState<MesaPublica | null>(null);
   const [menu, setMenu] = useState<MenuCategoryView[]>([]);
   const [categoriaActiva, setCategoriaActiva] = useState<string>('');
+  const [carritoAbierto, setCarritoAbierto] = useState(false);
+  const [itemParaPersonalizar, setItemParaPersonalizar] = useState<{
+    id: string;
+    nombre: string;
+    descripcion?: string;
+    precio: number;
+    variantes?: VariantePublica[];
+  } | null>(null);
+  const isManualScrollRef = useRef(false);
   const [loading, setLoading] = useState(() => Boolean(token));
   const [enviandoPedido, setEnviandoPedido] = useState(false);
   const [comensal, setComensal] = useState<ComensalIdentity | null>(null);
@@ -321,6 +400,19 @@ export default function MesaPage() {
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
   const skipNextPersistRef = useRef(false);
   const hydratedTokenRef = useRef<string | null>(null);
+
+  const handleSeleccionarCategoria = (catId: string) => {
+    setCategoriaActiva(catId);
+    
+    // Solo scrollear el navbar para mantener visible el botón seleccionado
+    const navBtn = document.getElementById(`nav-cat-${catId}`);
+    if (navBtn) {
+      navBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    }
+    
+    // Opcional: hacer scroll suave hacia arriba por si estaban muy abajo en la categoría anterior
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   const sincronizarPedidosMesa = useCallback(async () => {
     if (!token) return;
@@ -474,6 +566,7 @@ export default function MesaPage() {
                 descripcion: a.descripcion,
                 precio: a.precio,
                 disponible: a.activo !== false,
+                variantes: a.variantes,
               })),
             }));
 
@@ -583,6 +676,53 @@ export default function MesaPage() {
     };
   }, [mesaId, sincronizarPedidosMesa, token]);
 
+  const handleIntentarAgregarItem = (item: {
+    id: string;
+    nombre: string;
+    descripcion?: string;
+    precio: number;
+    variantes?: VariantePublica[];
+  }) => {
+    if (item.variantes && item.variantes.length > 0) {
+      setItemParaPersonalizar(item);
+    } else {
+      dispatch({
+        type: 'ADD_ITEM',
+        payload: {
+          articuloId: item.id,
+          nombre: item.nombre,
+          precio: item.precio,
+          precioBase: item.precio,
+        },
+      });
+    }
+  };
+
+  const handleConfirmarPersonalizacion = (
+    cantidad: number,
+    variantesSeleccionadas: VariantePublica[],
+    nota: string,
+  ) => {
+    if (!itemParaPersonalizar) return;
+    const precioBase = itemParaPersonalizar.precio;
+    const recargos = variantesSeleccionadas.reduce((acc, v) => acc + (v.precio_adicional || 0), 0);
+    const precioUnitario = precioBase + recargos;
+
+    dispatch({
+      type: 'ADD_ITEM',
+      payload: {
+        articuloId: itemParaPersonalizar.id,
+        nombre: itemParaPersonalizar.nombre,
+        precio: precioUnitario,
+        precioBase,
+        cantidad,
+        nota,
+        variantes: variantesSeleccionadas,
+      },
+    });
+    setItemParaPersonalizar(null);
+  };
+
   // 3. Confirmar y enviar pedido a la API real (US-43)
   const handleConfirmarPedido = async () => {
     if (!mesa || state.items.length === 0 || state.cuentaSolicitada) return;
@@ -601,16 +741,18 @@ export default function MesaPage() {
       const resp = await api.crearPedido({
         mesa_id: mesa.id,
         items: itemsEnviados.map(item => ({
-          articulo_id: item.id,
+          articulo_id: item.articuloId,
           cantidad: item.cantidad,
           notas: item.nota,
           comensal_id: comensal.id,
           comensal_nombre: comensal.nombre,
+          variantes: item.variantes?.map(v => v.id) ?? [],
         })),
       });
 
       if (!resp.id) throw new Error('La API no devolvió el identificador del pedido.');
       dispatch({ type: 'CONFIRMAR_PEDIDO', payload: { pedidoId: resp.id, items: itemsEnviados } });
+      setCarritoAbierto(false);
     } catch (err) {
       console.error("No se pudo enviar el pedido a la API:", err);
       try {
@@ -712,8 +854,6 @@ export default function MesaPage() {
         : state.estadoPedido;
   const todosLosPedidosListos = state.pedidos.length > 0
     && state.pedidos.every(pedido => pedido.estado === 'listo' || pedido.estado === 'cerrado');
-  const categoriaSeleccionada = menu.find(c => c.id === categoriaActiva) || menu[0];
-  const categoriaItems = categoriaSeleccionada?.items ?? [];
   const modalNombreComensal = identidadLista && !state.cuentaSolicitada && (!comensal || editandoComensal) ? (
     <ModalNombreComensal
       nombreInicial={comensal?.nombre}
@@ -762,24 +902,6 @@ export default function MesaPage() {
     );
   }
 
-  if (state.vista === 'carrito') {
-    return (
-      <div className="mesa-page" data-estilo-visual={theme.visualStyle} style={themeStyle}>
-        <CartDrawer
-          branding={branding}
-          items={state.items}
-          totalPrecio={totalPrecio}
-          enviando={enviandoPedido}
-          onSetCantidad={(id, cantidad) => dispatch({ type: 'SET_CANTIDAD', payload: { id, cantidad } })}
-          onSetNota={(id, nota) => dispatch({ type: 'SET_NOTA', payload: { id, nota } })}
-          onVolver={() => dispatch({ type: 'SET_VISTA', payload: 'carta' })}
-          onConfirmar={handleConfirmarPedido}
-        />
-        {modalNombreComensal}
-      </div>
-    );
-  }
-
   return (
     <div className="mesa-page min-h-screen pb-80 font-inter" data-estilo-visual={theme.visualStyle} style={themeStyle}>
       <BrandHeader
@@ -792,24 +914,43 @@ export default function MesaPage() {
       <div className="max-w-lg mx-auto">
         <CategoriaNav
           categorias={menu}
-          activa={categoriaActiva}
-          onSelect={setCategoriaActiva}
+          activa={categoriaActiva || menu[0]?.id || ''}
+          onSelect={handleSeleccionarCategoria}
         />
-        <div className="space-y-12 px-16 pt-12">
-          {categoriaItems.filter(i => i.disponible).map(item => (
-            <ItemCard
-              key={item.id}
-              item={item}
-              cantidad={state.items.find(i => i.id === item.id)?.cantidad ?? 0}
-              onAgregar={() =>
-                dispatch({ type: 'ADD_ITEM', payload: { id: item.id, nombre: item.nombre, precio: item.precio } })
-              }
-            />
-          ))}
+        <div className="space-y-24 px-16 pt-16">
+          {menu.filter(cat => cat.id === categoriaActiva).map(cat => {
+            const itemsDisponibles = cat.items.filter(i => i.disponible);
+            return (
+              <section
+                key={cat.id}
+                id={`categoria-${cat.id}`}
+                className="space-y-12 animate-in fade-in duration-200"
+              >
+                <div className="border-b mesa-border pb-6">
+                  <h2 className="mesa-text text-16 font-semibold tracking-tight">{cat.nombre}</h2>
+                </div>
+                <div className="space-y-12">
+                  {itemsDisponibles.map(item => (
+                    <ItemCard
+                      key={item.id}
+                      item={item}
+                      cantidad={state.items.filter(i => i.articuloId === item.id).reduce((sum, i) => sum + i.cantidad, 0)}
+                      onAgregar={() => handleIntentarAgregarItem(item)}
+                    />
+                  ))}
+                  {itemsDisponibles.length === 0 && (
+                    <div className="mesa-subtle-text py-16 text-center text-12">
+                      No hay artículos disponibles en esta categoría.
+                    </div>
+                  )}
+                </div>
+              </section>
+            );
+          })}
 
-          {categoriaItems.length === 0 && (
+          {menu.length === 0 && (
             <div className="mesa-subtle-text py-40 text-center text-13">
-              No hay artículos disponibles en esta categoría.
+              No hay categorías cargadas en la carta.
             </div>
           )}
         </div>
@@ -819,10 +960,13 @@ export default function MesaPage() {
         <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-20 p-16">
           <div className="pointer-events-auto mx-auto max-w-lg">
             <button
-              onClick={() => dispatch({
-                type: 'SET_VISTA',
-                payload: totalItems > 0 ? 'carrito' : 'seguimiento',
-              })}
+              onClick={() => {
+                if (totalItems > 0) {
+                  setCarritoAbierto(true);
+                } else {
+                  dispatch({ type: 'SET_VISTA', payload: 'seguimiento' });
+                }
+              }}
               disabled={enviandoPedido || state.cuentaSolicitada}
               className="mesa-primary-bg flex min-h-64 w-full items-center rounded-xl px-20 py-12 font-medium shadow-xl transition-all active:scale-[0.98] disabled:opacity-50"
             >
@@ -849,6 +993,28 @@ export default function MesaPage() {
           </div>
         </div>
       )}
+
+      <CartBottomSheet
+        branding={branding}
+        items={state.items}
+        totalPrecio={totalPrecio}
+        enviando={enviandoPedido}
+        isOpen={carritoAbierto}
+        onClose={() => setCarritoAbierto(false)}
+        onSetCantidad={(id, cantidad) => dispatch({ type: 'SET_CANTIDAD', payload: { id, cantidad } })}
+        onSetNota={(id, nota) => dispatch({ type: 'SET_NOTA', payload: { id, nota } })}
+        onConfirmar={handleConfirmarPedido}
+      />
+
+      {itemParaPersonalizar && (
+        <ModalPersonalizacion
+          articulo={itemParaPersonalizar}
+          isOpen={Boolean(itemParaPersonalizar)}
+          onClose={() => setItemParaPersonalizar(null)}
+          onConfirmar={handleConfirmarPersonalizacion}
+        />
+      )}
+
       {modalNombreComensal}
     </div>
   );

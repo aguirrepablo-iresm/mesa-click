@@ -3,7 +3,18 @@
 // Cliente HTTP centralizado para interactuar con la API REST de Mesa CLICK (Go).
 // Provee métodos tipados para autenticación, tenant/onboarding, carta, mesas, sucursales y equipo.
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+export function getApiBaseUrl(): string {
+  if (typeof window !== 'undefined') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+      return 'http://localhost:8080';
+    }
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(window.location.hostname)) {
+      return `http://${window.location.hostname}:8080`;
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+}
+
 const TOKEN_STORAGE_KEY = 'mc_token';
 
 export class ApiError extends Error {
@@ -104,7 +115,8 @@ export function estaAutenticado(): boolean {
 }
 
 async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`;
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}${endpoint}`;
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
     ...(options.headers as Record<string, string>),
@@ -115,26 +127,39 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const response = await fetch(url, {
-    ...options,
-    headers,
-    credentials: 'include',
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-  if (response.status === 204) {
-    return null as unknown as T;
+  try {
+    const response = await fetch(url, {
+      ...options,
+      headers,
+      credentials: 'include',
+      signal: options.signal || controller.signal,
+    });
+
+    if (response.status === 204) {
+      return null as unknown as T;
+    }
+
+    const contentType = response.headers.get('content-type');
+    const isJson = contentType && contentType.includes('application/json');
+    const data: unknown = isJson ? await response.json() : null;
+
+    if (!response.ok) {
+      const errorMsg = getApiErrorMessage(data, `Error HTTP ${response.status}`);
+      throw new ApiError(errorMsg, response.status, data);
+    }
+
+    return data as T;
+  } catch (err: unknown) {
+    if (err instanceof Error && err.name === 'AbortError') {
+      throw new ApiError('Tiempo de espera agotado al conectar con el servidor (10s).', 408);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  const contentType = response.headers.get('content-type');
-  const isJson = contentType && contentType.includes('application/json');
-  const data: unknown = isJson ? await response.json() : null;
-
-  if (!response.ok) {
-    const errorMsg = getApiErrorMessage(data, `Error HTTP ${response.status}`);
-    throw new ApiError(errorMsg, response.status, data);
-  }
-
-  return data as T;
 }
 
 // --- TIPOS ---
@@ -218,6 +243,16 @@ export interface CategoriaAPI {
   updated_at: string;
 }
 
+export interface VariantePublica {
+  id: string;
+  articulo_id: string;
+  nombre: string;
+  precio_adicional: number;
+  grupo?: string;
+  seleccion_unica: boolean;
+  orden: number;
+}
+
 export interface ArticuloAPI {
   id: string;
   tenant_id: string;
@@ -230,7 +265,7 @@ export interface ArticuloAPI {
   orden: number;
   created_at: string;
   updated_at: string;
-  variantes?: Array<{ id: string; nombre: string; precio: number }>;
+  variantes?: VariantePublica[];
 }
 
 export interface MesaAPI {
@@ -281,6 +316,7 @@ export interface ArticuloPublico {
   precio: number;
   foto_url?: string;
   activo: boolean;
+  variantes?: VariantePublica[];
 }
 
 export interface CategoriaPublica {
@@ -294,6 +330,12 @@ export interface CartaPublicaResponse {
   categorias: CategoriaPublica[];
 }
 
+export interface PedidoItemVarianteAPI {
+  variante_id: string;
+  nombre: string;
+  precio_adicional: number;
+}
+
 export interface PedidoItemAPI {
   id: string;
   pedido_id: string;
@@ -304,6 +346,7 @@ export interface PedidoItemAPI {
   notas?: string;
   comensal_id?: string;
   comensal_nombre?: string;
+  variantes?: PedidoItemVarianteAPI[];
 }
 
 export interface PedidoAPI {
@@ -325,6 +368,7 @@ export interface NuevoPedidoInput {
     notas?: string;
     comensal_id: string;
     comensal_nombre: string;
+    variantes?: string[];
   }>;
 }
 
@@ -332,7 +376,7 @@ export interface NuevoPedidoInput {
 
 export const api = {
   // Base URLs
-  getBaseUrl: () => API_BASE_URL,
+  getBaseUrl: () => getApiBaseUrl(),
 
   // 1. Auth (US-38)
   // El backend busca al usuario por email, así que lo mandamos normalizado
@@ -462,6 +506,42 @@ export const api = {
     });
   },
 
+  listarVariantes: async (articuloId: string) => {
+    return apiFetch<VariantePublica[]>(`/carta/articulos/${articuloId}/variantes`);
+  },
+
+  crearVariante: async (articuloId: string, data: {
+    nombre: string;
+    precio_adicional: number;
+    grupo?: string;
+    seleccion_unica?: boolean;
+    orden?: number;
+  }) => {
+    return apiFetch<VariantePublica>(`/carta/articulos/${articuloId}/variantes`, {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  actualizarVariante: async (id: string, data: {
+    nombre?: string;
+    precio_adicional?: number;
+    grupo?: string;
+    seleccion_unica?: boolean;
+    orden?: number;
+  }) => {
+    return apiFetch<VariantePublica>(`/carta/variantes/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  eliminarVariante: async (id: string) => {
+    return apiFetch<void>(`/carta/variantes/${id}`, {
+      method: 'DELETE',
+    });
+  },
+
   // 5. Mesas & QR (US-40 & US-41)
   listarMesas: async () => {
     return apiFetch<MesaAPI[]>('/mesas');
@@ -567,16 +647,16 @@ export const api = {
   },
 
   obtenerEventosPedidoUrl: (pedidoId: string) => {
-    return `${API_BASE_URL}/pedidos/${encodeURIComponent(pedidoId)}/eventos`;
+    return `${getApiBaseUrl()}/pedidos/${encodeURIComponent(pedidoId)}/eventos`;
   },
 
   obtenerEventosMesaUrl: (mesaId: string) => {
-    return `${API_BASE_URL}/publica/mesas/${encodeURIComponent(mesaId)}/eventos`;
+    return `${getApiBaseUrl()}/publica/mesas/${encodeURIComponent(mesaId)}/eventos`;
   },
 
   obtenerEventosSucursalUrl: (sucursalId: string) => {
     const token = obtenerToken();
     const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : '';
-    return `${API_BASE_URL}/sucursales/${encodeURIComponent(sucursalId)}/eventos${tokenQuery}`;
+    return `${getApiBaseUrl()}/sucursales/${encodeURIComponent(sucursalId)}/eventos${tokenQuery}`;
   },
 };

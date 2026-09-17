@@ -41,6 +41,16 @@ func (m *mockStore) EliminarArticulo(ctx context.Context, id, tenantID string) e
 func (m *mockStore) ObtenerCartaPublica(ctx context.Context, sucursalID string) (*carta.CartaPublica, error) {
 	return &carta.CartaPublica{}, nil
 }
+func (m *mockStore) ListarVariantes(ctx context.Context, articuloID, tenantID string) ([]carta.Variante, error) {
+	return []carta.Variante{}, nil
+}
+func (m *mockStore) CrearVariante(ctx context.Context, articuloID, tenantID string, input carta.CrearVarianteInput) (*carta.Variante, error) {
+	return &carta.Variante{ID: "v-1", ArticuloID: articuloID, Nombre: input.Nombre, PrecioAdicional: input.PrecioAdicional}, nil
+}
+func (m *mockStore) ActualizarVariante(ctx context.Context, id, tenantID string, input carta.ActualizarVarianteInput) (*carta.Variante, error) {
+	return &carta.Variante{ID: id}, nil
+}
+func (m *mockStore) EliminarVariante(ctx context.Context, id, tenantID string) error { return nil }
 
 func TestListarCategorias(t *testing.T) {
 	store := &mockStore{
@@ -70,5 +80,32 @@ func TestCrearArticulo_PrecioNegativo(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatal("esperaba error por precio negativo")
+	}
+}
+
+func TestCrearVariante_Validaciones(t *testing.T) {
+	svc := carta.NuevoService(&mockStore{})
+	_, err := svc.CrearVariante(context.Background(), "", "t-1", carta.CrearVarianteInput{
+		Nombre: "Extra queso",
+		PrecioAdicional: 100,
+	})
+	if err == nil {
+		t.Fatal("esperaba error por articulo_id vacío")
+	}
+
+	_, err = svc.CrearVariante(context.Background(), "art-1", "t-1", carta.CrearVarianteInput{
+		Nombre: "",
+		PrecioAdicional: 100,
+	})
+	if err == nil {
+		t.Fatal("esperaba error por nombre vacío")
+	}
+
+	_, err = svc.CrearVariante(context.Background(), "art-1", "t-1", carta.CrearVarianteInput{
+		Nombre: "Extra queso",
+		PrecioAdicional: -10,
+	})
+	if err == nil {
+		t.Fatal("esperaba error por precio_adicional negativo")
 	}
 }
