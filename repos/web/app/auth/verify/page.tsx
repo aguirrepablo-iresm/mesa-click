@@ -16,32 +16,29 @@ function VerifyContent() {
     token ? "" : "No se proporcionó ningún token de autenticación."
   );
   
-  const intentadoRef = React.useRef(false);
+  const tokenIntentadoRef = React.useRef<string | null>(null);
+  const mountedRef = React.useRef(false);
 
   useEffect(() => {
-    if (!token) return;
-    if (intentadoRef.current) return;
-    intentadoRef.current = true;
-
-    let isMounted = true;
+    mountedRef.current = true;
 
     async function verificar() {
       try {
         console.log('[AuthVerify] Verificando token con la API...', token);
         const res = await api.verificarToken(token!);
-        
-        if (!isMounted) return;
+
+        if (!mountedRef.current) return;
         
         console.log('[AuthVerify] Verificación exitosa:', res);
         setEstado("exito");
         setTimeout(() => {
-          if (isMounted) {
+          if (mountedRef.current) {
             console.log('[AuthVerify] Redirigiendo a /dashboard...');
             window.location.href = "/dashboard";
           }
         }, 800);
       } catch (err: unknown) {
-        if (!isMounted) return;
+        if (!mountedRef.current) return;
         
         console.log('[AuthVerify] Error catch disparado:', err);
         console.error('[AuthVerify] Error verificando token:', err);
@@ -50,10 +47,17 @@ function VerifyContent() {
       }
     }
 
-    void verificar();
+    // React ejecuta los efectos dos veces en desarrollo para detectar efectos
+    // secundarios inseguros. Conservamos una sola petición por token, pero el
+    // estado de montaje se reactiva en la segunda ejecución para poder procesar
+    // la respuesta de la petición iniciada por la primera.
+    if (token && tokenIntentadoRef.current !== token) {
+      tokenIntentadoRef.current = token;
+      void verificar();
+    }
 
     return () => {
-      isMounted = false;
+      mountedRef.current = false;
     };
   }, [token]);
 

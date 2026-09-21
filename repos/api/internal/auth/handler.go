@@ -2,6 +2,7 @@ package auth
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 	"os"
 )
@@ -29,11 +30,15 @@ func (h *Handlers) SolicitarLink(w http.ResponseWriter, r *http.Request) {
 
 	link, err := h.svc.SolicitarLink(r.Context(), body.Email)
 	if err != nil {
+		if errors.Is(err, ErrUsuarioNoEncontrado) {
+			jsonError(w, "No encontramos una cuenta registrada con ese correo.", http.StatusNotFound)
+			return
+		}
 		jsonError(w, "error interno", http.StatusInternalServerError)
 		return
 	}
 
-	resp := map[string]string{"mensaje": "si el email existe, recibirás un link"}
+	resp := map[string]string{"mensaje": "Te enviamos un enlace de acceso a tu correo."}
 	if h.exponerLink && link != "" {
 		resp["magic_link_dev"] = link
 	}
