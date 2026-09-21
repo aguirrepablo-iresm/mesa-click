@@ -30,10 +30,6 @@ export default function ModalPersonalizacion({
   onClose,
   onConfirmar,
 }: Props) {
-  const [cantidad, setCantidad] = useState(1);
-  const [seleccionadas, setSeleccionadas] = useState<Map<string, VariantePublica>>(new Map());
-  const [nota, setNota] = useState("");
-
   // Agrupar variantes por grupo
   const grupos = useMemo(() => {
     const list = articulo.variantes ?? [];
@@ -58,21 +54,17 @@ export default function ModalPersonalizacion({
     return Array.from(map.values());
   }, [articulo.variantes]);
 
-  // Al abrir, inicializar cantidad en 1, nota vacía y preseleccionar la primera opción de cada grupo de selección única
-  useEffect(() => {
-    if (!isOpen) return;
-
-    setCantidad(1);
-    setNota("");
-
+  const [cantidad, setCantidad] = useState(1);
+  const [nota, setNota] = useState("");
+  const [seleccionadas, setSeleccionadas] = useState<Map<string, VariantePublica>>(() => {
     const initial = new Map<string, VariantePublica>();
     grupos.forEach(g => {
       if (g.seleccionUnica && g.variantes.length > 0) {
         initial.set(g.variantes[0].id, g.variantes[0]);
       }
     });
-    setSeleccionadas(initial);
-  }, [isOpen, grupos]);
+    return initial;
+  });
 
   // Bloquear scroll de fondo y soportar Escape
   useEffect(() => {

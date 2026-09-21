@@ -110,10 +110,41 @@ export default function OnboardingTour({
     [activeSection, onNavigateSection]
   );
 
-  // Al abrir el tour, comenzar en el primer paso y sincronizar sección
+  const handleComplete = useCallback(() => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(TOUR_STORAGE_KEY, "true");
+        if (tenantId) {
+          localStorage.setItem(`mesaclick_tour_seen_${tenantId}`, "true");
+        }
+      } catch (err) {
+        console.warn("No se pudo guardar estado del tour:", err);
+      }
+    }
+    toast.success("¡Recorrido tutorial finalizado! Podés volver a verlo desde tu perfil.");
+    setCurrentStepIndex(0);
+    onClose();
+  }, [tenantId, toast, onClose]);
+
+  const handleSkip = useCallback(() => {
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(TOUR_STORAGE_KEY, "true");
+        if (tenantId) {
+          localStorage.setItem(`mesaclick_tour_seen_${tenantId}`, "true");
+        }
+      } catch (err) {
+        console.warn("No se pudo guardar estado del tour:", err);
+      }
+    }
+    toast.info("Recorrido omitido. Podés reactivarlo desde tu perfil en 'Recorrido tutorial'.");
+    setCurrentStepIndex(0);
+    onClose();
+  }, [tenantId, toast, onClose]);
+
+  // Al abrir el tour, sincronizar sección
   useEffect(() => {
     if (isOpen) {
-      setCurrentStepIndex(0);
       onNavigateSection(TOUR_STEPS[0].section);
     }
   }, [isOpen, onNavigateSection]);
@@ -138,7 +169,7 @@ export default function OnboardingTour({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, currentStepIndex, goToStep]);
+  }, [isOpen, currentStepIndex, goToStep, handleSkip]);
 
   const handleNext = () => {
     if (currentStepIndex < TOUR_STEPS.length - 1) {
@@ -152,36 +183,6 @@ export default function OnboardingTour({
     if (currentStepIndex > 0) {
       goToStep(currentStepIndex - 1);
     }
-  };
-
-  const handleComplete = () => {
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(TOUR_STORAGE_KEY, "true");
-        if (tenantId) {
-          localStorage.setItem(`mesaclick_tour_seen_${tenantId}`, "true");
-        }
-      } catch (err) {
-        console.warn("No se pudo guardar estado del tour:", err);
-      }
-    }
-    toast.success("¡Recorrido tutorial finalizado! Podés volver a verlo desde tu perfil.");
-    onClose();
-  };
-
-  const handleSkip = () => {
-    if (typeof window !== "undefined") {
-      try {
-        localStorage.setItem(TOUR_STORAGE_KEY, "true");
-        if (tenantId) {
-          localStorage.setItem(`mesaclick_tour_seen_${tenantId}`, "true");
-        }
-      } catch (err) {
-        console.warn("No se pudo guardar estado del tour:", err);
-      }
-    }
-    toast.info("Recorrido omitido. Podés reactivarlo desde tu perfil en 'Recorrido tutorial'.");
-    onClose();
   };
 
   if (!isOpen) return null;

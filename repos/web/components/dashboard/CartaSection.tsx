@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { api, CategoriaAPI, ArticuloAPI, getErrorMessage, type VariantePublica } from "@/lib/api";
+import { api, CategoriaAPI, ArticuloAPI, getErrorMessage } from "@/lib/api";
 import { EmptyState, Skeleton, useToast } from "@/components/ui";
 
 export interface CategoriaConItems extends CategoriaAPI {

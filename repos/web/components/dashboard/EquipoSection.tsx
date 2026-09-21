@@ -7,13 +7,6 @@ type RolUsuario = 'admin' | 'encargado' | 'mozo' | 'cocina';
 type RolInvitable = 'encargado' | 'mozo' | 'cocina';
 type FormState = { nombre: string; email: string; rol: RolInvitable };
 
-const ROL_LABELS: Record<string, string> = {
-  admin: 'Admin',
-  encargado: 'Encargado',
-  mozo: 'Mozo / Recepcionista',
-  cocina: 'Cocina (KDS)',
-};
-
 const ROL_DESCRIPTIONS: Record<RolInvitable, string> = {
   encargado: 'Puede gestionar la operación de una sucursal: carta, mesas y pedidos activos.',
   mozo: 'Puede ver pedidos en vivo, avanzar estados y atender solicitudes de cuenta.',
