@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Status Report #7 — Mesa CLICK (Cierre Sprint 11 & Kickoff Sprint 12)</title>
+<title>Status Report #8 — Mesa CLICK (Cierre Sprint 12 & Kickoff Sprint 13)</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -149,102 +149,90 @@
   .sprint-tag {
     font-family: 'DM Mono', monospace;
     font-size: 10.5px;
-    font-weight: 700;
-    color: var(--orange);
-    background: var(--orange-l);
-    display: inline-block;
-    padding: 2px 8px;
+    font-weight: 600;
+    padding: 3px 8px;
     border-radius: 4px;
+    display: inline-block;
     margin-bottom: 12px;
   }
-  .sprint-tag.blue { color: var(--blue); background: var(--blue-l); }
-  .sprint-tag.green { color: #15803D; background: var(--green-l); }
-  .c-card-body ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
-  .c-card-body li { display: flex; gap: 8px; font-size: 12.5px; line-height: 1.5; align-items: flex-start; }
-  .c-card-body .dot { color: var(--orange); font-size: 14px; line-height: 1; flex-shrink: 0; }
-  .c-card-body .dot-blue { color: var(--blue); font-size: 14px; line-height: 1; flex-shrink: 0; }
-  .c-card-body .dot-green { color: var(--green); font-size: 14px; line-height: 1; flex-shrink: 0; }
-  .c-card-body .chip {
+  .sprint-tag.green { background: var(--green-l); color: var(--green); }
+  .sprint-tag.blue  { background: var(--blue-l);  color: var(--blue);  }
+  .sprint-tag.orange{ background: var(--orange-l);color: var(--orange);}
+
+  ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  li { display: flex; align-items: flex-start; gap: 8px; font-size: 12.5px; line-height: 1.5; color: var(--text2); }
+  .dot-green { color: var(--green); font-weight: 700; flex-shrink: 0; }
+  .dot-blue  { color: var(--blue);  font-weight: 700; flex-shrink: 0; }
+  .chip {
     font-family: 'DM Mono', monospace;
-    font-size: 10.5px;
     background: var(--slate-l);
     padding: 1px 5px;
     border-radius: 4px;
+    font-size: 11px;
+    color: var(--text2);
     border: 1px solid var(--border);
-    font-weight: 600;
   }
 
-  .issue {
-    border-radius: 8px;
-    padding: 12px 14px;
-    margin-bottom: 10px;
-    font-size: 12px;
-    line-height: 1.5;
-  }
-  .issue:last-child { margin-bottom: 0; }
-  .issue.risk { background: var(--amber-l); border: 1px solid #FCD34D; }
-  .issue.info { background: var(--blue-l); border: 1px solid #BFDBFE; }
-  .issue.success { background: var(--green-l); border: 1px solid #86EFAC; }
-  .issue-tag { font-weight: 700; margin-bottom: 3px; display: flex; align-items: center; gap: 6px; }
-  .issue.risk .issue-tag { color: #92400E; }
-  .issue.info .issue-tag { color: #1E40AF; }
-  .issue.success .issue-tag { color: #15803D; }
-
-  /* GANTT */
+  /* Gantt */
   .gantt-wrap {
     background: var(--card);
     border: 1px solid var(--border);
     border-radius: 12px;
+    padding: 18px;
     overflow-x: auto;
-    padding: 16px;
   }
   table.gantt {
     width: 100%;
     border-collapse: collapse;
-    min-width: 750px;
+    font-size: 11px;
+    min-width: 780px;
   }
-  .g-lbl-col { width: 230px; }
-  th.g-lbl { text-align: left; font-size: 11px; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; }
+  th.g-lbl-col { width: 22%; text-align: left; padding: 6px 10px; font-size: 11px; color: var(--text3); font-weight: 600; }
   th.gth {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--text3);
-    padding: 6px;
+    padding: 6px 4px;
     text-align: center;
-    border-bottom: 1px solid var(--border);
+    border-bottom: 2px solid var(--border);
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text2);
+    width: 7.8%;
   }
+  th.gth .sn { display: block; font-size: 11px; }
+  th.gth .sd { display: block; font-size: 9px; font-weight: 400; color: var(--text3); font-family: 'DM Mono', monospace; margin-top: 1px; }
   th.gth.today {
     background: var(--orange-l);
+    border-top: 2px solid var(--orange);
+    border-bottom: 2px solid var(--orange);
     border-left: 1px solid var(--orange);
     border-right: 1px solid var(--orange);
+    border-radius: 4px 4px 0 0;
   }
   .today-arrow {
     display: block;
     font-size: 8px;
     color: var(--orange);
     font-weight: 800;
+    letter-spacing: .03em;
     margin-top: 2px;
   }
-  .sn { display: block; font-size: 10px; font-weight: 700; color: var(--text); }
-  .sd { display: block; font-size: 9px; color: var(--text3); margin-top: 1px; font-family: 'DM Mono', monospace; }
-
   tr.g-phase td {
-    padding: 10px 0 4px;
-    font-size: 10.5px;
+    background: #F8FAFC;
+    padding: 6px 10px;
     font-weight: 700;
+    font-size: 10.5px;
+    color: var(--text3);
     text-transform: uppercase;
-    letter-spacing: .08em;
+    letter-spacing: .06em;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
   }
-  td.ph-past { color: var(--green); }
-  td.ph-act { color: var(--orange); }
-
   td.g-lbl {
+    padding: 7px 10px;
     font-size: 11.5px;
     font-weight: 600;
-    color: var(--text2);
-    padding: 8px 8px 8px 0;
+    color: var(--text);
     border-bottom: 1px solid #F3F4F6;
+    white-space: nowrap;
   }
   td.g-cell {
     border-bottom: 1px solid #F3F4F6;
@@ -351,8 +339,8 @@
         Exportar PDF
       </button>
       <div class="report-title">
-        <h1>Project Status Report #7</h1>
-        <div class="sub">Cierre Sprint 11, Incorporación US-81 & Kickoff Sprint 12 · 14/09/2026</div>
+        <h1>Project Status Report #8</h1>
+        <div class="sub">Cierre Sprint 12 & Kickoff Sprint 13 (Carga Masiva & Precios) · 21/09/2026</div>
       </div>
     </div>
   </div>
@@ -365,7 +353,7 @@
     </div>
     <div class="meta-card">
       <div class="meta-label">Fecha de Corte</div>
-      <div class="meta-val">14 de septiembre de 2026 · Sprint 12 (semana 3 de 10)</div>
+      <div class="meta-val">21 de septiembre de 2026 · Sprint 13 (semana 4 de 10)</div>
     </div>
     <div class="meta-card">
       <div class="meta-label">Integrantes</div>
@@ -382,55 +370,55 @@
       <div class="rag-info">
         <div class="rag-dim">Tiempo (Schedule)</div>
         <div class="rag-status green">Verde (En Plan)</div>
-        <div class="rag-note"><b>Sprint 11 cerrado en tiempo (13/09)</b> con 100% de entregables aprobados y mergeados (US-53, US-54, US-55). El <b>Sprint 12 arranca en fecha hoy 14/09</b> sin desvíos en el cronograma hacia la entrega final del 08/11.</div>
+        <div class="rag-note"><b>Sprint 12 cerrado exitosamente al 100% (20/09)</b> con todas las historias aprobadas (US-56, US-57, US-81). El <b>Sprint 13 arranca hoy 21/09</b> sin desvíos en el cronograma hacia la entrega final del 08/11.</div>
       </div>
     </div>
     <div class="rag-card green">
       <div class="rag-dot green">●</div>
       <div class="rag-info">
         <div class="rag-dim">Alcance (Scope)</div>
-        <div class="rag-status green">Verde (32 US Totales · 6 Completadas / 19%)</div>
-        <div class="rag-note">Se sumó al Sprint 12 la <b>US-81 (Pedidos Colaborativos en Mesa con Identificación de Comensal en Cookie y División de Cuenta)</b>. El backlog general cuenta con 32 US especificadas y listas para ejecución paralela.</div>
+        <div class="rag-status green">Verde (32 US Totales · 9 Completadas / 28.1%)</div>
+        <div class="rag-note">Se completó la épica <b>Mobile-First Comensal</b>: navegación táctil fluida con categorías sticky y carrito bottom-sheet, personalización de platos con variantes/notas e integración de pedidos colaborativos con división de cuenta.</div>
       </div>
     </div>
     <div class="rag-card green">
       <div class="rag-dot green">●</div>
       <div class="rag-info">
         <div class="rag-dim">Riesgo & Calidad</div>
-        <div class="rag-status green">Verde (Bajo Riesgo · 100% Builds & Tests Verdes)</div>
-        <div class="rag-note">Onboarding implementado como widget compacto no invasivo sin overlay modal molesto. Frontend Next.js (<span class="chip">npm run build</span>) y backend Go (<span class="chip">go test ./...</span>) compilando de forma limpia en <span class="chip">qa</span> y <span class="chip">main</span>.</div>
+        <div class="rag-status green">Verde (Bajo Riesgo · 100% Builds, Linter y Tests Verdes)</div>
+        <div class="rag-note">Frontend Next.js 16 Turbopack (<span class="chip">npm run build</span>) y backend Go (<span class="chip">go test ./...</span>) compilando de forma limpia. Linter de React 19 optimizado a <b>0 errores</b> tras sanear efectos colaterales.</div>
       </div>
     </div>
   </div>
   </div><!-- /rpt-section -->
 
-  <!-- Logros Sprint 11 y Novedades -->
+  <!-- Logros Sprint 12 y Novedades -->
   <div class="rpt-section">
   <div class="sec-label" style="margin-top:16px;">Resultados y Novedades del Proyecto</div>
   <div class="content-grid">
 
     <div class="c-card">
-      <div class="c-card-head">Cierre Sprint 11 — Entregables Completados</div>
+      <div class="c-card-head">Cierre Sprint 12 — Entregables Completados</div>
       <div class="c-card-body">
-        <div class="sprint-tag green">Sprint 11 (07/09 – 13/09) · 100% Resuelto ✓</div>
+        <div class="sprint-tag green">Sprint 12 (14/09 – 20/09) · 100% Resuelto ✓</div>
         <ul>
-          <li><span class="dot-green">✓</span><span><b>US-53 (Front / Fullstack):</b> Rediseño UI/UX base y sistema accesible (WCAG 2.1 AA). Persistencia de sesión de mesa (<span class="chip">mesa_click_session_${token}</span>) en comensal para evitar pérdidas de comanda ante recarga (<span class="chip">F5</span>), reconexión automática a SSE y migración SQL <span class="chip">015_alter_mesas_account.sql</span>.</span></li>
-          <li><span class="dot-green">✓</span><span><b>US-54 (Front):</b> Componentes de Empty States con microinteracciones y CTAs contextuales, skeletons animados con efecto shimmer para cartas y mesas, y feedback visual ante errores de red.</span></li>
-          <li><span class="dot-green">✓</span><span><b>US-55 (Int):</b> Tour interactivo de onboarding guiado para administradores mediante widget flotante compacto abajo a la derecha (<span class="chip">TourWidget.tsx</span>), sin desenfoque invasivo, pasos esenciales guiados y acceso tutorial permanente desde el menú de perfil.</span></li>
-          <li><span class="dot-green">✓</span><span><b>Integración Continua:</b> Todo el sprint integrado y validado en rama <span class="chip">main</span> para despliegue productivo en Render.</span></li>
+          <li><span class="dot-green">✓</span><span><b>US-56 (Front):</b> Navegación mobile táctil con categorías sticky y scroll-spy optimizado mediante <span class="chip">IntersectionObserver</span> calibrado (offset de 140px, detección precisa de extremos y liberación inmediata ante toque manual). Modal <span class="chip">CartBottomSheet</span> deslizable con soporte de arrastre swipe-down (>100px) y tap targets táctiles confortables (≥ 48px).</span></li>
+          <li><span class="dot-green">✓</span><span><b>US-57 (Front / Fullstack):</b> Modal de personalización de platos con variantes mutuamente excluyentes (radio: cocción, tamaño) y múltiples (checkbox: aderezos, extras), cálculo de subtotal en vivo y notas libres para cocina ("sin cebolla", "hielo aparte"), integrado al flujo de pedidos.</span></li>
+          <li><span class="dot-green">✓</span><span><b>US-81 (Integración Fullstack):</b> Pedidos colaborativos multi-usuario en mesa con identificación de comensal en cookie local vinculada a <span class="chip">cuentaVersion</span>, trazabilidad de quién ordenó cada ítem en la comanda comensal y en el dashboard de mozo/recepcionista, eventos SSE en vivo y división de cuenta (total consolidada vs. por persona).</span></li>
+          <li><span class="dot-green">✓</span><span><b>Calidad de Código React 19:</b> Eliminadas llamadas síncronas a setState en efectos en <span class="chip">CartBottomSheet</span>, <span class="chip">ModalPersonalizacion</span> y <span class="chip">OnboardingTour</span>, logrando <span class="chip">npm run lint</span> con 0 errores.</span></li>
         </ul>
       </div>
     </div>
 
     <div class="c-card">
-      <div class="c-card-head">Innovaciones de Negocio & Novedades Sprint 12</div>
+      <div class="c-card-head">Kickoff Sprint 13 & Próximos Pasos</div>
       <div class="c-card-body">
-        <div class="sprint-tag blue">Aportes del Equipo & Organización</div>
+        <div class="sprint-tag blue">Sprint 13 (21/09 – 27/09) · Carga Masiva CSV & Precios</div>
         <ul>
-          <li><span class="dot-blue">⭐</span><span><b>Nueva US-81 (Pedidos Colaborativos en Mesa):</b> Múltiples comensales pueden escanear el mismo QR simultáneamente, identificarse con su nombre (almacenado en cookie de sesión de mesa) y ver los pedidos de la mesa en tiempo real. Permite al comensal y mozo ver quién pidió cada ítem y ofrece división de cuenta (total consolidada vs. separada por comensal).</span></li>
-          <li><span class="dot-blue">📱</span><span><b>Mobile-First Comensal en Foco:</b> El Sprint 12 se focaliza en la experiencia táctil comensal de smartphones: categorías sticky, carrito bottom-sheet y personalización de ítems con variantes y notas a cocina.</span></li>
-          <li><span class="dot-blue">🚀</span><span><b>Ritmo de Entrega Sostenido:</b> 2 semanas de sprints completadas con 100% de éxito (6 US de 32 resueltas, 19% de la Fase 4 alcanzado).</span></li>
-          <li><span class="dot-blue">📋</span><span><b>Metodología Ágil:</b> Tablero Kanban en <span class="chip">docs/features/README.md</span> y presentaciones de seguimiento actualizadas en sincronía.</span></li>
+          <li><span class="dot-blue">📥</span><span><b>US-58 (Back):</b> Procesamiento transaccional atómico de carga masiva de categorías y artículos a partir de archivos CSV/Excel, con validación estricta por fila y reporte detallado de errores.</span></li>
+          <li><span class="dot-blue">📑</span><span><b>US-59 (Int):</b> Interfaz administrativa para carga masiva de catálogo con descarga de plantilla oficial CSV/Excel con ejemplos, drag & drop de archivos y previsualización de filas procesadas con alertas de validación antes de confirmar la importación.</span></li>
+          <li><span class="dot-blue">📈</span><span><b>US-60 (Int):</b> Ajuste porcentual masivo de precios (+X% / -X%) por categoría individual o a toda la carta con previsualización en vivo y política de redondeo monetario configurable.</span></li>
+          <li><span class="dot-blue">🚀</span><span><b>Ritmo Sostenido:</b> 3er sprint consecutivo cerrado al 100% en tiempo y forma (9 US resueltas de 32, 28.1% de la Fase 4 alcanzado).</span></li>
         </ul>
       </div>
     </div>
@@ -448,12 +436,12 @@
           <th class="g-lbl g-lbl-col">Épica / Sprint</th>
           <th class="gth"><span class="sn">S10</span><span class="sd">31/08–06/09</span><span style="display:block; font-size:8px; color:var(--green); font-weight:700; margin-top:2px;">✓ CERRADO</span></th>
           <th class="gth"><span class="sn">S11</span><span class="sd">07/09–13/09</span><span style="display:block; font-size:8px; color:var(--green); font-weight:700; margin-top:2px;">✓ CERRADO</span></th>
+          <th class="gth"><span class="sn">S12</span><span class="sd">14/09–20/09</span><span style="display:block; font-size:8px; color:var(--green); font-weight:700; margin-top:2px;">✓ CERRADO</span></th>
           <th class="gth today">
-            <span class="sn">S12</span>
-            <span class="sd">14/09–20/09</span>
+            <span class="sn">S13</span>
+            <span class="sd">21/09–27/09</span>
             <span class="today-arrow">▲ EN CURSO</span>
           </th>
-          <th class="gth"><span class="sn">S13</span><span class="sd">21/09–27/09</span></th>
           <th class="gth"><span class="sn">S14</span><span class="sd">28/09–04/10</span></th>
           <th class="gth"><span class="sn">S15</span><span class="sd">05/10–11/10</span></th>
           <th class="gth"><span class="sn">S16</span><span class="sd">12/10–18/10</span></th>
@@ -480,13 +468,13 @@
         <tr>
           <td class="g-lbl">Mobile-First Comensal & Pedidos Colaborativos</td>
           <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
-          <td class="g-cell bar-wip">En Curso</td>
+          <td class="g-cell bar-done">Completado ✓</td>
           <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
         </tr>
         <tr>
           <td class="g-lbl">Carga Masiva CSV/Excel & Ajuste de Precios</td>
           <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
-          <td class="g-cell bar-plan">Plan.</td>
+          <td class="g-cell bar-wip">En Curso</td>
           <td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td><td class="g-cell bar-empty"></td>
         </tr>
         <tr>
@@ -528,27 +516,27 @@
     </table>
 
     <div class="legend">
-      <div class="li"><div class="sq sq-done"></div> Sprints Completados (S10 y S11 ✓)</div>
-      <div class="li"><div class="sq sq-wip"></div> Sprint en Curso (S12 Activo)</div>
-      <div class="li"><div class="sq sq-plan"></div> Sprints Planificados (S13–S19)</div>
-      <div class="hoy-badge">● SEMANA 3 · SPRINT 12 EN CURSO</div>
+      <div class="li"><div class="sq sq-done"></div> Sprints Completados (S10, S11 y S12 ✓)</div>
+      <div class="li"><div class="sq sq-wip"></div> Sprint en Curso (S13 Activo)</div>
+      <div class="li"><div class="sq sq-plan"></div> Sprints Planificados (S14–S19)</div>
+      <div class="hoy-badge">● SEMANA 4 · SPRINT 13 EN CURSO</div>
     </div>
   </div>
   </div><!-- /rpt-section -->
 
-  <!-- Próximos pasos / Foco Sprint 12 -->
+  <!-- Próximos pasos / Foco Sprint 13 -->
   <div class="rpt-section">
-  <div class="sec-label" style="margin-top:16px;">Foco de la Semana — Sprint 12 (14/09 – 20/09)</div>
+  <div class="sec-label" style="margin-top:16px;">Foco de la Semana — Sprint 13 (21/09 – 27/09)</div>
   <div class="c-card">
     <div class="c-card-body">
-      <div class="sprint-tag">Mobile-First Comensal & Pedidos Colaborativos</div>
+      <div class="sprint-tag blue">Carga Masiva CSV/Excel & Ajuste de Precios</div>
       <ul>
-        <li><span class="dot-blue">▸</span><span><b>US-56 (Front):</b> Navegación Mobile Táctil con Categorías Sticky y Carrito Bottom-Sheet deslizable para pedidos confortables con una sola mano (tap targets &ge; 48px).</span></li>
-        <li><span class="dot-blue">▸</span><span><b>US-57 (Front):</b> Personalización de Platos con Variantes, Opciones y Notas Libres mediante modal táctil, cálculo de agregados en vivo e indicaciones especiales a cocina.</span></li>
-        <li><span class="dot-blue">▸</span><span><b>US-81 (Int):</b> Pedidos Colaborativos en Mesa con Identificación de Comensal en Cookie, Trazabilidad de cada ítem en la comanda del Mozo/Recepcionista y División de Cuenta (total vs. por persona).</span></li>
+        <li><span class="dot-blue">▸</span><span><b>US-58 (Back):</b> Procesamiento atómico de carga masiva de catálogo vía CSV/Excel en una sola transacción segura con reporte estructurado de errores por fila.</span></li>
+        <li><span class="dot-blue">▸</span><span><b>US-59 (Int):</b> Interfaz drag-and-drop con plantilla oficial descargable (.csv / .xlsx), previsualización de datos importados y feedback claro de filas con conflicto.</span></li>
+        <li><span class="dot-blue">▸</span><span><b>US-60 (Int):</b> Modal de ajuste porcentual masivo de precios (+X% / -X%) aplicable por categoría o carta completa, con simulación de precios finales y redondeo.</span></li>
       </ul>
       <div style="margin-top: 14px; font-size: 11.5px; color: var(--text3); line-height: 1.5;">
-        <b>Asignación para la semana:</b> Los desarrolladores toman las US en <span class="chip">docs/features/sprint-12/</span>, crean sus ramas <span class="chip">feat/US-XX-...</span> a partir de <span class="chip">qa</span> y se valida con build limpio antes de integrar.
+        <b>Asignación para la semana:</b> Los desarrolladores toman las US en <span class="chip">docs/features/sprint-13/</span>, crean sus ramas <span class="chip">feat/US-XX-...</span> a partir de <span class="chip">qa</span> y se valida con build limpio antes de integrar.
       </div>
     </div>
   </div>
@@ -563,14 +551,9 @@
         📋 Tablero de User Stories (docs/features)
       </a>
     </div>
-    <div style="display: flex; gap: 14px; align-items: center;">
-      <a href="status-report-06.html" class="no-print" style="font-size: 12.5px; color: var(--text3); text-decoration: none; font-weight: 600; font-family: 'DM Mono', monospace;">
-        ← Ver Report #6
-      </a>
-      <a href="status-report-08.html" class="no-print" style="font-size: 12.5px; color: var(--green); text-decoration: none; font-weight: 600; font-family: 'DM Mono', monospace;">
-        Ver Status Report #8 (Siguiente) →
-      </a>
-    </div>
+    <a href="status-report-07.html" class="no-print" style="font-size: 12.5px; color: var(--text3); text-decoration: none; font-weight: 600; font-family: 'DM Mono', monospace;">
+      Ver Status Report #7 (Anterior) →
+    </a>
   </div>
 
   <div style="margin-top: 10px; text-align: right;">

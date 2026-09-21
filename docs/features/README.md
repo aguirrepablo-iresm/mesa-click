@@ -62,7 +62,7 @@
 |---|---|---|---|---|---|
 | **US-56** | `Frontend` | Navegación Mobile Táctil con Categorías Sticky y Carrito Bottom-Sheet | ✅ Resuelta | Antigravity | [Ver detalle](sprint-12/US-56-navegacion-mobile-categorias-carrito.md) |
 | **US-57** | `Frontend` | Personalización de Platos con Variantes, Opciones y Notas Libres | ✅ Resuelta | Antigravity | [Ver detalle](sprint-12/US-57-personalizacion-platos-variantes.md) |
-| **US-81** | `Integración` | Pedidos Colaborativos en Mesa con Identificación de Comensal y División de Cuenta | ⚡ En Curso | Mateo Silvestrin | [Ver detalle](sprint-12/US-81-pedidos-colaborativos-mesa.md) |
+| **US-81** | `Integración` | Pedidos Colaborativos en Mesa con Identificación de Comensal y División de Cuenta | ✅ Resuelta | Mateo Silvestrin | [Ver detalle](sprint-12/US-81-pedidos-colaborativos-mesa.md) |
 
 ### 📌 Sprint 13: Carga Masiva CSV/Excel & Ajuste de Precios (21/09 – 27/09/2026)
 
