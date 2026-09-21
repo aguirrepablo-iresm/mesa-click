@@ -53,6 +53,9 @@ function toUserMessage(message: string, fallback: string) {
   if (normalized.includes('slug') || normalized.includes('nombre de url')) {
     return 'Ese nombre en URL ya está en uso. Probá con otro.';
   }
+  if (normalized.includes('cuenta registrada con ese correo')) {
+    return 'No encontramos una cuenta registrada con ese correo.';
+  }
   if (
     normalized.includes('correo de acceso ya') ||
     normalized.includes('email ya') ||
@@ -69,6 +72,9 @@ function toUserMessage(message: string, fallback: string) {
   }
   if (normalized.includes('validar el correo')) {
     return 'No pudimos validar el correo de acceso. Intentá nuevamente.';
+  }
+  if (normalized.includes('tiempo de espera agotado')) {
+    return 'El servidor tardó demasiado en responder. Intentá nuevamente.';
   }
   if (normalized === 'error interno' || normalized.startsWith('error http 500')) {
     return 'Ocurrió un problema en el servidor. Intentá nuevamente en unos minutos.';
@@ -114,7 +120,11 @@ export function estaAutenticado(): boolean {
   return !!obtenerToken();
 }
 
-async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+async function apiFetch<T>(
+  endpoint: string,
+  options: RequestInit = {},
+  timeoutMs = 10000,
+): Promise<T> {
   const baseUrl = getApiBaseUrl();
   const url = `${baseUrl}${endpoint}`;
   const headers: Record<string, string> = {
@@ -128,7 +138,7 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
   }
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(url, {
@@ -154,7 +164,7 @@ async function apiFetch<T>(endpoint: string, options: RequestInit = {}): Promise
     return data as T;
   } catch (err: unknown) {
     if (err instanceof Error && err.name === 'AbortError') {
-      throw new ApiError('Tiempo de espera agotado al conectar con el servidor (10s).', 408);
+      throw new ApiError('Tiempo de espera agotado al conectar con el servidor.', 408);
     }
     throw err;
   } finally {
@@ -406,12 +416,14 @@ export const api = {
         email_admin: data.email_admin.trim().toLowerCase(),
         horarios: parseJsonField(data.horarios),
       }),
-    });
+    }, 45000);
   },
 
   verificarEmailAdminDisponible: async (email: string) => {
     return apiFetch<{ disponible: boolean }>(
       `/tenants/email-disponible?email=${encodeURIComponent(email.trim().toLowerCase())}`,
+      {},
+      30000,
     );
   },
 

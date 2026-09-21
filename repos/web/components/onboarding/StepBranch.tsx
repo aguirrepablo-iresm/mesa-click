@@ -130,7 +130,7 @@ function TimeField({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 text-center min-w-0">
       <label className="block text-10 font-mono text-sage-green uppercase tracking-wider px-1">
         {label}
       </label>
@@ -141,7 +141,7 @@ function TimeField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         disabled={disabled}
-        className="h-40 w-120 max-w-full px-8 bg-canvas-white border border-ash-graphite rounded-md focus:border-plain-green outline-none transition-all text-12 font-mono disabled:opacity-50"
+        className="h-40 w-full px-8 bg-canvas-white border border-ash-graphite rounded-md focus:border-plain-green outline-none transition-all text-12 font-mono disabled:opacity-50"
       />
     </div>
   );
@@ -364,11 +364,11 @@ export default function StepBranch({
             </button>
           </div>
 
-          <div className="space-y-8">
+          <div className="space-y-8 text-center">
             <span className="block text-10 font-mono text-sage-green uppercase tracking-wider px-1">
               Días abiertos
             </span>
-            <div className="flex flex-wrap gap-6">
+            <div className="grid grid-cols-7 gap-6">
               {DIAS.map((dia) => {
                 const abierto = horarios[dia.key].abierto;
                 return (
@@ -377,7 +377,7 @@ export default function StepBranch({
                     type="button"
                     onClick={() => toggleDia(dia.key)}
                     aria-pressed={abierto}
-                    className={`h-32 min-w-44 px-10 rounded-md border text-11 font-mono uppercase tracking-wider transition-all ${
+                    className={`h-32 min-w-0 w-full px-2 rounded-md border text-11 font-mono uppercase tracking-wider transition-all ${
                       abierto
                         ? "bg-plain-green text-canvas-white border-plain-green"
                         : "bg-canvas-white text-sage-green border-ash-graphite/30"
@@ -391,7 +391,7 @@ export default function StepBranch({
           </div>
 
           <div className="space-y-10">
-            <div className="flex items-center justify-between gap-12">
+            <div className="space-y-4 text-center">
               <span className="text-10 font-mono text-sage-green uppercase tracking-wider px-1">
                 Horario para días abiertos
               </span>
@@ -400,10 +400,14 @@ export default function StepBranch({
               )}
             </div>
 
-            <div className="flex flex-col md:flex-row md:items-start gap-12 md:justify-between">
-              <div className="space-y-8">
+            <div className="space-y-10">
+              <div className="space-y-8 w-full max-w-360 mx-auto">
                 {tramosBase.map((tramo, index) => (
-                  <div key={index} className="flex flex-wrap items-end gap-8">
+                  <div
+                    key={index}
+                    className="grid grid-cols-[40px_minmax(0,1fr)_minmax(0,1fr)_40px] items-end gap-8"
+                  >
+                    <span aria-hidden="true" className="h-40 w-40" />
                     <TimeField
                       label="Apertura"
                       value={tramo.apertura}
@@ -426,6 +430,7 @@ export default function StepBranch({
                         <span className="material-symbols-outlined text-18">remove</span>
                       </button>
                     )}
+                    {index === 0 && <span aria-hidden="true" className="h-40 w-40" />}
                   </div>
                 ))}
               </div>
@@ -434,7 +439,7 @@ export default function StepBranch({
                 <button
                   type="button"
                   onClick={agregarTramoBase}
-                  className="h-32 px-10 rounded-md border border-ash-graphite/30 text-11 font-mono uppercase tracking-wider flex items-center gap-6 hover:border-plain-green md:mt-16 md:shrink-0"
+                  className="h-32 px-10 mx-auto rounded-md border border-ash-graphite/30 text-11 font-mono uppercase tracking-wider flex items-center justify-center gap-6 hover:border-plain-green"
                 >
                   <span className="material-symbols-outlined text-16">add</span>
                   Agregar segundo turno
@@ -443,7 +448,7 @@ export default function StepBranch({
             </div>
           </div>
 
-          <div className="rounded-md bg-ghost-fog px-12 py-10 text-11 text-sage-green font-mono break-words">
+          <div className="rounded-md bg-ghost-fog px-12 py-10 text-11 text-sage-green font-mono break-words text-center">
             {resumenHorarios(horarios)}
           </div>
 
@@ -489,10 +494,14 @@ export default function StepBranch({
 
                     {editando && diaHorario.abierto && (
                       <div className="pt-8 space-y-8">
-                        <div className="flex flex-col md:flex-row md:items-start gap-12 md:justify-between">
-                          <div className="space-y-8">
+                        <div className="space-y-10">
+                          <div className="space-y-8 w-full max-w-360 mx-auto">
                             {tramosDia.map((tramo, index) => (
-                              <div key={index} className="flex flex-wrap items-end gap-8">
+                              <div
+                                key={index}
+                                className="grid grid-cols-[40px_minmax(0,1fr)_minmax(0,1fr)_40px] items-end gap-8"
+                              >
+                                <span aria-hidden="true" className="h-40 w-40" />
                                 <TimeField
                                   label="Apertura"
                                   value={tramo.apertura}
@@ -517,6 +526,9 @@ export default function StepBranch({
                                     <span className="material-symbols-outlined text-18">remove</span>
                                   </button>
                                 )}
+                                {index === 0 && (
+                                  <span aria-hidden="true" className="h-40 w-40" />
+                                )}
                               </div>
                             ))}
                           </div>
@@ -524,7 +536,7 @@ export default function StepBranch({
                             <button
                               type="button"
                               onClick={() => agregarTramoDia(dia.key)}
-                              className="h-32 px-10 rounded-md border border-ash-graphite/30 text-11 font-mono uppercase tracking-wider flex items-center gap-6 hover:border-plain-green md:mt-16 md:shrink-0"
+                              className="h-32 px-10 mx-auto rounded-md border border-ash-graphite/30 text-11 font-mono uppercase tracking-wider flex items-center justify-center gap-6 hover:border-plain-green"
                             >
                               <span className="material-symbols-outlined text-16">add</span>
                               Agregar segundo turno

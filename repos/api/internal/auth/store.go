@@ -2,10 +2,12 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/db"
+	"github.com/jackc/pgx/v5"
 )
 
 type Store interface {
@@ -27,7 +29,10 @@ func (s *pgStore) ObtenerUsuarioPorEmail(ctx context.Context, email string) (*Us
 		`SELECT id, tenant_id, email, rol FROM usuarios WHERE lower(email) = lower($1)`, email,
 	).Scan(&u.ID, &u.TenantID, &u.Email, &u.Rol)
 	if err != nil {
-		return nil, fmt.Errorf("usuario no encontrado: %w", err)
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUsuarioNoEncontrado
+		}
+		return nil, fmt.Errorf("error consultando usuario por email: %w", err)
 	}
 	return u, nil
 }

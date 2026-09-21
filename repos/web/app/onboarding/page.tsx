@@ -56,7 +56,11 @@ function pasoParaCampo(campo: keyof OnboardingFormData) {
 }
 
 function puedeOmitirPrevalidacionEmail(err: unknown) {
-  if (err instanceof ApiError && err.status === 404) return true;
+  // La creación final vuelve a validar el correo de forma autoritativa. Si el
+  // chequeo previo no está disponible o el servidor está despertando, no
+  // bloqueamos el formulario: un duplicado igualmente vuelve al paso 1 con
+  // el mensaje específico que devuelve POST /tenants.
+  if (err instanceof ApiError && (err.status === 404 || err.status === 408)) return true;
   if (err instanceof TypeError) return true;
 
   const message = err instanceof Error ? err.message.trim().toLowerCase() : "";

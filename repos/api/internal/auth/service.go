@@ -23,16 +23,17 @@ func NuevoService(s Store, e EmailSender) *Service { return &Service{store: s, e
 
 // SolicitarLink genera el magic link y lo envía por email.
 // Devuelve el link generado para que el handler pueda exponerlo en entornos de
-// desarrollo sin proveedor de email. Si el email no está registrado devuelve
-// ("", nil): no revelamos si la cuenta existe.
+// desarrollo sin proveedor de email.
 func (svc *Service) SolicitarLink(ctx context.Context, email string) (string, error) {
 	email = NormalizarEmail(email)
 
 	usuario, err := svc.store.ObtenerUsuarioPorEmail(ctx, email)
 	if err != nil {
-		// No revelamos si el email existe o no — siempre respondemos OK
-		slog.Warn("magic link solicitado para email no registrado", "email", email)
-		return "", nil
+		if errors.Is(err, ErrUsuarioNoEncontrado) {
+			slog.Warn("magic link solicitado para email no registrado", "email", email)
+			return "", ErrUsuarioNoEncontrado
+		}
+		return "", fmt.Errorf("error buscando usuario: %w", err)
 	}
 
 	token, err := generarTokenAleatorio()

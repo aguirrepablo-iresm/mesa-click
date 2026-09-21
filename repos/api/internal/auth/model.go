@@ -2,8 +2,11 @@ package auth
 
 import (
 	"context"
+	"errors"
 	"time"
 )
+
+var ErrUsuarioNoEncontrado = errors.New("usuario no encontrado")
 
 type MagicToken struct {
 	ID        string
