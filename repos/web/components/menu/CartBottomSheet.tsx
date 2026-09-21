@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type TouchEvent, type PointerEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type TouchEvent, type PointerEvent } from "react";
 import type { CartItem } from "@/app/mesa/[token]/page";
 import type { MesaBranding } from "./BrandHeader";
 
@@ -33,19 +33,21 @@ export default function CartBottomSheet({
   const currentYRef = useRef(0);
   const sheetRef = useRef<HTMLDivElement>(null);
 
+  const handleClose = useCallback(() => {
+    setDragY(0);
+    onClose();
+  }, [onClose]);
+
   // Bloquear scroll de fondo y soportar Escape para cerrar
   useEffect(() => {
-    if (!isOpen) {
-      setDragY(0);
-      return;
-    }
+    if (!isOpen) return;
 
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        handleClose();
       }
     };
 
@@ -54,7 +56,7 @@ export default function CartBottomSheet({
       document.body.style.overflow = prevOverflow;
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 
@@ -82,9 +84,10 @@ export default function CartBottomSheet({
     const delta = currentYRef.current - startYRef.current;
     // Si se arrastró más de 100px hacia abajo, se cierra la hoja
     if (delta > 100) {
-      onClose();
+      handleClose();
+    } else {
+      setDragY(0);
     }
-    setDragY(0);
   };
 
   // Manejo de puntero (mouse / stylus en desktop y emuladores)
@@ -109,9 +112,10 @@ export default function CartBottomSheet({
     setIsDragging(false);
     const delta = currentYRef.current - startYRef.current;
     if (delta > 100) {
-      onClose();
+      handleClose();
+    } else {
+      setDragY(0);
     }
-    setDragY(0);
     try {
       (e.target as HTMLElement).releasePointerCapture(e.pointerId);
     } catch {
@@ -125,9 +129,10 @@ export default function CartBottomSheet({
       role="dialog"
       aria-modal="true"
       aria-labelledby="cart-bottom-sheet-title"
+      aria-label={`Carrito de compras - ${branding.nombre}`}
       onClick={e => {
         if (e.target === e.currentTarget) {
-          onClose();
+          handleClose();
         }
       }}
     >
@@ -173,13 +178,13 @@ export default function CartBottomSheet({
           </div>
           <div className="flex shrink-0 items-center gap-4">
             <button
-              onClick={onClose}
+              onClick={handleClose}
               className="mesa-primary text-13 font-medium px-8 py-8 whitespace-nowrap active:scale-95 transition-transform"
             >
               + Agregar más
             </button>
             <button
-              onClick={onClose}
+              onClick={handleClose}
               aria-label="Cerrar carrito"
               className="mesa-muted flex h-44 w-44 items-center justify-center rounded-full text-20 transition-colors hover:text-[var(--mesa-primary)] active:scale-90"
             >

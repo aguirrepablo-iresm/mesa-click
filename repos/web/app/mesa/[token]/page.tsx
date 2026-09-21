@@ -390,7 +390,6 @@ export default function MesaPage() {
     precio: number;
     variantes?: VariantePublica[];
   } | null>(null);
-  const isManualScrollRef = useRef(false);
   const [loading, setLoading] = useState(() => Boolean(token));
   const [enviandoPedido, setEnviandoPedido] = useState(false);
   const [comensal, setComensal] = useState<ComensalIdentity | null>(null);
@@ -401,18 +400,179 @@ export default function MesaPage() {
   const skipNextPersistRef = useRef(false);
   const hydratedTokenRef = useRef<string | null>(null);
 
-  const handleSeleccionarCategoria = (catId: string) => {
-    setCategoriaActiva(catId);
-    
-    // Solo scrollear el navbar para mantener visible el botón seleccionado
+  const isManualScrollRef = useRef(false);
+  const manualScrollTimeoutRef = useRef<number | null>(null);
+  const intersectingCategoriesRef = useRef<Map<string, boolean>>(new Map());
+
+  const scrollNavButtonIntoView = useCallback((catId: string) => {
     const navBtn = document.getElementById(`nav-cat-${catId}`);
-    if (navBtn) {
-      navBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+    if (!navBtn) return;
+    const parent = navBtn.parentElement;
+    if (parent) {
+      const parentRect = parent.getBoundingClientRect();
+      const btnRect = navBtn.getBoundingClientRect();
+      const isOutside = btnRect.left < parentRect.left + 24 || btnRect.right > parentRect.right - 24;
+      if (isOutside) {
+        navBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
     }
-    
-    // Opcional: hacer scroll suave hacia arriba por si estaban muy abajo en la categoría anterior
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  }, []);
+
+  const handleSeleccionarCategoria = useCallback((catId: string) => {
+    setCategoriaActiva(catId);
+    isManualScrollRef.current = true;
+    if (manualScrollTimeoutRef.current) {
+      window.clearTimeout(manualScrollTimeoutRef.current);
+    }
+
+    const target = document.getElementById(`categoria-${catId}`);
+    if (target) {
+      const STICKY_HEADER_OFFSET = 136; // BrandHeader (68px) + CategoriaNav (68px)
+      const elementPosition = target.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.pageYOffset - STICKY_HEADER_OFFSET;
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
+        behavior: 'smooth',
+      });
+    }
+
+    scrollNavButtonIntoView(catId);
+
+    manualScrollTimeoutRef.current = window.setTimeout(() => {
+      isManualScrollRef.current = false;
+    }, 900);
+  }, [scrollNavButtonIntoView]);
+
+  // Si el usuario toca la pantalla o hace scroll manual mientras se desplaza suavemente,
+  // cancelamos el bloqueo para que la barra sticky responda a su gesto de inmediato.
+  useEffect(() => {
+    const handleUserInterrupt = () => {
+      if (isManualScrollRef.current) {
+        isManualScrollRef.current = false;
+        if (manualScrollTimeoutRef.current) {
+          window.clearTimeout(manualScrollTimeoutRef.current);
+          manualScrollTimeoutRef.current = null;
+        }
+      }
+    };
+
+    window.addEventListener('touchstart', handleUserInterrupt, { passive: true });
+    window.addEventListener('wheel', handleUserInterrupt, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', handleUserInterrupt);
+      window.removeEventListener('wheel', handleUserInterrupt);
+      if (manualScrollTimeoutRef.current) {
+        window.clearTimeout(manualScrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  // Scroll-spy: resalta automáticamente la categoría visible según el scroll vertical
+  useEffect(() => {
+    if (menu.length === 0) return;
+
+    const STICKY_HEADER_OFFSET = 136;
+
+    const updateActiveCategory = () => {
+      if (isManualScrollRef.current || menu.length === 0) return;
+
+      // 1. Al inicio de la página, fijar primera categoría
+      if (window.scrollY < 60) {
+        const firstCatId = menu[0].id;
+        setCategoriaActiva(current => {
+          if (current !== firstCatId) {
+            scrollNavButtonIntoView(firstCatId);
+            return firstCatId;
+          }
+          return current;
+        });
+        return;
+      }
+
+      // 2. Al llegar al final de la página, fijar última categoría
+      const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 40;
+      if (isAtBottom) {
+        const lastCatId = menu[menu.length - 1].id;
+        setCategoriaActiva(current => {
+          if (current !== lastCatId) {
+            scrollNavButtonIntoView(lastCatId);
+            return lastCatId;
+          }
+          return current;
+        });
+        return;
+      }
+
+      // 3. Buscar la categoría que intersecta y cuya sección cubre la línea de cabecera
+      let candidateId = '';
+      for (const cat of menu) {
+        const el = document.getElementById(`categoria-${cat.id}`);
+        if (!el) continue;
+        const rect = el.getBoundingClientRect();
+        if (rect.top <= STICKY_HEADER_OFFSET + 40 && rect.bottom > STICKY_HEADER_OFFSET) {
+          candidateId = cat.id;
+          break;
+        }
+      }
+
+      // Fallback a categorías con intersección activa
+      if (!candidateId) {
+        for (const cat of menu) {
+          if (intersectingCategoriesRef.current.get(cat.id)) {
+            candidateId = cat.id;
+            break;
+          }
+        }
+      }
+
+      if (candidateId) {
+        setCategoriaActiva(current => {
+          if (current !== candidateId) {
+            scrollNavButtonIntoView(candidateId);
+            return candidateId;
+          }
+          return current;
+        });
+      }
+    };
+
+    const observer = new IntersectionObserver(
+      entries => {
+        for (const entry of entries) {
+          const catId = entry.target.id.replace('categoria-', '');
+          intersectingCategoriesRef.current.set(catId, entry.isIntersecting);
+        }
+        updateActiveCategory();
+      },
+      {
+        rootMargin: '-136px 0px -40% 0px',
+        threshold: [0, 0.2, 0.5],
+      }
+    );
+
+    menu.forEach(cat => {
+      const el = document.getElementById(`categoria-${cat.id}`);
+      if (el) observer.observe(el);
+    });
+
+    let ticking = false;
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          updateActiveCategory();
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [menu, scrollNavButtonIntoView]);
 
   const sincronizarPedidosMesa = useCallback(async () => {
     if (!token) return;
@@ -917,14 +1077,14 @@ export default function MesaPage() {
           activa={categoriaActiva || menu[0]?.id || ''}
           onSelect={handleSeleccionarCategoria}
         />
-        <div className="space-y-24 px-16 pt-16">
-          {menu.filter(cat => cat.id === categoriaActiva).map(cat => {
+        <div className="space-y-28 px-16 pt-16 pb-40">
+          {menu.map(cat => {
             const itemsDisponibles = cat.items.filter(i => i.disponible);
             return (
               <section
                 key={cat.id}
                 id={`categoria-${cat.id}`}
-                className="space-y-12 animate-in fade-in duration-200"
+                className="scroll-mt-[140px] space-y-12"
               >
                 <div className="border-b mesa-border pb-6">
                   <h2 className="mesa-text text-16 font-semibold tracking-tight">{cat.nombre}</h2>
@@ -1008,6 +1168,7 @@ export default function MesaPage() {
 
       {itemParaPersonalizar && (
         <ModalPersonalizacion
+          key={itemParaPersonalizar.id}
           articulo={itemParaPersonalizar}
           isOpen={Boolean(itemParaPersonalizar)}
           onClose={() => setItemParaPersonalizar(null)}
