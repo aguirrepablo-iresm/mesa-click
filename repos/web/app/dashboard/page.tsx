@@ -8,7 +8,7 @@ import RecepcionistaSection from "@/components/dashboard/RecepcionistaSection";
 import ConfiguracionSection from "@/components/dashboard/ConfiguracionSection";
 import Logo from "@/components/brand/Logo";
 import { api, cerrarSesion, estaAutenticado, Tenant } from "@/lib/api";
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider, ConfirmProvider } from "@/components/ui";
 import OnboardingTour from "@/components/dashboard/OnboardingTour";
 
 type Section = 'carta' | 'mesas' | 'recepcionista' | 'configuracion';
@@ -73,6 +73,7 @@ export default function DashboardPage() {
   };
 
   return (
+    <ConfirmProvider>
     <ToastProvider>
     <div className="h-screen flex flex-col bg-canvas-white font-inter overflow-hidden">
       <header className="h-44 border-b border-system-black px-16 flex items-center justify-between shrink-0 bg-canvas-white z-30">
@@ -260,6 +261,7 @@ export default function DashboardPage() {
       />
     </div>
     </ToastProvider>
+    </ConfirmProvider>
   );
 }
 

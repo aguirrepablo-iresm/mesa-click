@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { api, PedidoAPI, Sucursal, MesaAPI } from "@/lib/api";
 import { agruparPorComensal } from "@/lib/desgloseCuenta";
-import { EmptyState, Skeleton, useToast } from "@/components/ui";
+import { EmptyState, Skeleton, useToast, useConfirm } from "@/components/ui";
 
 export interface PedidoVista {
   id: string;
@@ -345,6 +345,7 @@ function MesaDetalleModal({
 
 export default function RecepcionistaSection() {
   const toast = useToast();
+  const confirmar = useConfirm();
   const [pedidos, setPedidos] = useState<PedidoVista[]>([]);
   const [sucursal, setSucursal] = useState<Sucursal | null>(null);
   const [mesas, setMesas] = useState<Record<string, MesaAPI>>({});
@@ -543,7 +544,13 @@ export default function RecepcionistaSection() {
   const marcarMesaTodoLista = async (grupo: MesaGrupo) => {
     const pendientes = grupo.pedidos.filter(pedido => pedido.estado !== 'listo');
     if (pendientes.length === 0) return;
-    if (!window.confirm(`¿Seguro que deseas marcar como listos los ${pendientes.length} pedidos pendientes de la Mesa ${grupo.mesa}?`)) return;
+    const ok = await confirmar({
+      titulo: 'Marcar todos como listos',
+      mensaje: `¿Marcás como listos los ${pendientes.length} pedidos pendientes de la Mesa ${grupo.mesa}?`,
+      labelAceptar: 'Sí, marcar listos',
+      variante: 'warning',
+    });
+    if (!ok) return;
 
     setMesaAccionEnCurso('todo-listo');
     try {
@@ -575,7 +582,13 @@ export default function RecepcionistaSection() {
       toast.error('No se pudo identificar la mesa para cerrarla.');
       return;
     }
-    if (!window.confirm(`¿Seguro que deseas cerrar la cuenta de la Mesa ${grupo.mesa}? Se finalizarán los pedidos actuales y la mesa quedará disponible para una nueva cuenta.`)) return;
+    const ok = await confirmar({
+      titulo: 'Cerrar cuenta',
+      mensaje: `¿Cerrás la cuenta de la Mesa ${grupo.mesa}? Se finalizarán los pedidos actuales y la mesa quedará disponible para una nueva cuenta.`,
+      labelAceptar: 'Sí, cerrar cuenta',
+      variante: 'danger',
+    });
+    if (!ok) return;
 
     setMesaAccionEnCurso('cerrar-cuenta');
     try {
