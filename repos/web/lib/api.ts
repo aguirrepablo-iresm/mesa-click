@@ -671,4 +671,40 @@ export const api = {
     const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : '';
     return `${getApiBaseUrl()}/sucursales/${encodeURIComponent(sucursalId)}/eventos${tokenQuery}`;
   },
+
+  // 9. Carga masiva de catálogo (US-58 / US-59)
+  importarCarta: async (archivo: File): Promise<ResultadoImportacion> => {
+    const formData = new FormData();
+    formData.append('archivo', archivo);
+
+    const baseUrl = getApiBaseUrl();
+    const token = obtenerToken();
+    const headers: Record<string, string> = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const res = await fetch(`${baseUrl}/carta/importar`, {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include',
+    });
+
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      const msg = (data as Record<string, string>).error || 'Error al importar la carta';
+      throw new ApiError(msg, res.status, data);
+    }
+    return data as ResultadoImportacion;
+  },
 };
+
+export interface ResultadoImportacion {
+  creados: number;
+  omitidos: number;
+  errores: ErrorFila[];
+}
+
+export interface ErrorFila {
+  fila: number;
+  motivo: string;
+}

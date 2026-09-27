@@ -27,6 +27,16 @@ func (m *mockStore) CrearCategoria(ctx context.Context, tenantID string, input c
 	return &c, nil
 }
 func (m *mockStore) EliminarCategoria(ctx context.Context, id, tenantID string) error { return nil }
+func (m *mockStore) BuscarOCrearCategoria(ctx context.Context, tenantID, nombre string) (string, error) {
+	for _, c := range m.categorias {
+		if c.TenantID == tenantID && c.Nombre == nombre {
+			return c.ID, nil
+		}
+	}
+	c := carta.Categoria{ID: "cat-auto", TenantID: tenantID, Nombre: nombre}
+	m.categorias = append(m.categorias, c)
+	return c.ID, nil
+}
 func (m *mockStore) ListarArticulos(ctx context.Context, tenantID string) ([]carta.Articulo, error) {
 	return m.articulos, nil
 }

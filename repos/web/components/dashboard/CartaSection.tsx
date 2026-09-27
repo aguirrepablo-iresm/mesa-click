@@ -1,7 +1,8 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { api, CategoriaAPI, ArticuloAPI, getErrorMessage } from "@/lib/api";
-import { EmptyState, Skeleton, useToast } from "@/components/ui";
+import { EmptyState, Skeleton, useToast, useConfirm } from "@/components/ui";
+import ImportarCartaModal from "@/components/dashboard/ImportarCartaModal";
 
 export interface CategoriaConItems extends CategoriaAPI {
   items: ArticuloAPI[];
@@ -12,6 +13,7 @@ type NuevoItemErrors = Partial<Record<"nombre" | "precio", string>>;
 
 export default function CartaSection() {
   const toast = useToast();
+  const confirmar = useConfirm();
   const [categorias, setCategorias] = useState<CategoriaConItems[]>([]);
   const [loading, setLoading] = useState(true);
   const [nuevaCatNombre, setNuevaCatNombre] = useState('');
@@ -33,6 +35,7 @@ export default function CartaSection() {
     seleccionUnica: false,
   });
   const [guardandoVariante, setGuardandoVariante] = useState(false);
+  const [modalImportarAbierto, setModalImportarAbierto] = useState(false);
 
   const cargarCarta = useCallback(async () => {
     try {
@@ -88,7 +91,13 @@ export default function CartaSection() {
   };
 
   const eliminarCategoria = async (catId: string) => {
-    if (!confirm('¿Eliminar esta categoría y todos sus ítems?')) return;
+    const ok = await confirmar({
+      titulo: 'Eliminar categoría',
+      mensaje: '¿Eliminás esta categoría y todos sus ítems? Esta acción no se puede deshacer.',
+      labelAceptar: 'Sí, eliminar',
+      variante: 'danger',
+    });
+    if (!ok) return;
     try {
       await api.eliminarCategoria(catId);
       setCategorias(prev => prev.filter(c => c.id !== catId));
@@ -144,7 +153,13 @@ export default function CartaSection() {
   };
 
   const eliminarItem = async (catId: string, itemId: string) => {
-    if (!confirm('¿Eliminar este ítem?')) return;
+    const ok = await confirmar({
+      titulo: 'Eliminar ítem',
+      mensaje: '¿Eliminás este ítem del menú? Esta acción no se puede deshacer.',
+      labelAceptar: 'Sí, eliminar',
+      variante: 'danger',
+    });
+    if (!ok) return;
     try {
       await api.eliminarArticulo(itemId);
       setCategorias(prev =>
@@ -236,7 +251,13 @@ export default function CartaSection() {
   };
 
   const eliminarVariante = async (catId: string, articuloId: string, varianteId: string) => {
-    if (!confirm('¿Eliminar esta opción?')) return;
+    const ok = await confirmar({
+      titulo: 'Eliminar opción',
+      mensaje: '¿Eliminás esta opción de personalización?',
+      labelAceptar: 'Sí, eliminar',
+      variante: 'danger',
+    });
+    if (!ok) return;
     try {
       await api.eliminarVariante(varianteId);
       setCategorias(prev =>
@@ -270,13 +291,27 @@ export default function CartaSection() {
             {loading ? 'Cargando carta...' : `${categorias.length} categorías · ${totalItems} ítems`}
           </p>
         </div>
-        <button
-          onClick={() => setMostrarFormCat(true)}
-          className="px-16 py-8 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90 transition-opacity"
-        >
-          + Nueva categoría
-        </button>
+        <div className="flex items-center gap-8">
+          <button
+            onClick={() => setModalImportarAbierto(true)}
+            className="px-16 py-8 border border-ash-graphite text-ash-graphite text-13 font-medium rounded-md hover:bg-ghost-fog transition-colors"
+          >
+            ↑ Importar CSV/Excel
+          </button>
+          <button
+            onClick={() => setMostrarFormCat(true)}
+            className="px-16 py-8 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90 transition-opacity"
+          >
+            + Nueva categoría
+          </button>
+        </div>
       </div>
+
+      <ImportarCartaModal
+        isOpen={modalImportarAbierto}
+        onClose={() => setModalImportarAbierto(false)}
+        onImportacionCompletada={() => void cargarCarta()}
+      />
 
       {errorMsg && (
         <div className="p-10 bg-red-50 border border-alert-red/30 rounded text-12 text-alert-red flex items-center justify-between gap-12">
