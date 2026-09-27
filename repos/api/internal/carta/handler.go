@@ -1,10 +1,14 @@
 package carta
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"io"
 	"log/slog"
 	"net/http"
+	"path/filepath"
+	"strings"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/auth"
 )
@@ -228,6 +232,74 @@ func (h *Handlers) EliminarVariante(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
+}
+
+// ImportarCarta recibe un archivo CSV o XLSX vía multipart/form-data (campo "archivo"),
+// lo parsea y crea en la base de datos las categorías y artículos contenidos.
+// Retorna un JSON con el reporte de artículos creados, omitidos y filas con error.
+func (h *Handlers) ImportarCarta(w http.ResponseWriter, r *http.Request) {
+	const maxTamano = 5 << 20 // 5 MB
+	r.Body = http.MaxBytesReader(w, r.Body, maxTamano)
+
+	if err := r.ParseMultipartForm(maxTamano); err != nil {
+		jsonError(w, "el archivo excede el límite de 5 MB", http.StatusBadRequest)
+		return
+	}
+
+	archivo, cabecera, err := r.FormFile("archivo")
+	if err != nil {
+		jsonError(w, "campo 'archivo' requerido", http.StatusBadRequest)
+		return
+	}
+	defer archivo.Close()
+
+	ext := strings.ToLower(filepath.Ext(cabecera.Filename))
+	if ext != ".csv" && ext != ".xlsx" {
+		jsonError(w, "formato no soportado: solo se aceptan archivos .csv y .xlsx", http.StatusBadRequest)
+		return
+	}
+
+	contenido, err := io.ReadAll(archivo)
+	if err != nil {
+		jsonError(w, "error leyendo el archivo", http.StatusInternalServerError)
+		return
+	}
+
+	var filas []FilaImportacion
+	var erroresParseo []ErrorFila
+
+	if ext == ".csv" {
+		filas, erroresParseo = ParsearCSV(strings.NewReader(string(contenido)))
+	} else {
+		filas, erroresParseo = ParsearXLSX(bytes.NewReader(contenido))
+	}
+
+	// Si el parseo completo falló (archivo malformado), retornamos de inmediato.
+	if len(filas) == 0 && len(erroresParseo) > 0 && erroresParseo[0].Fila <= 1 {
+		jsonError(w, erroresParseo[0].Motivo, http.StatusBadRequest)
+		return
+	}
+
+	claims := auth.ClaimsFromContext(r.Context())
+	resultado, err := h.svc.ImportarCarta(r.Context(), claims.TenantID, filas)
+	if err != nil {
+		slog.ErrorContext(r.Context(), "error importando carta", "err", err)
+		jsonError(w, "error interno durante la importación", http.StatusInternalServerError)
+		return
+	}
+
+	// Agregar los errores de parseo a los errores de importación
+	resultado.Errores = append(erroresParseo, resultado.Errores...)
+	resultado.Omitidos += len(erroresParseo)
+
+	slog.InfoContext(r.Context(), "importación completada",
+		"tenant_id", claims.TenantID,
+		"creados", resultado.Creados,
+		"omitidos", resultado.Omitidos,
+	)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(resultado)
 }
 
 func jsonOK(w http.ResponseWriter, v any) {

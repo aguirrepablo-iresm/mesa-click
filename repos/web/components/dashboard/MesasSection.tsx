@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import QRCode from "qrcode";
 import { api, MesaAPI, Sucursal, getErrorMessage } from "@/lib/api";
-import { EmptyState, Skeleton, useToast } from "@/components/ui";
+import { EmptyState, Skeleton, useToast, useConfirm } from "@/components/ui";
 
 function QRCanvas({ token }: { token: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -54,6 +54,7 @@ function QRCanvas({ token }: { token: string }) {
 
 export default function MesasSection() {
   const toast = useToast();
+  const confirmar = useConfirm();
   const [mesas, setMesas] = useState<MesaAPI[]>([]);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -147,7 +148,13 @@ export default function MesasSection() {
   };
 
   const handleEliminarMesa = async (id: string) => {
-    if (!confirm('¿Seguro que deseas eliminar esta mesa?')) return;
+    const ok = await confirmar({
+      titulo: 'Eliminar mesa',
+      mensaje: '¿Eliminás esta mesa? Se borrará el QR asociado y no podrá recuperarse.',
+      labelAceptar: 'Sí, eliminar',
+      variante: 'danger',
+    });
+    if (!ok) return;
     try {
       await api.eliminarMesa(id);
       setMesas(prev => prev.filter(m => m.id !== id));

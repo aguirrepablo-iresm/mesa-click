@@ -120,6 +120,7 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.Handle("PATCH /carta/variantes/{id}", auth.Requerir(http.HandlerFunc(cartaH.ActualizarVariante)))
 	mux.Handle("DELETE /carta/variantes/{id}", auth.Requerir(http.HandlerFunc(cartaH.EliminarVariante)))
 	mux.Handle("DELETE /carta/articulos/{id}", auth.Requerir(http.HandlerFunc(cartaH.EliminarArticulo)))
+	mux.Handle("POST /carta/importar", auth.Requerir(http.HandlerFunc(cartaH.ImportarCarta)))
 
 	// Mesas (admin — protegidas)
 	mesaStore := mesa.NuevoStore()

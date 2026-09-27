@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { api, UsuarioAPI, getErrorMessage } from "@/lib/api";
-import { EmptyState, Skeleton, useToast } from "@/components/ui";
+import { EmptyState, Skeleton, useToast, useConfirm } from "@/components/ui";
 
 type RolUsuario = 'admin' | 'encargado' | 'mozo' | 'cocina';
 type RolInvitable = 'encargado' | 'mozo' | 'cocina';
@@ -15,6 +15,7 @@ const ROL_DESCRIPTIONS: Record<RolInvitable, string> = {
 
 export default function EquipoSection({ embedded = false }: { embedded?: boolean }) {
   const toast = useToast();
+  const confirmar = useConfirm();
   const [equipo, setEquipo] = useState<UsuarioAPI[]>([]);
   const [loading, setLoading] = useState(true);
   const [actualizandoId, setActualizandoId] = useState<string | null>(null);
@@ -83,7 +84,13 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
   };
 
   const handleEliminarUsuario = async (id: string) => {
-    if (!confirm('¿Seguro que deseas eliminar a este miembro del equipo?')) return;
+    const ok = await confirmar({
+      titulo: 'Eliminar miembro',
+      mensaje: '¿Eliminás a este miembro del equipo? Perderá acceso al dashboard.',
+      labelAceptar: 'Sí, eliminar',
+      variante: 'danger',
+    });
+    if (!ok) return;
     try {
       await api.eliminarUsuario(id);
       setEquipo(prev => prev.filter(u => u.id !== id));
