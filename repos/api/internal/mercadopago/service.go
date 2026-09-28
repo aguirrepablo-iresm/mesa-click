@@ -13,13 +13,16 @@ import (
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/pedido"
 )
 
+type ClientFactory func(accessToken string) Client
+
 type Service struct {
-	client    Client
-	store     Store
-	mesaSvc   *mesa.Service
-	pedidoSvc *pedido.Service
-	appURL    string
-	apiURL    string
+	client        Client
+	clientFactory ClientFactory
+	store         Store
+	mesaSvc       *mesa.Service
+	pedidoSvc     *pedido.Service
+	appURL        string
+	apiURL        string
 }
 
 func NuevoService(client Client, store Store, mesaSvc *mesa.Service, pedidoSvc *pedido.Service, appURL, apiURL string) *Service {
@@ -27,13 +30,38 @@ func NuevoService(client Client, store Store, mesaSvc *mesa.Service, pedidoSvc *
 		appURL = "http://localhost:3000"
 	}
 	return &Service{
-		client:    client,
-		store:     store,
-		mesaSvc:   mesaSvc,
-		pedidoSvc: pedidoSvc,
-		appURL:    strings.TrimRight(appURL, "/"),
-		apiURL:    strings.TrimRight(apiURL, "/"),
+		client:        client,
+		clientFactory: func(token string) Client { return NuevoCliente(token) },
+		store:         store,
+		mesaSvc:       mesaSvc,
+		pedidoSvc:     pedidoSvc,
+		appURL:        strings.TrimRight(appURL, "/"),
+		apiURL:        strings.TrimRight(apiURL, "/"),
 	}
+}
+
+func (s *Service) SetClientFactory(factory ClientFactory) {
+	s.clientFactory = factory
+}
+
+func (s *Service) resolverClient(ctx context.Context, mesaID string) (Client, error) {
+	token, activo, err := s.store.ObtenerCredencialesMesa(ctx, mesaID)
+	if err != nil {
+		return nil, err
+	}
+	if !activo {
+		return nil, ErrMercadoPagoInactivo
+	}
+	if token != "" {
+		if s.clientFactory != nil {
+			return s.clientFactory(token), nil
+		}
+		return NuevoCliente(token), nil
+	}
+	if s.client != nil {
+		return s.client, nil
+	}
+	return nil, ErrTokenNoConfigurado
 }
 
 func (s *Service) CrearPreferenciaMesa(ctx context.Context, qrToken string) (*PreferenciaDTO, error) {
@@ -43,6 +71,11 @@ func (s *Service) CrearPreferenciaMesa(ctx context.Context, qrToken string) (*Pr
 	}
 	if mp.Estado != "activa" {
 		return nil, ErrMesaNoEncontrada
+	}
+
+	client, err := s.resolverClient(ctx, mp.ID)
+	if err != nil {
+		return nil, err
 	}
 
 	pedidos, err := s.pedidoSvc.ListarCuentaActualPorQR(ctx, qrToken)
@@ -89,10 +122,10 @@ func (s *Service) CrearPreferenciaMesa(ctx context.Context, qrToken string) (*Pr
 	}
 
 	if s.apiURL != "" && strings.HasPrefix(s.apiURL, "https://") {
-		prefReq.NotificationURL = fmt.Sprintf("%s/publica/pago/mercadopago/webhook", s.apiURL)
+		prefReq.NotificationURL = fmt.Sprintf("%s/publica/pago/mercadopago/webhook?mesa_id=%s", s.apiURL, mp.ID)
 	}
 
-	prefResp, err := s.client.CrearPreferencia(ctx, prefReq)
+	prefResp, err := client.CrearPreferencia(ctx, prefReq)
 	if err != nil {
 		return nil, fmt.Errorf("error creando preferencia en Mercado Pago: %w", err)
 	}
@@ -119,7 +152,12 @@ func (s *Service) ConfirmarPago(ctx context.Context, qrToken string, paymentID s
 		return nil, err
 	}
 
-	pagoMP, err := s.client.ObtenerPago(ctx, paymentID)
+	client, err := s.resolverClient(ctx, mp.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	pagoMP, err := client.ObtenerPago(ctx, paymentID)
 	if err != nil {
 		return nil, fmt.Errorf("error consultando pago en Mercado Pago: %w", err)
 	}
@@ -193,7 +231,17 @@ func (s *Service) ProcesarWebhook(ctx context.Context, query url.Values, dataID 
 		return nil
 	}
 
-	pagoMP, err := s.client.ObtenerPago(ctx, id)
+	client := s.client
+	if mesaIDParam := query.Get("mesa_id"); mesaIDParam != "" {
+		if c, err := s.resolverClient(ctx, mesaIDParam); err == nil && c != nil {
+			client = c
+		}
+	}
+	if client == nil {
+		return fmt.Errorf("no hay cliente de Mercado Pago configurado para procesar webhook")
+	}
+
+	pagoMP, err := client.ObtenerPago(ctx, id)
 	if err != nil {
 		return fmt.Errorf("error obteniendo pago en webhook: %w", err)
 	}

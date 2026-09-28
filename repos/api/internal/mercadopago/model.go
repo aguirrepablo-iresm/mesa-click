@@ -8,7 +8,8 @@ import (
 var (
 	ErrMesaNoEncontrada    = errors.New("mesa no encontrada")
 	ErrSinConsumos         = errors.New("la mesa no tiene consumos pendientes para pagar")
-	ErrTokenNoConfigurado  = errors.New("MERCADOPAGO_ACCESS_TOKEN no configurado")
+	ErrTokenNoConfigurado  = errors.New("esta sucursal no tiene configurada su cuenta de Mercado Pago")
+	ErrMercadoPagoInactivo = errors.New("los cobros por Mercado Pago no están habilitados para esta sucursal")
 	ErrPagoNoAprobado      = errors.New("el pago no fue aprobado por Mercado Pago")
 	ErrPagoNoCorresponde   = errors.New("el pago no corresponde a esta mesa o cuenta")
 	ErrPagoYaProcesado     = errors.New("el pago ya fue procesado previamente")

@@ -187,6 +187,9 @@ export interface Tenant {
   estilo_visual?: string;
   datos_fiscales?: Record<string, unknown>;
   google_review_url?: string;
+  mp_access_token?: string;
+  mp_public_key?: string;
+  mp_activo?: boolean;
   slug: string;
   activo?: boolean;
   created_at: string;
@@ -205,6 +208,9 @@ export interface ActualizarTenantInput {
   estilo_visual?: string;
   datos_fiscales?: Record<string, unknown>;
   google_review_url?: string;
+  mp_access_token?: string;
+  mp_public_key?: string;
+  mp_activo?: boolean;
 }
 
 export interface OnboardingInput {
@@ -231,6 +237,9 @@ export interface Sucursal {
   email?: string;
   whatsapp?: string;
   horarios?: string;
+  mp_access_token?: string | null;
+  mp_public_key?: string | null;
+  mp_activo?: boolean | null;
   activa: boolean;
   created_at: string;
   updated_at: string;
@@ -329,6 +338,7 @@ export interface MesaPublica {
   logo_url?: string | null;
   color_primario?: string | null;
   estilo_visual?: 'claro' | 'oscuro' | null;
+  mercadopago_habilitado?: boolean;
 }
 
 export interface ArticuloPublico {

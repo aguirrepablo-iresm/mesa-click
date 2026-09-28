@@ -44,6 +44,7 @@ type MesaPublica struct {
 	CuentaVersion    int     `json:"cuenta_version"`
 	Nombre           string  `json:"nombre"`
 	LogoURL          *string `json:"logo_url,omitempty"`
-	ColorPrimario    *string `json:"color_primario,omitempty"`
-	EstiloVisual     *string `json:"estilo_visual,omitempty"`
+	ColorPrimario          *string `json:"color_primario,omitempty"`
+	EstiloVisual           *string `json:"estilo_visual,omitempty"`
+	MercadoPagoHabilitado  bool    `json:"mercadopago_habilitado"`
 }

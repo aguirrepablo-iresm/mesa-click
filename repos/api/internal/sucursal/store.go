@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/db"
 	"github.com/jackc/pgx/v5"
@@ -36,11 +37,11 @@ func (s *pgStore) Crear(ctx context.Context, tenantID string, input SucursalInpu
 	var horariosBytes []byte
 
 	err = db.Pool.QueryRow(ctx,
-		`INSERT INTO sucursales (tenant_id, nombre, whatsapp, email, telefono, horarios)
-		 VALUES ($1, $2, $3, $4, $5, $6)
-		 RETURNING id, tenant_id, nombre, whatsapp, email, telefono, horarios, created_at`,
-		tenantID, input.Nombre, input.Whatsapp, input.Email, input.Telefono, horariosJSON,
-	).Scan(&suc.ID, &suc.TenantID, &suc.Nombre, &suc.Whatsapp, &suc.Email, &suc.Telefono, &horariosBytes, &suc.CreatedAt)
+		`INSERT INTO sucursales (tenant_id, nombre, whatsapp, email, telefono, horarios, mp_access_token, mp_public_key, mp_activo)
+		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+		 RETURNING id, tenant_id, nombre, whatsapp, email, telefono, horarios, mp_access_token, mp_public_key, mp_activo, created_at`,
+		tenantID, input.Nombre, input.Whatsapp, input.Email, input.Telefono, horariosJSON, input.MPAccessToken, input.MPPublicKey, input.MPActivo,
+	).Scan(&suc.ID, &suc.TenantID, &suc.Nombre, &suc.Whatsapp, &suc.Email, &suc.Telefono, &horariosBytes, &suc.MPAccessToken, &suc.MPPublicKey, &suc.MPActivo, &suc.CreatedAt)
 
 	if err != nil {
 		return nil, fmt.Errorf("error insertando sucursal: %w", err)
@@ -58,11 +59,11 @@ func (s *pgStore) ObtenerPorID(ctx context.Context, id string, tenantID string) 
 	var horariosBytes []byte
 
 	err := db.Pool.QueryRow(ctx,
-		`SELECT id, tenant_id, nombre, whatsapp, email, telefono, horarios, created_at
+		`SELECT id, tenant_id, nombre, whatsapp, email, telefono, horarios, mp_access_token, mp_public_key, mp_activo, created_at
 		 FROM sucursales
 		 WHERE id = $1 AND tenant_id = $2`,
 		id, tenantID,
-	).Scan(&suc.ID, &suc.TenantID, &suc.Nombre, &suc.Whatsapp, &suc.Email, &suc.Telefono, &horariosBytes, &suc.CreatedAt)
+	).Scan(&suc.ID, &suc.TenantID, &suc.Nombre, &suc.Whatsapp, &suc.Email, &suc.Telefono, &horariosBytes, &suc.MPAccessToken, &suc.MPPublicKey, &suc.MPActivo, &suc.CreatedAt)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -80,7 +81,7 @@ func (s *pgStore) ObtenerPorID(ctx context.Context, id string, tenantID string) 
 
 func (s *pgStore) Listar(ctx context.Context, tenantID string) ([]Sucursal, error) {
 	rows, err := db.Pool.Query(ctx,
-		`SELECT id, tenant_id, nombre, whatsapp, email, telefono, horarios, created_at
+		`SELECT id, tenant_id, nombre, whatsapp, email, telefono, horarios, mp_access_token, mp_public_key, mp_activo, created_at
 		 FROM sucursales
 		 WHERE tenant_id = $1
 		 ORDER BY created_at ASC`,
@@ -95,7 +96,7 @@ func (s *pgStore) Listar(ctx context.Context, tenantID string) ([]Sucursal, erro
 	for rows.Next() {
 		var suc Sucursal
 		var horariosBytes []byte
-		err := rows.Scan(&suc.ID, &suc.TenantID, &suc.Nombre, &suc.Whatsapp, &suc.Email, &suc.Telefono, &horariosBytes, &suc.CreatedAt)
+		err := rows.Scan(&suc.ID, &suc.TenantID, &suc.Nombre, &suc.Whatsapp, &suc.Email, &suc.Telefono, &horariosBytes, &suc.MPAccessToken, &suc.MPPublicKey, &suc.MPActivo, &suc.CreatedAt)
 		if err != nil {
 			return nil, fmt.Errorf("error leyendo sucursal: %w", err)
 		}
@@ -109,9 +110,51 @@ func (s *pgStore) Listar(ctx context.Context, tenantID string) ([]Sucursal, erro
 }
 
 func (s *pgStore) Actualizar(ctx context.Context, id string, tenantID string, input SucursalInput) (*Sucursal, error) {
-	horariosJSON, err := json.Marshal(input.Horarios)
+	actual, err := s.ObtenerPorID(ctx, id, tenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	nombre := actual.Nombre
+	if strings.TrimSpace(input.Nombre) != "" {
+		nombre = input.Nombre
+	}
+
+	whatsapp := actual.Whatsapp
+	if input.Whatsapp != nil {
+		whatsapp = input.Whatsapp
+	}
+
+	email := actual.Email
+	if input.Email != nil {
+		email = input.Email
+	}
+
+	telefono := actual.Telefono
+	if input.Telefono != nil {
+		telefono = input.Telefono
+	}
+
+	horarios := actual.Horarios
+	if input.Horarios != nil {
+		horarios = input.Horarios
+	}
+	horariosJSON, err := json.Marshal(horarios)
 	if err != nil {
 		return nil, fmt.Errorf("error serializando horarios: %w", err)
+	}
+
+	mpAccessToken := actual.MPAccessToken
+	if input.MPAccessToken != nil {
+		mpAccessToken = input.MPAccessToken
+	}
+	mpPublicKey := actual.MPPublicKey
+	if input.MPPublicKey != nil {
+		mpPublicKey = input.MPPublicKey
+	}
+	mpActivo := actual.MPActivo
+	if input.MPActivo != nil {
+		mpActivo = input.MPActivo
 	}
 
 	var suc Sucursal
@@ -119,11 +162,13 @@ func (s *pgStore) Actualizar(ctx context.Context, id string, tenantID string, in
 
 	err = db.Pool.QueryRow(ctx,
 		`UPDATE sucursales
-		 SET nombre = $1, whatsapp = $2, email = $3, telefono = $4, horarios = $5
-		 WHERE id = $6 AND tenant_id = $7
-		 RETURNING id, tenant_id, nombre, whatsapp, email, telefono, horarios, created_at`,
-		input.Nombre, input.Whatsapp, input.Email, input.Telefono, horariosJSON, id, tenantID,
-	).Scan(&suc.ID, &suc.TenantID, &suc.Nombre, &suc.Whatsapp, &suc.Email, &suc.Telefono, &horariosBytes, &suc.CreatedAt)
+		 SET nombre = $1, whatsapp = $2, email = $3, telefono = $4, horarios = $5,
+		     mp_access_token = $6, mp_public_key = $7, mp_activo = $8
+		 WHERE id = $9 AND tenant_id = $10
+		 RETURNING id, tenant_id, nombre, whatsapp, email, telefono, horarios, mp_access_token, mp_public_key, mp_activo, created_at`,
+		nombre, whatsapp, email, telefono, horariosJSON,
+		mpAccessToken, mpPublicKey, mpActivo, id, tenantID,
+	).Scan(&suc.ID, &suc.TenantID, &suc.Nombre, &suc.Whatsapp, &suc.Email, &suc.Telefono, &horariosBytes, &suc.MPAccessToken, &suc.MPPublicKey, &suc.MPActivo, &suc.CreatedAt)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

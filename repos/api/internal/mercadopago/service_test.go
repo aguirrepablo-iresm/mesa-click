@@ -36,6 +36,8 @@ type mockMPStore struct {
 	guardadaPref  bool
 	registrado    bool
 	pagoExistente bool
+	inactivo      bool
+	tokenOverride string
 }
 
 func (m *mockMPStore) GuardarPreferencia(ctx context.Context, mesaID string, cuentaVersion int, prefID string, monto float64) error {
@@ -63,6 +65,16 @@ func (m *mockMPStore) ExistePago(ctx context.Context, pagoID string) (bool, erro
 
 func (m *mockMPStore) ObtenerMesaIDYTenantPorPago(ctx context.Context, mesaID string) (string, string, int, error) {
 	return "tenant-1", "suc-1", 3, nil
+}
+
+func (m *mockMPStore) ObtenerCredencialesMesa(ctx context.Context, mesaID string) (string, bool, error) {
+	if m.inactivo {
+		return "", false, nil
+	}
+	if m.tokenOverride != "" {
+		return m.tokenOverride, true, nil
+	}
+	return "TEST-token", true, nil
 }
 
 type mockMesaStore struct {
@@ -159,6 +171,9 @@ func TestCrearPreferenciaMesa_Exitoso(t *testing.T) {
 	mpStore := &mockMPStore{}
 
 	svc := mercadopago.NuevoService(mpClient, mpStore, mesaSvc, pedidosSvc, "http://localhost:3000", "http://localhost:8080")
+	svc.SetClientFactory(func(token string) mercadopago.Client {
+		return mpClient
+	})
 
 	pref, err := svc.CrearPreferenciaMesa(context.Background(), "token-valido")
 	if err != nil {
@@ -200,6 +215,36 @@ func TestCrearPreferenciaMesa_SinConsumos(t *testing.T) {
 	}
 }
 
+func TestCrearPreferenciaMesa_Inactivo(t *testing.T) {
+	mesaStore := &mockMesaStore{
+		mesaPub: &mesa.MesaPublica{
+			ID:            "mesa-1",
+			Numero:        3,
+			Estado:        "activa",
+			CuentaVersion: 1,
+		},
+	}
+	mesaSvc := mesa.NuevoService(mesaStore)
+	pedidosStore := &mockPedidoStore{
+		pedidos: []pedido.Pedido{
+			{
+				Items: []pedido.PedidoItem{
+					{NombreArticulo: "Burger", Cantidad: 1, PrecioUnitario: 5000},
+				},
+			},
+		},
+	}
+	pedidosSvc := pedido.NuevoService(pedidosStore)
+
+	mpStore := &mockMPStore{inactivo: true}
+	svc := mercadopago.NuevoService(&mockMPClient{}, mpStore, mesaSvc, pedidosSvc, "", "")
+
+	_, err := svc.CrearPreferenciaMesa(context.Background(), "token-valido")
+	if !errors.Is(err, mercadopago.ErrMercadoPagoInactivo) {
+		t.Fatalf("esperaba ErrMercadoPagoInactivo, obtuve %v", err)
+	}
+}
+
 func TestConfirmarPago_Exitoso(t *testing.T) {
 	mesaStore := &mockMesaStore{
 		mesaPub: &mesa.MesaPublica{
@@ -226,6 +271,9 @@ func TestConfirmarPago_Exitoso(t *testing.T) {
 	mpStore := &mockMPStore{}
 
 	svc := mercadopago.NuevoService(mpClient, mpStore, mesaSvc, pedidosSvc, "", "")
+	svc.SetClientFactory(func(token string) mercadopago.Client {
+		return mpClient
+	})
 
 	rp, err := svc.ConfirmarPago(context.Background(), "token-valido", "998877")
 	if err != nil {
@@ -263,6 +311,9 @@ func TestConfirmarPago_Rechazado(t *testing.T) {
 	mpStore := &mockMPStore{}
 
 	svc := mercadopago.NuevoService(mpClient, mpStore, mesaSvc, pedidosSvc, "", "")
+	svc.SetClientFactory(func(token string) mercadopago.Client {
+		return mpClient
+	})
 
 	_, err := svc.ConfirmarPago(context.Background(), "token-valido", "998877")
 	if !errors.Is(err, mercadopago.ErrPagoNoAprobado) {

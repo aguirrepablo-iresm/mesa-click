@@ -3,6 +3,7 @@ package mesa
 import (
 	"context"
 	"errors"
+	"os"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/db"
 	"github.com/jackc/pgx/v5"
@@ -155,18 +156,26 @@ func (s *pgStore) Eliminar(ctx context.Context, id, tenantID string) error {
 
 func (s *pgStore) ObtenerPorQRToken(ctx context.Context, token string) (*MesaPublica, error) {
 	mp := &MesaPublica{}
+	defaultToken := os.Getenv("MERCADOPAGO_ACCESS_TOKEN")
 	err := db.Pool.QueryRow(ctx,
 		`SELECT m.id, m.numero, m.sucursal_id, su.tenant_id, m.estado,
 		        m.cuenta_solicitada, m.cuenta_version,
 		        COALESCE(NULLIF(TRIM(t.nombre_fantasia), ''), NULLIF(TRIM(t.nombre), ''), NULLIF(TRIM(su.nombre), ''), 'Tu negocio'),
-		        t.logo_url, t.color_primario, t.estilo_visual
+		        t.logo_url, t.color_primario, t.estilo_visual,
+		        (
+		            COALESCE(su.mp_activo, t.mp_activo, true)
+		            AND (
+		                COALESCE(NULLIF(TRIM(su.mp_access_token), ''), NULLIF(TRIM(t.mp_access_token), '')) IS NOT NULL
+		                OR NULLIF(TRIM($2), '') IS NOT NULL
+		            )
+		        ) AS mp_habilitado
 		 FROM mesas m
 		 JOIN sucursales su ON su.id = m.sucursal_id
 		 JOIN tenants t ON t.id = su.tenant_id
-		 WHERE m.qr_token = $1`, token,
+		 WHERE m.qr_token = $1`, token, defaultToken,
 	).Scan(&mp.ID, &mp.Numero, &mp.SucursalID, &mp.TenantID, &mp.Estado,
 		&mp.CuentaSolicitada, &mp.CuentaVersion,
-		&mp.Nombre, &mp.LogoURL, &mp.ColorPrimario, &mp.EstiloVisual)
+		&mp.Nombre, &mp.LogoURL, &mp.ColorPrimario, &mp.EstiloVisual, &mp.MercadoPagoHabilitado)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound

@@ -16,6 +16,7 @@ type Store interface {
 	RegistrarPagoAprobado(ctx context.Context, mesaID string, cuentaVersion int, pagoID, preferenciaID string, monto float64, detalles any) (*RegistroPago, error)
 	ExistePago(ctx context.Context, pagoID string) (bool, error)
 	ObtenerMesaIDYTenantPorPago(ctx context.Context, mesaID string) (tenantID string, sucursalID string, numero int, err error)
+	ObtenerCredencialesMesa(ctx context.Context, mesaID string) (token string, activo bool, err error)
 }
 
 type pgStore struct{}
@@ -85,4 +86,25 @@ func (s *pgStore) ObtenerMesaIDYTenantPorPago(ctx context.Context, mesaID string
 		return "", "", 0, err
 	}
 	return tenantID, sucursalID, numero, nil
+}
+
+func (s *pgStore) ObtenerCredencialesMesa(ctx context.Context, mesaID string) (string, bool, error) {
+	var token string
+	var activo bool
+	err := db.Pool.QueryRow(ctx, `
+		SELECT 
+			COALESCE(NULLIF(TRIM(su.mp_access_token), ''), NULLIF(TRIM(t.mp_access_token), ''), ''),
+			COALESCE(su.mp_activo, t.mp_activo, true)
+		FROM mesas m
+		JOIN sucursales su ON su.id = m.sucursal_id
+		JOIN tenants t ON t.id = su.tenant_id
+		WHERE m.id = $1
+	`, mesaID).Scan(&token, &activo)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return "", false, ErrMesaNoEncontrada
+		}
+		return "", false, err
+	}
+	return token, activo, nil
 }

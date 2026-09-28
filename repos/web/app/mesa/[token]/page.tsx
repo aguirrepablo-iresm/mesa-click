@@ -1103,7 +1103,7 @@ export default function MesaPage() {
           onCambiarComensal={state.cuentaSolicitada ? undefined : () => setEditandoComensal(true)}
           onAgregarMas={() => dispatch({ type: 'SET_VISTA', payload: 'carta' })}
           onPedirCuenta={handlePedirCuenta}
-          onPagarMercadoPago={handlePagarMercadoPago}
+          onPagarMercadoPago={mesa.mercadopago_habilitado ? handlePagarMercadoPago : undefined}
           pagandoMP={pagandoMP}
           pagoExitoso={pagoExitoso}
           pagoError={pagoError}
