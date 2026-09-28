@@ -40,9 +40,9 @@ const ESTADO_LABELS: Record<'recibido' | 'preparando' | 'listo', string> = {
 };
 
 const ESTADO_STYLES: Record<'recibido' | 'preparando' | 'listo', string> = {
-  recibido: 'bg-vanilla-cream text-ash-graphite border-ash-graphite',
-  preparando: 'bg-ghost-fog text-sage-green border-sage-green',
-  listo: 'bg-success text-ash-graphite border-success',
+  recibido: 'bg-ghost-fog text-ash-graphite border-concrete',
+  preparando: 'bg-canvas-white text-sage-green border-stone/50',
+  listo: 'bg-success/15 text-[#087645] border-success/30',
 };
 
 function calcularEstadoMesa(pedidos: PedidoVista[]): PedidoVista['estado'] {
@@ -75,7 +75,7 @@ function PedidoDetalle({
           <span className="text-13 font-semibold text-ash-graphite">Pedido</span>
           <span className="text-11 font-mono text-sage-green">{pedido.timestamp}</span>
         </div>
-        <span className={`shrink-0 rounded-md border px-10 py-3 text-11 font-medium ${ESTADO_STYLES[pedido.estado]}`}>
+        <span className={`shrink-0 rounded-full border px-10 py-3 text-11 font-semibold ${ESTADO_STYLES[pedido.estado]}`}>
           {ESTADO_LABELS[pedido.estado]}
         </span>
       </div>
@@ -109,7 +109,7 @@ function PedidoDetalle({
         {pedido.estado !== 'listo' && !pedido.finalizado && (
           <button
             onClick={() => onAvanzar(pedido.id)}
-            className="flex min-h-44 flex-1 items-center justify-center rounded-md bg-plain-green px-16 py-8 text-center text-12 font-semibold text-canvas-white transition-all hover:opacity-90 active:scale-[0.98] sm:flex-initial"
+            className="flex min-h-44 flex-1 items-center justify-center rounded-lg bg-plain-green px-16 py-8 text-center text-12 font-semibold text-canvas-white transition-all hover:bg-plain-green-muted active:scale-[0.98] sm:flex-initial"
           >
             {pedido.estado === 'recibido' ? '→ Preparando' : '→ Listo'}
           </button>
@@ -117,13 +117,13 @@ function PedidoDetalle({
         {pedido.estado === 'listo' && !pedido.finalizado && (
           <button
             onClick={() => onCerrar(pedido.id)}
-            className="flex min-h-44 flex-1 items-center justify-center rounded-md bg-ash-graphite px-16 py-8 text-center text-12 font-semibold text-canvas-white transition-all hover:opacity-90 active:scale-[0.98] sm:flex-initial"
+            className="flex min-h-44 flex-1 items-center justify-center rounded-lg bg-ash-graphite px-16 py-8 text-center text-12 font-semibold text-canvas-white transition-all hover:bg-plain-green-muted active:scale-[0.98] sm:flex-initial"
           >
             Cerrar pedido
           </button>
         )}
         {pedido.finalizado && (
-          <span className="flex min-h-44 items-center rounded-md border border-success bg-success/20 px-12 py-8 text-12 font-semibold text-ash-graphite">
+          <span className="flex min-h-44 items-center rounded-lg border border-success/30 bg-success/15 px-12 py-8 text-12 font-semibold text-[#087645]">
             Pedido entregado
           </span>
         )}
@@ -151,20 +151,20 @@ function MesaCard({
   const cuentaSolicitada = grupo.cuentaSolicitada;
 
   return (
-    <div className={`overflow-hidden rounded-lg border bg-canvas-white ${cuentaSolicitada ? 'border-alert-red shadow-sm' : 'border-ash-graphite'}`}>
-      <div className={`flex items-center justify-between gap-12 border-b px-16 py-10 sm:px-20 ${cuentaSolicitada ? 'border-alert-red bg-red-50' : 'border-ash-graphite bg-vanilla-cream'}`}>
+    <article className={`overflow-hidden rounded-xl border bg-canvas-white shadow-sm transition-shadow hover:shadow-md ${cuentaSolicitada ? 'border-alert-red/40' : 'border-concrete'}`}>
+      <div className={`flex items-center justify-between gap-12 border-b px-16 py-14 sm:px-20 ${cuentaSolicitada ? 'border-alert-red/30 bg-warm-pink/15' : 'border-concrete/70 bg-canvas-white'}`}>
         <div className="flex min-w-0 flex-wrap items-center gap-8 sm:gap-12">
-          <span className="text-15 font-medium text-ash-graphite">Mesa {grupo.mesa}</span>
+          <span className="text-16 font-semibold text-ash-graphite">Mesa {grupo.mesa}</span>
           <span className="text-11 font-mono text-sage-green">
             {grupo.pedidos.length} {grupo.pedidos.length === 1 ? 'pedido' : 'pedidos'} activos
           </span>
           {cuentaSolicitada && (
-            <span className="flex items-center gap-4 rounded bg-red-100/60 px-6 py-1 text-11 font-medium text-alert-red">
+            <span className="flex items-center gap-4 rounded-full border border-alert-red/20 bg-warm-pink/20 px-8 py-2 text-11 font-semibold text-alert-red">
               Cuenta solicitada
             </span>
           )}
         </div>
-        <span className={`shrink-0 rounded-md border px-10 py-3 text-11 font-medium ${ESTADO_STYLES[estadoMesa]}`}>
+        <span className={`shrink-0 rounded-full border px-10 py-3 text-11 font-semibold ${ESTADO_STYLES[estadoMesa]}`}>
           {ESTADO_LABELS[estadoMesa]}
         </span>
       </div>
@@ -181,13 +181,13 @@ function MesaCard({
         <button
           type="button"
           onClick={onOpen}
-          className="flex min-h-44 w-full items-center justify-center gap-6 rounded-md border border-ash-graphite px-12 py-8 text-12 font-semibold text-ash-graphite transition-colors hover:bg-ghost-fog"
+          className="flex min-h-44 w-full items-center justify-center gap-6 rounded-lg border border-concrete px-12 py-8 text-12 font-semibold text-ash-graphite transition-colors hover:border-stone hover:bg-ghost-fog"
         >
           <span>Ver más</span>
           <span aria-hidden="true">↓</span>
         </button>
       </div>
-    </div>
+    </article>
   );
 }
 
@@ -250,18 +250,18 @@ function MesaDetalleModal({
       }}
     >
       <section
-        className="flex max-h-[calc(100vh-24px)] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-ash-graphite bg-canvas-white shadow-2xl sm:max-h-[calc(100vh-48px)]"
+        className="flex max-h-[calc(100vh-24px)] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-concrete bg-canvas-white shadow-2xl sm:max-h-[calc(100vh-48px)]"
         role="dialog"
         aria-modal="true"
         aria-labelledby={`mesa-detalle-${grupo.key}`}
       >
-        <header className="flex shrink-0 items-center justify-between gap-12 border-b border-ash-graphite bg-vanilla-cream px-16 py-12 sm:px-20">
+        <header className="flex shrink-0 items-center justify-between gap-12 border-b border-concrete bg-canvas-white px-16 py-14 sm:px-20">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-8 sm:gap-12">
-              <h2 id={`mesa-detalle-${grupo.key}`} className="text-16 font-medium text-ash-graphite">
+              <h2 id={`mesa-detalle-${grupo.key}`} className="text-18 font-semibold text-ash-graphite">
                 Mesa {grupo.mesa}
               </h2>
-              <span className={`shrink-0 rounded-md border px-10 py-3 text-11 font-medium ${ESTADO_STYLES[estadoMesa]}`}>
+              <span className={`shrink-0 rounded-full border px-10 py-3 text-11 font-semibold ${ESTADO_STYLES[estadoMesa]}`}>
                 {ESTADO_LABELS[estadoMesa]}
               </span>
             </div>
@@ -273,7 +273,7 @@ function MesaDetalleModal({
             type="button"
             onClick={onClose}
             aria-label={`Cerrar detalle de Mesa ${grupo.mesa}`}
-            className="flex h-44 w-44 shrink-0 items-center justify-center rounded-md border border-ash-graphite text-20 leading-none text-ash-graphite transition-colors hover:bg-ghost-fog"
+            className="flex h-44 w-44 shrink-0 items-center justify-center rounded-lg border border-concrete text-20 leading-none text-ash-graphite transition-colors hover:border-stone hover:bg-ghost-fog"
           >
             ×
           </button>
@@ -284,7 +284,7 @@ function MesaDetalleModal({
             type="button"
             onClick={() => onTodoListo(grupo)}
             disabled={todosListos || mesaAccionEnCurso !== null}
-            className="min-h-44 flex-1 rounded-md bg-success px-12 py-8 text-12 font-semibold text-ash-graphite transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial"
+            className="min-h-44 flex-1 rounded-lg bg-success px-12 py-8 text-12 font-semibold text-ash-graphite transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial"
           >
             {mesaAccionEnCurso === 'todo-listo' ? 'Actualizando...' : 'Todo listo'}
           </button>
@@ -292,12 +292,12 @@ function MesaDetalleModal({
             type="button"
             onClick={() => onCerrarCuenta(grupo)}
             disabled={mesaAccionEnCurso !== null}
-            className="min-h-44 flex-1 rounded-md bg-alert-red px-12 py-8 text-12 font-semibold text-canvas-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial"
+            className="min-h-44 flex-1 rounded-lg bg-alert-red px-12 py-8 text-12 font-semibold text-canvas-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial"
           >
             {mesaAccionEnCurso === 'cerrar-cuenta' ? 'Cerrando...' : 'Cerrar cuenta'}
           </button>
           {grupo.cuentaSolicitada && (
-            <span className="flex min-h-44 items-center justify-center rounded-md border border-alert-red bg-red-50 px-12 py-8 text-12 font-semibold text-alert-red sm:ml-auto">
+            <span className="flex min-h-44 items-center justify-center rounded-lg border border-alert-red/30 bg-warm-pink/15 px-12 py-8 text-12 font-semibold text-alert-red sm:ml-auto">
               Cuenta solicitada
             </span>
           )}
@@ -313,7 +313,7 @@ function MesaDetalleModal({
               <h3 className="text-13 font-semibold text-ash-graphite">Cuenta por comensal</h3>
               <div className="mt-10 grid gap-8 sm:grid-cols-2">
                 {gruposComensales.map(comensal => (
-                  <div key={comensal.id} className="rounded-lg border border-ghost-fog bg-vanilla-cream px-12 py-10">
+                  <div key={comensal.id} className="rounded-lg border border-concrete bg-ghost-fog/70 px-12 py-10">
                     <div className="flex items-center justify-between gap-8">
                       <span className="text-12 font-semibold text-ash-graphite">{comensal.etiqueta}</span>
                       <span className="shrink-0 font-mono text-13 font-semibold text-plain-green">
@@ -640,20 +640,20 @@ export default function RecepcionistaSection() {
   const sinAlerta = mesasAgrupadas.filter(grupo => !grupo.cuentaSolicitada);
 
   return (
-    <div className="p-16 sm:p-24 md:p-32 space-y-24 font-inter">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-12">
-        <div>
-          <h2 className="text-20 font-medium text-ash-graphite">Panel Recepcionista</h2>
-          <p className="text-13 text-sage-green mt-2">
+    <div className="h-full space-y-24 overflow-y-auto bg-ghost-fog/45 p-16 font-inter sm:p-24 md:p-32">
+      <div className="flex flex-col justify-between gap-16 sm:flex-row sm:items-center">
+        <div className="min-w-0">
+          <h2 className="text-24 font-semibold tracking-[-0.02em] text-ash-graphite sm:text-32">Panel Recepcionista</h2>
+          <p className="mt-4 text-13 text-sage-green sm:text-14">
             {loading 
               ? 'Cargando pedidos...' 
               : `${mesasAgrupadas.length} ${mesasAgrupadas.length === 1 ? 'mesa activa' : 'mesas activas'} · ${pedidos.length} ${pedidos.length === 1 ? 'pedido' : 'pedidos'}`
             }
           </p>
         </div>
-        <div className="flex items-center gap-8 self-start sm:self-auto bg-ghost-fog px-12 py-6 rounded-full border border-ash-graphite/10">
+        <div className="flex h-44 items-center gap-8 self-start rounded-full border border-concrete bg-canvas-white px-14 shadow-sm sm:self-auto">
           <span
-            className={`w-8 h-8 rounded-full ${sseConectado ? 'bg-success animate-pulse' : 'bg-sage-green'}`}
+            className={`h-8 w-8 rounded-full ${sseConectado ? 'bg-success animate-pulse' : 'bg-sage-green'}`}
           />
           <span className="text-11 font-mono text-sage-green uppercase tracking-wide">
             {sseConectado ? 'En vivo (SSE)' : 'Conectando...'}
@@ -664,8 +664,8 @@ export default function RecepcionistaSection() {
       {loading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
           {[1, 2, 3].map(i => (
-            <div key={i} className="border border-ash-graphite rounded-lg overflow-hidden bg-canvas-white">
-              <Skeleton className="h-40 w-full rounded-none" />
+            <div key={i} className="overflow-hidden rounded-xl border border-concrete bg-canvas-white shadow-sm">
+              <Skeleton className="h-52 w-full rounded-none" />
               <div className="p-16 space-y-8">
                 <Skeleton className="h-12 w-3/4" />
                 <Skeleton className="h-12 w-1/2" />
@@ -678,9 +678,10 @@ export default function RecepcionistaSection() {
 
       {!loading && conAlerta.length > 0 && (
         <div className="space-y-8">
-          <p className="text-11 font-mono text-alert-red uppercase tracking-wider font-semibold">
-            ⚠️ Solicitudes de cuenta
-          </p>
+          <div className="flex items-center gap-6 text-alert-red">
+            <span className="material-symbols-outlined text-18">notifications_active</span>
+            <p className="text-12 font-semibold">Solicitudes de cuenta</p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
             {conAlerta.map(grupo => (
               <MesaCard
@@ -695,7 +696,10 @@ export default function RecepcionistaSection() {
 
       {!loading && sinAlerta.length > 0 && (
         <div className="space-y-8">
-          <p className="text-11 font-mono text-sage-green uppercase tracking-wider">Pedidos en curso</p>
+          <div className="flex items-center gap-6 text-sage-green">
+            <span className="material-symbols-outlined text-18">receipt_long</span>
+            <p className="text-12 font-semibold">Pedidos en curso</p>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
             {sinAlerta.map(grupo => (
               <MesaCard

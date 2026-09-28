@@ -49,11 +49,11 @@ export default function ConfiguracionSection() {
   const sucursalSel = sucursales.find((s) => s.id === sucursalSelId) ?? null;
 
   return (
-    <div className="p-24 md:p-32 space-y-24 font-inter">
-      <header className="flex flex-col md:flex-row md:items-start md:justify-between gap-16">
-        <div>
-          <h2 className="text-24 font-semibold text-ash-graphite">Configuración</h2>
-          <p className="text-13 text-sage-green mt-4">
+    <div className="h-full space-y-24 overflow-y-auto bg-ghost-fog/45 p-16 font-inter sm:p-24 md:p-32">
+      <header className="flex flex-col gap-16 md:flex-row md:items-center md:justify-between">
+        <div className="min-w-0">
+          <h2 className="text-24 font-semibold tracking-[-0.02em] text-ash-graphite sm:text-32">Configuración</h2>
+          <p className="mt-4 text-13 text-sage-green sm:text-14">
             Administrá negocio, apariencia del menú, equipo y sucursales.
           </p>
         </div>
@@ -61,7 +61,7 @@ export default function ConfiguracionSection() {
           <select
             value={sucursalSelId}
             onChange={(e) => setSucursalSelId(e.target.value)}
-            className="h-40 px-12 text-13 rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-system-black"
+            className="h-44 rounded-lg border border-concrete bg-canvas-white px-12 text-13 shadow-sm outline-none focus:border-system-black"
           >
             {sucursales.map((s) => (
               <option key={s.id} value={s.id}>
@@ -72,15 +72,15 @@ export default function ConfiguracionSection() {
         )}
       </header>
 
-      <nav className="flex flex-wrap gap-8">
+      <nav className="flex max-w-full gap-6 overflow-x-auto rounded-xl border border-concrete bg-canvas-white p-6 shadow-sm no-scrollbar">
         {TABS.map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
-            className={`h-32 px-12 text-12 font-medium rounded-md border transition-colors ${
+            className={`h-44 shrink-0 rounded-lg border px-14 text-12 font-semibold transition-colors ${
               tab === t
                 ? "bg-ash-graphite text-canvas-white border-ash-graphite"
-                : "border-concrete text-ash-graphite hover:border-ash-graphite"
+                : "border-transparent text-sage-green hover:bg-ghost-fog hover:text-ash-graphite"
             }`}
           >
             {TAB_LABELS[t]}
@@ -114,12 +114,12 @@ export default function ConfiguracionSection() {
 
 function Card({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
-    <div className="border border-ash-graphite rounded-lg overflow-hidden bg-canvas-white">
-      <div className="px-20 py-10 bg-vanilla-cream border-b border-ash-graphite">
-        <p className="text-11 font-mono text-sage-green uppercase tracking-wider">{titulo}</p>
+    <section className="overflow-hidden rounded-xl border border-concrete bg-canvas-white shadow-sm">
+      <div className="border-b border-concrete/70 px-16 py-14 sm:px-20">
+        <p className="text-13 font-semibold text-ash-graphite">{titulo}</p>
       </div>
-      <div className="p-20 space-y-16">{children}</div>
-    </div>
+      <div className="space-y-16 p-16 sm:p-20">{children}</div>
+    </section>
   );
 }
 
@@ -139,7 +139,7 @@ function Campo({
 }
 
 const INPUT =
-  "w-full h-40 px-12 text-14 rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-system-black";
+  "w-full h-44 px-12 text-14 rounded-lg border border-concrete bg-canvas-white outline-none focus:border-system-black";
 
 
 
@@ -166,7 +166,7 @@ function PillPrimaria({
     <button
       onClick={onClick}
       disabled={disabled}
-      className="h-32 px-16 rounded-full bg-plain-green text-canvas-white text-11 font-bold uppercase tracking-wide hover:opacity-85 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+      className="h-44 rounded-lg bg-plain-green px-16 text-12 font-semibold text-canvas-white transition-colors hover:bg-plain-green-muted disabled:cursor-not-allowed disabled:opacity-40"
     >
       {children}
     </button>
@@ -351,7 +351,7 @@ function NegocioTab({ tenant }: { tenant: Tenant | null }) {
             </span>
             <button
               disabled
-              className="px-10 py-6 text-12 rounded-md border border-ash-graphite text-ash-graphite opacity-50 cursor-not-allowed"
+              className="h-44 cursor-not-allowed rounded-lg border border-concrete px-12 text-12 text-ash-graphite opacity-50"
               title="Disponible con el modelo Freemium (Sprint 16)"
             >
               Upgrade Pro
@@ -547,7 +547,7 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
                 />
               </div>
               <input
-                className="h-48 min-w-0 flex-1 px-12 text-13 font-mono rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-system-black"
+                className="h-48 min-w-0 flex-1 rounded-lg border border-concrete bg-canvas-white px-12 text-13 font-mono outline-none focus:border-system-black"
                 value={color.toUpperCase()}
                 onChange={(e) => {
                   setApariencia((prev) => ({ ...prev, color: e.target.value }));
@@ -567,7 +567,7 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
                   setApariencia((prev) => ({ ...prev, estilo: op }));
                   setOk(false);
                 }}
-                className={`h-32 px-12 text-12 font-medium rounded-md border capitalize ${
+                className={`h-44 rounded-lg border px-14 text-12 font-semibold capitalize ${
                   estilo === op
                     ? "bg-ash-graphite text-canvas-white border-ash-graphite"
                     : "border-concrete text-ash-graphite hover:border-ash-graphite"
@@ -713,7 +713,7 @@ function EquipoTab() {
       <div>
         <EquipoSection embedded />
       </div>
-      <div className="border border-concrete rounded-lg p-20 bg-canvas-white space-y-16">
+      <aside className="space-y-16 rounded-xl border border-concrete bg-canvas-white p-20 shadow-sm">
         <p className="text-13 font-bold text-ash-graphite">Roles disponibles</p>
         {ROLES.map(([r, d]) => (
           <div key={r}>
@@ -721,7 +721,7 @@ function EquipoTab() {
             <p className="text-12 text-sage-green mt-2 leading-normal">{d}</p>
           </div>
         ))}
-      </div>
+      </aside>
     </div>
   );
 }
@@ -821,7 +821,7 @@ function SucursalesTab({
   };
 
   return (
-    <div className="grid lg:grid-cols-[240px_1fr_260px] gap-16 items-start">
+    <div className="grid items-start gap-16 xl:grid-cols-[240px_minmax(0,1fr)_260px]">
       {/* lista */}
       <Card titulo="Sucursales actuales">
         <div className="space-y-8">
@@ -829,10 +829,10 @@ function SucursalesTab({
             <button
               key={s.id}
               onClick={() => setSelId(s.id)}
-              className={`w-full text-left px-12 py-10 rounded-md border transition-colors ${
+              className={`w-full rounded-lg border px-12 py-10 text-left transition-colors ${
                 s.id === selId
-                  ? "border-ash-graphite bg-vanilla-cream"
-                  : "border-concrete hover:border-ash-graphite"
+                  ? "border-ash-graphite bg-ghost-fog shadow-sm"
+                  : "border-concrete hover:border-stone hover:bg-ghost-fog/50"
               }`}
             >
               <p className="text-13 font-semibold text-ash-graphite">{s.nombre}</p>
@@ -883,7 +883,7 @@ function SucursalesTab({
                   <button
                     key={key}
                     onClick={() => toggleDia(key)}
-                    className={`w-40 h-32 text-11 font-mono uppercase rounded-md border ${
+                    className={`h-44 w-44 rounded-lg border text-11 font-mono uppercase ${
                       abiertos.has(key)
                         ? "bg-ash-graphite text-canvas-white border-ash-graphite"
                         : "border-concrete text-sage-green hover:border-ash-graphite"
@@ -912,7 +912,7 @@ function SucursalesTab({
                               prev.map((x, j) => (j === i ? { ...x, apertura: e.target.value } : x)),
                             )
                           }
-                          className="h-40 w-120 max-w-full px-10 text-13 font-mono rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-system-black"
+                          className="h-44 w-120 max-w-full rounded-lg border border-concrete bg-canvas-white px-10 text-13 font-mono outline-none focus:border-system-black"
                         />
                         <span className="text-12 text-sage-green">a</span>
                         <input
@@ -923,12 +923,12 @@ function SucursalesTab({
                               prev.map((x, j) => (j === i ? { ...x, cierre: e.target.value } : x)),
                             )
                           }
-                          className="h-40 w-120 max-w-full px-10 text-13 font-mono rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-system-black"
+                          className="h-44 w-120 max-w-full rounded-lg border border-concrete bg-canvas-white px-10 text-13 font-mono outline-none focus:border-system-black"
                         />
                         {turnos.length > 1 && (
                           <button
                             onClick={() => setTurnos((prev) => prev.filter((_, j) => j !== i))}
-                            className="h-32 w-32 grid place-items-center rounded-md text-12 text-alert-red hover:bg-red-50"
+                            className="grid h-44 w-44 place-items-center rounded-lg text-12 text-alert-red hover:bg-warm-pink/20"
                             title="Quitar turno"
                           >
                             ✕
@@ -941,7 +941,7 @@ function SucursalesTab({
                   {turnos.length < 2 && (
                   <button
                     onClick={() => setTurnos((prev) => [...prev, { apertura: "16:00", cierre: "00:00" }])}
-                    className="h-32 px-10 text-11 font-mono uppercase tracking-wider rounded-md border border-concrete hover:border-ash-graphite md:mt-4 md:shrink-0"
+                    className="h-44 rounded-lg border border-concrete px-12 text-11 font-semibold text-ash-graphite hover:border-stone hover:bg-ghost-fog md:mt-4 md:shrink-0"
                   >
                     + Agregar segundo turno
                   </button>
@@ -963,7 +963,7 @@ function SucursalesTab({
       </Card>
 
       {/* crear PRO */}
-      <div className="border border-concrete rounded-lg p-20 bg-canvas-white space-y-12">
+      <aside className="space-y-12 rounded-xl border border-concrete bg-canvas-white p-20 shadow-sm">
         <p className="text-13 font-bold text-ash-graphite">Crear sucursal PRO</p>
         <p className="text-12 text-sage-green">Disponible para negocios con más de un local físico.</p>
         <Campo label="Nombre">
@@ -974,12 +974,12 @@ function SucursalesTab({
         </Campo>
         <button
           disabled
-          className="w-full h-32 rounded-full border border-ash-graphite text-ash-graphite text-11 font-bold uppercase tracking-wide opacity-50 cursor-not-allowed"
+          className="h-44 w-full cursor-not-allowed rounded-lg border border-concrete text-11 font-semibold text-ash-graphite opacity-50"
           title="Disponible con el plan Pro (Sprint 16)"
         >
           Actualizar a Pro
         </button>
-      </div>
+      </aside>
     </div>
   );
 }
