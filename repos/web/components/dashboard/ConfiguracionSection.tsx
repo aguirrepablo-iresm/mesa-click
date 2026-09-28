@@ -1,19 +1,20 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import { api, Tenant, Sucursal, getErrorMessage } from "@/lib/api";
+import { api, Tenant, Sucursal, getErrorMessage, getApiBaseUrl } from "@/lib/api";
 import { DEFAULT_MESA_PRIMARY } from "@/components/menu/BrandHeader";
 import EquipoSection from "./EquipoSection";
 
 /* ─────────────────────────── contenedor ─────────────────────────── */
 
-const TABS = ["negocio", "apariencia", "equipo", "sucursales"] as const;
+const TABS = ["negocio", "apariencia", "equipo", "sucursales", "mercadopago"] as const;
 type Tab = (typeof TABS)[number];
 const TAB_LABELS: Record<Tab, string> = {
   negocio: "Negocio",
   apariencia: "Apariencia",
   equipo: "Equipo de trabajo",
   sucursales: "Sucursales",
+  mercadopago: "Mercado Pago",
 };
 
 export default function ConfiguracionSection() {
@@ -54,7 +55,7 @@ export default function ConfiguracionSection() {
         <div className="min-w-0">
           <h2 className="text-24 font-semibold tracking-[-0.02em] text-ash-graphite sm:text-32">Configuración</h2>
           <p className="mt-4 text-13 text-sage-green sm:text-14">
-            Administrá negocio, apariencia del menú, equipo y sucursales.
+            Administrá negocio, apariencia del menú, equipo, sucursales y cobros digitales.
           </p>
         </div>
         {sucursales.length > 0 && (
@@ -88,7 +89,13 @@ export default function ConfiguracionSection() {
         ))}
       </nav>
 
-      {tab === "negocio" && <NegocioTab key={tenant?.id ?? "sin-tenant"} tenant={tenant} />}
+      {tab === "negocio" && (
+        <NegocioTab
+          key={tenant?.id ?? "sin-tenant"}
+          tenant={tenant}
+          onIrAMercadoPago={() => setTab("mercadopago")}
+        />
+      )}
       {tab === "apariencia" && (
         <AparienciaTab
           key={`${tenant?.id ?? "sin-tenant"}-${sucursalSel?.id ?? "sin-sucursal"}`}
@@ -100,6 +107,18 @@ export default function ConfiguracionSection() {
       {tab === "sucursales" && (
         <SucursalesTab
           key={sucursalSelId || "sin-sucursal"}
+          sucursales={sucursales}
+          setSucursales={setSucursales}
+          selId={sucursalSelId}
+          setSelId={setSucursalSelId}
+          onIrAMercadoPago={() => setTab("mercadopago")}
+        />
+      )}
+      {tab === "mercadopago" && (
+        <MercadoPagoTab
+          key={`${tenant?.id ?? "sin-tenant"}-${sucursalSel?.id ?? "sin-sucursal"}`}
+          tenant={tenant}
+          setTenant={setTenant}
           sucursales={sucursales}
           setSucursales={setSucursales}
           selId={sucursalSelId}
@@ -177,7 +196,13 @@ function PillPrimaria({
 
 const RUBROS = ["Cafetería", "Bar", "Restaurante", "Cervecería", "Pizzería", "Otro"];
 
-function NegocioTab({ tenant }: { tenant: Tenant | null }) {
+function NegocioTab({
+  tenant,
+  onIrAMercadoPago,
+}: {
+  tenant: Tenant | null;
+  onIrAMercadoPago?: () => void;
+}) {
   const rubro = tenant?.rubro;
   const rubroNormalizado = useMemo(() => {
     if (!rubro) return RUBROS[0];
@@ -198,9 +223,6 @@ function NegocioTab({ tenant }: { tenant: Tenant | null }) {
     razonSocial: typeof fiscalData.razon_social === "string" ? fiscalData.razon_social : "",
     cuit: typeof fiscalData.cuit === "string" ? fiscalData.cuit : "",
     condicionIva: typeof fiscalData.condicion_iva === "string" ? fiscalData.condicion_iva : "",
-    mpAccessToken: tenant?.mp_access_token ?? "",
-    mpPublicKey: tenant?.mp_public_key ?? "",
-    mpActivo: tenant?.mp_activo ?? false,
   }));
   const [loading, setLoading] = useState(false);
   const [ok, setOk] = useState(false);
@@ -230,9 +252,6 @@ function NegocioTab({ tenant }: { tenant: Tenant | null }) {
           cuit: form.cuit,
           condicion_iva: form.condicionIva,
         },
-        mp_access_token: form.mpAccessToken || undefined,
-        mp_public_key: form.mpPublicKey || undefined,
-        mp_activo: form.mpActivo,
       });
       setOk(true);
     } catch (err: unknown) {
@@ -335,55 +354,23 @@ function NegocioTab({ tenant }: { tenant: Tenant | null }) {
             </div>
           </div>
 
-          <div className="pt-16 border-t border-concrete space-y-12">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-8">
-              <div>
-                <p className="text-12 font-mono text-sage-green uppercase tracking-wider">
-                  Mercado Pago (Configuración por Defecto)
-                </p>
-                <p className="text-12 text-sage-green mt-2">
-                  Permite a los comensales pagar su cuenta desde el celular mediante Checkout Pro (Sandbox o Producción). Las sucursales usan estos datos salvo que definan una cuenta propia.
-                </p>
-              </div>
-              <label className="flex items-center gap-8 cursor-pointer select-none shrink-0">
-                <input
-                  type="checkbox"
-                  checked={form.mpActivo}
-                  onChange={(e) => set("mpActivo", e.target.checked)}
-                  className="h-18 w-18 rounded border-concrete accent-plain-green cursor-pointer"
-                />
-                <span className="text-13 font-semibold text-ash-graphite">
-                  {form.mpActivo ? "Habilitado" : "Deshabilitado"}
-                </span>
-              </label>
+          <div className="pt-16 border-t border-concrete flex flex-col sm:flex-row sm:items-center sm:justify-between gap-12">
+            <div>
+              <p className="text-12 font-mono text-sage-green uppercase tracking-wider">
+                Cobros con Mercado Pago
+              </p>
+              <p className="text-12 text-sage-green mt-2">
+                Habilitá pagos desde la mesa, cargá credenciales y revisá las URLs de webhook en la pestaña dedicada.
+              </p>
             </div>
-
-            {form.mpActivo && (
-              <div className="grid sm:grid-cols-2 gap-12 pt-4">
-                <Campo label="Access Token de Mercado Pago">
-                  <input
-                    type="password"
-                    className={INPUT}
-                    value={form.mpAccessToken}
-                    onChange={(e) => set("mpAccessToken", e.target.value)}
-                    placeholder="TEST-... o APP_USR-..."
-                  />
-                  <span className="block text-11 text-sage-green mt-4">
-                    Token de prueba (Sandbox) o credenciales productivas.
-                  </span>
-                </Campo>
-                <Campo label="Public Key (Opcional)">
-                  <input
-                    className={INPUT}
-                    value={form.mpPublicKey}
-                    onChange={(e) => set("mpPublicKey", e.target.value)}
-                    placeholder="TEST-... o APP_USR-..."
-                  />
-                  <span className="block text-11 text-sage-green mt-4">
-                    Clave pública para checkout integrado.
-                  </span>
-                </Campo>
-              </div>
+            {onIrAMercadoPago && (
+              <button
+                type="button"
+                onClick={onIrAMercadoPago}
+                className="h-44 shrink-0 rounded-lg border border-concrete bg-ghost-fog/40 px-14 text-12 font-semibold text-ash-graphite hover:border-ash-graphite hover:bg-canvas-white transition-colors cursor-pointer"
+              >
+                Configurar Mercado Pago →
+              </button>
             )}
           </div>
 
@@ -828,11 +815,13 @@ function SucursalesTab({
   setSucursales,
   selId,
   setSelId,
+  onIrAMercadoPago,
 }: {
   sucursales: Sucursal[];
   setSucursales: React.Dispatch<React.SetStateAction<Sucursal[]>>;
   selId: string;
   setSelId: (id: string) => void;
+  onIrAMercadoPago?: () => void;
 }) {
   const sel = useMemo(() => sucursales.find((s) => s.id === selId) ?? null, [sucursales, selId]);
   const horariosIniciales = parseHorarios(sel?.horarios);
@@ -1062,13 +1051,24 @@ function SucursalesTab({
             </div>
 
             <div className="pt-16 border-t border-concrete space-y-12">
-              <div>
-                <span className="block text-11 font-mono text-sage-green uppercase tracking-wider mb-2">
-                  Cobro con Mercado Pago en esta sucursal
-                </span>
-                <p className="text-12 text-sage-green">
-                  Podés heredar la cuenta configurada a nivel negocio, asignar credenciales propias para esta sucursal o deshabilitar el cobro digital aquí.
-                </p>
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-8">
+                <div>
+                  <span className="block text-11 font-mono text-sage-green uppercase tracking-wider mb-2">
+                    Cobro con Mercado Pago en esta sucursal
+                  </span>
+                  <p className="text-12 text-sage-green">
+                    Podés heredar la cuenta configurada a nivel negocio, asignar credenciales propias para esta sucursal o deshabilitar el cobro digital aquí.
+                  </p>
+                </div>
+                {onIrAMercadoPago && (
+                  <button
+                    type="button"
+                    onClick={onIrAMercadoPago}
+                    className="h-36 shrink-0 rounded-lg border border-concrete bg-ghost-fog/40 px-12 text-11 font-semibold text-ash-graphite hover:border-ash-graphite hover:bg-canvas-white transition-colors cursor-pointer"
+                  >
+                    Ver panel de Mercado Pago →
+                  </button>
+                )}
               </div>
 
               <div className="space-y-8">
@@ -1174,6 +1174,533 @@ function SucursalesTab({
           Actualizar a Pro
         </button>
       </aside>
+    </div>
+  );
+}
+
+/* ─────────────────────────── pestaña mercado pago ─────────────────────────── */
+
+function MercadoPagoTab({
+  tenant,
+  setTenant,
+  sucursales,
+  setSucursales,
+  selId,
+  setSelId,
+}: {
+  tenant: Tenant | null;
+  setTenant?: React.Dispatch<React.SetStateAction<Tenant | null>>;
+  sucursales: Sucursal[];
+  setSucursales: React.Dispatch<React.SetStateAction<Sucursal[]>>;
+  selId: string;
+  setSelId: (id: string) => void;
+}) {
+  // Estado negocio (default)
+  const [tenantMpActivo, setTenantMpActivo] = useState(tenant?.mp_activo ?? false);
+  const [tenantAccessToken, setTenantAccessToken] = useState(tenant?.mp_access_token ?? "");
+  const [tenantPublicKey, setTenantPublicKey] = useState(tenant?.mp_public_key ?? "");
+  const [mostrarTenantToken, setMostrarTenantToken] = useState(false);
+  const [guardandoTenant, setGuardandoTenant] = useState(false);
+  const [msgTenant, setMsgTenant] = useState("");
+  const [errTenant, setErrTenant] = useState("");
+
+  // Sucursal seleccionada
+  const sucursalSel = useMemo(
+    () => sucursales.find((s) => s.id === selId) ?? sucursales[0] ?? null,
+    [sucursales, selId],
+  );
+  const [mpModoSucursal, setMpModoSucursal] = useState<"heredar" | "propia" | "deshabilitar">(() => {
+    if (sucursalSel?.mp_activo === false) return "deshabilitar";
+    if (sucursalSel?.mp_activo === true || (sucursalSel?.mp_access_token && sucursalSel.mp_access_token.trim() !== "")) {
+      return "propia";
+    }
+    return "heredar";
+  });
+  const [sucursalAccessToken, setSucursalAccessToken] = useState(sucursalSel?.mp_access_token ?? "");
+  const [sucursalPublicKey, setSucursalPublicKey] = useState(sucursalSel?.mp_public_key ?? "");
+  const [mostrarSucursalToken, setMostrarSucursalToken] = useState(false);
+  const [guardandoSucursal, setGuardandoSucursal] = useState(false);
+  const [msgSucursal, setMsgSucursal] = useState("");
+  const [errSucursal, setErrSucursal] = useState("");
+
+  // Estado de portapapeles
+  const [copiadoWebhook, setCopiadoWebhook] = useState(false);
+
+  useEffect(() => {
+    if (sucursalSel) {
+      if (sucursalSel.mp_activo === false) {
+        setMpModoSucursal("deshabilitar");
+      } else if (
+        sucursalSel.mp_activo === true ||
+        (sucursalSel.mp_access_token && sucursalSel.mp_access_token.trim() !== "")
+      ) {
+        setMpModoSucursal("propia");
+      } else {
+        setMpModoSucursal("heredar");
+      }
+      setSucursalAccessToken(sucursalSel.mp_access_token ?? "");
+      setSucursalPublicKey(sucursalSel.mp_public_key ?? "");
+      setMsgSucursal("");
+      setErrSucursal("");
+    }
+  }, [sucursalSel]);
+
+  const apiBase = getApiBaseUrl();
+  const webhookUrl = `${apiBase}/publica/pago/mercadopago/webhook`;
+
+  const copiarWebhook = async () => {
+    try {
+      await navigator.clipboard.writeText(webhookUrl);
+      setCopiadoWebhook(true);
+      setTimeout(() => setCopiadoWebhook(false), 2500);
+    } catch {
+      const input = document.createElement("textarea");
+      input.value = webhookUrl;
+      document.body.appendChild(input);
+      input.select();
+      document.execCommand("copy");
+      document.body.removeChild(input);
+      setCopiadoWebhook(true);
+      setTimeout(() => setCopiadoWebhook(false), 2500);
+    }
+  };
+
+  const guardarTenantMP = async () => {
+    setGuardandoTenant(true);
+    setMsgTenant("");
+    setErrTenant("");
+    try {
+      const resp = await api.actualizarMiTenant({
+        mp_activo: tenantMpActivo,
+        mp_access_token: tenantAccessToken.trim() || undefined,
+        mp_public_key: tenantPublicKey.trim() || undefined,
+      });
+      if (setTenant) setTenant((prev) => (prev ? { ...prev, ...resp } : resp));
+      setMsgTenant("Credenciales del negocio guardadas correctamente.");
+    } catch (err: unknown) {
+      setErrTenant(getErrorMessage(err, "No se pudieron guardar las credenciales."));
+    } finally {
+      setGuardandoTenant(false);
+    }
+  };
+
+  const guardarSucursalMP = async () => {
+    if (!sucursalSel) return;
+    setGuardandoSucursal(true);
+    setMsgSucursal("");
+    setErrSucursal("");
+    try {
+      let mpPayload: Partial<Sucursal> = {};
+      if (mpModoSucursal === "heredar") {
+        mpPayload = { mp_activo: null, mp_access_token: null, mp_public_key: null };
+      } else if (mpModoSucursal === "deshabilitar") {
+        mpPayload = { mp_activo: false, mp_access_token: null, mp_public_key: null };
+      } else {
+        mpPayload = {
+          mp_activo: true,
+          mp_access_token: sucursalAccessToken.trim() || null,
+          mp_public_key: sucursalPublicKey.trim() || null,
+        };
+      }
+      const actualizada = await api.actualizarSucursal(sucursalSel.id, mpPayload);
+      setSucursales((prev) => prev.map((s) => (s.id === sucursalSel.id ? { ...s, ...actualizada } : s)));
+      setMsgSucursal("Configuración de la sucursal actualizada.");
+    } catch (err: unknown) {
+      setErrSucursal(getErrorMessage(err, "No se pudo actualizar la sucursal."));
+    } finally {
+      setGuardandoSucursal(false);
+    }
+  };
+
+  const renderBadgeEntorno = (activo: boolean, token: string) => {
+    if (!activo) {
+      return (
+        <span className="inline-flex items-center gap-4 rounded-full bg-concrete/60 px-8 py-2 text-11 font-mono font-medium text-sage-green">
+          <span className="h-6 w-6 rounded-full bg-sage-green/60" />
+          Deshabilitado
+        </span>
+      );
+    }
+    const t = token.trim();
+    if (!t) {
+      return (
+        <span className="inline-flex items-center gap-4 rounded-full bg-amber-500/10 px-8 py-2 text-11 font-mono font-medium text-amber-700">
+          <span className="h-6 w-6 rounded-full bg-amber-500" />
+          Sin token
+        </span>
+      );
+    }
+    if (t.startsWith("TEST-")) {
+      return (
+        <span className="inline-flex items-center gap-4 rounded-full bg-blue-500/10 px-8 py-2 text-11 font-mono font-medium text-blue-700">
+          <span className="h-6 w-6 rounded-full bg-blue-500" />
+          Sandbox (Pruebas)
+        </span>
+      );
+    }
+    if (t.startsWith("APP_USR-")) {
+      return (
+        <span className="inline-flex items-center gap-4 rounded-full bg-plain-green/15 px-8 py-2 text-11 font-mono font-medium text-plain-green">
+          <span className="h-6 w-6 rounded-full bg-plain-green" />
+          Producción
+        </span>
+      );
+    }
+    return (
+      <span className="inline-flex items-center gap-4 rounded-full bg-concrete/80 px-8 py-2 text-11 font-mono font-medium text-ash-graphite">
+        Token personalizado
+      </span>
+    );
+  };
+
+  return (
+    <div className="grid items-start gap-16 xl:grid-cols-[minmax(0,1fr)_380px]">
+      {/* Columna Principal: Negocio y Sucursal */}
+      <div className="space-y-16">
+        {/* 1. Negocio General */}
+        <Card titulo="Cuenta General de Mercado Pago (Predeterminada)">
+          <div className="space-y-14">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-10">
+              <p className="text-13 text-sage-green">
+                Habilita el cobro de pedidos desde el celular de los comensales mediante Checkout Pro. Todas las sucursales usarán esta cuenta salvo que configures una propia abajo.
+              </p>
+              <div className="flex items-center gap-10 shrink-0">
+                {renderBadgeEntorno(tenantMpActivo, tenantAccessToken)}
+                <label className="flex items-center gap-8 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={tenantMpActivo}
+                    onChange={(e) => setTenantMpActivo(e.target.checked)}
+                    className="h-18 w-18 rounded border-concrete accent-plain-green cursor-pointer"
+                  />
+                  <span className="text-13 font-semibold text-ash-graphite">
+                    {tenantMpActivo ? "Habilitado" : "Deshabilitado"}
+                  </span>
+                </label>
+              </div>
+            </div>
+
+            <div className="space-y-12 pt-6">
+              <Campo label="Access Token del Negocio">
+                <div className="relative">
+                  <input
+                    type={mostrarTenantToken ? "text" : "password"}
+                    className={`${INPUT} pr-80 font-mono text-13`}
+                    value={tenantAccessToken}
+                    onChange={(e) => setTenantAccessToken(e.target.value)}
+                    placeholder="TEST-... o APP_USR-..."
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setMostrarTenantToken((prev) => !prev)}
+                    className="absolute right-8 top-1/2 -translate-y-1/2 text-11 font-mono text-sage-green hover:text-ash-graphite px-8 py-4 rounded cursor-pointer"
+                  >
+                    {mostrarTenantToken ? "Ocultar" : "Mostrar"}
+                  </button>
+                </div>
+                <span className="block text-11 text-sage-green mt-4">
+                  Token privado generado en Mercado Pago Developers. Si comienza con <code className="font-mono text-ash-graphite">TEST-</code> opera en modo sandbox de pruebas sin dinero real.
+                </span>
+              </Campo>
+
+              <Campo label="Public Key del Negocio (Opcional)">
+                <input
+                  type="text"
+                  className={`${INPUT} font-mono text-13`}
+                  value={tenantPublicKey}
+                  onChange={(e) => setTenantPublicKey(e.target.value)}
+                  placeholder="TEST-... o APP_USR-..."
+                />
+                <span className="block text-11 text-sage-green mt-4">
+                  Clave pública asociada a tu aplicación de Mercado Pago.
+                </span>
+              </Campo>
+            </div>
+
+            <div className="pt-8 flex items-center gap-12">
+              <PillPrimaria onClick={guardarTenantMP} disabled={guardandoTenant}>
+                {guardandoTenant ? "Guardando…" : "Guardar credenciales del negocio"}
+              </PillPrimaria>
+              {msgTenant && <span className="text-12 font-medium text-success-muted">{msgTenant}</span>}
+              {errTenant && <span className="text-12 font-medium text-alert-red">{errTenant}</span>}
+            </div>
+          </div>
+        </Card>
+
+        {/* 2. Sucursales */}
+        <Card titulo="Configuración por Sucursal Física">
+          <div className="space-y-14">
+            <p className="text-13 text-sage-green">
+              Si tu local tiene distintas razones sociales, cuentas bancarias o dueños por sucursal, podés cargar credenciales individuales para cada una.
+            </p>
+
+            {sucursales.length > 0 ? (
+              <>
+                <div className="flex flex-wrap gap-8 items-center">
+                  <span className="text-11 font-mono text-sage-green uppercase tracking-wider">Sucursal:</span>
+                  <div className="flex flex-wrap gap-6">
+                    {sucursales.map((s) => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => setSelId(s.id)}
+                        className={`h-36 px-12 rounded-lg border text-12 font-medium transition-colors cursor-pointer ${
+                          s.id === sucursalSel?.id
+                            ? "border-ash-graphite bg-ghost-fog text-ash-graphite font-semibold shadow-xs"
+                            : "border-concrete text-sage-green hover:border-stone hover:bg-canvas-white"
+                        }`}
+                      >
+                        {s.nombre}
+                        {s.mp_activo === false ? (
+                          <span className="ml-6 text-10 font-mono text-sage-green">(Inactivo)</span>
+                        ) : s.mp_activo === true ? (
+                          <span className="ml-6 text-10 font-mono text-plain-green">(Propio)</span>
+                        ) : (
+                          <span className="ml-6 text-10 font-mono text-sage-green">(Hereda)</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {sucursalSel && (
+                  <div className="rounded-xl border border-concrete/80 bg-ghost-fog/20 p-14 sm:p-16 space-y-14">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-8 pb-10 border-b border-concrete/60">
+                      <div>
+                        <p className="text-13 font-semibold text-ash-graphite">{sucursalSel.nombre}</p>
+                        <p className="text-11 text-sage-green">{sucursalSel.direccion || "Sin dirección cargada"}</p>
+                      </div>
+                      <div>
+                        {renderBadgeEntorno(
+                          mpModoSucursal === "deshabilitar"
+                            ? false
+                            : mpModoSucursal === "propia"
+                            ? true
+                            : tenantMpActivo,
+                          mpModoSucursal === "propia" ? sucursalAccessToken : tenantAccessToken,
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-10">
+                      <label className="flex items-start gap-8 cursor-pointer select-none">
+                        <input
+                          type="radio"
+                          name="mp_modo_sucursal"
+                          value="heredar"
+                          checked={mpModoSucursal === "heredar"}
+                          onChange={() => setMpModoSucursal("heredar")}
+                          className="mt-2 accent-plain-green cursor-pointer"
+                        />
+                        <div>
+                          <span className="text-13 text-ash-graphite font-medium">
+                            Heredar configuración del negocio (recomendado)
+                          </span>
+                          <p className="text-11 text-sage-green">
+                            Cobra en la cuenta general cargada arriba ({tenantAccessToken ? (tenantAccessToken.startsWith("TEST-") ? "Sandbox" : "Producción") : "Sin credenciales"}).
+                          </p>
+                        </div>
+                      </label>
+
+                      <label className="flex items-start gap-8 cursor-pointer select-none">
+                        <input
+                          type="radio"
+                          name="mp_modo_sucursal"
+                          value="propia"
+                          checked={mpModoSucursal === "propia"}
+                          onChange={() => setMpModoSucursal("propia")}
+                          className="mt-2 accent-plain-green cursor-pointer"
+                        />
+                        <div>
+                          <span className="text-13 text-ash-graphite font-medium">
+                            Usar cuenta propia de Mercado Pago para esta sucursal
+                          </span>
+                          <p className="text-11 text-sage-green">
+                            Los cobros de las mesas de {sucursalSel.nombre} se transferirán a este Access Token individual.
+                          </p>
+                        </div>
+                      </label>
+
+                      <label className="flex items-start gap-8 cursor-pointer select-none">
+                        <input
+                          type="radio"
+                          name="mp_modo_sucursal"
+                          value="deshabilitar"
+                          checked={mpModoSucursal === "deshabilitar"}
+                          onChange={() => setMpModoSucursal("deshabilitar")}
+                          className="mt-2 accent-plain-green cursor-pointer"
+                        />
+                        <div>
+                          <span className="text-13 text-ash-graphite font-medium">
+                            Deshabilitar cobro con Mercado Pago en esta sucursal
+                          </span>
+                          <p className="text-11 text-sage-green">
+                            Los comensales de este local no verán la opción de abonar por Mercado Pago (solo pago presencial al mozo).
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {mpModoSucursal === "propia" && (
+                      <div className="grid sm:grid-cols-2 gap-12 pt-8 border-t border-concrete/60">
+                        <Campo label="Access Token de la Sucursal">
+                          <div className="relative">
+                            <input
+                              type={mostrarSucursalToken ? "text" : "password"}
+                              className={`${INPUT} pr-80 font-mono text-13`}
+                              value={sucursalAccessToken}
+                              onChange={(e) => setSucursalAccessToken(e.target.value)}
+                              placeholder="TEST-... o APP_USR-..."
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setMostrarSucursalToken((prev) => !prev)}
+                              className="absolute right-8 top-1/2 -translate-y-1/2 text-11 font-mono text-sage-green hover:text-ash-graphite px-8 py-4 rounded cursor-pointer"
+                            >
+                              {mostrarSucursalToken ? "Ocultar" : "Mostrar"}
+                            </button>
+                          </div>
+                          <span className="block text-11 text-sage-green mt-4">
+                            Token de la cuenta de MP de esta sucursal.
+                          </span>
+                        </Campo>
+                        <Campo label="Public Key de la Sucursal (Opcional)">
+                          <input
+                            type="text"
+                            className={`${INPUT} font-mono text-13`}
+                            value={sucursalPublicKey}
+                            onChange={(e) => setSucursalPublicKey(e.target.value)}
+                            placeholder="TEST-... o APP_USR-..."
+                          />
+                          <span className="block text-11 text-sage-green mt-4">
+                            Clave pública de la sucursal.
+                          </span>
+                        </Campo>
+                      </div>
+                    )}
+
+                    <div className="pt-4 flex items-center gap-12">
+                      <PillPrimaria onClick={guardarSucursalMP} disabled={guardandoSucursal}>
+                        {guardandoSucursal ? "Guardando…" : `Guardar configuración de ${sucursalSel.nombre}`}
+                      </PillPrimaria>
+                      {msgSucursal && <span className="text-12 font-medium text-success-muted">{msgSucursal}</span>}
+                      {errSucursal && <span className="text-12 font-medium text-alert-red">{errSucursal}</span>}
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="text-13 text-sage-green">No hay sucursales registradas aún.</p>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {/* Columna Lateral: URLs a Configurar y Guía */}
+      <div className="space-y-16">
+        <section className="overflow-hidden rounded-xl border border-concrete bg-canvas-white shadow-sm">
+          <div className="border-b border-concrete/70 px-16 py-14">
+            <p className="text-13 font-semibold text-ash-graphite flex items-center gap-6">
+              <span className="material-symbols-outlined text-18 text-plain-green">link</span>
+              URLs a configurar en Mercado Pago
+            </p>
+          </div>
+          <div className="p-16 space-y-16">
+            {/* Webhook URL */}
+            <div className="space-y-8">
+              <div className="flex items-center justify-between">
+                <span className="text-11 font-mono text-sage-green uppercase tracking-wider">
+                  Webhook URL (IPN)
+                </span>
+                <span className="text-10 font-mono rounded bg-plain-green/15 text-plain-green px-6 py-1 font-semibold">
+                  Obligatorio
+                </span>
+              </div>
+              <p className="text-12 text-sage-green">
+                Mercado Pago notificará a este endpoint cada vez que un comensal confirme un pago:
+              </p>
+              <div className="relative rounded-lg border border-concrete bg-ghost-fog p-10 font-mono text-11 break-all text-ash-graphite">
+                {webhookUrl}
+              </div>
+              <button
+                type="button"
+                onClick={copiarWebhook}
+                className="w-full h-38 rounded-lg border border-concrete bg-canvas-white text-12 font-semibold text-ash-graphite hover:border-ash-graphite hover:bg-ghost-fog transition-colors flex items-center justify-center gap-6 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-16">
+                  {copiadoWebhook ? "done" : "content_copy"}
+                </span>
+                {copiadoWebhook ? "¡URL Copiada al Portapapeles!" : "Copiar Webhook URL"}
+              </button>
+            </div>
+
+            {/* Pasos en Mercado Pago */}
+            <div className="pt-12 border-t border-concrete/60 space-y-8">
+              <p className="text-11 font-mono text-sage-green uppercase tracking-wider">
+                Configuración en Mercado Pago:
+              </p>
+              <ol className="text-12 text-sage-green space-y-6 list-decimal list-inside leading-relaxed">
+                <li>
+                  Ingresá a{" "}
+                  <a
+                    href="https://www.mercadopago.com.ar/developers/panel/app"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline text-ash-graphite font-medium hover:text-plain-green"
+                  >
+                    Mercado Pago Developers
+                  </a>.
+                </li>
+                <li>Abrí tu aplicación y hacé clic en <strong>Webhooks</strong>.</li>
+                <li>Pegá la <strong>Webhook URL</strong> indicada arriba.</li>
+                <li>
+                  En eventos a escuchar, tildá únicamente <strong>Pagos (payments)</strong>.
+                </li>
+              </ol>
+            </div>
+
+            {/* Redirección automática */}
+            <div className="pt-12 border-t border-concrete/60 space-y-8">
+              <div className="flex items-center justify-between">
+                <span className="text-11 font-mono text-sage-green uppercase tracking-wider">
+                  Redirección de retorno (back_urls)
+                </span>
+                <span className="text-10 font-mono rounded bg-ghost-fog text-sage-green px-6 py-1 font-semibold">
+                  Automático
+                </span>
+              </div>
+              <p className="text-12 text-sage-green leading-relaxed">
+                <strong>No tenés que configurar URLs de retorno en el panel de Mercado Pago.</strong> Mesa CLICK inyecta dinámicamente las rutas de retorno hacia la comanda de la mesa (<code className="text-11 font-mono text-ash-graphite">/mesa/[qr_token]?pago=exitoso</code>).
+              </p>
+              <p className="text-12 text-sage-green leading-relaxed">
+                Al pagar o cancelar, Mercado Pago redirige de inmediato al comensal a su mesa, donde el pedido se actualiza en tiempo real vía SSE.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Card: Sandbox y Pruebas */}
+        <section className="overflow-hidden rounded-xl border border-concrete bg-canvas-white shadow-sm p-16 space-y-12">
+          <p className="text-13 font-semibold text-ash-graphite flex items-center gap-6">
+            <span className="material-symbols-outlined text-18 text-amber-600">science</span>
+            Modo Sandbox (Pruebas)
+          </p>
+          <p className="text-12 text-sage-green leading-relaxed">
+            Podés realizar pruebas completas de cobro sin debitar dinero real:
+          </p>
+          <ul className="text-12 text-sage-green space-y-4 list-disc list-inside">
+            <li>
+              Cargá un Access Token que empiece con <code className="font-mono text-ash-graphite">TEST-</code>.
+            </li>
+            <li>
+              En el portal de Mercado Pago, creá una <strong>cuenta de prueba de comprador</strong> para pagar con saldo ficticio o tarjetas de test.
+            </li>
+            <li>
+              Al cambiar al token <code className="font-mono text-ash-graphite">APP_USR-</code> el sistema empezará a cobrar dinero real automáticamente.
+            </li>
+          </ul>
+        </section>
+      </div>
     </div>
   );
 }
