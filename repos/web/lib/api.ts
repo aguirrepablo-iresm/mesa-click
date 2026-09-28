@@ -715,7 +715,41 @@ export const api = {
     }
     return data as ResultadoImportacion;
   },
+
+  // 10. Pagos con Mercado Pago (US-82)
+  crearPreferenciaPagoMP: async (qrToken: string): Promise<PreferenciaPagoMP> => {
+    return apiFetch<PreferenciaPagoMP>(`/publica/mesas/${encodeURIComponent(qrToken)}/pago/mercadopago`, {
+      method: 'POST',
+    });
+  },
+
+  confirmarPagoMP: async (qrToken: string, paymentId: string): Promise<RegistroPagoMP> => {
+    return apiFetch<RegistroPagoMP>(`/publica/mesas/${encodeURIComponent(qrToken)}/pago/mercadopago/confirmar`, {
+      method: 'POST',
+      body: JSON.stringify({ payment_id: paymentId }),
+    });
+  },
 };
+
+export interface PreferenciaPagoMP {
+  preference_id: string;
+  init_point: string;
+  sandbox_init_point: string;
+  monto_total: number;
+}
+
+export interface RegistroPagoMP {
+  id: string;
+  mesa_id: string;
+  cuenta_version: number;
+  proveedor: string;
+  preferencia_id: string;
+  pago_id: string;
+  monto: number;
+  moneda: string;
+  estado: string;
+  created_at: string;
+}
 
 export interface ResultadoImportacion {
   creados: number;
@@ -727,3 +761,4 @@ export interface ErrorFila {
   fila: number;
   motivo: string;
 }
+

@@ -71,6 +71,7 @@
 | **US-58** | `Backend` | Procesamiento Atómico de Carga Masiva de Catálogo por CSV/Excel | 📋 Pendiente | Por asignar | [Ver detalle](sprint-13/US-58-backend-carga-masiva-csv.md) |
 | **US-59** | `Integración` | Interfaz de Carga Masiva con Plantilla Oficial y Previsualización | 📋 Pendiente | Por asignar | [Ver detalle](sprint-13/US-59-interfaz-carga-masiva-errores.md) |
 | **US-60** | `Integración` | Ajuste Porcentual Masivo de Precios por Categoría o Carta Completa | ✅ Resuelta | Mateo Silvestrin | [Ver detalle](sprint-13/US-60-ajuste-porcentual-precios.md) |
+| **US-82** | `Integración` | Pago de Cuenta con Mercado Pago (Sandbox Checkout Pro) | ✅ Resuelta | Pablo Aguirre / Antigravity | [Ver detalle](sprint-13/US-82-pago-cuenta-mercadopago.md) |
 
 ### 📌 Sprint 14: Disponibilidad de Ítems (86) & Menús por Franja Horaria (28/09 – 04/10/2026)
 
