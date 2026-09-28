@@ -125,6 +125,27 @@ func (h *Handlers) ActualizarArticulo(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, art)
 }
 
+func (h *Handlers) AjustarPrecios(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	var input AjustePreciosInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		jsonError(w, "body inválido", http.StatusBadRequest)
+		return
+	}
+
+	resultado, err := h.svc.AjustarPrecios(r.Context(), claims.TenantID, input)
+	if err != nil {
+		if errors.Is(err, ErrValidation) {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error ajustando precios", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, resultado)
+}
+
 func (h *Handlers) EliminarArticulo(w http.ResponseWriter, r *http.Request) {
 	claims := auth.ClaimsFromContext(r.Context())
 	id := r.PathValue("id")
