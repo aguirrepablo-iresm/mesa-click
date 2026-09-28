@@ -3,9 +3,9 @@
 > **Sprint**: Sprint 13 (21/09 – 27/09/2026)  
 > **Épica**: Carga Masiva CSV/Excel & Ajuste de Precios  
 > **Tipo**: `Backend`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
-> **Rama de trabajo**: `feat/US-58-backend-carga-masiva`  
+> **Estado**: ✅ **Resuelta**  
+> **Asignado a**: Antigravity  
+> **Rama de trabajo**: `feat/US-58-backend-carga-masiva`
 
 ---
 
@@ -17,19 +17,19 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Endpoint `POST /carta/importar` que recibe archivo CSV o XLSX vía multipart/form-data.
-- [ ] Validación de campos obligatorios: categoría, nombre del producto, precio, descripción opcional.
-- [ ] Transacción de base de datos completa: si hay un error irrecuperable se hace rollback total.
-- [ ] Retorno de reporte JSON con conteo de registros creados, actualizados y lista de filas con advertencias o errores.
+- [x] Endpoint `POST /carta/importar` que recibe archivo CSV o XLSX vía multipart/form-data.
+- [x] Validación de campos obligatorios: categoría, nombre del producto, precio, descripción opcional.
+- [x] Transacción de base de datos completa: si hay un error irrecuperable se hace rollback total.
+- [x] Retorno de reporte JSON con conteo de registros creados, actualizados y lista de filas con advertencias o errores.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Implementar parser de CSV y XLSX en Go.
-- [ ] Lógica de resolución de categorías (crear si no existe, asociar si ya existe).
-- [ ] Test unitario con archivos válidos, inválidos y casos de borde.
-- [ ] Medir performance para archivos de hasta 500 artículos.
+- [x] Implementar parser de CSV y XLSX en Go.
+- [x] Lógica de resolución de categorías (crear si no existe, asociar si ya existe).
+- [x] Test unitario con archivos válidos, inválidos y casos de borde.
+- [x] Medir performance para archivos de hasta 500 artículos.
 
 ---
 
@@ -45,7 +45,7 @@
 
 - **Dependencias**: Habilita US-59.
 - **Estrategia Git**:
-  1. Crear rama siempre a partir de `qa`:  
+  1. Crear rama siempre a partir de `qa`:
      ```bash
      git checkout qa && git pull
      git checkout -b feat/US-58-backend-carga-masiva
