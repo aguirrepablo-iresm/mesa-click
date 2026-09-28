@@ -3,8 +3,8 @@
 > **Sprint**: Sprint 13 (21/09 – 27/09/2026)  
 > **Épica**: Carga Masiva CSV/Excel & Ajuste de Precios  
 > **Tipo**: `Integración`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
+> **Estado**: ✅ **Resuelta**  
+> **Asignado a**: Antigravity  
 > **Rama de trabajo**: `feat/US-59-interfaz-carga-masiva`  
 
 ---
@@ -17,19 +17,19 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Botón para descargar plantilla de ejemplo en formato `.csv` y `.xlsx` con datos de muestra.
-- [ ] Zona de arrastrar y soltar archivo (Drag & Drop) con validación de extensión y peso.
-- [ ] Visualización previa de filas parseadas antes del envío definitivo.
-- [ ] Reporte visual post-importación indicando cuántos ítems se dieron de alta y detalle de filas rechazadas.
+- [x] Botón para descargar plantilla de ejemplo en formato `.csv` y `.xlsx` con datos de muestra.
+- [x] Zona de arrastrar y soltar archivo (Drag & Drop) con validación de extensión y peso.
+- [x] Visualización previa de filas parseadas antes del envío definitivo.
+- [x] Reporte visual post-importación indicando cuántos ítems se dieron de alta y detalle de filas rechazadas.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Crear modal o sección de importación masiva en `CartaSection.tsx`.
-- [ ] Generar archivo modelo de plantilla descargable.
-- [ ] Integrar llamada a `api.importarCarta` con barra de progreso o loader.
-- [ ] Diseñar tabla de errores con número de fila y motivo de rechazo.
+- [x] Crear modal o sección de importación masiva en `CartaSection.tsx`.
+- [x] Generar archivo modelo de plantilla descargable.
+- [x] Integrar llamada a `api.importarCarta` con barra de progreso o loader.
+- [x] Diseñar tabla de errores con número de fila y motivo de rechazo.
 
 ---
 
