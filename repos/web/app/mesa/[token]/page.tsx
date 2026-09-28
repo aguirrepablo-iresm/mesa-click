@@ -953,6 +953,53 @@ export default function MesaPage() {
     }
   };
 
+  const [pagandoMP, setPagandoMP] = useState(false);
+  const [pagoExitoso, setPagoExitoso] = useState(false);
+  const [pagoError, setPagoError] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const params = new URLSearchParams(window.location.search);
+    const pagoParam = params.get('pago');
+    const statusParam = params.get('status') || params.get('collection_status');
+    const paymentId = params.get('payment_id') || params.get('collection_id');
+
+    if (pagoParam === 'exitoso' || statusParam === 'approved') {
+      setPagoExitoso(true);
+      setPagoError(false);
+      dispatch({ type: 'SET_VISTA', payload: 'seguimiento' });
+      if (token && paymentId) {
+        api.confirmarPagoMP(token, paymentId).catch(err => {
+          console.warn('Aviso al confirmar pago en API:', err);
+        });
+      }
+    } else if (pagoParam === 'fallido' || statusParam === 'rejected') {
+      setPagoError(true);
+      setPagoExitoso(false);
+      dispatch({ type: 'SET_VISTA', payload: 'seguimiento' });
+    }
+  }, [token]);
+
+  const handlePagarMercadoPago = async () => {
+    if (!token || !mesa) return;
+    setPagandoMP(true);
+    setPagoError(false);
+
+    try {
+      const resp = await api.crearPreferenciaPagoMP(token);
+      const urlDestino = resp.sandbox_init_point || resp.init_point;
+      if (urlDestino) {
+        window.location.href = urlDestino;
+      } else {
+        throw new Error('No se obtuvo la URL de pago.');
+      }
+    } catch (error) {
+      console.error('Error al crear preferencia de Mercado Pago:', error);
+      alert('No se pudo iniciar el pago con Mercado Pago. Verifica que haya consumos en la mesa e intenta nuevamente.');
+      setPagandoMP(false);
+    }
+  };
+
   const handleGuardarComensal = (nombre: string) => {
     if (!mesa || state.cuentaSolicitada) return;
     const identidad = comensal
@@ -1056,6 +1103,10 @@ export default function MesaPage() {
           onCambiarComensal={state.cuentaSolicitada ? undefined : () => setEditandoComensal(true)}
           onAgregarMas={() => dispatch({ type: 'SET_VISTA', payload: 'carta' })}
           onPedirCuenta={handlePedirCuenta}
+          onPagarMercadoPago={mesa.mercadopago_habilitado ? handlePagarMercadoPago : undefined}
+          pagandoMP={pagandoMP}
+          pagoExitoso={pagoExitoso}
+          pagoError={pagoError}
         />
         {modalNombreComensal}
       </div>

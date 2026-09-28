@@ -62,7 +62,7 @@
 |---|---|---|---|---|---|
 | **US-56** | `Frontend` | Navegación Mobile Táctil con Categorías Sticky y Carrito Bottom-Sheet | ✅ Resuelta | Antigravity | [Ver detalle](sprint-12/US-56-navegacion-mobile-categorias-carrito.md) |
 | **US-57** | `Frontend` | Personalización de Platos con Variantes, Opciones y Notas Libres | ✅ Resuelta | Antigravity | [Ver detalle](sprint-12/US-57-personalizacion-platos-variantes.md) |
-| **US-81** | `Integración` | Pedidos Colaborativos en Mesa con Identificación de Comensal y División de Cuenta | ⚡ En Curso | Mateo Silvestrin | [Ver detalle](sprint-12/US-81-pedidos-colaborativos-mesa.md) |
+| **US-81** | `Integración` | Pedidos Colaborativos en Mesa con Identificación de Comensal y División de Cuenta | ✅ Resuelta | Mateo Silvestrin | [Ver detalle](sprint-12/US-81-pedidos-colaborativos-mesa.md) |
 
 ### 📌 Sprint 13: Carga Masiva CSV/Excel & Ajuste de Precios (21/09 – 27/09/2026)
 
@@ -71,6 +71,7 @@
 | **US-58** | `Backend` | Procesamiento Atómico de Carga Masiva de Catálogo por CSV/Excel | 📋 Pendiente | Por asignar | [Ver detalle](sprint-13/US-58-backend-carga-masiva-csv.md) |
 | **US-59** | `Integración` | Interfaz de Carga Masiva con Plantilla Oficial y Previsualización | 📋 Pendiente | Por asignar | [Ver detalle](sprint-13/US-59-interfaz-carga-masiva-errores.md) |
 | **US-60** | `Integración` | Ajuste Porcentual Masivo de Precios por Categoría o Carta Completa | ✅ Resuelta | Mateo Silvestrin | [Ver detalle](sprint-13/US-60-ajuste-porcentual-precios.md) |
+| **US-82** | `Integración` | Pago de Cuenta con Mercado Pago (Sandbox Checkout Pro) | ✅ Resuelta | Pablo Aguirre / Antigravity | [Ver detalle](sprint-13/US-82-pago-cuenta-mercadopago.md) |
 
 ### 📌 Sprint 14: Disponibilidad de Ítems (86) & Menús por Franja Horaria (28/09 – 04/10/2026)
 

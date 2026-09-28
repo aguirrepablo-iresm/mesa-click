@@ -3,7 +3,7 @@
 > **Sprint**: Sprint 12 (14/09 – 20/09/2026)  
 > **Épica**: Mobile-First Comensal  
 > **Tipo**: `Integración` (Fullstack: Frontend Comensal + Dashboard + Backend)  
-> **Estado**: ⚡ **En Curso**
+> **Estado**: ✅ **Resuelta**
 >
 > **Asignado a**: Mateo Silvestrin
 >

@@ -91,10 +91,12 @@ func (s *pgStore) ObtenerPorID(ctx context.Context, id string) (*Tenant, error) 
 	var datosFiscalesBytes []byte
 	err := db.Pool.QueryRow(ctx,
 		`SELECT id, nombre, nombre_fantasia, rubro, descripcion, email_contacto, whatsapp,
-		        logo_url, color_primario, estilo_visual, datos_fiscales, google_review_url, slug, created_at
+		        logo_url, color_primario, estilo_visual, datos_fiscales, google_review_url,
+		        mp_access_token, mp_public_key, COALESCE(mp_activo, false), slug, created_at
 		 FROM tenants WHERE id = $1`, id,
 	).Scan(&t.ID, &t.Nombre, &t.NombreFantasia, &t.Rubro, &t.Descripcion, &t.EmailContacto, &t.Whatsapp,
-		&t.LogoURL, &t.ColorPrimario, &t.EstiloVisual, &datosFiscalesBytes, &t.GoogleReviewURL, &t.Slug, &t.CreatedAt)
+		&t.LogoURL, &t.ColorPrimario, &t.EstiloVisual, &datosFiscalesBytes, &t.GoogleReviewURL,
+		&t.MPAccessToken, &t.MPPublicKey, &t.MPActivo, &t.Slug, &t.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
@@ -175,6 +177,21 @@ func (s *pgStore) Actualizar(ctx context.Context, id string, input ActualizarTen
 		googleReviewURL = input.GoogleReviewURL
 	}
 
+	mpAccessToken := actual.MPAccessToken
+	if input.MPAccessToken != nil {
+		mpAccessToken = input.MPAccessToken
+	}
+
+	mpPublicKey := actual.MPPublicKey
+	if input.MPPublicKey != nil {
+		mpPublicKey = input.MPPublicKey
+	}
+
+	mpActivo := actual.MPActivo
+	if input.MPActivo != nil {
+		mpActivo = *input.MPActivo
+	}
+
 	var t Tenant
 	var datosFiscalesBytes []byte
 
@@ -182,15 +199,19 @@ func (s *pgStore) Actualizar(ctx context.Context, id string, input ActualizarTen
 		`UPDATE tenants
 		 SET nombre = $1, nombre_fantasia = $2, rubro = $3, descripcion = $4,
 		     email_contacto = $5, whatsapp = $6, logo_url = $7, color_primario = $8,
-		     estilo_visual = $9, datos_fiscales = $10, google_review_url = $11
-		 WHERE id = $12
+		     estilo_visual = $9, datos_fiscales = $10, google_review_url = $11,
+		     mp_access_token = $12, mp_public_key = $13, mp_activo = $14
+		 WHERE id = $15
 		 RETURNING id, nombre, nombre_fantasia, rubro, descripcion, email_contacto, whatsapp,
-		           logo_url, color_primario, estilo_visual, datos_fiscales, google_review_url, slug, created_at`,
+		           logo_url, color_primario, estilo_visual, datos_fiscales, google_review_url,
+		           mp_access_token, mp_public_key, COALESCE(mp_activo, false), slug, created_at`,
 		nombre, nombreFantasia, rubro, descripcion,
 		emailContacto, whatsapp, logoURL, colorPrimario,
-		estiloVisual, datosFiscalesJSON, googleReviewURL, id,
+		estiloVisual, datosFiscalesJSON, googleReviewURL,
+		mpAccessToken, mpPublicKey, mpActivo, id,
 	).Scan(&t.ID, &t.Nombre, &t.NombreFantasia, &t.Rubro, &t.Descripcion, &t.EmailContacto, &t.Whatsapp,
-		&t.LogoURL, &t.ColorPrimario, &t.EstiloVisual, &datosFiscalesBytes, &t.GoogleReviewURL, &t.Slug, &t.CreatedAt)
+		&t.LogoURL, &t.ColorPrimario, &t.EstiloVisual, &datosFiscalesBytes, &t.GoogleReviewURL,
+		&t.MPAccessToken, &t.MPPublicKey, &t.MPActivo, &t.Slug, &t.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound

@@ -187,6 +187,9 @@ export interface Tenant {
   estilo_visual?: string;
   datos_fiscales?: Record<string, unknown>;
   google_review_url?: string;
+  mp_access_token?: string;
+  mp_public_key?: string;
+  mp_activo?: boolean;
   slug: string;
   activo?: boolean;
   created_at: string;
@@ -205,6 +208,9 @@ export interface ActualizarTenantInput {
   estilo_visual?: string;
   datos_fiscales?: Record<string, unknown>;
   google_review_url?: string;
+  mp_access_token?: string;
+  mp_public_key?: string;
+  mp_activo?: boolean;
 }
 
 export interface OnboardingInput {
@@ -231,6 +237,9 @@ export interface Sucursal {
   email?: string;
   whatsapp?: string;
   horarios?: string;
+  mp_access_token?: string | null;
+  mp_public_key?: string | null;
+  mp_activo?: boolean | null;
   activa: boolean;
   created_at: string;
   updated_at: string;
@@ -329,6 +338,7 @@ export interface MesaPublica {
   logo_url?: string | null;
   color_primario?: string | null;
   estilo_visual?: 'claro' | 'oscuro' | null;
+  mercadopago_habilitado?: boolean;
 }
 
 export interface ArticuloPublico {
@@ -715,7 +725,41 @@ export const api = {
     }
     return data as ResultadoImportacion;
   },
+
+  // 10. Pagos con Mercado Pago (US-82)
+  crearPreferenciaPagoMP: async (qrToken: string): Promise<PreferenciaPagoMP> => {
+    return apiFetch<PreferenciaPagoMP>(`/publica/mesas/${encodeURIComponent(qrToken)}/pago/mercadopago`, {
+      method: 'POST',
+    });
+  },
+
+  confirmarPagoMP: async (qrToken: string, paymentId: string): Promise<RegistroPagoMP> => {
+    return apiFetch<RegistroPagoMP>(`/publica/mesas/${encodeURIComponent(qrToken)}/pago/mercadopago/confirmar`, {
+      method: 'POST',
+      body: JSON.stringify({ payment_id: paymentId }),
+    });
+  },
 };
+
+export interface PreferenciaPagoMP {
+  preference_id: string;
+  init_point: string;
+  sandbox_init_point: string;
+  monto_total: number;
+}
+
+export interface RegistroPagoMP {
+  id: string;
+  mesa_id: string;
+  cuenta_version: number;
+  proveedor: string;
+  preferencia_id: string;
+  pago_id: string;
+  monto: number;
+  moneda: string;
+  estado: string;
+  created_at: string;
+}
 
 export interface ResultadoImportacion {
   creados: number;
@@ -727,3 +771,4 @@ export interface ErrorFila {
   fila: number;
   motivo: string;
 }
+

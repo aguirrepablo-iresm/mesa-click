@@ -25,6 +25,9 @@ type Tenant struct {
 	EstiloVisual    *string        `json:"estilo_visual,omitempty"`
 	DatosFiscales   map[string]any `json:"datos_fiscales,omitempty"`
 	GoogleReviewURL *string        `json:"google_review_url,omitempty"`
+	MPAccessToken   *string        `json:"mp_access_token,omitempty"`
+	MPPublicKey     *string        `json:"mp_public_key,omitempty"`
+	MPActivo        bool           `json:"mp_activo"`
 	Slug            string         `json:"slug"`
 	CreatedAt       time.Time      `json:"created_at"`
 }
@@ -54,4 +57,7 @@ type ActualizarTenantInput struct {
 	EstiloVisual    *string        `json:"estilo_visual,omitempty"`
 	DatosFiscales   map[string]any `json:"datos_fiscales,omitempty"`
 	GoogleReviewURL *string        `json:"google_review_url,omitempty"`
+	MPAccessToken   *string        `json:"mp_access_token,omitempty"`
+	MPPublicKey     *string        `json:"mp_public_key,omitempty"`
+	MPActivo        *bool          `json:"mp_activo,omitempty"`
 }

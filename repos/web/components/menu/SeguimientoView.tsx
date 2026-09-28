@@ -16,6 +16,10 @@ interface Props {
   onCambiarComensal?: () => void;
   onAgregarMas: () => void;
   onPedirCuenta: () => Promise<void> | void;
+  onPagarMercadoPago?: () => Promise<void> | void;
+  pagandoMP?: boolean;
+  pagoExitoso?: boolean;
+  pagoError?: boolean;
 }
 
 const PASOS: EstadoPedido[] = ['recibido', 'preparando', 'listo'];
@@ -46,6 +50,10 @@ export default function SeguimientoView({
   onCambiarComensal,
   onAgregarMas,
   onPedirCuenta,
+  onPagarMercadoPago,
+  pagandoMP = false,
+  pagoExitoso = false,
+  pagoError = false,
 }: Props) {
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [solicitandoCuenta, setSolicitandoCuenta] = useState(false);
@@ -242,14 +250,28 @@ export default function SeguimientoView({
 
         {/* Acciones */}
         <div className="space-y-10 pt-4">
-          {items.length > 0 && (
+          {pagoExitoso && (
+            <div className="w-full rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-16 text-center shadow-xs animate-in fade-in">
+              <p className="text-14 font-semibold text-emerald-600 dark:text-emerald-400">✓ ¡Pago acreditado por Mercado Pago!</p>
+              <p className="mesa-muted mt-2 text-12">El pago fue registrado con éxito y el personal del local fue notificado en tiempo real.</p>
+            </div>
+          )}
+
+          {pagoError && (
+            <div className="w-full rounded-lg border border-rose-500/30 bg-rose-500/10 p-16 text-center shadow-xs animate-in fade-in">
+              <p className="text-14 font-semibold text-rose-600 dark:text-rose-400">No se pudo procesar el pago con Mercado Pago</p>
+              <p className="mesa-muted mt-2 text-12">Podés reintentar abonar con Mercado Pago o solicitar la cuenta para pagar al mozo.</p>
+            </div>
+          )}
+
+          {items.length > 0 && !pagoExitoso && (
             <div className="mesa-primary-soft mesa-border w-full rounded-lg border py-16 text-center shadow-xs">
               <p className="mesa-primary text-14 font-semibold">✓ Pedido realizado con éxito</p>
               <p className="mesa-muted mt-2 text-12">Nuestro equipo ya está trabajando en tu pedido.</p>
             </div>
           )}
 
-          {!cuentaSolicitada && (
+          {!cuentaSolicitada && !pagoExitoso && (
             <button
               onClick={onAgregarMas}
               className="mesa-surface mesa-muted mesa-border flex min-h-52 w-full items-center justify-center gap-6 rounded-lg border py-12 text-13 font-medium shadow-2xs transition-all hover:border-[var(--mesa-primary)] active:scale-[0.98]"
@@ -259,7 +281,29 @@ export default function SeguimientoView({
             </button>
           )}
 
-          {!cuentaSolicitada ? (
+          {onPagarMercadoPago && !pagoExitoso && items.length > 0 && (
+            <button
+              type="button"
+              onClick={() => void onPagarMercadoPago()}
+              disabled={pagandoMP}
+              className="flex min-h-52 w-full items-center justify-center gap-8 rounded-lg bg-[#009EE3] hover:bg-[#0086c2] text-white py-14 px-16 text-14 font-semibold shadow-md transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+            >
+              {pagandoMP ? (
+                <>
+                  <span className="material-symbols-outlined animate-spin text-18">progress_activity</span>
+                  <span>Conectando con Mercado Pago...</span>
+                </>
+              ) : (
+                <>
+                  <span className="text-16">💳</span>
+                  <span>Pagar con Mercado Pago</span>
+                  <span className="ml-4 rounded bg-white/25 px-6 py-2 text-10 font-bold tracking-wide uppercase">Sandbox</span>
+                </>
+              )}
+            </button>
+          )}
+
+          {!cuentaSolicitada && !pagoExitoso ? (
             <button
               onClick={() => setMostrarConfirmacion(true)}
               className="mesa-primary-bg flex min-h-52 w-full items-center justify-center gap-6 rounded-lg py-14 text-14 font-semibold shadow-md transition-all active:scale-[0.98]"
@@ -267,12 +311,12 @@ export default function SeguimientoView({
               <span>Pedir la cuenta</span>
               <span className="text-16">🧾</span>
             </button>
-          ) : (
+          ) : !pagoExitoso ? (
             <div className="mesa-primary-soft mesa-border w-full rounded-lg border py-16 text-center shadow-xs animate-in fade-in">
               <p className="mesa-primary text-14 font-semibold">✓ Solicitud de cuenta enviada</p>
               <p className="mesa-muted mt-2 text-12">La cuenta queda asociada a todos los pedidos de esta mesa.</p>
             </div>
-          )}
+          ) : null}
         </div>
       </div>
 

@@ -198,13 +198,16 @@ function NegocioTab({ tenant }: { tenant: Tenant | null }) {
     razonSocial: typeof fiscalData.razon_social === "string" ? fiscalData.razon_social : "",
     cuit: typeof fiscalData.cuit === "string" ? fiscalData.cuit : "",
     condicionIva: typeof fiscalData.condicion_iva === "string" ? fiscalData.condicion_iva : "",
+    mpAccessToken: tenant?.mp_access_token ?? "",
+    mpPublicKey: tenant?.mp_public_key ?? "",
+    mpActivo: tenant?.mp_activo ?? false,
   }));
   const [loading, setLoading] = useState(false);
   const [ok, setOk] = useState(false);
   const [error, setError] = useState("");
 
   const linkBase = `mesa-click-web.onrender.com/${tenant?.slug ?? "tu-negocio"}`;
-  const set = (k: keyof typeof form, v: string) => {
+  const set = <K extends keyof typeof form>(k: K, v: (typeof form)[K]) => {
     setForm((f) => ({ ...f, [k]: v }));
     setOk(false);
     setError("");
@@ -227,6 +230,9 @@ function NegocioTab({ tenant }: { tenant: Tenant | null }) {
           cuit: form.cuit,
           condicion_iva: form.condicionIva,
         },
+        mp_access_token: form.mpAccessToken || undefined,
+        mp_public_key: form.mpPublicKey || undefined,
+        mp_activo: form.mpActivo,
       });
       setOk(true);
     } catch (err: unknown) {
@@ -327,6 +333,58 @@ function NegocioTab({ tenant }: { tenant: Tenant | null }) {
                 </select>
               </Campo>
             </div>
+          </div>
+
+          <div className="pt-16 border-t border-concrete space-y-12">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-8">
+              <div>
+                <p className="text-12 font-mono text-sage-green uppercase tracking-wider">
+                  Mercado Pago (Configuración por Defecto)
+                </p>
+                <p className="text-12 text-sage-green mt-2">
+                  Permite a los comensales pagar su cuenta desde el celular mediante Checkout Pro (Sandbox o Producción). Las sucursales usan estos datos salvo que definan una cuenta propia.
+                </p>
+              </div>
+              <label className="flex items-center gap-8 cursor-pointer select-none shrink-0">
+                <input
+                  type="checkbox"
+                  checked={form.mpActivo}
+                  onChange={(e) => set("mpActivo", e.target.checked)}
+                  className="h-18 w-18 rounded border-concrete accent-plain-green cursor-pointer"
+                />
+                <span className="text-13 font-semibold text-ash-graphite">
+                  {form.mpActivo ? "Habilitado" : "Deshabilitado"}
+                </span>
+              </label>
+            </div>
+
+            {form.mpActivo && (
+              <div className="grid sm:grid-cols-2 gap-12 pt-4">
+                <Campo label="Access Token de Mercado Pago">
+                  <input
+                    type="password"
+                    className={INPUT}
+                    value={form.mpAccessToken}
+                    onChange={(e) => set("mpAccessToken", e.target.value)}
+                    placeholder="TEST-... o APP_USR-..."
+                  />
+                  <span className="block text-11 text-sage-green mt-4">
+                    Token de prueba (Sandbox) o credenciales productivas.
+                  </span>
+                </Campo>
+                <Campo label="Public Key (Opcional)">
+                  <input
+                    className={INPUT}
+                    value={form.mpPublicKey}
+                    onChange={(e) => set("mpPublicKey", e.target.value)}
+                    placeholder="TEST-... o APP_USR-..."
+                  />
+                  <span className="block text-11 text-sage-green mt-4">
+                    Clave pública para checkout integrado.
+                  </span>
+                </Campo>
+              </div>
+            )}
           </div>
 
           {error && <p className="text-12 text-alert-red">{error}</p>}
@@ -788,8 +846,38 @@ function SucursalesTab({
   const [turnos, setTurnos] = useState<Turno[]>(() =>
     horariosIniciales.turnos.length ? horariosIniciales.turnos : [{ apertura: "08:00", cierre: "00:00" }],
   );
+  const [mpModo, setMpModo] = useState<"heredar" | "propia" | "deshabilitar">(() => {
+    if (sel?.mp_activo === false) return "deshabilitar";
+    if (sel?.mp_activo === true || (sel?.mp_access_token && sel.mp_access_token.trim() !== "")) return "propia";
+    return "heredar";
+  });
+  const [mpAccessToken, setMpAccessToken] = useState(sel?.mp_access_token ?? "");
+  const [mpPublicKey, setMpPublicKey] = useState(sel?.mp_public_key ?? "");
   const [guardando, setGuardando] = useState(false);
   const [msg, setMsg] = useState("");
+
+  useEffect(() => {
+    if (sel) {
+      setForm({
+        nombre: sel.nombre ?? "",
+        whatsapp: sel.whatsapp ?? "",
+        email: sel.email ?? "",
+      });
+      const h = parseHorarios(sel.horarios);
+      setAbiertos(h.abiertos);
+      setTurnos(h.turnos.length ? h.turnos : [{ apertura: "08:00", cierre: "00:00" }]);
+      if (sel.mp_activo === false) {
+        setMpModo("deshabilitar");
+      } else if (sel.mp_activo === true || (sel.mp_access_token && sel.mp_access_token.trim() !== "")) {
+        setMpModo("propia");
+      } else {
+        setMpModo("heredar");
+      }
+      setMpAccessToken(sel.mp_access_token ?? "");
+      setMpPublicKey(sel.mp_public_key ?? "");
+      setMsg("");
+    }
+  }, [sel]);
 
   const toggleDia = (key: string) =>
     setAbiertos((prev) => {
@@ -804,11 +892,25 @@ function SucursalesTab({
     setGuardando(true);
     setMsg("");
     try {
+      let mpPayload: Partial<Sucursal> = {};
+      if (mpModo === "heredar") {
+        mpPayload = { mp_activo: null, mp_access_token: null, mp_public_key: null };
+      } else if (mpModo === "deshabilitar") {
+        mpPayload = { mp_activo: false, mp_access_token: null, mp_public_key: null };
+      } else {
+        mpPayload = {
+          mp_activo: true,
+          mp_access_token: mpAccessToken.trim() || null,
+          mp_public_key: mpPublicKey.trim() || null,
+        };
+      }
+
       const payload: Partial<Sucursal> = {
         nombre: form.nombre,
         whatsapp: form.whatsapp,
         email: form.email,
         horarios: serializeHorarios(abiertos, turnos),
+        ...mpPayload,
       };
       const actualizada = await api.actualizarSucursal(sel.id, payload);
       setSucursales((prev) => prev.map((s) => (s.id === sel.id ? { ...s, ...actualizada } : s)));
@@ -836,7 +938,16 @@ function SucursalesTab({
               }`}
             >
               <p className="text-13 font-semibold text-ash-graphite">{s.nombre}</p>
-              <p className="text-11 text-sage-green mt-2">{s.activa ? "Abierto" : "Cerrado"}</p>
+              <div className="flex items-center gap-6 mt-2">
+                <span className="text-11 text-sage-green">{s.activa ? "Abierto" : "Cerrado"}</span>
+                {s.mp_activo === false ? (
+                  <span className="text-10 rounded bg-concrete px-4 py-1 text-sage-green font-mono">MP inactivo</span>
+                ) : s.mp_activo === true ? (
+                  <span className="text-10 rounded bg-plain-green/15 px-4 py-1 text-plain-green font-mono font-medium">MP propio</span>
+                ) : (
+                  <span className="text-10 rounded bg-ghost-fog px-4 py-1 text-sage-green font-mono">MP negocio</span>
+                )}
+              </div>
             </button>
           ))}
           {sucursales.length === 0 && (
@@ -948,6 +1059,89 @@ function SucursalesTab({
                   )}
                 </div>
               </div>
+            </div>
+
+            <div className="pt-16 border-t border-concrete space-y-12">
+              <div>
+                <span className="block text-11 font-mono text-sage-green uppercase tracking-wider mb-2">
+                  Cobro con Mercado Pago en esta sucursal
+                </span>
+                <p className="text-12 text-sage-green">
+                  Podés heredar la cuenta configurada a nivel negocio, asignar credenciales propias para esta sucursal o deshabilitar el cobro digital aquí.
+                </p>
+              </div>
+
+              <div className="space-y-8">
+                <label className="flex items-center gap-8 cursor-pointer select-none">
+                  <input
+                    type="radio"
+                    name="mp_modo"
+                    value="heredar"
+                    checked={mpModo === "heredar"}
+                    onChange={() => setMpModo("heredar")}
+                    className="accent-plain-green cursor-pointer"
+                  />
+                  <span className="text-13 text-ash-graphite font-medium">
+                    Heredar configuración del negocio (recomendado)
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-8 cursor-pointer select-none">
+                  <input
+                    type="radio"
+                    name="mp_modo"
+                    value="propia"
+                    checked={mpModo === "propia"}
+                    onChange={() => setMpModo("propia")}
+                    className="accent-plain-green cursor-pointer"
+                  />
+                  <span className="text-13 text-ash-graphite font-medium">
+                    Usar cuenta propia de Mercado Pago para esta sucursal
+                  </span>
+                </label>
+
+                <label className="flex items-center gap-8 cursor-pointer select-none">
+                  <input
+                    type="radio"
+                    name="mp_modo"
+                    value="deshabilitar"
+                    checked={mpModo === "deshabilitar"}
+                    onChange={() => setMpModo("deshabilitar")}
+                    className="accent-plain-green cursor-pointer"
+                  />
+                  <span className="text-13 text-ash-graphite font-medium">
+                    Deshabilitar cobro con Mercado Pago en esta sucursal
+                  </span>
+                </label>
+              </div>
+
+              {mpModo === "propia" && (
+                <div className="grid sm:grid-cols-2 gap-12 pt-8 animate-in fade-in">
+                  <Campo label="Access Token de la sucursal">
+                    <input
+                      type="password"
+                      className={INPUT}
+                      value={mpAccessToken}
+                      onChange={(e) => setMpAccessToken(e.target.value)}
+                      placeholder="TEST-... o APP_USR-..."
+                    />
+                    <span className="block text-11 text-sage-green mt-4">
+                      Los pagos de las mesas de esta sucursal se acreditarán en esta cuenta.
+                    </span>
+                  </Campo>
+                  <Campo label="Public Key de la sucursal (Opcional)">
+                    <input
+                      className={INPUT}
+                      value={mpPublicKey}
+                      onChange={(e) => setMpPublicKey(e.target.value)}
+                      placeholder="TEST-... o APP_USR-..."
+                    />
+                    <span className="block text-11 text-sage-green mt-4">
+                      Clave pública de la cuenta de esta sucursal.
+                    </span>
+                  </Campo>
+                </div>
+              )}
             </div>
 
             <div className="flex items-center gap-12">

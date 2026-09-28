@@ -10,6 +10,7 @@ import (
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/auth"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/carta"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/db"
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/mercadopago"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/mesa"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/notificacion"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/pedido"
@@ -154,6 +155,19 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.HandleFunc("GET /publica/mesas/{qr_token}", mesaH.MesaPorQR)
 	mux.HandleFunc("GET /publica/mesas/{qr_token}/pedidos", pedidoH.ListarCuentaActual)
 	mux.HandleFunc("POST /publica/mesas/{qr_token}/cuenta", mesaH.SolicitarCuenta)
+
+	// Mercado Pago (Sandbox / Producción)
+	mpAccessToken := os.Getenv("MERCADOPAGO_ACCESS_TOKEN")
+	appURL := os.Getenv("APP_URL")
+	apiURL := os.Getenv("API_URL")
+	mpClient := mercadopago.NuevoCliente(mpAccessToken)
+	mpStore := mercadopago.NuevoStore()
+	mpSvc := mercadopago.NuevoService(mpClient, mpStore, mesaSvc, pedidoSvc, appURL, apiURL)
+	mpH := mercadopago.NuevosHandlers(mpSvc)
+
+	mux.HandleFunc("POST /publica/mesas/{qr_token}/pago/mercadopago", mpH.CrearPreferencia)
+	mux.HandleFunc("POST /publica/mesas/{qr_token}/pago/mercadopago/confirmar", mpH.ConfirmarPago)
+	mux.HandleFunc("POST /publica/pago/mercadopago/webhook", mpH.Webhook)
 }
 
 func handlerHealth(w http.ResponseWriter, r *http.Request) {
