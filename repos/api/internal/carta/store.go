@@ -20,6 +20,7 @@ type Store interface {
 	ListarArticulos(ctx context.Context, tenantID string) ([]Articulo, error)
 	CrearArticulo(ctx context.Context, tenantID string, input ArticuloInput) (*Articulo, error)
 	ActualizarArticulo(ctx context.Context, id, tenantID string, u ArticuloUpdate) (*Articulo, error)
+	AjustarPrecios(ctx context.Context, tenantID string, input AjustePreciosInput) (*AjustePreciosResultado, error)
 	EliminarArticulo(ctx context.Context, id, tenantID string) error
 	ObtenerCartaPublica(ctx context.Context, sucursalID string) (*CartaPublica, error)
 
@@ -171,6 +172,29 @@ func (s *pgStore) ActualizarArticulo(ctx context.Context, id, tenantID string, u
 		return nil, err
 	}
 	return a, nil
+}
+
+func (s *pgStore) AjustarPrecios(ctx context.Context, tenantID string, input AjustePreciosInput) (*AjustePreciosResultado, error) {
+	resultado := &AjustePreciosResultado{}
+	err := db.Pool.QueryRow(ctx,
+		`WITH precios_actualizados AS (
+			UPDATE articulos
+			SET precio = CASE $4
+				WHEN '10' THEN ROUND((precio * (1 + $3::numeric / 100)) / 10) * 10
+				WHEN '100' THEN ROUND((precio * (1 + $3::numeric / 100)) / 100) * 100
+				ELSE ROUND(precio * (1 + $3::numeric / 100), 2)
+			END
+			WHERE tenant_id = $1
+			  AND ($2 = '' OR categoria_id::text = $2)
+			RETURNING id
+		)
+		SELECT COUNT(*) FROM precios_actualizados`,
+		tenantID, input.CategoriaID, input.Porcentaje, input.Redondeo,
+	).Scan(&resultado.Actualizados)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
 }
 
 func (s *pgStore) EliminarArticulo(ctx context.Context, id, tenantID string) error {

@@ -4,7 +4,7 @@ import "errors"
 
 // Sentinel errors
 var (
-	ErrNotFound  = errors.New("recurso no encontrado")
+	ErrNotFound   = errors.New("recurso no encontrado")
 	ErrValidation = errors.New("datos inválidos")
 )
 
@@ -70,6 +70,22 @@ type ArticuloUpdate struct {
 	Nombre *string  `json:"nombre"`
 	Precio *float64 `json:"precio"`
 	Activo *bool    `json:"activo"`
+}
+
+const (
+	RedondeoNinguno = "ninguno"
+	Redondeo10      = "10"
+	Redondeo100     = "100"
+)
+
+type AjustePreciosInput struct {
+	CategoriaID string  `json:"categoria_id,omitempty"`
+	Porcentaje  float64 `json:"porcentaje"`
+	Redondeo    string  `json:"redondeo"`
+}
+
+type AjustePreciosResultado struct {
+	Actualizados int `json:"actualizados"`
 }
 
 type CartaPublica struct {

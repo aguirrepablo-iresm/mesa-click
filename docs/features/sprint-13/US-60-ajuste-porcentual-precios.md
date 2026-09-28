@@ -3,8 +3,8 @@
 > **Sprint**: Sprint 13 (21/09 – 27/09/2026)  
 > **Épica**: Carga Masiva CSV/Excel & Ajuste de Precios  
 > **Tipo**: `Integración`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
+> **Estado**: ✅ **Resuelta**
+> **Asignado a**: Mateo Silvestrin
 > **Rama de trabajo**: `feat/US-60-ajuste-precios`  
 
 ---
@@ -17,19 +17,19 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Modal de ajuste masivo con selector: toda la carta o categoría específica.
-- [ ] Input de porcentaje (+X% / -X%) y opción de redondeo (al múltiplo de 10 o 100 más cercano).
-- [ ] Previsualización de ejemplos de precios actuales vs precios resultantes antes de confirmar.
-- [ ] Endpoint backend `PATCH /carta/precios/ajuste-porcentual` que actualiza los valores en base de datos.
+- [x] Modal de ajuste masivo con selector: toda la carta o categoría específica.
+- [x] Input de porcentaje (+X% / -X%) y opción de redondeo (al múltiplo de 10 o 100 más cercano).
+- [x] Previsualización de ejemplos de precios actuales vs precios resultantes antes de confirmar.
+- [x] Endpoint backend `PATCH /carta/precios/ajuste-porcentual` que actualiza los valores en base de datos.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Endpoint en Go para aplicar la fórmula de incremento masivo.
-- [ ] Interfaz de modal con simulación en tiempo real en frontend.
-- [ ] Confirmación de seguridad ('¿Seguro que deseas actualizar X productos?').
-- [ ] Notificación de éxito y refresco de la carta.
+- [x] Endpoint en Go para aplicar la fórmula de incremento masivo.
+- [x] Interfaz de modal con simulación en tiempo real en frontend.
+- [x] Confirmación de seguridad ('¿Seguro que deseas actualizar X productos?').
+- [x] Notificación de éxito y refresco de la carta.
 
 ---
 
