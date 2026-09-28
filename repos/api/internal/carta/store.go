@@ -3,6 +3,7 @@ package carta
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/db"
 	"github.com/jackc/pgx/v5"
@@ -13,9 +14,13 @@ type Store interface {
 	ListarCategorias(ctx context.Context, tenantID string) ([]Categoria, error)
 	CrearCategoria(ctx context.Context, tenantID string, input CategoriaInput) (*Categoria, error)
 	EliminarCategoria(ctx context.Context, id, tenantID string) error
+	// BuscarOCrearCategoria retorna el ID de la categoría con ese nombre para ese tenant,
+	// creándola si no existe. Usado en importaciones masivas.
+	BuscarOCrearCategoria(ctx context.Context, tenantID, nombre string) (string, error)
 	ListarArticulos(ctx context.Context, tenantID string) ([]Articulo, error)
 	CrearArticulo(ctx context.Context, tenantID string, input ArticuloInput) (*Articulo, error)
 	ActualizarArticulo(ctx context.Context, id, tenantID string, u ArticuloUpdate) (*Articulo, error)
+	AjustarPrecios(ctx context.Context, tenantID string, input AjustePreciosInput) (*AjustePreciosResultado, error)
 	EliminarArticulo(ctx context.Context, id, tenantID string) error
 	ObtenerCartaPublica(ctx context.Context, sucursalID string) (*CartaPublica, error)
 
@@ -70,6 +75,43 @@ func (s *pgStore) EliminarCategoria(ctx context.Context, id, tenantID string) er
 		return ErrNotFound
 	}
 	return nil
+}
+
+// BuscarOCrearCategoria devuelve el ID de la categoría con ese nombre para el tenant dado.
+// Si no existe la crea. La resolución de "nombre ya existente" usa ILIKE para ser
+// insensible a mayúsculas/minúsculas y así evitar duplicados visuales.
+func (s *pgStore) BuscarOCrearCategoria(ctx context.Context, tenantID, nombre string) (string, error) {
+	var id string
+
+	// Intentar encontrar primero (case-insensitive)
+	err := db.Pool.QueryRow(ctx,
+		`SELECT id FROM categorias WHERE tenant_id = $1 AND nombre ILIKE $2 LIMIT 1`,
+		tenantID, strings.TrimSpace(nombre),
+	).Scan(&id)
+	if err == nil {
+		return id, nil
+	}
+
+	// Si no existe, crearla. El orden (orden) se calcula como MAX(orden)+1.
+	err = db.Pool.QueryRow(ctx,
+		`INSERT INTO categorias (tenant_id, nombre, orden)
+		 VALUES ($1, $2, COALESCE((SELECT MAX(orden)+1 FROM categorias WHERE tenant_id = $1), 1))
+		 ON CONFLICT DO NOTHING
+		 RETURNING id`,
+		tenantID, strings.TrimSpace(nombre),
+	).Scan(&id)
+	if err != nil {
+		// Puede ocurrir si dos goroutines insertan la misma categoría en paralelo;
+		// en ese caso, la segunda obtiene conflict y retornamos la existente.
+		err2 := db.Pool.QueryRow(ctx,
+			`SELECT id FROM categorias WHERE tenant_id = $1 AND nombre ILIKE $2 LIMIT 1`,
+			tenantID, strings.TrimSpace(nombre),
+		).Scan(&id)
+		if err2 != nil {
+			return "", err2
+		}
+	}
+	return id, nil
 }
 
 func (s *pgStore) ListarArticulos(ctx context.Context, tenantID string) ([]Articulo, error) {
@@ -130,6 +172,29 @@ func (s *pgStore) ActualizarArticulo(ctx context.Context, id, tenantID string, u
 		return nil, err
 	}
 	return a, nil
+}
+
+func (s *pgStore) AjustarPrecios(ctx context.Context, tenantID string, input AjustePreciosInput) (*AjustePreciosResultado, error) {
+	resultado := &AjustePreciosResultado{}
+	err := db.Pool.QueryRow(ctx,
+		`WITH precios_actualizados AS (
+			UPDATE articulos
+			SET precio = CASE $4
+				WHEN '10' THEN ROUND((precio * (1 + $3::numeric / 100)) / 10) * 10
+				WHEN '100' THEN ROUND((precio * (1 + $3::numeric / 100)) / 100) * 100
+				ELSE ROUND(precio * (1 + $3::numeric / 100), 2)
+			END
+			WHERE tenant_id = $1
+			  AND ($2 = '' OR categoria_id::text = $2)
+			RETURNING id
+		)
+		SELECT COUNT(*) FROM precios_actualizados`,
+		tenantID, input.CategoriaID, input.Porcentaje, input.Redondeo,
+	).Scan(&resultado.Actualizados)
+	if err != nil {
+		return nil, err
+	}
+	return resultado, nil
 }
 
 func (s *pgStore) EliminarArticulo(ctx context.Context, id, tenantID string) error {

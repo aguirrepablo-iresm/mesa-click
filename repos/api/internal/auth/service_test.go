@@ -3,6 +3,9 @@ package auth_test
 import (
 	"context"
 	"errors"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -129,22 +132,45 @@ func TestSolicitarLink_Exitoso(t *testing.T) {
 	}
 }
 
-func TestSolicitarLink_UsuarioNoEncontrado_Silencioso(t *testing.T) {
+func TestSolicitarLink_UsuarioNoEncontrado(t *testing.T) {
 	store := &mockStore{
 		obtenerUsuarioPorEmailFn: func(ctx context.Context, email string) (*auth.UsuarioAuth, error) {
-			return nil, errors.New("no encontrado")
+			return nil, auth.ErrUsuarioNoEncontrado
 		},
 	}
 	emailMock := &mockEmailSender{}
 
 	svc := auth.NuevoService(store, emailMock)
-	// Para seguridad y evitar enumerar correos, SolicitarLink retorna nil (exitoso) aunque no exista el usuario.
 	link, err := svc.SolicitarLink(context.Background(), "no-existe@mibar.com")
-	if err != nil {
-		t.Fatalf("error inesperado: %v", err)
+	if !errors.Is(err, auth.ErrUsuarioNoEncontrado) {
+		t.Fatalf("se esperaba ErrUsuarioNoEncontrado, obtenido: %v", err)
 	}
 	if link != "" {
 		t.Errorf("no se debe generar link para un email inexistente, obtenido: %q", link)
+	}
+}
+
+func TestSolicitarLink_HandlerInformaUsuarioNoEncontrado(t *testing.T) {
+	store := &mockStore{
+		obtenerUsuarioPorEmailFn: func(ctx context.Context, email string) (*auth.UsuarioAuth, error) {
+			return nil, auth.ErrUsuarioNoEncontrado
+		},
+	}
+	handler := auth.NuevosHandlers(auth.NuevoService(store, &mockEmailSender{}), false)
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/auth/magic-link",
+		strings.NewReader(`{"email":"no-existe@mibar.com"}`),
+	)
+	recorder := httptest.NewRecorder()
+
+	handler.SolicitarLink(recorder, req)
+
+	if recorder.Code != http.StatusNotFound {
+		t.Fatalf("status: got %d, want %d", recorder.Code, http.StatusNotFound)
+	}
+	if !strings.Contains(recorder.Body.String(), "No encontramos una cuenta registrada") {
+		t.Fatalf("respuesta inesperada: %s", recorder.Body.String())
 	}
 }
 

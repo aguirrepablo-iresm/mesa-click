@@ -195,10 +195,10 @@ export default function OnboardingTour({
       role="dialog"
       aria-modal="false"
       aria-labelledby="tour-widget-title"
-      className="fixed bottom-16 right-16 sm:bottom-20 sm:right-20 z-50 w-[calc(100vw-32px)] sm:w-360 md:w-380 bg-canvas-white border border-system-black rounded-lg shadow-xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-150"
+      className="fixed bottom-12 right-12 sm:bottom-20 sm:right-20 z-50 w-[clamp(440px,48vw,620px)] max-w-[calc(100vw-24px)] max-h-[calc(100vh-24px)] [@supports(height:100dvh)]:max-h-[calc(100dvh-24px)] bg-canvas-white border border-system-black rounded-lg shadow-xl overflow-hidden flex flex-col animate-in slide-in-from-bottom-4 duration-150"
     >
       {/* Cabecera compacta */}
-      <div className="px-14 py-10 border-b border-concrete/60 bg-vanilla-cream/50 flex items-center justify-between gap-8">
+      <div className="px-14 py-8 border-b border-concrete/60 bg-vanilla-cream/50 flex items-center justify-between gap-8 shrink-0">
         <div className="flex items-center gap-8 min-w-0">
           <div className="w-28 h-28 rounded bg-ash-graphite text-canvas-white flex items-center justify-center shrink-0">
             <span className="material-symbols-outlined text-16">
@@ -226,7 +226,7 @@ export default function OnboardingTour({
         </div>
         <button
           onClick={handleSkip}
-          className="text-sage-green hover:text-ash-graphite p-3 rounded hover:bg-vanilla-cream transition-colors cursor-pointer shrink-0"
+          className="h-32 w-32 min-h-32 min-w-32 text-sage-green hover:text-ash-graphite p-0 rounded hover:bg-vanilla-cream transition-colors cursor-pointer shrink-0 flex items-center justify-center"
           aria-label="Cerrar recorrido"
           title="Cerrar"
         >
@@ -235,7 +235,7 @@ export default function OnboardingTour({
       </div>
 
       {/* Barra de progreso sutil */}
-      <div className="grid grid-cols-4 gap-3 px-14 pt-8 bg-canvas-white">
+      <div className="grid grid-cols-4 gap-3 px-14 pt-4 bg-canvas-white shrink-0">
         {TOUR_STEPS.map((step, idx) => {
           const isDone = idx < currentStepIndex;
           const isCurrent = idx === currentStepIndex;
@@ -243,23 +243,31 @@ export default function OnboardingTour({
             <button
               key={step.id}
               onClick={() => goToStep(idx)}
-              className="h-3 rounded-full transition-all duration-150 cursor-pointer focus:outline-hidden"
-              style={{
-                backgroundColor: isDone || isCurrent ? "var(--color-ash-graphite, #0a0a0a)" : "var(--color-concrete, #d9d9d9)",
-              }}
+              className="h-16 min-h-16 min-w-0 flex items-center cursor-pointer focus:outline-hidden"
               title={`Ir al paso ${idx + 1}`}
-            />
+            >
+              <span
+                aria-hidden="true"
+                className="block h-[5px] w-full rounded-full transition-all duration-150"
+                style={{
+                  backgroundColor:
+                    isDone || isCurrent
+                      ? "var(--color-ash-graphite, #0a0a0a)"
+                      : "var(--color-concrete, #d9d9d9)",
+                }}
+              />
+            </button>
           );
         })}
       </div>
 
       {/* Contenido resumido */}
-      <div className="px-14 py-10 space-y-8 text-12">
+      <div className="px-14 py-8 space-y-6 text-12 min-h-0 overflow-y-auto overscroll-contain">
         <p className="text-deep-forest leading-relaxed">
           {currentStep.description}
         </p>
 
-        <ul className="space-y-4 pt-2 border-t border-ghost-fog">
+        <ul className="space-y-2 pt-2 border-t border-ghost-fog">
           {currentStep.bullets.map((bullet, i) => (
             <li key={i} className="flex items-start gap-6 text-11 text-sage-green leading-tight">
               <span className="material-symbols-outlined text-13 text-ash-graphite shrink-0 mt-0.5">
@@ -272,10 +280,10 @@ export default function OnboardingTour({
       </div>
 
       {/* Pie de navegación compacto */}
-      <div className="px-14 py-8 border-t border-concrete/50 bg-vanilla-cream/30 flex items-center justify-between gap-8 shrink-0">
+      <div className="px-14 py-6 border-t border-concrete/50 bg-vanilla-cream/30 flex items-center justify-between gap-8 shrink-0">
         <button
           onClick={handleSkip}
-          className="text-11 font-medium text-sage-green hover:text-ash-graphite transition-colors underline decoration-dotted underline-offset-2 cursor-pointer"
+          className="h-[36px] min-h-[36px] text-11 font-medium text-sage-green hover:text-ash-graphite transition-colors underline decoration-dotted underline-offset-2 cursor-pointer"
         >
           Omitir recorrido
         </button>
@@ -284,7 +292,7 @@ export default function OnboardingTour({
           {currentStepIndex > 0 && (
             <button
               onClick={handlePrev}
-              className="px-10 py-5 rounded border border-concrete text-ash-graphite text-11 font-medium hover:bg-vanilla-cream transition-all flex items-center gap-3 cursor-pointer"
+              className="h-[36px] min-h-[36px] px-10 py-0 rounded border border-concrete text-ash-graphite text-11 font-medium hover:bg-vanilla-cream transition-all flex items-center gap-3 cursor-pointer"
             >
               <span className="material-symbols-outlined text-13">
                 arrow_back
@@ -295,7 +303,7 @@ export default function OnboardingTour({
 
           <button
             onClick={handleNext}
-            className="px-12 py-5 rounded bg-plain-green text-canvas-white text-11 font-medium hover:bg-plain-green-muted transition-all flex items-center gap-4 cursor-pointer shadow-xs"
+            className="h-[36px] min-h-[36px] px-12 py-0 rounded bg-plain-green text-canvas-white text-11 font-medium hover:bg-plain-green-muted transition-all flex items-center gap-4 cursor-pointer shadow-xs"
           >
             <span>{isLastStep ? "Finalizar" : "Siguiente"}</span>
             <span className="material-symbols-outlined text-13">

@@ -10,9 +10,9 @@
 | Métrica | Valor |
 |---|---|
 | **Total de User Stories** | **32 US** (US-50 a US-81) |
-| **Completadas** | **8** (25%) |
+| **Completadas** | **9** (28%) |
 | **En Curso** | **1** |
-| **Pendientes** | **23** |
+| **Pendientes** | **22** |
 | **Sprint Actual** | **Sprint 12 (14/09 – 20/09/2026)** |
 
 ---
@@ -70,7 +70,7 @@
 |---|---|---|---|---|---|
 | **US-58** | `Backend` | Procesamiento Atómico de Carga Masiva de Catálogo por CSV/Excel | 📋 Pendiente | Por asignar | [Ver detalle](sprint-13/US-58-backend-carga-masiva-csv.md) |
 | **US-59** | `Integración` | Interfaz de Carga Masiva con Plantilla Oficial y Previsualización | 📋 Pendiente | Por asignar | [Ver detalle](sprint-13/US-59-interfaz-carga-masiva-errores.md) |
-| **US-60** | `Integración` | Ajuste Porcentual Masivo de Precios por Categoría o Carta Completa | 📋 Pendiente | Por asignar | [Ver detalle](sprint-13/US-60-ajuste-porcentual-precios.md) |
+| **US-60** | `Integración` | Ajuste Porcentual Masivo de Precios por Categoría o Carta Completa | ✅ Resuelta | Mateo Silvestrin | [Ver detalle](sprint-13/US-60-ajuste-porcentual-precios.md) |
 
 ### 📌 Sprint 14: Disponibilidad de Ítems (86) & Menús por Franja Horaria (28/09 – 04/10/2026)
 

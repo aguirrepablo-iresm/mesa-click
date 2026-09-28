@@ -138,6 +138,28 @@ func TestIntegracion_FlujoCompletoPedido(t *testing.T) {
 		t.Fatalf("error creando artículo: %v", err)
 	}
 
+	// E.1 AJUSTAR PRECIOS DE LA CATEGORÍA (US-60)
+	t.Log("Aplicando ajuste porcentual de precios...")
+	ajuste, err := cartaSvc.AjustarPrecios(ctx, createdTenant.ID, carta.AjustePreciosInput{
+		CategoriaID: createdCat.ID,
+		Porcentaje:  10,
+		Redondeo:    carta.Redondeo100,
+	})
+	if err != nil {
+		t.Fatalf("error ajustando precios: %v", err)
+	}
+	if ajuste.Actualizados != 1 {
+		t.Fatalf("artículos actualizados: got %d, want 1", ajuste.Actualizados)
+	}
+
+	articulos, err := cartaSvc.ListarArticulos(ctx, createdTenant.ID)
+	if err != nil {
+		t.Fatalf("error listando artículos luego del ajuste: %v", err)
+	}
+	if len(articulos) != 1 || articulos[0].ID != createdArt.ID || articulos[0].Precio != 300 {
+		t.Fatalf("precio ajustado inesperado: %+v", articulos)
+	}
+
 	// F. CREAR PEDIDO (Simula la acción del cliente comensal)
 	t.Log("Creando pedido desde el cliente...")
 	itemsInput := []pedido.NuevoItemInput{

@@ -1,7 +1,9 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { api, CategoriaAPI, ArticuloAPI, getErrorMessage } from "@/lib/api";
-import { EmptyState, Skeleton, useToast } from "@/components/ui";
+import { EmptyState, Skeleton, useToast, useConfirm } from "@/components/ui";
+import ImportarCartaModal from "@/components/dashboard/ImportarCartaModal";
+import AjustePreciosModal from "./AjustePreciosModal";
 
 export interface CategoriaConItems extends CategoriaAPI {
   items: ArticuloAPI[];
@@ -12,6 +14,7 @@ type NuevoItemErrors = Partial<Record<"nombre" | "precio", string>>;
 
 export default function CartaSection() {
   const toast = useToast();
+  const confirmar = useConfirm();
   const [categorias, setCategorias] = useState<CategoriaConItems[]>([]);
   const [loading, setLoading] = useState(true);
   const [nuevaCatNombre, setNuevaCatNombre] = useState('');
@@ -33,6 +36,10 @@ export default function CartaSection() {
     seleccionUnica: false,
   });
   const [guardandoVariante, setGuardandoVariante] = useState(false);
+  const [modalImportarAbierto, setModalImportarAbierto] = useState(false);
+  const [mostrarAjustePrecios, setMostrarAjustePrecios] = useState(false);
+  const [menuCategoriaAbierto, setMenuCategoriaAbierto] = useState<string | null>(null);
+  const [menuItemAbierto, setMenuItemAbierto] = useState<string | null>(null);
 
   const cargarCarta = useCallback(async () => {
     try {
@@ -69,6 +76,15 @@ export default function CartaSection() {
     return () => window.clearTimeout(timeoutId);
   }, [cargarCarta]);
 
+  useEffect(() => {
+    const cerrarMenus = () => {
+      setMenuCategoriaAbierto(null);
+      setMenuItemAbierto(null);
+    };
+    window.addEventListener("click", cerrarMenus);
+    return () => window.removeEventListener("click", cerrarMenus);
+  }, []);
+
   const agregarCategoria = async () => {
     if (!nuevaCatNombre.trim()) return;
     setErrorMsg('');
@@ -88,7 +104,13 @@ export default function CartaSection() {
   };
 
   const eliminarCategoria = async (catId: string) => {
-    if (!confirm('¿Eliminar esta categoría y todos sus ítems?')) return;
+    const ok = await confirmar({
+      titulo: 'Eliminar categoría',
+      mensaje: '¿Eliminás esta categoría y todos sus ítems? Esta acción no se puede deshacer.',
+      labelAceptar: 'Sí, eliminar',
+      variante: 'danger',
+    });
+    if (!ok) return;
     try {
       await api.eliminarCategoria(catId);
       setCategorias(prev => prev.filter(c => c.id !== catId));
@@ -144,7 +166,13 @@ export default function CartaSection() {
   };
 
   const eliminarItem = async (catId: string, itemId: string) => {
-    if (!confirm('¿Eliminar este ítem?')) return;
+    const ok = await confirmar({
+      titulo: 'Eliminar ítem',
+      mensaje: '¿Eliminás este ítem del menú? Esta acción no se puede deshacer.',
+      labelAceptar: 'Sí, eliminar',
+      variante: 'danger',
+    });
+    if (!ok) return;
     try {
       await api.eliminarArticulo(itemId);
       setCategorias(prev =>
@@ -236,7 +264,13 @@ export default function CartaSection() {
   };
 
   const eliminarVariante = async (catId: string, articuloId: string, varianteId: string) => {
-    if (!confirm('¿Eliminar esta opción?')) return;
+    const ok = await confirmar({
+      titulo: 'Eliminar opción',
+      mensaje: '¿Eliminás esta opción de personalización?',
+      labelAceptar: 'Sí, eliminar',
+      variante: 'danger',
+    });
+    if (!ok) return;
     try {
       await api.eliminarVariante(varianteId);
       setCategorias(prev =>
@@ -261,22 +295,69 @@ export default function CartaSection() {
 
   const totalItems = categorias.reduce((n, c) => n + c.items.length, 0);
 
+  const handlePreciosActualizados = async (actualizados: number) => {
+    await cargarCarta();
+    toast.success(
+      `Se ${actualizados === 1 ? "actualizó" : "actualizaron"} ${actualizados} ${
+        actualizados === 1 ? "producto" : "productos"
+      }.`
+    );
+  };
+
   return (
-    <div className="p-24 md:p-32 space-y-24 overflow-y-auto h-full font-inter">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-20 font-medium text-ash-graphite">Gestión de Carta</h2>
-          <p className="text-13 text-sage-green mt-4">
+    <div className="h-full space-y-24 overflow-y-auto bg-ghost-fog/45 p-16 font-inter sm:p-24 md:p-32">
+      <div className="flex flex-col justify-between gap-16 lg:flex-row lg:items-center">
+        <div className="min-w-0">
+          <h2 className="text-24 font-semibold tracking-[-0.02em] text-ash-graphite sm:text-32">
+            Gestión de Carta
+          </h2>
+          <p className="mt-4 text-13 text-sage-green sm:text-14">
             {loading ? 'Cargando carta...' : `${categorias.length} categorías · ${totalItems} ítems`}
           </p>
         </div>
-        <button
-          onClick={() => setMostrarFormCat(true)}
-          className="px-16 py-8 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90 transition-opacity"
-        >
-          + Nueva categoría
-        </button>
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 lg:flex lg:shrink-0">
+          <button
+            type="button"
+            onClick={() => setModalImportarAbierto(true)}
+            className="flex h-48 items-center justify-center gap-8 rounded-lg border border-concrete bg-canvas-white px-16 text-12 font-semibold text-ash-graphite shadow-sm transition-colors hover:border-stone hover:bg-vanilla-cream"
+          >
+            <span className="material-symbols-outlined text-18">upload_file</span>
+            Importar CSV/Excel
+          </button>
+          <button
+            type="button"
+            onClick={() => setMostrarAjustePrecios(true)}
+            disabled={loading || totalItems === 0}
+            className="flex h-48 items-center justify-center gap-8 rounded-lg border border-concrete bg-canvas-white px-16 text-12 font-semibold text-ash-graphite shadow-sm transition-colors hover:border-stone hover:bg-vanilla-cream disabled:cursor-not-allowed disabled:opacity-40"
+            title={totalItems === 0 ? "Agregá productos antes de ajustar precios" : undefined}
+          >
+            <span className="material-symbols-outlined text-18">percent</span>
+            Ajustar precios
+          </button>
+          <button
+            type="button"
+            onClick={() => setMostrarFormCat(true)}
+            className="flex h-48 items-center justify-center gap-8 rounded-lg bg-plain-green px-20 text-13 font-semibold text-canvas-white shadow-sm transition-colors hover:bg-plain-green-muted"
+          >
+            <span className="material-symbols-outlined text-18">add</span>
+            Nueva categoría
+          </button>
+        </div>
       </div>
+
+      <ImportarCartaModal
+        isOpen={modalImportarAbierto}
+        onClose={() => setModalImportarAbierto(false)}
+        onImportacionCompletada={() => void cargarCarta()}
+      />
+
+      {mostrarAjustePrecios && (
+        <AjustePreciosModal
+          categorias={categorias}
+          onClose={() => setMostrarAjustePrecios(false)}
+          onApplied={handlePreciosActualizados}
+        />
+      )}
 
       {errorMsg && (
         <div className="p-10 bg-red-50 border border-alert-red/30 rounded text-12 text-alert-red flex items-center justify-between gap-12">
@@ -291,9 +372,9 @@ export default function CartaSection() {
       )}
 
       {mostrarFormCat && (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-8 p-16 border border-plain-green rounded-md bg-ghost-fog">
+        <div className="flex flex-col items-stretch gap-10 rounded-xl border border-concrete bg-canvas-white p-16 shadow-sm sm:flex-row sm:items-center">
           <input
-            className="flex-1 px-12 py-8 text-13 bg-canvas-white rounded-md border border-ash-graphite focus:border-plain-green outline-none"
+            className="h-44 flex-1 rounded-lg border border-concrete bg-canvas-white px-12 text-13 outline-none focus:border-plain-green"
             placeholder="Nombre de la categoría"
             value={nuevaCatNombre}
             onChange={e => setNuevaCatNombre(e.target.value)}
@@ -303,13 +384,13 @@ export default function CartaSection() {
           <div className="flex items-center gap-8 justify-end">
             <button
               onClick={agregarCategoria}
-              className="flex-1 sm:flex-initial px-16 py-8 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90"
+              className="h-44 flex-1 rounded-lg bg-plain-green px-16 text-13 font-semibold text-canvas-white hover:bg-plain-green-muted sm:flex-initial"
             >
               Agregar
             </button>
             <button
               onClick={() => setMostrarFormCat(false)}
-              className="px-12 py-8 text-sage-green text-13 hover:text-ash-graphite"
+              className="h-44 rounded-lg px-12 text-13 text-sage-green hover:bg-ghost-fog hover:text-ash-graphite"
             >
               Cancelar
             </button>
@@ -321,11 +402,11 @@ export default function CartaSection() {
       {loading && (
         <div className="space-y-16">
           {[1, 2, 3].map(i => (
-            <div key={i} className="border border-ash-graphite rounded-lg overflow-hidden">
-              <Skeleton className="h-40 w-full rounded-none" />
-              <div className="divide-y divide-ghost-fog">
-                {[1, 2, 3].map(j => (
-                  <div key={j} className="px-20 py-12 flex items-center justify-between">
+            <div key={i} className="overflow-hidden rounded-xl border border-concrete bg-canvas-white shadow-sm">
+              <Skeleton className="h-72 w-full rounded-none" />
+              <div>
+                {[1, 2].map(j => (
+                  <div key={j} className="flex items-center justify-between px-20 py-16">
                     <Skeleton className="h-12 w-1/3" />
                     <Skeleton className="h-12 w-20" />
                   </div>
@@ -338,112 +419,163 @@ export default function CartaSection() {
 
       {/* Lista de categorías */}
       {!loading && (
-        <div className="space-y-16">
+        <div className="space-y-20">
           {categorias.map(cat => (
-            <div key={cat.id} className="border border-ash-graphite rounded-lg overflow-hidden bg-canvas-white">
-              <div className="flex items-center justify-between px-16 sm:px-20 py-12 bg-vanilla-cream border-b border-ash-graphite">
-                <h3 className="text-15 font-medium text-ash-graphite truncate pr-8">{cat.nombre}</h3>
-                <div className="flex items-center gap-8 shrink-0">
+            <section key={cat.id} className="rounded-xl border border-concrete bg-canvas-white shadow-sm">
+              <header className="flex flex-col justify-between gap-12 border-b border-concrete/70 px-16 py-16 sm:flex-row sm:items-center sm:px-20">
+                <div className="min-w-0">
+                  <h3 className="truncate text-16 font-semibold text-ash-graphite sm:text-20">{cat.nombre}</h3>
+                  <p className="mt-2 text-12 text-sage-green">
+                    {cat.items.length} {cat.items.length === 1 ? 'ítem' : 'ítems'}
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center justify-end gap-8">
                   <button
                     onClick={() => {
                       setMostrarFormItem(cat.id);
                       setNuevoItem({ nombre: '', descripcion: '', precio: '' });
                       setNuevoItemErrors({});
                     }}
-                    className="px-10 py-4 text-12 font-medium text-plain-green-muted border border-plain-green-muted rounded-md hover:bg-ghost-fog transition-colors"
+                    className="flex h-44 items-center gap-6 rounded-lg border border-concrete bg-canvas-white px-12 text-12 font-semibold text-ash-graphite transition-colors hover:border-stone hover:bg-ghost-fog"
                   >
-                    + Ítem
+                    <span className="material-symbols-outlined text-18">add</span>
+                    Agregar ítem
                   </button>
-                  <button
-                    onClick={() => eliminarCategoria(cat.id)}
-                    className="px-10 py-4 text-12 font-medium text-alert-red border border-alert-red rounded-md hover:bg-red-50 transition-colors"
-                  >
-                    Eliminar
-                  </button>
+                  <div className="relative" onClick={event => event.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={event => {
+                        event.stopPropagation();
+                        setMenuCategoriaAbierto(actual => actual === cat.id ? null : cat.id);
+                        setMenuItemAbierto(null);
+                      }}
+                      className="flex h-44 w-44 items-center justify-center rounded-lg text-sage-green transition-colors hover:bg-ghost-fog hover:text-ash-graphite"
+                      title="Más acciones de la categoría"
+                      aria-label={`Más acciones de ${cat.nombre}`}
+                      aria-expanded={menuCategoriaAbierto === cat.id}
+                    >
+                      <span className="material-symbols-outlined text-24">more_horiz</span>
+                    </button>
+                    {menuCategoriaAbierto === cat.id && (
+                      <div className="absolute right-0 top-[48px] z-30 min-w-[190px] rounded-lg border border-concrete bg-canvas-white p-4 shadow-xl">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setMenuCategoriaAbierto(null);
+                            void eliminarCategoria(cat.id);
+                          }}
+                          className="flex h-44 w-full items-center gap-8 rounded-md px-10 text-left text-12 font-medium text-alert-red transition-colors hover:bg-warm-pink/20"
+                        >
+                          <span className="material-symbols-outlined text-18">delete</span>
+                          Eliminar categoría
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              </header>
 
               <div className="divide-y divide-ghost-fog">
                 {cat.items.map(item => {
                   const visible = item.activo !== false;
 
                   return (
-                  <div key={item.id} className="border-b last:border-b-0 border-ghost-fog">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-10 px-16 sm:px-20 py-12">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-8 flex-wrap">
-                          <span className="text-13 font-medium text-ash-graphite">{item.nombre}</span>
-                          {!visible && (
-                            <span className="px-6 py-1 text-10 font-medium bg-vanilla-cream text-sage-green rounded-md border border-ghost-fog">
-                              No disponible
-                            </span>
-                          )}
+                  <div key={item.id} className="border-b border-ghost-fog last:border-b-0">
+                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-14 gap-y-10 px-16 py-16 transition-colors hover:bg-ghost-fog/35 sm:px-20 md:grid-cols-[minmax(0,1fr)_110px_auto]">
+                      <div className="col-span-2 min-w-0 md:col-span-1">
+                        <div className="flex flex-wrap items-center gap-8">
+                          <span className="text-14 font-semibold text-ash-graphite sm:text-16">{item.nombre}</span>
                           {item.variantes && item.variantes.length > 0 && (
-                            <span className="px-6 py-1 text-10 font-medium bg-ghost-fog text-ash-graphite rounded-md border border-ash-graphite/20">
+                            <span className="rounded-full border border-concrete bg-ghost-fog px-8 py-2 text-10 font-medium text-sage-green">
                               {item.variantes.length} {item.variantes.length === 1 ? 'opción' : 'opciones'}
                             </span>
                           )}
                         </div>
                         {item.descripcion && (
-                          <p className="text-12 text-sage-green line-clamp-2 mt-2">{item.descripcion}</p>
+                          <p className="mt-3 line-clamp-2 text-12 leading-relaxed text-sage-green sm:text-13">
+                            {item.descripcion}
+                          </p>
                         )}
                       </div>
-                      <div className="flex items-center justify-between sm:justify-end gap-16 shrink-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-ghost-fog/60">
-                        <span className="text-13 font-medium text-ash-graphite font-mono">
-                          ${item.precio.toLocaleString()}
-                        </span>
-                        <div className="flex items-center gap-12">
+
+                      <span className="whitespace-nowrap text-14 font-semibold text-ash-graphite md:text-16">
+                        ${item.precio.toLocaleString('es-AR')}
+                      </span>
+
+                      <div className="flex items-center justify-end gap-6">
+                        <button
+                          type="button"
+                          onClick={() => void toggleDisponible(cat.id, item)}
+                          className={`inline-flex h-44 items-center gap-6 rounded-full border px-10 text-11 font-semibold transition-colors sm:px-12 ${
+                            visible
+                              ? "border-success/30 bg-success/10 text-[#087645] hover:bg-success/20"
+                              : "border-concrete bg-ghost-fog text-sage-green hover:bg-vanilla-cream"
+                          }`}
+                          title={visible ? "Ocultar del menú público" : "Mostrar en el menú público"}
+                          aria-label={visible ? `Ocultar ${item.nombre}` : `Mostrar ${item.nombre}`}
+                        >
+                          <span className={`h-8 min-h-0 w-8 min-w-0 rounded-full ${visible ? 'bg-success-muted' : 'bg-stone'}`} />
+                          <span>{visible ? 'Visible' : 'Oculto'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (articuloVariantesAbierto === item.id) {
+                              setArticuloVariantesAbierto(null);
+                            } else {
+                              setArticuloVariantesAbierto(item.id);
+                              setNuevaVariante({ nombre: '', grupo: '', precioAdicional: '0', seleccionUnica: false });
+                            }
+                          }}
+                          className={`flex h-44 w-44 items-center justify-center rounded-lg border transition-colors ${
+                            articuloVariantesAbierto === item.id
+                              ? "border-plain-green bg-plain-green text-canvas-white"
+                              : "border-concrete bg-canvas-white text-ash-graphite hover:border-stone hover:bg-ghost-fog"
+                          }`}
+                          title="Gestionar opciones y variantes"
+                          aria-label={`Gestionar opciones de ${item.nombre}`}
+                          aria-expanded={articuloVariantesAbierto === item.id}
+                        >
+                          <span className="material-symbols-outlined text-20">tune</span>
+                        </button>
+                        <div className="relative" onClick={event => event.stopPropagation()}>
                           <button
                             type="button"
-                            onClick={() => {
-                              if (articuloVariantesAbierto === item.id) {
-                                setArticuloVariantesAbierto(null);
-                              } else {
-                                setArticuloVariantesAbierto(item.id);
-                                setNuevaVariante({ nombre: '', grupo: '', precioAdicional: '0', seleccionUnica: false });
-                              }
+                            onClick={event => {
+                              event.stopPropagation();
+                              setMenuItemAbierto(actual => actual === item.id ? null : item.id);
+                              setMenuCategoriaAbierto(null);
                             }}
-                            className={`inline-flex items-center gap-4 px-8 py-4 text-11 font-medium rounded-md border transition-colors ${
-                              articuloVariantesAbierto === item.id
-                                ? "text-canvas-white bg-plain-green border-plain-green"
-                                : (item.variantes && item.variantes.length > 0)
-                                  ? "text-plain-green-muted border-plain-green-muted bg-ghost-fog hover:bg-canvas-white"
-                                  : "text-sage-green border-ghost-fog bg-vanilla-cream hover:bg-ghost-fog"
-                            }`}
-                            title="Gestionar opciones y variantes"
+                            className="flex h-44 w-44 items-center justify-center rounded-lg text-sage-green transition-colors hover:bg-ghost-fog hover:text-ash-graphite"
+                            title="Más acciones del ítem"
+                            aria-label={`Más acciones de ${item.nombre}`}
+                            aria-expanded={menuItemAbierto === item.id}
                           >
-                            <span className="material-symbols-outlined text-16">tune</span>
-                            <span>Opciones{item.variantes && item.variantes.length > 0 ? ` (${item.variantes.length})` : ''}</span>
+                            <span className="material-symbols-outlined text-24">more_horiz</span>
                           </button>
-                          <button
-                            onClick={() => toggleDisponible(cat.id, item)}
-                            className={`inline-flex items-center gap-4 px-8 py-4 text-11 font-medium rounded-md border transition-colors ${
-                              visible
-                                ? "text-plain-green-muted border-plain-green-muted bg-ghost-fog hover:bg-canvas-white"
-                                : "text-sage-green border-ghost-fog bg-vanilla-cream hover:bg-ghost-fog"
-                            }`}
-                            title={visible ? "Ocultar del menú público" : "Mostrar en el menú público"}
-                          >
-                            <span className="material-symbols-outlined text-16">
-                              {visible ? "visibility" : "visibility_off"}
-                            </span>
-                            {visible ? 'Visible en menú' : 'Oculto en menú'}
-                          </button>
-                          <button
-                            onClick={() => eliminarItem(cat.id, item.id)}
-                            className="p-4 text-12 text-alert-red hover:opacity-70 font-medium"
-                            title="Eliminar artículo"
-                          >
-                            ✕
-                          </button>
+                          {menuItemAbierto === item.id && (
+                            <div className="absolute right-0 top-[48px] z-30 min-w-[180px] rounded-lg border border-concrete bg-canvas-white p-4 shadow-xl">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setMenuItemAbierto(null);
+                                  void eliminarItem(cat.id, item.id);
+                                }}
+                                className="flex h-44 w-full items-center gap-8 rounded-md px-10 text-left text-12 font-medium text-alert-red transition-colors hover:bg-warm-pink/20"
+                              >
+                                <span className="material-symbols-outlined text-18">delete</span>
+                                Eliminar ítem
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
 
                     {/* Subpanel de variantes y personalización */}
                     {articuloVariantesAbierto === item.id && (
-                      <div className="px-16 sm:px-20 py-14 bg-ghost-fog/80 border-t border-ghost-fog space-y-12">
-                        <div className="flex items-center justify-between">
+                      <div className="space-y-12 border-t border-ghost-fog bg-ghost-fog/70 px-16 py-16 sm:px-20">
+                        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
                           <div className="flex items-center gap-6">
                             <span className="material-symbols-outlined text-16 text-ash-graphite">tune</span>
                             <h4 className="text-12 font-semibold text-ash-graphite">
@@ -461,10 +593,10 @@ export default function CartaSection() {
                             {item.variantes.map(v => (
                               <div
                                 key={v.id}
-                                className="flex items-center justify-between gap-8 bg-canvas-white px-12 py-8 rounded-md border border-ash-graphite/20 text-12"
+                                className="flex flex-col gap-8 rounded-lg border border-concrete bg-canvas-white px-12 py-10 text-12 sm:flex-row sm:items-center sm:justify-between"
                               >
-                                <div className="flex items-center gap-8 min-w-0">
-                                  <span className="px-6 py-2 text-10 font-medium bg-vanilla-cream text-ash-graphite rounded border border-ghost-fog">
+                                <div className="flex min-w-0 flex-wrap items-center gap-8">
+                                  <span className="rounded-full border border-concrete bg-ghost-fog px-8 py-2 text-10 font-medium text-ash-graphite">
                                     {v.grupo || 'General'}
                                   </span>
                                   <span className="font-medium text-ash-graphite truncate">{v.nombre}</span>
@@ -472,14 +604,14 @@ export default function CartaSection() {
                                     ({v.seleccion_unica ? 'Radio · Única' : 'Checkbox · Múltiple'})
                                   </span>
                                 </div>
-                                <div className="flex items-center gap-10 shrink-0">
+                                <div className="flex shrink-0 items-center justify-between gap-10 sm:justify-end">
                                   <span className="font-mono font-medium text-ash-graphite">
                                     {v.precio_adicional > 0 ? `+$${v.precio_adicional.toLocaleString()}` : 'Sin cargo'}
                                   </span>
                                   <button
                                     type="button"
                                     onClick={() => eliminarVariante(cat.id, item.id, v.id)}
-                                    className="text-alert-red hover:opacity-75 p-2 font-medium"
+                                    className="flex h-44 w-44 items-center justify-center rounded-lg text-alert-red transition-colors hover:bg-warm-pink/20"
                                     title="Eliminar opción"
                                   >
                                     ✕
@@ -495,19 +627,19 @@ export default function CartaSection() {
                         )}
 
                         {/* Formulario para agregar variante */}
-                        <div className="bg-canvas-white p-12 rounded-md border border-ash-graphite/40 space-y-10">
+                        <div className="space-y-10 rounded-lg border border-concrete bg-canvas-white p-12">
                           <div className="text-11 font-semibold text-ash-graphite">
                             + Agregar nueva opción
                           </div>
                           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
                             <input
-                              className="px-10 py-6 text-12 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
+                              className="h-44 rounded-lg border border-concrete bg-canvas-white px-10 text-12 outline-none focus:border-plain-green"
                               placeholder="Nombre (ej: Jugoso, Cheddar) *"
                               value={nuevaVariante.nombre}
                               onChange={e => setNuevaVariante(p => ({ ...p, nombre: e.target.value }))}
                             />
                             <input
-                              className="px-10 py-6 text-12 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
+                              className="h-44 rounded-lg border border-concrete bg-canvas-white px-10 text-12 outline-none focus:border-plain-green"
                               placeholder="Grupo (ej: Término, Extras)"
                               value={nuevaVariante.grupo}
                               onChange={e => setNuevaVariante(p => ({ ...p, grupo: e.target.value }))}
@@ -516,7 +648,7 @@ export default function CartaSection() {
                               type="number"
                               min="0"
                               step="0.01"
-                              className="px-10 py-6 text-12 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
+                              className="h-44 rounded-lg border border-concrete bg-canvas-white px-10 text-12 outline-none focus:border-plain-green"
                               placeholder="Precio adicional ($)"
                               value={nuevaVariante.precioAdicional}
                               onChange={e => setNuevaVariante(p => ({ ...p, precioAdicional: e.target.value }))}
@@ -536,7 +668,7 @@ export default function CartaSection() {
                               type="button"
                               disabled={guardandoVariante}
                               onClick={() => agregarVariante(cat.id, item.id)}
-                              className="px-14 py-6 bg-plain-green text-canvas-white text-12 font-medium rounded-md hover:opacity-90 disabled:opacity-50 whitespace-nowrap self-end sm:self-auto"
+                              className="h-44 self-end whitespace-nowrap rounded-lg bg-plain-green px-14 text-12 font-semibold text-canvas-white hover:bg-plain-green-muted disabled:opacity-50 sm:self-auto"
                             >
                               {guardandoVariante ? 'Guardando...' : 'Agregar opción'}
                             </button>
@@ -555,7 +687,7 @@ export default function CartaSection() {
                       icon="restaurant_menu"
                       title="Sin ítems"
                       description="Agregá platos o bebidas a esta categoría."
-                      actionLabel="+ Ítem"
+                      actionLabel="Agregar ítem"
                       onAction={() => {
                         setMostrarFormItem(cat.id);
                         setNuevoItem({ nombre: '', descripcion: '', precio: '' });
@@ -566,12 +698,12 @@ export default function CartaSection() {
                 )}
 
                 {mostrarFormItem === cat.id && (
-                  <div className="px-16 sm:px-20 py-16 bg-ghost-fog space-y-10">
+                  <div className="space-y-10 bg-ghost-fog/70 px-16 py-16 sm:px-20">
                     <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,3fr)_minmax(150px,1fr)] gap-8">
                       <div className="space-y-4">
                         <input
-                          className={`w-full px-10 py-6 text-13 bg-canvas-white rounded-md border outline-none focus:border-plain-green ${
-                            nuevoItemErrors.nombre ? "border-alert-red" : "border-ash-graphite"
+                          className={`h-44 w-full rounded-lg border bg-canvas-white px-10 text-13 outline-none focus:border-plain-green ${
+                            nuevoItemErrors.nombre ? "border-alert-red" : "border-concrete"
                           }`}
                           placeholder="Nombre del ítem *"
                           value={nuevoItem.nombre}
@@ -591,8 +723,8 @@ export default function CartaSection() {
                           type="number"
                           min="0.01"
                           step="0.01"
-                          className={`w-full px-12 py-6 text-14 bg-canvas-white rounded-md border outline-none focus:border-plain-green ${
-                            nuevoItemErrors.precio ? "border-alert-red" : "border-ash-graphite"
+                          className={`h-44 w-full rounded-lg border bg-canvas-white px-12 text-14 outline-none focus:border-plain-green ${
+                            nuevoItemErrors.precio ? "border-alert-red" : "border-concrete"
                           }`}
                           placeholder="Precio *"
                           value={nuevoItem.precio}
@@ -608,7 +740,7 @@ export default function CartaSection() {
                       </div>
                     </div>
                     <input
-                      className="w-full px-10 py-6 text-13 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
+                      className="h-44 w-full rounded-lg border border-concrete bg-canvas-white px-10 text-13 outline-none focus:border-plain-green"
                       placeholder="Descripción (opcional)"
                       value={nuevoItem.descripcion}
                       onChange={e => setNuevoItem(p => ({ ...p, descripcion: e.target.value }))}
@@ -617,7 +749,7 @@ export default function CartaSection() {
                       <button
                         type="button"
                         onClick={() => agregarItem(cat.id)}
-                        className="px-14 py-6 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90 whitespace-nowrap"
+                        className="h-44 whitespace-nowrap rounded-lg bg-plain-green px-14 text-13 font-semibold text-canvas-white hover:bg-plain-green-muted"
                       >
                         Agregar ítem
                       </button>
@@ -627,7 +759,7 @@ export default function CartaSection() {
                           setMostrarFormItem(null);
                           setNuevoItemErrors({});
                         }}
-                        className="px-12 py-6 text-sage-green text-13 hover:text-ash-graphite"
+                        className="h-44 rounded-lg px-12 text-13 text-sage-green hover:bg-canvas-white hover:text-ash-graphite"
                       >
                         Cancelar
                       </button>
@@ -635,7 +767,7 @@ export default function CartaSection() {
                   </div>
                 )}
               </div>
-            </div>
+            </section>
           ))}
 
           {categorias.length === 0 && (

@@ -8,7 +8,7 @@ import RecepcionistaSection from "@/components/dashboard/RecepcionistaSection";
 import ConfiguracionSection from "@/components/dashboard/ConfiguracionSection";
 import Logo from "@/components/brand/Logo";
 import { api, cerrarSesion, estaAutenticado, Tenant } from "@/lib/api";
-import { ToastProvider } from "@/components/ui";
+import { ToastProvider, ConfirmProvider } from "@/components/ui";
 import OnboardingTour from "@/components/dashboard/OnboardingTour";
 
 type Section = 'carta' | 'mesas' | 'recepcionista' | 'configuracion';
@@ -73,51 +73,58 @@ export default function DashboardPage() {
   };
 
   return (
+    <ConfirmProvider>
     <ToastProvider>
-    <div className="h-screen flex flex-col bg-canvas-white font-inter overflow-hidden">
-      <header className="h-44 border-b border-system-black px-16 flex items-center justify-between shrink-0 bg-canvas-white z-30">
-        <div className="flex items-center gap-8">
+    <div className="flex h-screen flex-col overflow-hidden bg-ghost-fog/45 font-inter">
+      <header className="z-30 flex h-64 shrink-0 items-center justify-between border-b border-concrete bg-canvas-white px-12 shadow-sm sm:px-20">
+        <div className="flex min-w-0 items-center gap-8 sm:gap-12">
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="material-symbols-outlined text-ash-graphite hover:text-plain-green transition-colors text-20 mr-4"
+            className="flex h-44 w-44 shrink-0 items-center justify-center rounded-lg text-ash-graphite transition-colors hover:bg-ghost-fog"
+            aria-label={isExpanded ? "Contraer navegación" : "Expandir navegación"}
           >
-            {isExpanded ? 'menu_open' : 'menu'}
+            <span className="material-symbols-outlined text-20">{isExpanded ? 'menu_open' : 'menu'}</span>
           </button>
           <Link
             href="/"
-            className="flex items-center gap-8 text-ash-graphite hover:opacity-70 transition-opacity"
+            className="flex shrink-0 items-center gap-8 text-ash-graphite transition-opacity hover:opacity-70"
             aria-label="Ir al inicio"
           >
-            <Logo className="w-20 h-20" />
-            <h1 className="text-15 font-bold uppercase tracking-tight">Mesa CLICK</h1>
+            <Logo className="h-24 w-24" />
+            <h1 className="hidden text-15 font-bold uppercase tracking-tight sm:block">Mesa CLICK</h1>
           </Link>
-          <span className="text-11 font-mono text-sage-green uppercase tracking-wider border-l border-concrete pl-8">
+          <span className="max-w-[90px] truncate border-l border-concrete pl-8 text-12 font-medium text-sage-green sm:max-w-[260px] sm:pl-12">
             {tenant ? tenant.nombre : "Admin"}
           </span>
           {tenant && (
-            <span className="hidden sm:inline-block px-6 py-1 bg-ghost-fog border border-ash-graphite/20 text-10 font-mono text-sage-green rounded">
+            <span className="hidden rounded-full border border-concrete bg-ghost-fog px-8 py-2 text-10 font-mono text-sage-green lg:inline-block">
               /{tenant.slug}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-16">
-          <button className="material-symbols-outlined text-ash-graphite hover:text-plain-green transition-colors text-20">
-            notifications
+        <div className="flex shrink-0 items-center gap-4 sm:gap-8">
+          <button
+            className="flex h-44 w-44 items-center justify-center rounded-lg text-ash-graphite transition-colors hover:bg-ghost-fog"
+            aria-label="Notificaciones"
+          >
+            <span className="material-symbols-outlined text-20">notifications</span>
           </button>
           <div className="relative">
             <button
               onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-              className="w-28 h-28 bg-vanilla-cream border border-ash-graphite rounded-md flex items-center justify-center hover:border-plain-green transition-all"
+              className="flex h-44 w-44 items-center justify-center rounded-lg border border-concrete bg-canvas-white transition-all hover:border-stone hover:bg-ghost-fog"
+              aria-label="Abrir menú de usuario"
+              aria-expanded={isUserMenuOpen}
             >
-              <span className="material-symbols-outlined text-18 text-ash-graphite">person</span>
+              <span className="material-symbols-outlined text-20 text-ash-graphite">person</span>
             </button>
             {isUserMenuOpen && (
               <>
                 <div className="fixed inset-0 z-10" onClick={() => setIsUserMenuOpen(false)} />
-                <div className="absolute right-0 mt-8 w-90 bg-canvas-white border border-system-black rounded-md shadow-sm z-20 py-8 overflow-hidden">
-                  <div className="px-16 py-8 border-b border-ghost-fog mb-4">
-                    <p className="text-11 font-medium text-ash-graphite">{tenant ? tenant.nombre : "Administrador"}</p>
-                    <p className="text-11 font-mono text-sage-green truncate">Sesión activa</p>
+                <div className="absolute right-0 z-20 mt-8 w-[240px] overflow-hidden rounded-xl border border-concrete bg-canvas-white py-6 shadow-xl">
+                  <div className="mb-4 border-b border-ghost-fog px-16 py-10">
+                    <p className="truncate text-13 font-semibold text-ash-graphite">{tenant ? tenant.nombre : "Administrador"}</p>
+                    <p className="mt-2 truncate text-11 text-sage-green">Sesión activa</p>
                   </div>
                   <UserMenuItem icon="account_circle" label="Perfil" />
                   <div onClick={() => { setIsTourOpen(true); setIsUserMenuOpen(false); }}>
@@ -135,7 +142,7 @@ export default function DashboardPage() {
         </div>
       </header>
 
-      <div className="flex-1 flex overflow-hidden relative">
+      <div className="relative flex flex-1 overflow-hidden">
         {/* Mobile Backdrop */}
         {isExpanded && (
           <div 
@@ -146,11 +153,11 @@ export default function DashboardPage() {
 
         {/* Mobile Drawer (Slide-out) */}
         <aside
-          className={`fixed inset-y-0 left-0 z-50 w-240 bg-canvas-white border-r border-system-black flex flex-col py-16 transition-transform duration-300 ease-in-out md:hidden ${
+          className={`fixed inset-y-0 left-0 z-50 flex w-240 flex-col border-r border-concrete bg-canvas-white py-16 shadow-2xl transition-transform duration-300 ease-in-out md:hidden ${
             isExpanded ? "translate-x-0" : "-translate-x-full"
           }`}
         >
-          <div className="px-16 pb-16 flex items-center justify-between border-b border-ghost-fog mb-8">
+          <div className="mb-8 flex items-center justify-between border-b border-ghost-fog px-16 pb-16">
             <Link
               href="/"
               className="flex items-center gap-8 text-ash-graphite hover:opacity-70 transition-opacity"
@@ -161,9 +168,9 @@ export default function DashboardPage() {
             </Link>
             <button 
               onClick={() => setIsExpanded(false)}
-              className="material-symbols-outlined text-ash-graphite p-4 hover:text-plain-green"
+              className="flex h-44 w-44 items-center justify-center rounded-lg text-ash-graphite hover:bg-ghost-fog"
             >
-              close
+              <span className="material-symbols-outlined text-20">close</span>
             </button>
           </div>
           <nav className="space-y-4 flex-1 px-8">
@@ -210,8 +217,8 @@ export default function DashboardPage() {
         {/* Desktop Sidebar */}
         <aside
           className={`${
-            isExpanded ? "w-200" : "w-64"
-          } border-r border-system-black hidden md:flex flex-col py-16 transition-all duration-300 ease-in-out bg-canvas-white overflow-y-auto overflow-x-hidden shrink-0`}
+            isExpanded ? "w-200" : "w-72"
+          } hidden shrink-0 flex-col overflow-x-hidden overflow-y-auto border-r border-concrete bg-canvas-white py-16 transition-all duration-300 ease-in-out md:flex`}
         >
           <nav className={`space-y-4 flex-1 flex flex-col ${isExpanded ? "px-8" : "items-center"}`}>
             {SECTIONS.map((s) => (
@@ -245,7 +252,7 @@ export default function DashboardPage() {
           </div>
         </aside>
 
-        <main className="flex-1 overflow-y-auto">
+        <main className="min-w-0 flex-1 overflow-hidden">
           {renderSection(activeSection)}
         </main>
       </div>
@@ -260,6 +267,7 @@ export default function DashboardPage() {
       />
     </div>
     </ToastProvider>
+    </ConfirmProvider>
   );
 }
 
@@ -283,9 +291,9 @@ function NavItem({
       data-tour={dataTour}
       title={!expanded ? label : undefined}
       onClick={onClick}
-      className={`flex items-center rounded-md cursor-pointer transition-all ${
-        expanded ? "w-full px-12 py-8 gap-12" : "justify-center w-40 h-40"
-      } ${active ? "bg-ash-graphite text-canvas-white" : "text-ash-graphite hover:bg-vanilla-cream"}`}
+      className={`flex min-h-44 cursor-pointer items-center rounded-lg transition-all ${
+        expanded ? "w-full gap-12 px-12 py-8" : "h-44 w-44 justify-center"
+      } ${active ? "bg-ash-graphite text-canvas-white shadow-sm" : "text-sage-green hover:bg-ghost-fog hover:text-ash-graphite"}`}
     >
       <span className="material-symbols-outlined text-20">{icon}</span>
       {expanded && <span className="text-13 font-medium whitespace-nowrap">{label}</span>}
@@ -304,8 +312,8 @@ function UserMenuItem({
 }) {
   return (
     <div
-      className={`flex items-center gap-12 px-16 py-8 cursor-pointer transition-colors ${
-        isDanger ? "text-alert-red hover:bg-red-50" : "text-ash-graphite hover:bg-vanilla-cream"
+      className={`flex min-h-44 cursor-pointer items-center gap-12 px-16 py-8 transition-colors ${
+        isDanger ? "text-alert-red hover:bg-warm-pink/20" : "text-ash-graphite hover:bg-ghost-fog"
       }`}
     >
       <span className="material-symbols-outlined text-18">{icon}</span>
