@@ -16,7 +16,7 @@ export default function EmptyState({
   compact = false,
 }: EmptyStateProps) {
   return (
-    <div className="flex flex-col items-center gap-16 py-40">
+    <div className={`flex flex-col items-center ${compact ? "gap-10 py-12" : "gap-16 py-40"}`}>
       {!compact && (
         <span className="material-symbols-outlined text-48 text-concrete select-none">
           {icon}
