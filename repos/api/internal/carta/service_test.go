@@ -2,14 +2,16 @@ package carta_test
 
 import (
 	"context"
+	"errors"
 	"testing"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/carta"
 )
 
 type mockStore struct {
-	categorias []carta.Categoria
-	articulos  []carta.Articulo
+	categorias       []carta.Categoria
+	articulos        []carta.Articulo
+	ajustarPreciosFn func(ctx context.Context, tenantID string, input carta.AjustePreciosInput) (*carta.AjustePreciosResultado, error)
 }
 
 func (m *mockStore) ListarCategorias(ctx context.Context, tenantID string) ([]carta.Categoria, error) {
@@ -36,6 +38,12 @@ func (m *mockStore) CrearArticulo(ctx context.Context, tenantID string, input ca
 }
 func (m *mockStore) ActualizarArticulo(ctx context.Context, id, tenantID string, u carta.ArticuloUpdate) (*carta.Articulo, error) {
 	return &carta.Articulo{ID: id}, nil
+}
+func (m *mockStore) AjustarPrecios(ctx context.Context, tenantID string, input carta.AjustePreciosInput) (*carta.AjustePreciosResultado, error) {
+	if m.ajustarPreciosFn != nil {
+		return m.ajustarPreciosFn(ctx, tenantID, input)
+	}
+	return &carta.AjustePreciosResultado{Actualizados: len(m.articulos)}, nil
 }
 func (m *mockStore) EliminarArticulo(ctx context.Context, id, tenantID string) error { return nil }
 func (m *mockStore) ObtenerCartaPublica(ctx context.Context, sucursalID string) (*carta.CartaPublica, error) {
@@ -86,7 +94,7 @@ func TestCrearArticulo_PrecioNegativo(t *testing.T) {
 func TestCrearVariante_Validaciones(t *testing.T) {
 	svc := carta.NuevoService(&mockStore{})
 	_, err := svc.CrearVariante(context.Background(), "", "t-1", carta.CrearVarianteInput{
-		Nombre: "Extra queso",
+		Nombre:          "Extra queso",
 		PrecioAdicional: 100,
 	})
 	if err == nil {
@@ -94,7 +102,7 @@ func TestCrearVariante_Validaciones(t *testing.T) {
 	}
 
 	_, err = svc.CrearVariante(context.Background(), "art-1", "t-1", carta.CrearVarianteInput{
-		Nombre: "",
+		Nombre:          "",
 		PrecioAdicional: 100,
 	})
 	if err == nil {
@@ -102,10 +110,70 @@ func TestCrearVariante_Validaciones(t *testing.T) {
 	}
 
 	_, err = svc.CrearVariante(context.Background(), "art-1", "t-1", carta.CrearVarianteInput{
-		Nombre: "Extra queso",
+		Nombre:          "Extra queso",
 		PrecioAdicional: -10,
 	})
 	if err == nil {
 		t.Fatal("esperaba error por precio_adicional negativo")
+	}
+}
+
+func TestAjustarPrecios_Exitoso(t *testing.T) {
+	store := &mockStore{
+		ajustarPreciosFn: func(ctx context.Context, tenantID string, input carta.AjustePreciosInput) (*carta.AjustePreciosResultado, error) {
+			if tenantID != "t-1" {
+				t.Fatalf("tenantID: got %q, want %q", tenantID, "t-1")
+			}
+			if input.CategoriaID != "cat-1" || input.Porcentaje != 12.5 || input.Redondeo != carta.Redondeo100 {
+				t.Fatalf("input inesperado: %+v", input)
+			}
+			return &carta.AjustePreciosResultado{Actualizados: 3}, nil
+		},
+	}
+
+	resultado, err := carta.NuevoService(store).AjustarPrecios(context.Background(), "t-1", carta.AjustePreciosInput{
+		CategoriaID: " cat-1 ",
+		Porcentaje:  12.5,
+		Redondeo:    carta.Redondeo100,
+	})
+	if err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+	if resultado.Actualizados != 3 {
+		t.Fatalf("actualizados: got %d, want 3", resultado.Actualizados)
+	}
+}
+
+func TestAjustarPrecios_Validaciones(t *testing.T) {
+	tests := []struct {
+		nombre string
+		input  carta.AjustePreciosInput
+	}{
+		{nombre: "porcentaje cero", input: carta.AjustePreciosInput{Porcentaje: 0}},
+		{nombre: "descuento menor a menos cien", input: carta.AjustePreciosInput{Porcentaje: -100.01}},
+		{nombre: "incremento excesivo", input: carta.AjustePreciosInput{Porcentaje: 1000.01}},
+		{nombre: "redondeo inválido", input: carta.AjustePreciosInput{Porcentaje: 10, Redondeo: "50"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.nombre, func(t *testing.T) {
+			_, err := carta.NuevoService(&mockStore{}).AjustarPrecios(context.Background(), "t-1", tt.input)
+			if !errors.Is(err, carta.ErrValidation) {
+				t.Fatalf("se esperaba ErrValidation, obtenido: %v", err)
+			}
+		})
+	}
+}
+
+func TestAjustarPrecios_SinProductos(t *testing.T) {
+	store := &mockStore{
+		ajustarPreciosFn: func(ctx context.Context, tenantID string, input carta.AjustePreciosInput) (*carta.AjustePreciosResultado, error) {
+			return &carta.AjustePreciosResultado{Actualizados: 0}, nil
+		},
+	}
+
+	_, err := carta.NuevoService(store).AjustarPrecios(context.Background(), "t-1", carta.AjustePreciosInput{Porcentaje: 10})
+	if !errors.Is(err, carta.ErrValidation) {
+		t.Fatalf("se esperaba ErrValidation, obtenido: %v", err)
 	}
 }

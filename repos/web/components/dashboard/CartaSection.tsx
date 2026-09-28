@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { api, CategoriaAPI, ArticuloAPI, getErrorMessage } from "@/lib/api";
 import { EmptyState, Skeleton, useToast } from "@/components/ui";
+import AjustePreciosModal from "./AjustePreciosModal";
 
 export interface CategoriaConItems extends CategoriaAPI {
   items: ArticuloAPI[];
@@ -33,6 +34,7 @@ export default function CartaSection() {
     seleccionUnica: false,
   });
   const [guardandoVariante, setGuardandoVariante] = useState(false);
+  const [mostrarAjustePrecios, setMostrarAjustePrecios] = useState(false);
 
   const cargarCarta = useCallback(async () => {
     try {
@@ -261,22 +263,52 @@ export default function CartaSection() {
 
   const totalItems = categorias.reduce((n, c) => n + c.items.length, 0);
 
+  const handlePreciosActualizados = async (actualizados: number) => {
+    await cargarCarta();
+    toast.success(
+      `Se ${actualizados === 1 ? "actualizó" : "actualizaron"} ${actualizados} ${
+        actualizados === 1 ? "producto" : "productos"
+      }.`
+    );
+  };
+
   return (
     <div className="p-24 md:p-32 space-y-24 overflow-y-auto h-full font-inter">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-12">
         <div>
           <h2 className="text-20 font-medium text-ash-graphite">Gestión de Carta</h2>
           <p className="text-13 text-sage-green mt-4">
             {loading ? 'Cargando carta...' : `${categorias.length} categorías · ${totalItems} ítems`}
           </p>
         </div>
-        <button
-          onClick={() => setMostrarFormCat(true)}
-          className="px-16 py-8 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90 transition-opacity"
-        >
-          + Nueva categoría
-        </button>
+        <div className="flex flex-col sm:flex-row gap-8">
+          <button
+            type="button"
+            onClick={() => setMostrarAjustePrecios(true)}
+            disabled={loading || totalItems === 0}
+            className="h-44 px-14 border border-concrete bg-canvas-white text-ash-graphite text-12 font-medium rounded-md shadow-sm hover:bg-ghost-fog hover:border-stone transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-6"
+            title={totalItems === 0 ? "Agregá productos antes de ajustar precios" : undefined}
+          >
+            <span className="material-symbols-outlined text-16">percent</span>
+            Ajustar precios
+          </button>
+          <button
+            type="button"
+            onClick={() => setMostrarFormCat(true)}
+            className="h-44 px-16 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90 transition-opacity"
+          >
+            + Nueva categoría
+          </button>
+        </div>
       </div>
+
+      {mostrarAjustePrecios && (
+        <AjustePreciosModal
+          categorias={categorias}
+          onClose={() => setMostrarAjustePrecios(false)}
+          onApplied={handlePreciosActualizados}
+        />
+      )}
 
       {errorMsg && (
         <div className="p-10 bg-red-50 border border-alert-red/30 rounded text-12 text-alert-red flex items-center justify-between gap-12">

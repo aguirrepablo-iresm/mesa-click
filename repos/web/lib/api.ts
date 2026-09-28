@@ -278,6 +278,18 @@ export interface ArticuloAPI {
   variantes?: VariantePublica[];
 }
 
+export type RedondeoAjustePrecios = 'ninguno' | '10' | '100';
+
+export interface AjustePreciosInput {
+  categoria_id?: string;
+  porcentaje: number;
+  redondeo: RedondeoAjustePrecios;
+}
+
+export interface AjustePreciosResultado {
+  actualizados: number;
+}
+
 export interface MesaAPI {
   id: string;
   tenant_id: string;
@@ -507,6 +519,13 @@ export const api = {
 
   actualizarArticulo: async (id: string, data: Partial<ArticuloAPI>) => {
     return apiFetch<ArticuloAPI>(`/carta/articulos/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  ajustarPrecios: async (data: AjustePreciosInput) => {
+    return apiFetch<AjustePreciosResultado>('/carta/precios/ajuste-porcentual', {
       method: 'PATCH',
       body: JSON.stringify(data),
     });

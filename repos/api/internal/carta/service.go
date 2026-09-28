@@ -3,6 +3,8 @@ package carta
 import (
 	"context"
 	"fmt"
+	"math"
+	"strings"
 )
 
 type Service struct {
@@ -48,6 +50,33 @@ func (svc *Service) ActualizarArticulo(ctx context.Context, id, tenantID string,
 		return nil, fmt.Errorf("precio no puede ser negativo: %w", ErrValidation)
 	}
 	return svc.store.ActualizarArticulo(ctx, id, tenantID, u)
+}
+
+func (svc *Service) AjustarPrecios(ctx context.Context, tenantID string, input AjustePreciosInput) (*AjustePreciosResultado, error) {
+	input.CategoriaID = strings.TrimSpace(input.CategoriaID)
+	input.Redondeo = strings.TrimSpace(input.Redondeo)
+	if input.Redondeo == "" {
+		input.Redondeo = RedondeoNinguno
+	}
+
+	if math.IsNaN(input.Porcentaje) || math.IsInf(input.Porcentaje, 0) || input.Porcentaje == 0 {
+		return nil, fmt.Errorf("el porcentaje debe ser distinto de cero: %w", ErrValidation)
+	}
+	if input.Porcentaje < -100 || input.Porcentaje > 1000 {
+		return nil, fmt.Errorf("el porcentaje debe estar entre -100 y 1000: %w", ErrValidation)
+	}
+	if input.Redondeo != RedondeoNinguno && input.Redondeo != Redondeo10 && input.Redondeo != Redondeo100 {
+		return nil, fmt.Errorf("opción de redondeo inválida: %w", ErrValidation)
+	}
+
+	resultado, err := svc.store.AjustarPrecios(ctx, tenantID, input)
+	if err != nil {
+		return nil, err
+	}
+	if resultado.Actualizados == 0 {
+		return nil, fmt.Errorf("no hay productos para actualizar: %w", ErrValidation)
+	}
+	return resultado, nil
 }
 
 func (svc *Service) EliminarArticulo(ctx context.Context, id, tenantID string) error {
