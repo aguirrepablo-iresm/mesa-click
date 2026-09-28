@@ -26,8 +26,8 @@ function QRCanvas({ token }: { token: string }) {
   };
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full">
-      <div className="bg-canvas-white p-4 rounded-md border border-ghost-fog flex items-center justify-center">
+    <div className="flex w-full flex-col items-center gap-10">
+      <div className="flex items-center justify-center rounded-xl border border-concrete bg-canvas-white p-8 shadow-sm">
         <canvas ref={canvasRef} className="max-w-full h-auto rounded" />
       </div>
       {publicUrl && (
@@ -36,14 +36,14 @@ function QRCanvas({ token }: { token: string }) {
           target="_blank"
           rel="noopener noreferrer"
           aria-label={`Abrir menú de la Mesa ${token} en una nueva pestaña`}
-          className="w-full break-all text-center text-10 font-mono text-sage-green underline decoration-sage-green/40 underline-offset-2 transition-colors hover:text-ash-graphite"
+          className="w-full truncate text-center text-10 font-mono text-sage-green underline decoration-sage-green/40 underline-offset-2 transition-colors hover:text-ash-graphite"
         >
           {publicUrl}
         </a>
       )}
       <button
         onClick={handleDownload}
-        className="w-full px-8 py-6 text-12 font-medium text-plain-green-muted border border-plain-green-muted rounded-md hover:bg-ghost-fog transition-colors flex items-center justify-center gap-4"
+        className="flex h-44 w-full items-center justify-center gap-6 rounded-lg border border-concrete bg-canvas-white px-10 text-12 font-semibold text-ash-graphite transition-colors hover:border-stone hover:bg-ghost-fog"
       >
         <span className="material-symbols-outlined text-16">download</span>
         Descargar QR
@@ -166,11 +166,11 @@ export default function MesasSection() {
   };
 
   return (
-    <div className="p-24 md:p-32 space-y-24 font-inter">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-20 font-medium text-ash-graphite">Mesas & Códigos QR</h2>
-          <p className="text-13 text-sage-green mt-4">
+    <div className="h-full space-y-24 overflow-y-auto bg-ghost-fog/45 p-16 font-inter sm:p-24 md:p-32">
+      <div className="flex flex-col justify-between gap-16 sm:flex-row sm:items-center">
+        <div className="min-w-0">
+          <h2 className="text-24 font-semibold tracking-[-0.02em] text-ash-graphite sm:text-32">Mesas & Códigos QR</h2>
+          <p className="mt-4 text-13 text-sage-green sm:text-14">
             {loading ? 'Cargando mesas...' : `${mesas.length} mesas configuradas con QR activo`}
           </p>
         </div>
@@ -179,10 +179,10 @@ export default function MesasSection() {
             setErrorMsg('');
             setMostrarFormMesa(true);
           }}
-          className="px-16 py-8 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90 transition-opacity flex items-center gap-6 shrink-0 whitespace-nowrap"
+          className="flex h-48 shrink-0 items-center justify-center gap-8 whitespace-nowrap rounded-lg bg-plain-green px-20 text-13 font-semibold text-canvas-white shadow-sm transition-colors hover:bg-plain-green-muted"
         >
           <span className="material-symbols-outlined text-16">add</span>
-          Nueva Mesa
+          Nueva mesa
         </button>
       </div>
 
@@ -193,7 +193,7 @@ export default function MesasSection() {
       )}
 
       {mostrarFormMesa && (
-        <form onSubmit={handleCrearMesa} className="p-16 border border-plain-green rounded-md bg-ghost-fog flex flex-col sm:flex-row items-stretch sm:items-end gap-12">
+        <form onSubmit={handleCrearMesa} className="flex flex-col items-stretch gap-12 rounded-xl border border-concrete bg-canvas-white p-16 shadow-sm sm:flex-row sm:items-end sm:p-20">
           <div className="space-y-4 flex-1">
             <label className="text-11 font-mono text-sage-green uppercase">Número de Mesa</label>
             <input
@@ -204,7 +204,7 @@ export default function MesasSection() {
               placeholder="Ej: 1"
               value={nuevoNumero}
               onChange={e => setNuevoNumero(e.target.value)}
-              className="w-full px-12 py-8 text-13 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
+              className="h-44 w-full rounded-lg border border-concrete bg-canvas-white px-12 text-13 outline-none focus:border-plain-green"
             />
           </div>
           <div className="space-y-4 flex-1">
@@ -216,13 +216,13 @@ export default function MesasSection() {
               placeholder="4"
               value={nuevaCapacidad}
               onChange={e => setNuevaCapacidad(e.target.value)}
-              className="w-full px-12 py-8 text-13 bg-canvas-white rounded-md border border-ash-graphite outline-none focus:border-plain-green"
+              className="h-44 w-full rounded-lg border border-concrete bg-canvas-white px-12 text-13 outline-none focus:border-plain-green"
             />
           </div>
           <div className="flex items-center gap-8 pt-4 sm:pt-0">
             <button
               type="submit"
-              className="flex-1 sm:flex-initial px-16 py-8 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90 transition-opacity"
+              className="h-44 flex-1 rounded-lg bg-plain-green px-16 text-13 font-semibold text-canvas-white transition-colors hover:bg-plain-green-muted sm:flex-initial"
             >
               Guardar
             </button>
@@ -232,7 +232,7 @@ export default function MesasSection() {
                 setErrorMsg('');
                 setMostrarFormMesa(false);
               }}
-              className="px-12 py-8 text-sage-green text-13 hover:text-ash-graphite"
+              className="h-44 rounded-lg px-12 text-13 text-sage-green hover:bg-ghost-fog hover:text-ash-graphite"
             >
               Cancelar
             </button>
@@ -242,9 +242,9 @@ export default function MesasSection() {
 
       {/* Skeleton de carga */}
       {loading && (
-        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-16">
+        <div className="grid grid-cols-1 gap-16 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {[1, 2, 3, 4].map(i => (
-            <div key={i} className="border border-ash-graphite rounded-lg p-16 space-y-12 bg-canvas-white">
+            <div key={i} className="space-y-12 rounded-xl border border-concrete bg-canvas-white p-16 shadow-sm">
               <Skeleton className="h-14 w-2/3" />
               <Skeleton className="h-140 w-full" />
               <Skeleton className="h-10 w-1/2 mx-auto" />
@@ -256,29 +256,35 @@ export default function MesasSection() {
       {/* Grid de mesas */}
       {!loading && (
         <>
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-16">
+          <div className="grid grid-cols-1 gap-16 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {mesas.map(mesa => (
-              <div key={mesa.id} className="border border-ash-graphite rounded-lg p-16 space-y-12 bg-canvas-white flex flex-col items-center">
-                <div className="flex items-center justify-between w-full">
-                  <span className="text-15 font-medium text-ash-graphite">Mesa {mesa.numero}</span>
+              <article key={mesa.id} className="flex flex-col items-center space-y-14 rounded-xl border border-concrete bg-canvas-white p-16 shadow-sm transition-shadow hover:shadow-md sm:p-20">
+                <div className="flex w-full items-center justify-between gap-8">
+                  <div className="flex min-w-0 items-center gap-10">
+                    <span className="flex h-44 w-44 shrink-0 items-center justify-center rounded-lg bg-ghost-fog text-ash-graphite">
+                      <span className="material-symbols-outlined text-20">table_restaurant</span>
+                    </span>
+                    <div className="min-w-0">
+                      <p className="truncate text-16 font-semibold text-ash-graphite">Mesa {mesa.numero}</p>
+                      <p className="mt-2 text-11 text-sage-green">{mesa.capacidad} personas</p>
+                    </div>
+                  </div>
                   <button
                     onClick={() => handleEliminarMesa(mesa.id)}
                     title="Eliminar mesa"
-                    className="p-4 text-12 text-alert-red hover:opacity-70"
+                    className="flex h-44 w-44 shrink-0 items-center justify-center rounded-lg text-alert-red transition-colors hover:bg-warm-pink/20"
+                    aria-label={`Eliminar Mesa ${mesa.numero}`}
                   >
-                    ✕
+                    <span className="material-symbols-outlined text-18">delete</span>
                   </button>
                 </div>
                 <QRCanvas token={mesa.qr_token} />
-                <div className="space-y-2 w-full">
+                <div className="w-full space-y-2 border-t border-ghost-fog pt-10">
                   <p className="text-9 font-mono text-sage-green text-center break-all truncate">
                     {mesa.qr_token}
                   </p>
-                  <p className="text-11 text-sage-green text-center font-mono">
-                    Capacidad: {mesa.capacidad} pers.
-                  </p>
                 </div>
-              </div>
+              </article>
             ))}
           </div>
 

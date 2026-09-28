@@ -127,10 +127,15 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
   }${loading ? " (cargando...)" : ""}`;
 
   return (
-    <div className={`${embedded ? "space-y-24" : "p-24 md:p-32 space-y-32"} font-inter`}>
-      <div className="border border-ash-graphite rounded-lg overflow-hidden bg-canvas-white">
-        <div className="px-20 py-10 bg-vanilla-cream border-b border-ash-graphite flex items-center justify-between gap-12">
-          <p className="text-11 font-mono text-sage-green uppercase tracking-wider">Miembros actuales</p>
+    <div className={`${embedded ? "space-y-20" : "h-full space-y-24 overflow-y-auto bg-ghost-fog/45 p-16 sm:p-24 md:p-32"} font-inter`}>
+      <section className="overflow-hidden rounded-xl border border-concrete bg-canvas-white shadow-sm">
+        <div className="flex items-center justify-between gap-12 border-b border-concrete/70 px-16 py-14 sm:px-20">
+          <div className="flex items-center gap-8">
+            <span className="flex h-32 w-32 items-center justify-center rounded-lg bg-ghost-fog">
+              <span className="material-symbols-outlined text-18 text-ash-graphite">groups</span>
+            </span>
+            <p className="text-13 font-semibold text-ash-graphite">Miembros actuales</p>
+          </div>
           <p className="text-11 text-sage-green text-right whitespace-nowrap">{miembrosLabel}</p>
         </div>
 
@@ -138,7 +143,7 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
         {loading && (
           <div className="divide-y divide-ghost-fog">
             {[1, 2, 3].map(i => (
-              <div key={i} className="flex items-center justify-between px-20 py-12">
+              <div key={i} className="flex items-center justify-between px-16 py-14 sm:px-20">
                 <div className="space-y-6">
                   <Skeleton className="h-12 w-48" />
                   <Skeleton className="h-10 w-64" />
@@ -153,14 +158,14 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
         {!loading && (
           <div className="divide-y divide-ghost-fog">
             {equipo.map(u => (
-              <div key={u.id} className="flex items-center justify-between px-20 py-12">
-                <div>
-                  <p className="text-13 font-medium text-ash-graphite">{u.nombre}</p>
-                  <p className="text-12 text-sage-green font-mono">{u.email}</p>
+              <div key={u.id} className="flex flex-col gap-12 px-16 py-14 sm:flex-row sm:items-center sm:justify-between sm:px-20">
+                <div className="min-w-0">
+                  <p className="truncate text-14 font-semibold text-ash-graphite">{u.nombre}</p>
+                  <p className="mt-2 truncate text-12 text-sage-green">{u.email}</p>
                 </div>
-                <div className="flex items-center gap-12">
+                <div className="flex items-center justify-between gap-8 sm:justify-end">
                   {u.rol === 'admin' ? (
-                    <span className="px-8 py-2 text-11 font-medium text-sage-green bg-vanilla-cream border border-ghost-fog rounded-md">
+                    <span className="inline-flex h-32 items-center rounded-full border border-concrete bg-ghost-fog px-10 text-11 font-semibold text-sage-green">
                       Admin
                     </span>
                   ) : (
@@ -168,7 +173,7 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
                       value={u.rol}
                       disabled={actualizandoId === u.id}
                       onChange={(e) => void handleCambiarRol(u.id, e.target.value as RolUsuario)}
-                      className="h-28 px-6 text-11 rounded border border-ash-graphite bg-canvas-white outline-none focus:border-plain-green cursor-pointer disabled:opacity-50"
+                      className="h-44 cursor-pointer rounded-lg border border-concrete bg-canvas-white px-10 text-11 outline-none focus:border-plain-green disabled:opacity-50"
                     >
                       <option value="encargado">Encargado</option>
                       <option value="mozo">Mozo / Recepcionista</option>
@@ -178,10 +183,11 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
                   {u.rol !== 'admin' && (
                     <button
                       onClick={() => handleEliminarUsuario(u.id)}
-                      className="text-12 text-alert-red hover:opacity-70"
+                      className="flex h-44 w-44 items-center justify-center rounded-lg text-alert-red transition-colors hover:bg-warm-pink/20"
                       title="Eliminar usuario"
+                      aria-label={`Eliminar a ${u.nombre}`}
                     >
-                      ✕
+                      <span className="material-symbols-outlined text-18">delete</span>
                     </button>
                   )}
                 </div>
@@ -200,26 +206,29 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
             onAction={() => document.getElementById('form-invitar')?.scrollIntoView({ behavior: 'smooth' })}
           />
         )}
-      </div>
+      </section>
 
-      <div id="form-invitar" className="border border-ash-graphite rounded-lg overflow-hidden bg-canvas-white">
-        <div className="px-20 py-10 bg-vanilla-cream border-b border-ash-graphite">
-          <p className="text-11 font-mono text-sage-green uppercase tracking-wider">Invitar nuevo miembro</p>
+      <section id="form-invitar" className="overflow-hidden rounded-xl border border-concrete bg-canvas-white shadow-sm">
+        <div className="flex items-center gap-8 border-b border-concrete/70 px-16 py-14 sm:px-20">
+          <span className="flex h-32 w-32 items-center justify-center rounded-lg bg-ghost-fog">
+            <span className="material-symbols-outlined text-18 text-ash-graphite">person_add</span>
+          </span>
+          <p className="text-13 font-semibold text-ash-graphite">Invitar nuevo miembro</p>
         </div>
         <form onSubmit={handleInvitar} className="p-16 sm:p-20 space-y-12">
-          <div className="p-12 bg-ghost-fog border border-ghost-fog rounded-md text-12 text-sage-green leading-normal">
+          <div className="rounded-lg border border-concrete bg-ghost-fog/70 p-12 text-12 leading-normal text-sage-green">
             Invitá a quienes atienden la sucursal para que entren con su propio magic link. El rol define qué tareas puede realizar cada persona.
           </div>
           <div className="flex flex-col sm:flex-row gap-12">
             <input
-              className="flex-1 px-12 py-8 text-13 rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-plain-green"
+              className="h-44 flex-1 rounded-lg border border-concrete bg-canvas-white px-12 text-13 outline-none focus:border-plain-green"
               placeholder="Nombre completo *"
               value={form.nombre}
               onChange={e => setForm(p => ({ ...p, nombre: e.target.value }))}
             />
             <input
               type="email"
-              className="flex-1 px-12 py-8 text-13 rounded-md border border-ash-graphite bg-canvas-white outline-none focus:border-plain-green"
+              className="h-44 flex-1 rounded-lg border border-concrete bg-canvas-white px-12 text-13 outline-none focus:border-plain-green"
               placeholder="Email *"
               value={form.email}
               onChange={e => setForm(p => ({ ...p, email: e.target.value }))}
@@ -227,7 +236,7 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
           </div>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-12">
             <select
-              className="w-full sm:w-auto px-12 py-8 text-13 rounded-md bg-canvas-white border border-ash-graphite outline-none focus:border-plain-green"
+              className="h-44 w-full rounded-lg border border-concrete bg-canvas-white px-12 text-13 outline-none focus:border-plain-green sm:w-auto"
               value={form.rol}
               onChange={e => setForm(p => ({ ...p, rol: e.target.value as RolInvitable }))}
             >
@@ -237,7 +246,7 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
             </select>
             <button
               type="submit"
-              className="w-full sm:w-auto px-16 py-8 bg-plain-green text-canvas-white text-13 font-medium rounded-md hover:opacity-90 transition-opacity text-center"
+              className="h-44 w-full rounded-lg bg-plain-green px-16 text-center text-13 font-semibold text-canvas-white transition-colors hover:bg-plain-green-muted sm:w-auto"
             >
               Generar Magic Link de Invitación
             </button>
@@ -247,19 +256,19 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
           </p>
           {error && <p className="text-12 text-alert-red">{error}</p>}
           {invitacionLink && (
-            <div className="p-12 bg-ghost-fog border border-plain-green rounded-md space-y-8">
-              <p className="text-12 text-success-muted font-medium">✓ Invitación generada correctamente:</p>
+            <div className="space-y-8 rounded-lg border border-success/40 bg-success/10 p-12">
+              <p className="text-12 font-semibold text-[#087645]">✓ Invitación generada correctamente:</p>
               <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-8">
                 <input
                   type="text"
                   readOnly
                   value={invitacionLink}
-                  className="flex-1 px-10 py-6 text-11 font-mono bg-canvas-white border border-ash-graphite rounded"
+                  className="h-44 flex-1 rounded-lg border border-concrete bg-canvas-white px-10 text-11 font-mono"
                 />
                 <button
                   type="button"
                   onClick={handleCopiarLink}
-                  className="px-16 py-6 text-12 font-medium bg-plain-green text-canvas-white rounded hover:opacity-90 text-center"
+                  className="h-44 rounded-lg bg-plain-green px-16 text-center text-12 font-semibold text-canvas-white hover:bg-plain-green-muted"
                 >
                   {copiado ? "¡Copiado!" : "Copiar Link"}
                 </button>
@@ -267,7 +276,7 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
             </div>
           )}
         </form>
-      </div>
+      </section>
     </div>
   );
 }
