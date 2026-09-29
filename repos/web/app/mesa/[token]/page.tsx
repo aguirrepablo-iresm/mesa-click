@@ -47,6 +47,7 @@ type State = {
   vista: Vista;
   estadoPedido: EstadoPedido;
   cuentaSolicitada: boolean;
+  pagoHabilitado: boolean;
   cuentaVersion: number;
   pedidoId: string | null;
 };
@@ -73,7 +74,7 @@ type Action =
   | { type: 'SET_PEDIDOS'; payload: PedidoSesion[] }
   | { type: 'UPSERT_PEDIDO'; payload: PedidoSesion }
   | { type: 'SET_ESTADO_PEDIDO'; payload: { pedidoId: string; estado: EstadoPedido } }
-  | { type: 'SYNC_CUENTA'; payload: { cuentaSolicitada: boolean; cuentaVersion: number } }
+  | { type: 'SYNC_CUENTA'; payload: { cuentaSolicitada: boolean; pagoHabilitado?: boolean; cuentaVersion: number } }
   | { type: 'RESET_SESSION' };
 
 const INITIAL_STATE: State = {
@@ -82,6 +83,7 @@ const INITIAL_STATE: State = {
   vista: 'carta',
   estadoPedido: 'recibido',
   cuentaSolicitada: false,
+  pagoHabilitado: false,
   cuentaVersion: 1,
   pedidoId: null,
 };
@@ -197,6 +199,7 @@ function reducer(state: State, action: Action): State {
       return {
         ...state,
         cuentaSolicitada: action.payload.cuentaSolicitada,
+        pagoHabilitado: action.payload.pagoHabilitado ?? state.pagoHabilitado,
         cuentaVersion: action.payload.cuentaVersion,
         vista: action.payload.cuentaSolicitada ? 'seguimiento' : state.vista,
       };
@@ -353,6 +356,7 @@ function readStoredSession(raw: string): State | null {
       vista: pedidos.length > 0 && items.length === 0 ? 'seguimiento' : vista,
       estadoPedido: ultimoPedido?.estado ?? estadoPedido,
       cuentaSolicitada: parsed.cuentaSolicitada === true,
+      pagoHabilitado: parsed.pagoHabilitado === true,
       cuentaVersion,
       pedidoId: ultimoPedido?.id ?? pedidoId,
     };
@@ -635,6 +639,7 @@ export default function MesaPage() {
           type: 'SYNC_CUENTA',
           payload: {
             cuentaSolicitada: mesaActualizada.cuenta_solicitada,
+            pagoHabilitado: mesaActualizada.pago_habilitado,
             cuentaVersion: mesaActualizada.cuenta_version,
           },
         });
@@ -707,6 +712,7 @@ export default function MesaPage() {
           type: 'SYNC_CUENTA',
           payload: {
             cuentaSolicitada: mesaApi.cuenta_solicitada,
+            pagoHabilitado: mesaApi.pago_habilitado,
             cuentaVersion: mesaApi.cuenta_version,
           },
         });
@@ -805,6 +811,7 @@ export default function MesaPage() {
         setMesa(actual => actual ? {
           ...actual,
           cuenta_solicitada: payload.cuenta_solicitada as boolean,
+          pago_habilitado: payload.pago_habilitado !== undefined ? (payload.pago_habilitado as boolean) : actual.pago_habilitado,
           cuenta_version: payload.cuenta_version as number,
         } : actual);
         if (mesaId) {
@@ -817,16 +824,30 @@ export default function MesaPage() {
           type: 'SYNC_CUENTA',
           payload: {
             cuentaSolicitada: payload.cuenta_solicitada,
+            pagoHabilitado: payload.pago_habilitado !== undefined ? Boolean(payload.pago_habilitado) : undefined,
             cuentaVersion: payload.cuenta_version,
           },
         });
+        if (event.type === 'cuenta_cerrada') {
+          void sincronizarPedidosMesa();
+        }
       } catch (error) {
         console.warn('Error parseando evento de cuenta de mesa:', error);
       }
     };
 
+    const handlePagoAprobado = () => {
+      setPagoExitoso(true);
+      setPagoError(false);
+      dispatch({ type: 'SET_VISTA', payload: 'seguimiento' });
+      void sincronizarPedidosMesa();
+    };
+
     eventSource.addEventListener('cuenta_solicitada', sincronizarCuentaDesdeEvento);
     eventSource.addEventListener('cuenta_cerrada', sincronizarCuentaDesdeEvento);
+    eventSource.addEventListener('pago_habilitado', sincronizarCuentaDesdeEvento);
+    eventSource.addEventListener('pago_deshabilitado', sincronizarCuentaDesdeEvento);
+    eventSource.addEventListener('pago_aprobado', handlePagoAprobado);
     eventSource.onerror = () => {
       // EventSource reintenta automáticamente y onopen recupera el snapshot.
     };
@@ -943,6 +964,7 @@ export default function MesaPage() {
         type: 'SYNC_CUENTA',
         payload: {
           cuentaSolicitada: mesaActualizada.cuenta_solicitada,
+          pagoHabilitado: mesaActualizada.pago_habilitado,
           cuentaVersion: mesaActualizada.cuenta_version,
         },
       });
@@ -995,7 +1017,10 @@ export default function MesaPage() {
       }
     } catch (error) {
       console.error('Error al crear preferencia de Mercado Pago:', error);
-      alert('No se pudo iniciar el pago con Mercado Pago. Verifica que haya consumos en la mesa e intenta nuevamente.');
+      const mensaje = error instanceof Error && error.message
+        ? error.message
+        : 'No se pudo iniciar el pago con Mercado Pago. Verifica que haya consumos en la mesa e intenta nuevamente.';
+      alert(mensaje);
       setPagandoMP(false);
     }
   };
@@ -1097,6 +1122,7 @@ export default function MesaPage() {
           estadoPedido={estadoPedidoActual}
           todosListos={todosLosPedidosListos}
           cuentaSolicitada={state.cuentaSolicitada}
+          pagoHabilitado={state.pagoHabilitado}
           mesa={mesa.numero}
           comensalId={comensal?.id}
           comensalNombre={comensal?.nombre}

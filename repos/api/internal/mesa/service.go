@@ -40,6 +40,20 @@ func (svc *Service) Actualizar(ctx context.Context, id, tenantID string, u MesaU
 	return svc.store.Actualizar(ctx, id, tenantID, u)
 }
 
+func (svc *Service) HabilitarPago(ctx context.Context, id, tenantID string, habilitado bool) (*Mesa, error) {
+	m, err := svc.store.HabilitarPago(ctx, id, tenantID, habilitado)
+	if err != nil {
+		return nil, err
+	}
+	evento := "pago_habilitado"
+	if !habilitado {
+		evento = "pago_deshabilitado"
+	}
+	notificacion.Instancia.Publicar(fmt.Sprintf("sucursal:%s", m.SucursalID), evento, m)
+	notificacion.Instancia.Publicar(fmt.Sprintf("mesa:%s", m.ID), evento, m)
+	return m, nil
+}
+
 func (svc *Service) CerrarCuenta(ctx context.Context, id, tenantID string) (*Mesa, error) {
 	m, err := svc.store.CerrarCuenta(ctx, id, tenantID)
 	if err != nil {

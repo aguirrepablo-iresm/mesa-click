@@ -31,6 +31,7 @@ interface MesaGrupo {
   mesaId?: string;
   pedidos: PedidoVista[];
   cuentaSolicitada: boolean;
+  pagoHabilitado: boolean;
 }
 
 const ESTADO_LABELS: Record<'recibido' | 'preparando' | 'listo', string> = {
@@ -135,9 +136,11 @@ function PedidoDetalle({
 function MesaCard({
   grupo,
   onOpen,
+  onHabilitarPago,
 }: {
   grupo: MesaGrupo;
   onOpen: () => void;
+  onHabilitarPago?: (grupo: MesaGrupo) => void;
 }) {
   const total = grupo.pedidos.reduce(
     (sum, pedido) => sum + pedido.items.reduce((pedidoTotal, item) => pedidoTotal + item.precio * item.cantidad, 0),
@@ -159,8 +162,14 @@ function MesaCard({
             {grupo.pedidos.length} {grupo.pedidos.length === 1 ? 'pedido' : 'pedidos'} activos
           </span>
           {cuentaSolicitada && (
-            <span className="flex items-center gap-4 rounded-full border border-alert-red/20 bg-warm-pink/20 px-8 py-2 text-11 font-semibold text-alert-red">
-              Cuenta solicitada
+            <span
+              className={`flex items-center gap-4 rounded-full border px-8 py-2 text-11 font-semibold ${
+                grupo.pagoHabilitado
+                  ? 'border-plain-green/30 bg-plain-green/15 text-plain-green'
+                  : 'border-alert-red/20 bg-warm-pink/20 text-alert-red'
+              }`}
+            >
+              {grupo.pagoHabilitado ? '✓ Pago habilitado' : 'Cuenta solicitada'}
             </span>
           )}
         </div>
@@ -178,14 +187,26 @@ function MesaCard({
           <span className="shrink-0 font-mono text-15 font-semibold text-ash-graphite">${total.toLocaleString()}</span>
         </div>
 
-        <button
-          type="button"
-          onClick={onOpen}
-          className="flex min-h-44 w-full items-center justify-center gap-6 rounded-lg border border-concrete px-12 py-8 text-12 font-semibold text-ash-graphite transition-colors hover:border-stone hover:bg-ghost-fog"
-        >
-          <span>Ver más</span>
-          <span aria-hidden="true">↓</span>
-        </button>
+        <div className="flex gap-8">
+          {cuentaSolicitada && !grupo.pagoHabilitado && onHabilitarPago && (
+            <button
+              type="button"
+              onClick={() => onHabilitarPago(grupo)}
+              className="flex min-h-44 flex-1 items-center justify-center gap-6 rounded-lg bg-[#009EE3] px-12 py-8 text-12 font-semibold text-white transition-opacity hover:opacity-90 shadow-2xs cursor-pointer"
+            >
+              <span>💳</span>
+              <span>Habilitar pago</span>
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onOpen}
+            className={`flex min-h-44 ${cuentaSolicitada && !grupo.pagoHabilitado && onHabilitarPago ? 'flex-1' : 'w-full'} items-center justify-center gap-6 rounded-lg border border-concrete px-12 py-8 text-12 font-semibold text-ash-graphite transition-colors hover:border-stone hover:bg-ghost-fog cursor-pointer`}
+          >
+            <span>Ver más</span>
+            <span aria-hidden="true">↓</span>
+          </button>
+        </div>
       </div>
     </article>
   );
@@ -198,6 +219,7 @@ function MesaDetalleModal({
   onCerrar,
   onTodoListo,
   onCerrarCuenta,
+  onHabilitarPago,
   mesaAccionEnCurso,
 }: {
   grupo: MesaGrupo;
@@ -206,7 +228,8 @@ function MesaDetalleModal({
   onCerrar: (id: string) => void;
   onTodoListo: (grupo: MesaGrupo) => void;
   onCerrarCuenta: (grupo: MesaGrupo) => void;
-  mesaAccionEnCurso: 'todo-listo' | 'cerrar-cuenta' | null;
+  onHabilitarPago: (grupo: MesaGrupo, habilitar?: boolean) => void;
+  mesaAccionEnCurso: 'todo-listo' | 'cerrar-cuenta' | 'habilitar-pago' | null;
 }) {
   const total = grupo.pedidos.reduce(
     (sum, pedido) => sum + pedido.items.reduce((pedidoTotal, item) => pedidoTotal + item.precio * item.cantidad, 0),
@@ -284,19 +307,46 @@ function MesaDetalleModal({
             type="button"
             onClick={() => onTodoListo(grupo)}
             disabled={todosListos || mesaAccionEnCurso !== null}
-            className="min-h-44 flex-1 rounded-lg bg-success px-12 py-8 text-12 font-semibold text-ash-graphite transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial"
+            className="min-h-44 flex-1 rounded-lg bg-success px-12 py-8 text-12 font-semibold text-ash-graphite transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial cursor-pointer"
           >
             {mesaAccionEnCurso === 'todo-listo' ? 'Actualizando...' : 'Todo listo'}
           </button>
+          {grupo.cuentaSolicitada && !grupo.pagoHabilitado && (
+            <button
+              type="button"
+              onClick={() => onHabilitarPago(grupo)}
+              disabled={mesaAccionEnCurso !== null}
+              className="min-h-44 flex-1 rounded-lg bg-[#009EE3] px-14 py-8 text-12 font-semibold text-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial flex items-center justify-center gap-6 shadow-xs cursor-pointer"
+            >
+              <span className="text-14">💳</span>
+              <span>{mesaAccionEnCurso === 'habilitar-pago' ? 'Habilitando...' : 'Habilitar pago MP'}</span>
+            </button>
+          )}
+          {grupo.cuentaSolicitada && grupo.pagoHabilitado && (
+            <div className="flex flex-wrap items-center gap-8">
+              <span className="flex min-h-44 items-center justify-center gap-6 rounded-lg border border-plain-green/30 bg-plain-green/10 px-12 py-8 text-12 font-semibold text-plain-green">
+                <span>✓ Pago habilitado</span>
+              </span>
+              <button
+                type="button"
+                onClick={() => onHabilitarPago(grupo, false)}
+                disabled={mesaAccionEnCurso !== null}
+                className="min-h-44 rounded-lg border border-concrete px-12 py-8 text-12 font-medium text-sage-green hover:text-alert-red hover:border-alert-red/40 transition-colors cursor-pointer"
+                title="Deshabilitar pago digital para esta mesa"
+              >
+                Revocar
+              </button>
+            </div>
+          )}
           <button
             type="button"
             onClick={() => onCerrarCuenta(grupo)}
             disabled={mesaAccionEnCurso !== null}
-            className="min-h-44 flex-1 rounded-lg bg-alert-red px-12 py-8 text-12 font-semibold text-canvas-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial"
+            className="min-h-44 flex-1 rounded-lg bg-alert-red px-12 py-8 text-12 font-semibold text-canvas-white transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 sm:flex-initial cursor-pointer"
           >
             {mesaAccionEnCurso === 'cerrar-cuenta' ? 'Cerrando...' : 'Cerrar cuenta'}
           </button>
-          {grupo.cuentaSolicitada && (
+          {grupo.cuentaSolicitada && !grupo.pagoHabilitado && (
             <span className="flex min-h-44 items-center justify-center rounded-lg border border-alert-red/30 bg-warm-pink/15 px-12 py-8 text-12 font-semibold text-alert-red sm:ml-auto">
               Cuenta solicitada
             </span>
@@ -351,7 +401,7 @@ export default function RecepcionistaSection() {
   const [mesas, setMesas] = useState<Record<string, MesaAPI>>({});
   const [loading, setLoading] = useState(true);
   const [sseConectado, setSseConectado] = useState(false);
-  const [mesaAccionEnCurso, setMesaAccionEnCurso] = useState<'todo-listo' | 'cerrar-cuenta' | null>(null);
+  const [mesaAccionEnCurso, setMesaAccionEnCurso] = useState<'todo-listo' | 'cerrar-cuenta' | 'habilitar-pago' | null>(null);
   const [mesaDetalleKey, setMesaDetalleKey] = useState<string | null>(null);
   const eventSourceRef = useRef<EventSource | null>(null);
 
@@ -502,6 +552,47 @@ export default function RecepcionistaSection() {
       }
     });
 
+    es.addEventListener('pago_habilitado', (e: MessageEvent) => {
+      try {
+        const data: MesaAPI = JSON.parse(e.data);
+        if (!data?.id) return;
+        setMesas(prev => ({
+          ...prev,
+          [data.id]: { ...prev[data.id], ...data, pago_habilitado: true },
+        }));
+      } catch (err) {
+        console.warn("Error parseando pago_habilitado SSE:", err);
+      }
+    });
+
+    es.addEventListener('pago_deshabilitado', (e: MessageEvent) => {
+      try {
+        const data: MesaAPI = JSON.parse(e.data);
+        if (!data?.id) return;
+        setMesas(prev => ({
+          ...prev,
+          [data.id]: { ...prev[data.id], ...data, pago_habilitado: false },
+        }));
+      } catch (err) {
+        console.warn("Error parseando pago_deshabilitado SSE:", err);
+      }
+    });
+
+    es.addEventListener('pago_recibido', (e: MessageEvent) => {
+      try {
+        const data = JSON.parse(e.data);
+        toast.success(`¡Pago recibido de Mesa ${data.numero}! Monto: $${data.monto}`);
+        if (data.mesa_id) {
+          setMesas(prev => ({
+            ...prev,
+            [data.mesa_id]: { ...prev[data.mesa_id], cuenta_solicitada: false, pago_habilitado: false },
+          }));
+        }
+      } catch (err) {
+        console.warn("Error parseando pago_recibido SSE:", err);
+      }
+    });
+
     es.onerror = () => {
       setSseConectado(false);
     };
@@ -612,6 +703,35 @@ export default function RecepcionistaSection() {
     }
   };
 
+  const habilitarPago = async (grupo: MesaGrupo, habilitar = true) => {
+    if (!grupo.mesaId) {
+      toast.error('No se pudo identificar la mesa para modificar el pago.');
+      return;
+    }
+    setMesaAccionEnCurso('habilitar-pago');
+    try {
+      const mesaActualizada = await api.habilitarPagoMesa(grupo.mesaId, habilitar);
+      setMesas(prev => ({
+        ...prev,
+        [grupo.mesaId as string]: {
+          ...prev[grupo.mesaId as string],
+          ...mesaActualizada,
+          pago_habilitado: habilitar,
+        },
+      }));
+      if (habilitar) {
+        toast.success(`¡Pago habilitado para Mesa ${grupo.mesa}! El comensal ya puede abonar con Mercado Pago desde su celular.`);
+      } else {
+        toast.info(`Pago digital deshabilitado para Mesa ${grupo.mesa}.`);
+      }
+    } catch (err) {
+      console.error("Error al modificar estado del pago:", err);
+      toast.error('No se pudo actualizar el pago. Intenta nuevamente.');
+    } finally {
+      setMesaAccionEnCurso(null);
+    }
+  };
+
   const cerrarMesaDetalle = useCallback(() => setMesaDetalleKey(null), []);
   const mesasAgrupadas = useMemo(() => {
     const grupos = new Map<string, MesaGrupo>();
@@ -630,6 +750,7 @@ export default function RecepcionistaSection() {
         mesaId: pedido.mesaId,
         pedidos: [pedido],
         cuentaSolicitada: Boolean(pedido.mesaId && mesas[pedido.mesaId]?.cuenta_solicitada) || Boolean(pedido.cuentaSolicitada),
+        pagoHabilitado: Boolean(pedido.mesaId && mesas[pedido.mesaId]?.pago_habilitado),
       });
     });
 
@@ -688,6 +809,7 @@ export default function RecepcionistaSection() {
                 key={grupo.key}
                 grupo={grupo}
                 onOpen={() => setMesaDetalleKey(grupo.key)}
+                onHabilitarPago={habilitarPago}
               />
             ))}
           </div>
@@ -706,6 +828,7 @@ export default function RecepcionistaSection() {
                 key={grupo.key}
                 grupo={grupo}
                 onOpen={() => setMesaDetalleKey(grupo.key)}
+                onHabilitarPago={habilitarPago}
               />
             ))}
           </div>
@@ -732,6 +855,7 @@ export default function RecepcionistaSection() {
           onCerrar={cerrarPedido}
           onTodoListo={marcarMesaTodoLista}
           onCerrarCuenta={cerrarCuenta}
+          onHabilitarPago={habilitarPago}
           mesaAccionEnCurso={mesaAccionEnCurso}
         />
       )}

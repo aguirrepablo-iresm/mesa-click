@@ -3,6 +3,7 @@ package mercadopago_test
 import (
 	"context"
 	"errors"
+	"net/url"
 	"testing"
 	"time"
 
@@ -90,6 +91,9 @@ func (m *mockMesaStore) Crear(ctx context.Context, tenantID string, input mesa.M
 func (m *mockMesaStore) Actualizar(ctx context.Context, id, tenantID string, u mesa.MesaUpdate) (*mesa.Mesa, error) {
 	return nil, nil
 }
+func (m *mockMesaStore) HabilitarPago(ctx context.Context, id, tenantID string, habilitado bool) (*mesa.Mesa, error) {
+	return &mesa.Mesa{ID: id, SucursalID: "suc-1", Estado: "activa", PagoHabilitado: habilitado}, nil
+}
 func (m *mockMesaStore) CerrarCuenta(ctx context.Context, id, tenantID string) (*mesa.Mesa, error) {
 	return &mesa.Mesa{ID: id, SucursalID: "suc-1", Estado: "activa", CuentaVersion: 2}, nil
 }
@@ -130,12 +134,14 @@ func (m *mockPedidoStore) ObtenerSucursalPorMesa(ctx context.Context, mesaID str
 func TestCrearPreferenciaMesa_Exitoso(t *testing.T) {
 	mesaStore := &mockMesaStore{
 		mesaPub: &mesa.MesaPublica{
-			ID:            "mesa-1",
-			Numero:        3,
-			SucursalID:    "suc-1",
-			TenantID:      "tenant-1",
-			Estado:        "activa",
-			CuentaVersion: 1,
+			ID:               "mesa-1",
+			Numero:           3,
+			SucursalID:       "suc-1",
+			TenantID:         "tenant-1",
+			Estado:           "activa",
+			CuentaSolicitada: true,
+			PagoHabilitado:   true,
+			CuentaVersion:    1,
 		},
 	}
 	mesaSvc := mesa.NuevoService(mesaStore)
@@ -194,13 +200,45 @@ func TestCrearPreferenciaMesa_Exitoso(t *testing.T) {
 	}
 }
 
+func TestCrearPreferenciaMesa_PagoNoHabilitado(t *testing.T) {
+	mesaStore := &mockMesaStore{
+		mesaPub: &mesa.MesaPublica{
+			ID:               "mesa-1",
+			Numero:           3,
+			Estado:           "activa",
+			CuentaSolicitada: true,
+			PagoHabilitado:   false,
+			CuentaVersion:    1,
+		},
+	}
+	mesaSvc := mesa.NuevoService(mesaStore)
+	pedidosStore := &mockPedidoStore{
+		pedidos: []pedido.Pedido{
+			{
+				Items: []pedido.PedidoItem{
+					{NombreArticulo: "Burger", Cantidad: 1, PrecioUnitario: 5000},
+				},
+			},
+		},
+	}
+	pedidosSvc := pedido.NuevoService(pedidosStore)
+
+	svc := mercadopago.NuevoService(&mockMPClient{}, &mockMPStore{}, mesaSvc, pedidosSvc, "", "")
+
+	_, err := svc.CrearPreferenciaMesa(context.Background(), "token-valido")
+	if !errors.Is(err, mercadopago.ErrPagoNoHabilitado) {
+		t.Fatalf("esperaba ErrPagoNoHabilitado, obtuve %v", err)
+	}
+}
+
 func TestCrearPreferenciaMesa_SinConsumos(t *testing.T) {
 	mesaStore := &mockMesaStore{
 		mesaPub: &mesa.MesaPublica{
-			ID:            "mesa-1",
-			Numero:        3,
-			Estado:        "activa",
-			CuentaVersion: 1,
+			ID:             "mesa-1",
+			Numero:         3,
+			Estado:         "activa",
+			PagoHabilitado: true,
+			CuentaVersion:  1,
 		},
 	}
 	mesaSvc := mesa.NuevoService(mesaStore)
@@ -218,10 +256,11 @@ func TestCrearPreferenciaMesa_SinConsumos(t *testing.T) {
 func TestCrearPreferenciaMesa_Inactivo(t *testing.T) {
 	mesaStore := &mockMesaStore{
 		mesaPub: &mesa.MesaPublica{
-			ID:            "mesa-1",
-			Numero:        3,
-			Estado:        "activa",
-			CuentaVersion: 1,
+			ID:             "mesa-1",
+			Numero:         3,
+			Estado:         "activa",
+			PagoHabilitado: true,
+			CuentaVersion:  1,
 		},
 	}
 	mesaSvc := mesa.NuevoService(mesaStore)
@@ -320,3 +359,67 @@ func TestConfirmarPago_Rechazado(t *testing.T) {
 		t.Fatalf("esperaba ErrPagoNoAprobado, obtuve %v", err)
 	}
 }
+
+func TestProcesarWebhook_Aprobado(t *testing.T) {
+	mesaStore := &mockMesaStore{
+		mesaPub: &mesa.MesaPublica{
+			ID:            "mesa-1",
+			Numero:        3,
+			SucursalID:    "suc-1",
+			TenantID:      "tenant-1",
+			Estado:        "activa",
+			CuentaVersion: 1,
+		},
+	}
+	mesaSvc := mesa.NuevoService(mesaStore)
+	pedidosSvc := pedido.NuevoService(&mockPedidoStore{})
+
+	mpClient := &mockMPClient{
+		pagoResp: &mercadopago.PagoMercadoPago{
+			ID:                112233,
+			Status:            "approved",
+			StatusDetail:      "accredited",
+			ExternalReference: "mesa:mesa-1:v1:token:token-valido",
+			TransactionAmount: 7500,
+		},
+	}
+	mpStore := &mockMPStore{}
+
+	svc := mercadopago.NuevoService(mpClient, mpStore, mesaSvc, pedidosSvc, "", "")
+	query := url.Values{
+		"data.id": []string{"112233"},
+		"type":    []string{"payment"},
+	}
+
+	err := svc.ProcesarWebhook(context.Background(), query, "", "")
+	if err != nil {
+		t.Fatalf("error inesperado en webhook: %v", err)
+	}
+
+	if !mpStore.registrado {
+		t.Error("esperaba que el pago quede registrado tras webhook")
+	}
+}
+
+func TestProcesarWebhook_IgnorarNoPayment(t *testing.T) {
+	mesaStore := &mockMesaStore{}
+	mesaSvc := mesa.NuevoService(mesaStore)
+	pedidosSvc := pedido.NuevoService(&mockPedidoStore{})
+	mpStore := &mockMPStore{}
+
+	svc := mercadopago.NuevoService(&mockMPClient{}, mpStore, mesaSvc, pedidosSvc, "", "")
+	query := url.Values{
+		"data.id": []string{"112233"},
+		"type":    []string{"merchant_order"},
+	}
+
+	err := svc.ProcesarWebhook(context.Background(), query, "", "")
+	if err != nil {
+		t.Fatalf("error inesperado en webhook con tipo no payment: %v", err)
+	}
+
+	if mpStore.registrado {
+		t.Error("no esperaba que se registre el pago si el webhook no es de tipo payment")
+	}
+}
+

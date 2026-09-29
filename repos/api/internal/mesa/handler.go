@@ -97,6 +97,37 @@ func (h *Handlers) CerrarCuenta(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, m)
 }
 
+func (h *Handlers) HabilitarPago(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	id := r.PathValue("id")
+	if id == "" {
+		jsonError(w, "id de mesa requerido", http.StatusBadRequest)
+		return
+	}
+
+	habilitado := true
+	if r.Body != nil {
+		var input struct {
+			Habilitado *bool `json:"habilitado"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&input); err == nil && input.Habilitado != nil {
+			habilitado = *input.Habilitado
+		}
+	}
+
+	m, err := h.svc.HabilitarPago(r.Context(), id, claims.TenantID, habilitado)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			jsonError(w, "mesa no encontrada", http.StatusNotFound)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error habilitando pago en mesa", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, m)
+}
+
 func (h *Handlers) SolicitarCuenta(w http.ResponseWriter, r *http.Request) {
 	token := r.PathValue("qr_token")
 	if token == "" {

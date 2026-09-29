@@ -309,6 +309,7 @@ export interface MesaAPI {
   qr_token: string;
   estado: 'activa' | 'inactiva';
   cuenta_solicitada: boolean;
+  pago_habilitado: boolean;
   cuenta_version: number;
   created_at: string;
   updated_at: string;
@@ -333,6 +334,7 @@ export interface MesaPublica {
   tenant_id: string;
   estado: 'activa' | 'inactiva';
   cuenta_solicitada: boolean;
+  pago_habilitado: boolean;
   cuenta_version: number;
   nombre: string;
   logo_url?: string | null;
@@ -604,6 +606,13 @@ export const api = {
     return apiFetch<MesaAPI>(`/mesas/${id}`, {
       method: 'PATCH',
       body: JSON.stringify(data),
+    });
+  },
+
+  habilitarPagoMesa: async (id: string, habilitado = true) => {
+    return apiFetch<MesaAPI>(`/mesas/${encodeURIComponent(id)}/habilitar-pago`, {
+      method: 'POST',
+      body: JSON.stringify({ habilitado }),
     });
   },
 

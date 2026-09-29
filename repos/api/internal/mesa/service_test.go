@@ -20,6 +20,9 @@ func (m *mockStore) Crear(ctx context.Context, tenantID string, input mesa.MesaI
 func (m *mockStore) Actualizar(ctx context.Context, id, tenantID string, u mesa.MesaUpdate) (*mesa.Mesa, error) {
 	return &mesa.Mesa{ID: id}, nil
 }
+func (m *mockStore) HabilitarPago(ctx context.Context, id, tenantID string, habilitado bool) (*mesa.Mesa, error) {
+	return &mesa.Mesa{ID: id, Estado: "activa", SucursalID: "suc-1", PagoHabilitado: habilitado}, nil
+}
 func (m *mockStore) CerrarCuenta(ctx context.Context, id, tenantID string) (*mesa.Mesa, error) {
 	return &mesa.Mesa{ID: id, Estado: "activa", SucursalID: "suc-1", CuentaVersion: 2}, nil
 }
@@ -55,5 +58,27 @@ func TestCrear_NumeroInvalido(t *testing.T) {
 	})
 	if err == nil {
 		t.Fatal("esperaba error por número de mesa inválido")
+	}
+}
+
+func TestHabilitarPago_Exitoso(t *testing.T) {
+	svc := mesa.NuevoService(&mockStore{})
+	m, err := svc.HabilitarPago(context.Background(), "m-1", "tenant-1", true)
+	if err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+	if !m.PagoHabilitado {
+		t.Error("esperaba PagoHabilitado en true")
+	}
+}
+
+func TestHabilitarPago_Deshabilitar(t *testing.T) {
+	svc := mesa.NuevoService(&mockStore{})
+	m, err := svc.HabilitarPago(context.Background(), "m-1", "tenant-1", false)
+	if err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+	if m.PagoHabilitado {
+		t.Error("esperaba PagoHabilitado en false")
 	}
 }
