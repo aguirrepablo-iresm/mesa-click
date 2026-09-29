@@ -13,6 +13,7 @@ var (
 	ErrPagoNoAprobado      = errors.New("el pago no fue aprobado por Mercado Pago")
 	ErrPagoNoCorresponde   = errors.New("el pago no corresponde a esta mesa o cuenta")
 	ErrPagoYaProcesado     = errors.New("el pago ya fue procesado previamente")
+	ErrPagoNoHabilitado    = errors.New("el pago aún no ha sido habilitado por recepción")
 )
 
 type PreferenciaItem struct {

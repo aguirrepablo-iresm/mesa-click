@@ -28,7 +28,7 @@ func (h *Handlers) CrearPreferencia(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, "mesa no encontrada", http.StatusNotFound)
 			return
 		}
-		if errors.Is(err, ErrSinConsumos) {
+		if errors.Is(err, ErrSinConsumos) || errors.Is(err, ErrPagoNoHabilitado) || errors.Is(err, ErrTokenNoConfigurado) || errors.Is(err, ErrMercadoPagoInactivo) {
 			jsonError(w, err.Error(), http.StatusBadRequest)
 			return
 		}

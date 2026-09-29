@@ -10,6 +10,7 @@ interface Props {
   estadoPedido: EstadoPedido;
   todosListos: boolean;
   cuentaSolicitada: boolean;
+  pagoHabilitado?: boolean;
   mesa: number;
   comensalId?: string;
   comensalNombre?: string;
@@ -44,6 +45,7 @@ export default function SeguimientoView({
   estadoPedido,
   todosListos,
   cuentaSolicitada,
+  pagoHabilitado = false,
   mesa,
   comensalId,
   comensalNombre,
@@ -281,40 +283,61 @@ export default function SeguimientoView({
             </button>
           )}
 
-          {onPagarMercadoPago && !pagoExitoso && items.length > 0 && (
-            <button
-              type="button"
-              onClick={() => void onPagarMercadoPago()}
-              disabled={pagandoMP}
-              className="flex min-h-52 w-full items-center justify-center gap-8 rounded-lg bg-[#009EE3] hover:bg-[#0086c2] text-white py-14 px-16 text-14 font-semibold shadow-md transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer"
-            >
-              {pagandoMP ? (
-                <>
-                  <span className="material-symbols-outlined animate-spin text-18">progress_activity</span>
-                  <span>Conectando con Mercado Pago...</span>
-                </>
-              ) : (
-                <>
-                  <span className="text-16">💳</span>
-                  <span>Pagar con Mercado Pago</span>
-                  <span className="ml-4 rounded bg-white/25 px-6 py-2 text-10 font-bold tracking-wide uppercase">Sandbox</span>
-                </>
-              )}
-            </button>
-          )}
-
           {!cuentaSolicitada && !pagoExitoso ? (
             <button
               onClick={() => setMostrarConfirmacion(true)}
-              className="mesa-primary-bg flex min-h-52 w-full items-center justify-center gap-6 rounded-lg py-14 text-14 font-semibold shadow-md transition-all active:scale-[0.98]"
+              className="mesa-primary-bg flex min-h-52 w-full items-center justify-center gap-6 rounded-lg py-14 text-14 font-semibold shadow-md transition-all active:scale-[0.98] cursor-pointer"
             >
               <span>Pedir la cuenta</span>
               <span className="text-16">🧾</span>
             </button>
           ) : !pagoExitoso ? (
-            <div className="mesa-primary-soft mesa-border w-full rounded-lg border py-16 text-center shadow-xs animate-in fade-in">
-              <p className="mesa-primary text-14 font-semibold">✓ Solicitud de cuenta enviada</p>
-              <p className="mesa-muted mt-2 text-12">La cuenta queda asociada a todos los pedidos de esta mesa.</p>
+            <div className="space-y-12">
+              {!pagoHabilitado ? (
+                <div className="mesa-primary-soft mesa-border w-full rounded-lg border py-16 px-16 text-center shadow-xs animate-in fade-in space-y-4">
+                  <p className="mesa-primary text-14 font-semibold">✓ Solicitud de cuenta enviada</p>
+                  <p className="mesa-muted text-12">
+                    El personal del local está revisando tu mesa. En instantes habilitarán el cobro digital o podés pagarle en persona al mozo.
+                  </p>
+                  <div className="flex items-center justify-center gap-6 pt-4 text-11 font-medium text-amber-600">
+                    <span className="material-symbols-outlined text-16 animate-pulse">hourglass_top</span>
+                    <span>Aguardando habilitación de recepción...</span>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="w-full rounded-lg border border-plain-green/30 bg-plain-green/10 py-14 px-16 text-center shadow-xs animate-in fade-in space-y-2">
+                    <p className="text-14 font-semibold text-plain-green flex items-center justify-center gap-6">
+                      <span className="material-symbols-outlined text-18">check_circle</span>
+                      <span>¡Pago habilitado por recepción!</span>
+                    </p>
+                    <p className="mesa-muted text-12">
+                      Ya podés abonar el total de tu cuenta de forma digital con Mercado Pago.
+                    </p>
+                  </div>
+
+                  {onPagarMercadoPago && items.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => void onPagarMercadoPago()}
+                      disabled={pagandoMP}
+                      className="flex min-h-52 w-full items-center justify-center gap-8 rounded-lg bg-[#009EE3] hover:bg-[#0086c2] text-white py-14 px-16 text-14 font-semibold shadow-md transition-all active:scale-[0.98] disabled:opacity-60 cursor-pointer"
+                    >
+                      {pagandoMP ? (
+                        <>
+                          <span className="material-symbols-outlined animate-spin text-18">progress_activity</span>
+                          <span>Conectando con Mercado Pago...</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="text-16">💳</span>
+                          <span>Pagar con Mercado Pago</span>
+                        </>
+                      )}
+                    </button>
+                  )}
+                </>
+              )}
             </div>
           ) : null}
         </div>

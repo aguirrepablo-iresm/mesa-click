@@ -131,6 +131,7 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.Handle("GET /mesas", auth.Requerir(http.HandlerFunc(mesaH.Listar)))
 	mux.Handle("POST /mesas", auth.Requerir(http.HandlerFunc(mesaH.Crear)))
 	mux.Handle("PATCH /mesas/{id}", auth.Requerir(http.HandlerFunc(mesaH.Actualizar)))
+	mux.Handle("POST /mesas/{id}/habilitar-pago", auth.Requerir(http.HandlerFunc(mesaH.HabilitarPago)))
 	mux.Handle("POST /mesas/{id}/cerrar-cuenta", auth.Requerir(http.HandlerFunc(mesaH.CerrarCuenta)))
 	// Alias temporal para clientes anteriores: ahora cierra la cuenta sin inhabilitar la mesa.
 	mux.Handle("POST /mesas/{id}/cerrar", auth.Requerir(http.HandlerFunc(mesaH.CerrarCuenta)))

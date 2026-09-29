@@ -72,6 +72,9 @@ func (s *Service) CrearPreferenciaMesa(ctx context.Context, qrToken string) (*Pr
 	if mp.Estado != "activa" {
 		return nil, ErrMesaNoEncontrada
 	}
+	if !mp.PagoHabilitado {
+		return nil, ErrPagoNoHabilitado
+	}
 
 	client, err := s.resolverClient(ctx, mp.ID)
 	if err != nil {

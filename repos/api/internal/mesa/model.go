@@ -19,6 +19,7 @@ type Mesa struct {
 	QRToken          string `json:"qr_token"`
 	Estado           string `json:"estado"` // "activa" | "inactiva"
 	CuentaSolicitada bool   `json:"cuenta_solicitada"`
+	PagoHabilitado   bool   `json:"pago_habilitado"`
 	CuentaVersion    int    `json:"cuenta_version"`
 }
 
@@ -35,16 +36,17 @@ type MesaUpdate struct {
 }
 
 type MesaPublica struct {
-	ID               string  `json:"id"`
-	Numero           int     `json:"numero"`
-	SucursalID       string  `json:"sucursal_id"`
-	TenantID         string  `json:"tenant_id"`
-	Estado           string  `json:"estado"`
-	CuentaSolicitada bool    `json:"cuenta_solicitada"`
-	CuentaVersion    int     `json:"cuenta_version"`
-	Nombre           string  `json:"nombre"`
-	LogoURL          *string `json:"logo_url,omitempty"`
-	ColorPrimario          *string `json:"color_primario,omitempty"`
-	EstiloVisual           *string `json:"estilo_visual,omitempty"`
-	MercadoPagoHabilitado  bool    `json:"mercadopago_habilitado"`
+	ID                    string  `json:"id"`
+	Numero                int     `json:"numero"`
+	SucursalID            string  `json:"sucursal_id"`
+	TenantID              string  `json:"tenant_id"`
+	Estado                string  `json:"estado"`
+	CuentaSolicitada      bool    `json:"cuenta_solicitada"`
+	PagoHabilitado        bool    `json:"pago_habilitado"`
+	CuentaVersion         int     `json:"cuenta_version"`
+	Nombre                string  `json:"nombre"`
+	LogoURL               *string `json:"logo_url,omitempty"`
+	ColorPrimario         *string `json:"color_primario,omitempty"`
+	EstiloVisual          *string `json:"estilo_visual,omitempty"`
+	MercadoPagoHabilitado bool    `json:"mercadopago_habilitado"`
 }
