@@ -3,7 +3,7 @@
 > **Sprint**: Sprint 15 (05/10 – 11/10/2026)  
 > **Épica**: Kitchen Display System (KDS) & Impresión de Comandas  
 > **Tipo**: `Backend`  
-> **Estado**: ⚡ **En Curso**
+> **Estado**: ✅ **Resuelta**
 > **Asignado a**: Mateo Silvestrin
 > **Rama de trabajo**: `feat/US-64-backend-kds-sse`  
 
