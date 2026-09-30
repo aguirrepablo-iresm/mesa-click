@@ -3,8 +3,8 @@
 > **Sprint**: Sprint 15 (05/10 – 11/10/2026)  
 > **Épica**: Kitchen Display System (KDS) & Impresión de Comandas  
 > **Tipo**: `Backend`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
+> **Estado**: ✅ **Resuelta**
+> **Asignado a**: Mateo Silvestrin
 > **Rama de trabajo**: `feat/US-64-backend-kds-sse`  
 
 ---
@@ -17,25 +17,25 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Columna `estado` en tabla `pedido_items` con valores (`pendiente`, `preparando`, `listo`).
-- [ ] Endpoint SSE `/kds/eventos?sucursal_id=...` para actualizaciones en tiempo real de cocina.
-- [ ] Endpoint `PATCH /pedidos/items/{id}/estado` para actualizar ítems individuales.
-- [ ] Transición automática: si todos los ítems pasan a 'listo', el estado global del pedido avanza automáticamente a 'listo'.
+- [x] Columna `estado` en tabla `pedido_items` con valores (`pendiente`, `preparando`, `listo`).
+- [x] Endpoint SSE `/kds/eventos?sucursal_id=...` para actualizaciones en tiempo real de cocina.
+- [x] Endpoint `PATCH /pedidos/items/{id}/estado` para actualizar ítems individuales.
+- [x] Transición automática: si todos los ítems pasan a 'listo', el estado global del pedido avanza automáticamente a 'listo'.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Migración SQL para estado individual en ítems de pedido.
-- [ ] Hub de eventos SSE segmentado para personal de cocina.
-- [ ] Endpoint de actualización de ítem individual.
-- [ ] Pruebas unitarias de avance de estado y cálculo agregado.
+- [x] Migración SQL para estado individual en ítems de pedido.
+- [x] Hub de eventos SSE segmentado para personal de cocina.
+- [x] Endpoint de actualización de ítem individual.
+- [x] Pruebas unitarias de avance de estado y cálculo agregado.
 
 ---
 
 ## 4. Archivos Clave Involucrados
 
-- `repos/api/migrations/016_alter_pedido_items_estado.sql`
+- `repos/api/migrations/023_add_estado_pedido_items.sql`
 - `repos/api/internal/pedido/store.go`
 - `repos/api/internal/pedido/service.go`
 - `repos/api/internal/pedido/handler.go`

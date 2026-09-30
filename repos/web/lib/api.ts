@@ -257,6 +257,7 @@ export interface CategoriaAPI {
   tenant_id: string;
   nombre: string;
   orden: number;
+  franja_horaria_id?: string;
   activa: boolean;
   created_at: string;
   updated_at: string;
@@ -281,6 +282,7 @@ export interface ArticuloAPI {
   precio: number;
   foto_url?: string;
   activo: boolean;
+  franja_horaria_id?: string;
   orden: number;
   created_at: string;
   updated_at: string;
@@ -358,6 +360,16 @@ export interface CategoriaPublica {
   nombre: string;
   orden: number;
   articulos: ArticuloPublico[];
+  disponible: boolean;
+  disponible_desde?: string;
+}
+
+export interface FranjaHorariaAPI {
+  id: string;
+  tenant_id: string;
+  nombre: string;
+  hora_inicio: string;
+  hora_fin: string;
 }
 
 export interface CartaPublicaResponse {
@@ -510,6 +522,13 @@ export const api = {
     });
   },
 
+  asignarFranjaCategoria: async (id: string, franjaHorariaId: string | null) => {
+    return apiFetch<CategoriaAPI>(`/carta/categorias/${id}/franja-horaria`, {
+      method: 'PATCH',
+      body: JSON.stringify({ franja_horaria_id: franjaHorariaId }),
+    });
+  },
+
   listarArticulos: async () => {
     return apiFetch<ArticuloAPI[]>('/carta/articulos');
   },
@@ -534,6 +553,35 @@ export const api = {
       method: 'PATCH',
       body: JSON.stringify(data),
     });
+  },
+
+  asignarFranjaArticulo: async (id: string, franjaHorariaId: string | null) => {
+    return apiFetch<ArticuloAPI>(`/carta/articulos/${id}/franja-horaria`, {
+      method: 'PATCH',
+      body: JSON.stringify({ franja_horaria_id: franjaHorariaId }),
+    });
+  },
+
+  listarFranjasHorarias: async () => {
+    return apiFetch<FranjaHorariaAPI[]>('/carta/franjas-horarias');
+  },
+
+  crearFranjaHoraria: async (data: { nombre: string; hora_inicio: string; hora_fin: string }) => {
+    return apiFetch<FranjaHorariaAPI>('/carta/franjas-horarias', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    });
+  },
+
+  actualizarFranjaHoraria: async (id: string, data: { nombre: string; hora_inicio: string; hora_fin: string }) => {
+    return apiFetch<FranjaHorariaAPI>(`/carta/franjas-horarias/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    });
+  },
+
+  eliminarFranjaHoraria: async (id: string) => {
+    return apiFetch<void>(`/carta/franjas-horarias/${id}`, { method: 'DELETE' });
   },
 
   ajustarPrecios: async (data: AjustePreciosInput) => {

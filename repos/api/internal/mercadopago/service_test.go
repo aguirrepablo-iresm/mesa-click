@@ -124,6 +124,12 @@ func (m *mockPedidoStore) ListarCuentaActualPorQR(ctx context.Context, qrToken s
 func (m *mockPedidoStore) CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado string) (*pedido.Pedido, error) {
 	return nil, nil
 }
+func (m *mockPedidoStore) CambiarEstadoItem(ctx context.Context, itemID, tenantID, nuevoEstado string) (*pedido.Pedido, error) {
+	return nil, nil
+}
+func (m *mockPedidoStore) SucursalPerteneceATenant(ctx context.Context, sucursalID, tenantID string) (bool, error) {
+	return true, nil
+}
 func (m *mockPedidoStore) ObtenerPorID(ctx context.Context, id string) (*pedido.Pedido, error) {
 	return nil, nil
 }
@@ -422,4 +428,3 @@ func TestProcesarWebhook_IgnorarNoPayment(t *testing.T) {
 		t.Error("no esperaba que se registre el pago si el webhook no es de tipo payment")
 	}
 }
-

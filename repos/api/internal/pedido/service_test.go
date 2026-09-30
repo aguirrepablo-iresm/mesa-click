@@ -3,12 +3,17 @@ package pedido_test
 import (
 	"context"
 	"testing"
+	"time"
 
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/notificacion"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/pedido"
 )
 
 type mockStore struct {
-	crearInput pedido.NuevoPedidoInput
+	crearInput             pedido.NuevoPedidoInput
+	estadoItemRecibido     string
+	pedidoTrasCambioDeItem *pedido.Pedido
+	sucursalPertenece      bool
 }
 
 func (m *mockStore) Crear(ctx context.Context, input pedido.NuevoPedidoInput, sucursalID string, cuentaVersion int) (*pedido.Pedido, error) {
@@ -23,6 +28,25 @@ func (m *mockStore) ListarCuentaActualPorQR(ctx context.Context, qrToken string)
 }
 func (m *mockStore) CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado string) (*pedido.Pedido, error) {
 	return &pedido.Pedido{ID: id, Estado: nuevoEstado}, nil
+}
+func (m *mockStore) CambiarEstadoItem(ctx context.Context, itemID, tenantID, nuevoEstado string) (*pedido.Pedido, error) {
+	m.estadoItemRecibido = nuevoEstado
+	if m.pedidoTrasCambioDeItem != nil {
+		return m.pedidoTrasCambioDeItem, nil
+	}
+	return &pedido.Pedido{
+		ID:         "p-1",
+		MesaID:     "mesa-1",
+		SucursalID: "suc-1",
+		Estado:     "preparando",
+		Items: []pedido.PedidoItem{{
+			ID:     itemID,
+			Estado: nuevoEstado,
+		}},
+	}, nil
+}
+func (m *mockStore) SucursalPerteneceATenant(ctx context.Context, sucursalID, tenantID string) (bool, error) {
+	return m.sucursalPertenece, nil
 }
 func (m *mockStore) ObtenerSucursalPorMesa(ctx context.Context, mesaID string) (string, int, error) {
 	return "suc-1", 3, nil
@@ -195,5 +219,71 @@ func TestCrear_ConVariantes_Exito(t *testing.T) {
 	}
 	if len(store.crearInput.Items[0].Variantes) != 2 {
 		t.Fatalf("esperaba 2 variantes, obtuve %d", len(store.crearInput.Items[0].Variantes))
+	}
+}
+
+func TestCambiarEstadoItem_EstadoInvalido(t *testing.T) {
+	svc := pedido.NuevoService(&mockStore{})
+	_, err := svc.CambiarEstadoItem(context.Background(), "item-1", "tenant-1", "entregado")
+	if err == nil {
+		t.Fatal("esperaba error por estado de item inválido")
+	}
+}
+
+func TestCambiarEstadoItem_EstadosValidos(t *testing.T) {
+	store := &mockStore{}
+	svc := pedido.NuevoService(store)
+
+	for _, estado := range pedido.EstadosItemValidos {
+		_, err := svc.CambiarEstadoItem(context.Background(), "item-1", "tenant-1", estado)
+		if err != nil {
+			t.Errorf("estado %q debería ser válido pero dio error: %v", estado, err)
+		}
+		if store.estadoItemRecibido != estado {
+			t.Errorf("el store recibió %q, se esperaba %q", store.estadoItemRecibido, estado)
+		}
+	}
+}
+
+func TestCambiarEstadoItem_PublicaEventoEnCanalKDS(t *testing.T) {
+	store := &mockStore{
+		pedidoTrasCambioDeItem: &pedido.Pedido{
+			ID:         "pedido-1",
+			MesaID:     "mesa-1",
+			SucursalID: "suc-kds",
+			Estado:     "listo",
+			Items:      []pedido.PedidoItem{{ID: "item-1", Estado: "listo"}},
+		},
+	}
+	svc := pedido.NuevoService(store)
+	canal, desuscribir := notificacion.Instancia.Suscribir("kds:suc-kds")
+	defer desuscribir()
+
+	_, err := svc.CambiarEstadoItem(context.Background(), "item-1", "tenant-1", "listo")
+	if err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+
+	select {
+	case evento := <-canal:
+		if evento.Nombre != "pedido_item_actualizado" {
+			t.Fatalf("evento incorrecto: got %q, want %q", evento.Nombre, "pedido_item_actualizado")
+		}
+	case <-time.After(time.Second):
+		t.Fatal("no se publicó la actualización en el canal KDS")
+	}
+}
+
+func TestValidarAccesoKDS_RechazaSucursalAjena(t *testing.T) {
+	svc := pedido.NuevoService(&mockStore{sucursalPertenece: false})
+	if err := svc.ValidarAccesoKDS(context.Background(), "suc-otra", "tenant-1"); err == nil {
+		t.Fatal("esperaba error para una sucursal de otro tenant")
+	}
+}
+
+func TestValidarAccesoKDS_AceptaSucursalPropia(t *testing.T) {
+	svc := pedido.NuevoService(&mockStore{sucursalPertenece: true})
+	if err := svc.ValidarAccesoKDS(context.Background(), "suc-1", "tenant-1"); err != nil {
+		t.Fatalf("la sucursal del tenant debería aceptarse: %v", err)
 	}
 }

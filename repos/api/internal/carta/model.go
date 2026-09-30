@@ -9,22 +9,45 @@ var (
 )
 
 type Categoria struct {
-	ID       string `json:"id"`
-	TenantID string `json:"tenant_id,omitempty"`
-	Nombre   string `json:"nombre"`
-	Orden    int    `json:"orden"`
+	ID              string  `json:"id"`
+	TenantID        string  `json:"tenant_id,omitempty"`
+	Nombre          string  `json:"nombre"`
+	Orden           int     `json:"orden"`
+	FranjaHorariaID *string `json:"franja_horaria_id,omitempty"`
 }
 
 type Articulo struct {
-	ID          string     `json:"id"`
-	TenantID    string     `json:"tenant_id,omitempty"`
-	CategoriaID string     `json:"categoria_id"`
-	Nombre      string     `json:"nombre"`
-	Descripcion string     `json:"descripcion,omitempty"`
-	Precio      float64    `json:"precio"`
-	FotoURL     string     `json:"foto_url,omitempty"`
-	Activo      bool       `json:"activo"`
-	Variantes   []Variante `json:"variantes,omitempty"`
+	ID              string         `json:"id"`
+	TenantID        string         `json:"tenant_id,omitempty"`
+	CategoriaID     string         `json:"categoria_id"`
+	Nombre          string         `json:"nombre"`
+	Descripcion     string         `json:"descripcion,omitempty"`
+	Precio          float64        `json:"precio"`
+	FotoURL         string         `json:"foto_url,omitempty"`
+	Activo          bool           `json:"activo"`
+	FranjaHorariaID *string        `json:"franja_horaria_id,omitempty"`
+	Variantes       []Variante     `json:"variantes,omitempty"`
+	FranjaEfectiva  *FranjaHoraria `json:"-"`
+}
+
+// FranjaHoraria define una ventana diaria. Si el horario final es menor que el
+// inicial, la franja cruza medianoche (por ejemplo, 20:00 a 02:00).
+type FranjaHoraria struct {
+	ID         string `json:"id"`
+	TenantID   string `json:"tenant_id,omitempty"`
+	Nombre     string `json:"nombre"`
+	HoraInicio string `json:"hora_inicio"`
+	HoraFin    string `json:"hora_fin"`
+}
+
+type FranjaHorariaInput struct {
+	Nombre     string `json:"nombre"`
+	HoraInicio string `json:"hora_inicio"`
+	HoraFin    string `json:"hora_fin"`
+}
+
+type AsignarFranjaInput struct {
+	FranjaHorariaID *string `json:"franja_horaria_id"`
 }
 
 type Variante struct {
@@ -94,5 +117,7 @@ type CartaPublica struct {
 
 type CategoriaConArticulos struct {
 	Categoria
-	Articulos []Articulo `json:"articulos"`
+	Articulos       []Articulo `json:"articulos"`
+	Disponible      bool       `json:"disponible"`
+	DisponibleDesde string     `json:"disponible_desde,omitempty"`
 }

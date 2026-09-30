@@ -79,13 +79,13 @@
 |---|---|---|---|---|---|
 | **US-61** | `Integración` | Marcado de Ítem Sin Stock (86) con Actualización en Tiempo Real | 📋 Pendiente | Por asignar | [Ver detalle](sprint-14/US-61-marcado-item-sin-stock-86.md) |
 | **US-62** | `Backend` | Persistencia de Disponibilidad y Reposición Automática | 📋 Pendiente | Por asignar | [Ver detalle](sprint-14/US-62-backend-reposicion-disponibilidad.md) |
-| **US-63** | `Integración` | Menús por Franja Horaria y Resolución Dinámica de Carta | 📋 Pendiente | Por asignar | [Ver detalle](sprint-14/US-63-menus-franjas-horarias.md) |
+| **US-63** | `Integración` | Menús por Franja Horaria y Resolución Dinámica de Carta | ✅ Resuelta | Mateo Silvestrin | [Ver detalle](sprint-14/US-63-menus-franjas-horarias.md) |
 
 ### 📌 Sprint 15: Kitchen Display System (KDS) & Impresión de Comandas (05/10 – 11/10/2026)
 
 | ID | Tipo | Título | Estado | Asignado | Archivo |
 |---|---|---|---|---|---|
-| **US-64** | `Backend` | Modelo de Estados por Ítem y Canal SSE de Cocina | 📋 Pendiente | Por asignar | [Ver detalle](sprint-15/US-64-backend-estados-item-sse-cocina.md) |
+| **US-64** | `Backend` | Modelo de Estados por Ítem y Canal SSE de Cocina | ✅ Resuelta | Mateo Silvestrin | [Ver detalle](sprint-15/US-64-backend-estados-item-sse-cocina.md) |
 | **US-65** | `Frontend` | Pantalla KDS Dedicada de Cocina con Temporizadores | 📋 Pendiente | Por asignar | [Ver detalle](sprint-15/US-65-pantalla-kds-cocina.md) |
 | **US-66** | `Integración` | Interacción Táctil en KDS y Notificación al Salón | 📋 Pendiente | Por asignar | [Ver detalle](sprint-15/US-66-interaccion-kds-cambio-estados.md) |
 | **US-67** | `Integración` | Impresión Térmica de Comandas (58/80 mm) y Reintento Manual | 📋 Pendiente | Por asignar | [Ver detalle](sprint-15/US-67-impresion-comandas-termicas.md) |

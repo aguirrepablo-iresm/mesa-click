@@ -63,6 +63,7 @@ func (svc *Service) Crear(ctx context.Context, input NuevoPedidoInput) (*Pedido,
 	// Notificar en tiempo real al recepcionista de la sucursal
 	notificacion.Instancia.Publicar(fmt.Sprintf("sucursal:%s", p.SucursalID), "pedido_creado", p)
 	notificacion.Instancia.Publicar(fmt.Sprintf("mesa:%s", p.MesaID), "pedido_creado", p)
+	notificacion.Instancia.Publicar(fmt.Sprintf("kds:%s", p.SucursalID), "pedido_creado", p)
 
 	return p, nil
 }
@@ -98,6 +99,49 @@ func (svc *Service) CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado
 	return p, nil
 }
 
+func (svc *Service) CambiarEstadoItem(ctx context.Context, itemID, tenantID, nuevoEstado string) (*Pedido, error) {
+	itemID = strings.TrimSpace(itemID)
+	nuevoEstado = strings.TrimSpace(nuevoEstado)
+	if itemID == "" {
+		return nil, fmt.Errorf("id de item requerido: %w", ErrValidation)
+	}
+	if !estadoItemValido(nuevoEstado) {
+		return nil, fmt.Errorf("estado de item inválido: %q (válidos: pendiente, preparando, listo): %w", nuevoEstado, ErrValidation)
+	}
+
+	p, err := svc.store.CambiarEstadoItem(ctx, itemID, tenantID, nuevoEstado)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) || errors.Is(err, ErrPedidoCerrado) {
+			return nil, err
+		}
+		return nil, fmt.Errorf("error cambiando estado del item: %w", err)
+	}
+
+	// Cocina recibe un evento exclusivo y el resto de las vistas conserva
+	// la actualización global del pedido para no desincronizar salón y mesa.
+	notificacion.Instancia.Publicar(fmt.Sprintf("kds:%s", p.SucursalID), "pedido_item_actualizado", p)
+	notificacion.Instancia.Publicar(fmt.Sprintf("pedido:%s", p.ID), "pedido_actualizado", p)
+	notificacion.Instancia.Publicar(fmt.Sprintf("sucursal:%s", p.SucursalID), "pedido_actualizado", p)
+	notificacion.Instancia.Publicar(fmt.Sprintf("mesa:%s", p.MesaID), "pedido_actualizado", p)
+
+	return p, nil
+}
+
+func (svc *Service) ValidarAccesoKDS(ctx context.Context, sucursalID, tenantID string) error {
+	sucursalID = strings.TrimSpace(sucursalID)
+	if sucursalID == "" {
+		return fmt.Errorf("sucursal_id requerido: %w", ErrValidation)
+	}
+	pertenece, err := svc.store.SucursalPerteneceATenant(ctx, sucursalID, tenantID)
+	if err != nil {
+		return fmt.Errorf("error validando acceso a cocina: %w", err)
+	}
+	if !pertenece {
+		return ErrNotFound
+	}
+	return nil
+}
+
 func uuidValido(value string) bool {
 	if len(value) != 36 || value[8] != '-' || value[13] != '-' || value[18] != '-' || value[23] != '-' {
 		return false
@@ -110,6 +154,15 @@ func uuidValido(value string) bool {
 func estadoValido(estado string) bool {
 	for _, v := range EstadosValidos {
 		if v == estado {
+			return true
+		}
+	}
+	return false
+}
+
+func estadoItemValido(estado string) bool {
+	for _, valido := range EstadosItemValidos {
+		if valido == estado {
 			return true
 		}
 	}

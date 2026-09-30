@@ -3,8 +3,8 @@
 > **Sprint**: Sprint 14 (28/09 – 04/10/2026)  
 > **Épica**: Disponibilidad de Ítems (86) & Menús por Franja Horaria  
 > **Tipo**: `Integración`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
+> **Estado**: ✅ **Resuelta**
+> **Asignado a**: Mateo Silvestrin
 > **Rama de trabajo**: `feat/US-63-franjas-horarias`  
 
 ---
@@ -17,19 +17,19 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Configuración de franjas horarias (hora inicio y fin) asociables a categorías o platos.
-- [ ] La consulta pública de la carta filtra automáticamente aquellos productos fuera de la franja horaria en curso.
-- [ ] Indicador amigable para el comensal indicando a partir de qué hora estará disponible una categoría no activa.
-- [ ] Los administradores pueden previsualizar la carta simulando cualquier franja horaria.
+- [x] Configuración de franjas horarias (hora inicio y fin) asociables a categorías o platos.
+- [x] La consulta pública de la carta filtra automáticamente aquellos productos fuera de la franja horaria en curso.
+- [x] Indicador amigable para el comensal indicando a partir de qué hora estará disponible una categoría no activa.
+- [x] Los administradores pueden previsualizar la carta simulando cualquier franja horaria.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Modelado de franjas horarias en categorías en backend.
-- [ ] Lógica de resolución horaria en `ObtenerCartaPublica` según zona horaria local.
-- [ ] Interfaz de configuración en dashboard.
-- [ ] Banner informativo en carta del comensal.
+- [x] Modelado de franjas horarias en categorías en backend.
+- [x] Lógica de resolución horaria en `ObtenerCartaPublica` según zona horaria local.
+- [x] Interfaz de configuración en dashboard.
+- [x] Banner informativo en carta del comensal.
 
 ---
 
