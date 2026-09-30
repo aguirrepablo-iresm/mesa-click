@@ -4,7 +4,10 @@ import (
 	"context"
 	"fmt"
 	"math"
+	"os"
+	"sort"
 	"strings"
+	"time"
 )
 
 type Service struct {
@@ -84,7 +87,154 @@ func (svc *Service) EliminarArticulo(ctx context.Context, id, tenantID string) e
 }
 
 func (svc *Service) ObtenerCartaPublica(ctx context.Context, sucursalID string) (*CartaPublica, error) {
-	return svc.store.ObtenerCartaPublica(ctx, sucursalID)
+	carta, err := svc.store.ObtenerCartaPublica(ctx, sucursalID)
+	if err != nil {
+		return nil, err
+	}
+
+	zona := strings.TrimSpace(os.Getenv("APP_TIMEZONE"))
+	if zona == "" {
+		zona = "America/Argentina/Buenos_Aires"
+	}
+	ubicacion, err := time.LoadLocation(zona)
+	if err != nil {
+		return nil, fmt.Errorf("zona horaria %q inválida: %w", zona, err)
+	}
+	return ResolverCartaPorHora(carta, time.Now().In(ubicacion)), nil
+}
+
+// ResolverCartaPorHora filtra los artículos fuera de su franja efectiva. Los
+// artículos sin franja permanecen disponibles durante todo el día.
+func ResolverCartaPorHora(carta *CartaPublica, ahora time.Time) *CartaPublica {
+	if carta == nil {
+		return &CartaPublica{Categorias: []CategoriaConArticulos{}}
+	}
+
+	resultado := &CartaPublica{Categorias: make([]CategoriaConArticulos, 0, len(carta.Categorias))}
+	minutosAhora := ahora.Hour()*60 + ahora.Minute()
+
+	for _, categoria := range carta.Categorias {
+		originales := categoria.Articulos
+		categoria.Articulos = make([]Articulo, 0, len(originales))
+		proximosInicios := make([]int, 0, len(originales))
+
+		for _, articulo := range originales {
+			if articulo.FranjaEfectiva == nil || franjaActiva(*articulo.FranjaEfectiva, minutosAhora) {
+				categoria.Articulos = append(categoria.Articulos, articulo)
+				continue
+			}
+			if inicio, ok := minutosDelDia(articulo.FranjaEfectiva.HoraInicio); ok {
+				delta := inicio - minutosAhora
+				if delta <= 0 {
+					delta += 24 * 60
+				}
+				proximosInicios = append(proximosInicios, delta)
+			}
+		}
+
+		categoria.Disponible = len(categoria.Articulos) > 0
+		categoria.DisponibleDesde = ""
+		if !categoria.Disponible && len(proximosInicios) > 0 {
+			sort.Ints(proximosInicios)
+			proximo := (minutosAhora + proximosInicios[0]) % (24 * 60)
+			categoria.DisponibleDesde = fmt.Sprintf("%02d:%02d", proximo/60, proximo%60)
+		}
+		resultado.Categorias = append(resultado.Categorias, categoria)
+	}
+
+	return resultado
+}
+
+func franjaActiva(franja FranjaHoraria, minutosAhora int) bool {
+	inicio, inicioOK := minutosDelDia(franja.HoraInicio)
+	fin, finOK := minutosDelDia(franja.HoraFin)
+	if !inicioOK || !finOK || inicio == fin {
+		return false
+	}
+	if inicio < fin {
+		return minutosAhora >= inicio && minutosAhora < fin
+	}
+	return minutosAhora >= inicio || minutosAhora < fin
+}
+
+func minutosDelDia(valor string) (int, bool) {
+	hora, err := time.Parse("15:04", valor)
+	if err != nil {
+		return 0, false
+	}
+	return hora.Hour()*60 + hora.Minute(), true
+}
+
+func (svc *Service) ListarFranjasHorarias(ctx context.Context, tenantID string) ([]FranjaHoraria, error) {
+	return svc.store.ListarFranjasHorarias(ctx, tenantID)
+}
+
+func (svc *Service) CrearFranjaHoraria(ctx context.Context, tenantID string, input FranjaHorariaInput) (*FranjaHoraria, error) {
+	input = normalizarFranja(input)
+	if err := validarFranja(input); err != nil {
+		return nil, err
+	}
+	return svc.store.CrearFranjaHoraria(ctx, tenantID, input)
+}
+
+func (svc *Service) ActualizarFranjaHoraria(ctx context.Context, id, tenantID string, input FranjaHorariaInput) (*FranjaHoraria, error) {
+	if strings.TrimSpace(id) == "" {
+		return nil, fmt.Errorf("id requerido: %w", ErrValidation)
+	}
+	input = normalizarFranja(input)
+	if err := validarFranja(input); err != nil {
+		return nil, err
+	}
+	return svc.store.ActualizarFranjaHoraria(ctx, id, tenantID, input)
+}
+
+func (svc *Service) EliminarFranjaHoraria(ctx context.Context, id, tenantID string) error {
+	if strings.TrimSpace(id) == "" {
+		return fmt.Errorf("id requerido: %w", ErrValidation)
+	}
+	return svc.store.EliminarFranjaHoraria(ctx, id, tenantID)
+}
+
+func (svc *Service) AsignarFranjaCategoria(ctx context.Context, id, tenantID string, franjaID *string) (*Categoria, error) {
+	return svc.store.AsignarFranjaCategoria(ctx, id, tenantID, normalizarFranjaID(franjaID))
+}
+
+func (svc *Service) AsignarFranjaArticulo(ctx context.Context, id, tenantID string, franjaID *string) (*Articulo, error) {
+	return svc.store.AsignarFranjaArticulo(ctx, id, tenantID, normalizarFranjaID(franjaID))
+}
+
+func normalizarFranja(input FranjaHorariaInput) FranjaHorariaInput {
+	input.Nombre = strings.TrimSpace(input.Nombre)
+	input.HoraInicio = strings.TrimSpace(input.HoraInicio)
+	input.HoraFin = strings.TrimSpace(input.HoraFin)
+	return input
+}
+
+func validarFranja(input FranjaHorariaInput) error {
+	if input.Nombre == "" {
+		return fmt.Errorf("nombre requerido: %w", ErrValidation)
+	}
+	if _, err := time.Parse("15:04", input.HoraInicio); err != nil {
+		return fmt.Errorf("hora_inicio debe tener formato HH:MM: %w", ErrValidation)
+	}
+	if _, err := time.Parse("15:04", input.HoraFin); err != nil {
+		return fmt.Errorf("hora_fin debe tener formato HH:MM: %w", ErrValidation)
+	}
+	if input.HoraInicio == input.HoraFin {
+		return fmt.Errorf("hora_inicio y hora_fin deben ser distintas: %w", ErrValidation)
+	}
+	return nil
+}
+
+func normalizarFranjaID(franjaID *string) *string {
+	if franjaID == nil {
+		return nil
+	}
+	valor := strings.TrimSpace(*franjaID)
+	if valor == "" {
+		return nil
+	}
+	return &valor
 }
 
 func (svc *Service) ListarVariantes(ctx context.Context, articuloID, tenantID string) ([]Variante, error) {

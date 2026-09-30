@@ -1,9 +1,10 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { api, CategoriaAPI, ArticuloAPI, getErrorMessage } from "@/lib/api";
+import { api, CategoriaAPI, ArticuloAPI, FranjaHorariaAPI, getErrorMessage } from "@/lib/api";
 import { EmptyState, Skeleton, useToast, useConfirm } from "@/components/ui";
 import ImportarCartaModal from "@/components/dashboard/ImportarCartaModal";
 import AjustePreciosModal from "./AjustePreciosModal";
+import FranjasHorariasModal from "./FranjasHorariasModal";
 
 export interface CategoriaConItems extends CategoriaAPI {
   items: ArticuloAPI[];
@@ -12,10 +13,131 @@ export interface CategoriaConItems extends CategoriaAPI {
 type NuevoItemForm = { nombre: string; descripcion: string; precio: string };
 type NuevoItemErrors = Partial<Record<"nombre" | "precio", string>>;
 
+type SelectorFranjaCategoriaProps = {
+  categoria: CategoriaConItems;
+  franjas: FranjaHorariaAPI[];
+  abierto: boolean;
+  guardando: boolean;
+  onToggle: () => void;
+  onSelect: (franjaId: string) => void;
+};
+
+function SelectorFranjaCategoria({
+  categoria,
+  franjas,
+  abierto,
+  guardando,
+  onToggle,
+  onSelect,
+}: SelectorFranjaCategoriaProps) {
+  const franjaActual = franjas.find(franja => franja.id === categoria.franja_horaria_id);
+
+  return (
+    <div className="relative min-w-0 flex-1 sm:w-[190px] sm:flex-none" onClick={event => event.stopPropagation()}>
+      <button
+        type="button"
+        disabled={guardando}
+        onClick={event => {
+          event.stopPropagation();
+          onToggle();
+        }}
+        className={`group flex h-44 w-full min-w-0 items-center gap-8 rounded-lg border px-10 text-left transition-all disabled:cursor-wait disabled:opacity-60 ${
+          franjaActual
+            ? "border-plain-green/30 bg-plain-green/[0.07] hover:border-plain-green/55"
+            : "border-concrete bg-canvas-white hover:border-stone hover:bg-ghost-fog"
+        }`}
+        aria-label={`Cambiar horario de ${categoria.nombre}`}
+        aria-haspopup="listbox"
+        aria-expanded={abierto}
+      >
+        <span className={`material-symbols-outlined shrink-0 text-18 ${franjaActual ? 'text-plain-green' : 'text-sage-green'}`}>
+          schedule
+        </span>
+        <span className="min-w-0 flex-1 truncate text-11 font-semibold text-ash-graphite">
+          {franjaActual?.nombre || 'Todo el día'}
+        </span>
+        <span className={`material-symbols-outlined shrink-0 text-18 text-sage-green transition-transform ${abierto ? 'rotate-180' : ''}`}>
+          expand_more
+        </span>
+      </button>
+
+      {abierto && (
+        <div
+          role="listbox"
+          aria-label={`Horario de ${categoria.nombre}`}
+          className="absolute right-0 top-[50px] z-40 w-[260px] overflow-hidden rounded-xl border border-concrete bg-canvas-white p-6 shadow-xl"
+        >
+          <div className="px-12 pb-8 pt-6 text-center">
+            <p className="text-10 font-semibold uppercase tracking-[0.08em] text-sage-green">Disponibilidad horaria</p>
+            <p className="mt-2 text-10 text-sage-green">Opcional para toda la categoría</p>
+          </div>
+
+          <button
+            type="button"
+            role="option"
+            aria-selected={!categoria.franja_horaria_id}
+            onClick={() => onSelect('')}
+            className={`flex min-h-48 w-full items-center gap-8 rounded-lg px-10 py-8 text-left transition-colors ${
+              !categoria.franja_horaria_id ? 'bg-plain-green/[0.08]' : 'hover:bg-ghost-fog'
+            }`}
+          >
+            <span className="flex h-30 w-30 shrink-0 items-center justify-center rounded-lg bg-ghost-fog text-sage-green">
+              <span className="material-symbols-outlined text-18">all_inclusive</span>
+            </span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-12 font-semibold text-ash-graphite">Siempre disponible</span>
+              <span className="block truncate text-10 text-sage-green">Sin restricción horaria</span>
+            </span>
+            {!categoria.franja_horaria_id && (
+              <span className="material-symbols-outlined shrink-0 text-18 text-plain-green">check</span>
+            )}
+          </button>
+
+          {franjas.map(franja => {
+            const seleccionada = categoria.franja_horaria_id === franja.id;
+            return (
+              <button
+                key={franja.id}
+                type="button"
+                role="option"
+                aria-selected={seleccionada}
+                onClick={() => onSelect(franja.id)}
+                className={`mt-2 flex min-h-48 w-full items-center gap-8 rounded-lg px-10 py-8 text-left transition-colors ${
+                  seleccionada ? 'bg-plain-green/[0.08]' : 'hover:bg-ghost-fog'
+                }`}
+              >
+                <span className={`flex h-30 w-30 shrink-0 items-center justify-center rounded-lg ${
+                  seleccionada ? 'bg-plain-green/15 text-plain-green' : 'bg-ghost-fog text-sage-green'
+                }`}>
+                  <span className="material-symbols-outlined text-18">schedule</span>
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-12 font-semibold text-ash-graphite">{franja.nombre}</span>
+                  <span className="block font-mono text-10 text-sage-green">{franja.hora_inicio} — {franja.hora_fin}</span>
+                </span>
+                {seleccionada && (
+                  <span className="material-symbols-outlined shrink-0 text-18 text-plain-green">check</span>
+                )}
+              </button>
+            );
+          })}
+
+          {franjas.length === 0 && (
+            <p className="mx-8 mb-6 mt-8 rounded-lg bg-ghost-fog px-10 py-8 text-10 leading-relaxed text-sage-green">
+              Creá una franja desde el botón Horarios para poder limitar esta categoría.
+            </p>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function CartaSection() {
   const toast = useToast();
   const confirmar = useConfirm();
   const [categorias, setCategorias] = useState<CategoriaConItems[]>([]);
+  const [franjas, setFranjas] = useState<FranjaHorariaAPI[]>([]);
   const [loading, setLoading] = useState(true);
   const [nuevaCatNombre, setNuevaCatNombre] = useState('');
   const [mostrarFormCat, setMostrarFormCat] = useState(false);
@@ -38,6 +160,9 @@ export default function CartaSection() {
   const [guardandoVariante, setGuardandoVariante] = useState(false);
   const [modalImportarAbierto, setModalImportarAbierto] = useState(false);
   const [mostrarAjustePrecios, setMostrarAjustePrecios] = useState(false);
+  const [mostrarFranjasHorarias, setMostrarFranjasHorarias] = useState(false);
+  const [guardandoHorarioId, setGuardandoHorarioId] = useState<string | null>(null);
+  const [menuHorarioCategoriaAbierto, setMenuHorarioCategoriaAbierto] = useState<string | null>(null);
   const [menuCategoriaAbierto, setMenuCategoriaAbierto] = useState<string | null>(null);
   const [menuItemAbierto, setMenuItemAbierto] = useState<string | null>(null);
 
@@ -45,10 +170,13 @@ export default function CartaSection() {
     try {
       setLoading(true);
       setErrorMsg('');
-      const [cats, arts] = await Promise.all([
+      const [cats, arts, franjasConfiguradas] = await Promise.all([
         api.listarCategorias(),
         api.listarArticulos(),
+        api.listarFranjasHorarias(),
       ]);
+
+      setFranjas(franjasConfiguradas || []);
 
       if (cats && cats.length > 0) {
         const combinadas: CategoriaConItems[] = cats.map(c => ({
@@ -78,6 +206,7 @@ export default function CartaSection() {
 
   useEffect(() => {
     const cerrarMenus = () => {
+      setMenuHorarioCategoriaAbierto(null);
       setMenuCategoriaAbierto(null);
       setMenuItemAbierto(null);
     };
@@ -214,6 +343,47 @@ export default function CartaSection() {
     }
   };
 
+  const asignarFranjaCategoria = async (categoriaId: string, franjaId: string) => {
+    try {
+      setGuardandoHorarioId(categoriaId);
+      const actualizada = await api.asignarFranjaCategoria(categoriaId, franjaId || null);
+      setCategorias(prev => prev.map(categoria => (
+        categoria.id === categoriaId
+          ? { ...categoria, franja_horaria_id: actualizada.franja_horaria_id }
+          : categoria
+      )));
+      setMenuHorarioCategoriaAbierto(null);
+      toast.success(franjaId ? "Horario aplicado a la categoría." : "La categoría quedó disponible todo el día.");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "No se pudo actualizar el horario."));
+    } finally {
+      setGuardandoHorarioId(null);
+    }
+  };
+
+  const asignarFranjaArticulo = async (categoriaId: string, articuloId: string, franjaId: string) => {
+    try {
+      setGuardandoHorarioId(articuloId);
+      const actualizado = await api.asignarFranjaArticulo(articuloId, franjaId || null);
+      setCategorias(prev => prev.map(categoria => (
+        categoria.id === categoriaId
+          ? {
+              ...categoria,
+              items: categoria.items.map(item => item.id === articuloId
+                ? { ...item, franja_horaria_id: actualizado.franja_horaria_id }
+                : item),
+            }
+          : categoria
+      )));
+      setMenuItemAbierto(null);
+      toast.success(franjaId ? "Horario propio aplicado al producto." : "El producto vuelve a heredar el horario de su categoría.");
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, "No se pudo actualizar el horario."));
+    } finally {
+      setGuardandoHorarioId(null);
+    }
+  };
+
   const agregarVariante = async (catId: string, articuloId: string) => {
     if (!nuevaVariante.nombre.trim()) {
       toast.error('Ingresá el nombre de la opción.');
@@ -315,7 +485,15 @@ export default function CartaSection() {
             {loading ? 'Cargando carta...' : `${categorias.length} categorías · ${totalItems} ítems`}
           </p>
         </div>
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-3 lg:flex lg:shrink-0">
+        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:flex xl:shrink-0">
+          <button
+            type="button"
+            onClick={() => setMostrarFranjasHorarias(true)}
+            className="flex h-48 items-center justify-center gap-8 rounded-lg border border-concrete bg-canvas-white px-16 text-12 font-semibold text-ash-graphite shadow-sm transition-colors hover:border-stone hover:bg-vanilla-cream"
+          >
+            <span className="material-symbols-outlined text-18">schedule</span>
+            Horarios
+          </button>
           <button
             type="button"
             onClick={() => setModalImportarAbierto(true)}
@@ -356,6 +534,15 @@ export default function CartaSection() {
           categorias={categorias}
           onClose={() => setMostrarAjustePrecios(false)}
           onApplied={handlePreciosActualizados}
+        />
+      )}
+
+      {mostrarFranjasHorarias && (
+        <FranjasHorariasModal
+          categorias={categorias}
+          franjas={franjas}
+          onClose={() => setMostrarFranjasHorarias(false)}
+          onChanged={cargarCarta}
         />
       )}
 
@@ -425,18 +612,32 @@ export default function CartaSection() {
               <header className="flex flex-col justify-between gap-12 border-b border-concrete/70 px-16 py-16 sm:flex-row sm:items-center sm:px-20">
                 <div className="min-w-0">
                   <h3 className="truncate text-16 font-semibold text-ash-graphite sm:text-20">{cat.nombre}</h3>
-                  <p className="mt-2 text-12 text-sage-green">
-                    {cat.items.length} {cat.items.length === 1 ? 'ítem' : 'ítems'}
-                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-6 text-12 text-sage-green">
+                    <span>{cat.items.length} {cat.items.length === 1 ? 'ítem' : 'ítems'}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{cat.franja_horaria_id ? franjas.find(franja => franja.id === cat.franja_horaria_id)?.nombre || 'Horario configurado' : 'Siempre disponible'}</span>
+                  </div>
                 </div>
-                <div className="flex shrink-0 items-center justify-end gap-8">
+                <div className="flex w-full shrink-0 items-center justify-end gap-8 sm:w-auto">
+                  <SelectorFranjaCategoria
+                    categoria={cat}
+                    franjas={franjas}
+                    abierto={menuHorarioCategoriaAbierto === cat.id}
+                    guardando={guardandoHorarioId === cat.id}
+                    onToggle={() => {
+                      setMenuHorarioCategoriaAbierto(actual => actual === cat.id ? null : cat.id);
+                      setMenuCategoriaAbierto(null);
+                      setMenuItemAbierto(null);
+                    }}
+                    onSelect={franjaId => void asignarFranjaCategoria(cat.id, franjaId)}
+                  />
                   <button
                     onClick={() => {
                       setMostrarFormItem(cat.id);
                       setNuevoItem({ nombre: '', descripcion: '', precio: '' });
                       setNuevoItemErrors({});
                     }}
-                    className="flex h-44 items-center gap-6 rounded-lg border border-concrete bg-canvas-white px-12 text-12 font-semibold text-ash-graphite transition-colors hover:border-stone hover:bg-ghost-fog"
+                    className="flex h-44 shrink-0 items-center gap-6 whitespace-nowrap rounded-lg border border-concrete bg-canvas-white px-10 text-12 font-semibold text-ash-graphite transition-colors hover:border-stone hover:bg-ghost-fog sm:px-12"
                   >
                     <span className="material-symbols-outlined text-18">add</span>
                     Agregar ítem
@@ -447,6 +648,7 @@ export default function CartaSection() {
                       onClick={event => {
                         event.stopPropagation();
                         setMenuCategoriaAbierto(actual => actual === cat.id ? null : cat.id);
+                        setMenuHorarioCategoriaAbierto(null);
                         setMenuItemAbierto(null);
                       }}
                       className="flex h-44 w-44 items-center justify-center rounded-lg text-sage-green transition-colors hover:bg-ghost-fog hover:text-ash-graphite"
@@ -488,6 +690,12 @@ export default function CartaSection() {
                           {item.variantes && item.variantes.length > 0 && (
                             <span className="rounded-full border border-concrete bg-ghost-fog px-8 py-2 text-10 font-medium text-sage-green">
                               {item.variantes.length} {item.variantes.length === 1 ? 'opción' : 'opciones'}
+                            </span>
+                          )}
+                          {item.franja_horaria_id && (
+                            <span className="inline-flex items-center gap-3 rounded-full border border-concrete bg-vanilla-cream/60 px-8 py-2 text-10 font-medium text-sage-green">
+                              <span className="material-symbols-outlined text-12">schedule</span>
+                              {franjas.find(franja => franja.id === item.franja_horaria_id)?.nombre || 'Horario propio'}
                             </span>
                           )}
                         </div>
@@ -544,6 +752,7 @@ export default function CartaSection() {
                             onClick={event => {
                               event.stopPropagation();
                               setMenuItemAbierto(actual => actual === item.id ? null : item.id);
+                              setMenuHorarioCategoriaAbierto(null);
                               setMenuCategoriaAbierto(null);
                             }}
                             className="flex h-44 w-44 items-center justify-center rounded-lg text-sage-green transition-colors hover:bg-ghost-fog hover:text-ash-graphite"
@@ -554,7 +763,57 @@ export default function CartaSection() {
                             <span className="material-symbols-outlined text-24">more_horiz</span>
                           </button>
                           {menuItemAbierto === item.id && (
-                            <div className="absolute right-0 top-[48px] z-30 min-w-[180px] rounded-lg border border-concrete bg-canvas-white p-4 shadow-xl">
+                            <div className="absolute right-0 top-[48px] z-30 w-[250px] rounded-lg border border-concrete bg-canvas-white p-6 shadow-xl">
+                              <div className="px-6 pb-8 pt-6">
+                                <p className="px-4 text-10 font-semibold uppercase tracking-[0.08em] text-sage-green">
+                                  Horario del producto
+                                </p>
+                                <p className="mb-6 mt-2 px-4 text-10 leading-relaxed text-sage-green">
+                                  Podés reemplazar el horario de la categoría solo para este producto.
+                                </p>
+                                <button
+                                  type="button"
+                                  disabled={guardandoHorarioId === item.id}
+                                  onClick={() => void asignarFranjaArticulo(cat.id, item.id, '')}
+                                  className={`flex min-h-44 w-full items-center gap-8 rounded-lg px-8 py-6 text-left transition-colors disabled:cursor-wait disabled:opacity-60 ${
+                                    !item.franja_horaria_id ? 'bg-plain-green/[0.08]' : 'hover:bg-ghost-fog'
+                                  }`}
+                                >
+                                  <span className="material-symbols-outlined text-18 text-sage-green">
+                                    {cat.franja_horaria_id ? 'account_tree' : 'all_inclusive'}
+                                  </span>
+                                  <span className="min-w-0 flex-1 text-11 font-semibold text-ash-graphite">
+                                    {cat.franja_horaria_id ? 'Heredar de la categoría' : 'Siempre disponible'}
+                                  </span>
+                                  {!item.franja_horaria_id && (
+                                    <span className="material-symbols-outlined text-18 text-plain-green">check</span>
+                                  )}
+                                </button>
+                                {franjas.map(franja => {
+                                  const seleccionada = item.franja_horaria_id === franja.id;
+                                  return (
+                                    <button
+                                      key={franja.id}
+                                      type="button"
+                                      disabled={guardandoHorarioId === item.id}
+                                      onClick={() => void asignarFranjaArticulo(cat.id, item.id, franja.id)}
+                                      className={`mt-2 flex min-h-44 w-full items-center gap-8 rounded-lg px-8 py-6 text-left transition-colors disabled:cursor-wait disabled:opacity-60 ${
+                                        seleccionada ? 'bg-plain-green/[0.08]' : 'hover:bg-ghost-fog'
+                                      }`}
+                                    >
+                                      <span className="material-symbols-outlined text-18 text-sage-green">schedule</span>
+                                      <span className="min-w-0 flex-1">
+                                        <span className="block truncate text-11 font-semibold text-ash-graphite">{franja.nombre}</span>
+                                        <span className="block font-mono text-9 text-sage-green">{franja.hora_inicio} — {franja.hora_fin}</span>
+                                      </span>
+                                      {seleccionada && (
+                                        <span className="material-symbols-outlined text-18 text-plain-green">check</span>
+                                      )}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                              <div className="my-4 border-t border-ghost-fog" />
                               <button
                                 type="button"
                                 onClick={() => {
@@ -654,16 +913,27 @@ export default function CartaSection() {
                               onChange={e => setNuevaVariante(p => ({ ...p, precioAdicional: e.target.value }))}
                             />
                           </div>
-                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-8 pt-2">
-                            <label className="flex items-center gap-6 text-12 text-ash-graphite cursor-pointer select-none">
-                              <input
-                                type="checkbox"
-                                checked={nuevaVariante.seleccionUnica}
-                                onChange={e => setNuevaVariante(p => ({ ...p, seleccionUnica: e.target.checked }))}
-                                className="rounded border-ash-graphite text-plain-green focus:ring-plain-green"
+                          <div className="flex flex-col justify-between gap-8 pt-2 sm:flex-row sm:items-center">
+                            <button
+                              type="button"
+                              role="switch"
+                              aria-checked={nuevaVariante.seleccionUnica}
+                              onClick={() => setNuevaVariante(p => ({ ...p, seleccionUnica: !p.seleccionUnica }))}
+                              className="group flex min-h-44 select-none items-center gap-10 rounded-lg px-8 text-left transition-colors hover:bg-canvas-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-plain-green/30 focus-visible:ring-offset-2"
+                            >
+                              <span
+                                aria-hidden="true"
+                                className={`relative h-24 w-44 shrink-0 rounded-full border transition-colors after:absolute after:left-[3px] after:top-[3px] after:h-[16px] after:w-[16px] after:rounded-full after:bg-canvas-white after:shadow-sm after:transition-transform ${
+                                  nuevaVariante.seleccionUnica
+                                    ? 'border-plain-green bg-plain-green after:translate-x-20'
+                                    : 'border-concrete bg-stone/45'
+                                }`}
                               />
-                              <span>Selección única (excluyente dentro del grupo / radio)</span>
-                            </label>
+                              <span className="min-w-0">
+                                <span className="block text-12 font-semibold text-ash-graphite">Selección única</span>
+                                <span className="mt-2 block text-10 leading-snug text-sage-green">Una sola opción permitida dentro del grupo</span>
+                              </span>
+                            </button>
                             <button
                               type="button"
                               disabled={guardandoVariante}

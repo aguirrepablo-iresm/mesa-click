@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/carta"
 )
@@ -58,6 +59,24 @@ func (m *mockStore) AjustarPrecios(ctx context.Context, tenantID string, input c
 func (m *mockStore) EliminarArticulo(ctx context.Context, id, tenantID string) error { return nil }
 func (m *mockStore) ObtenerCartaPublica(ctx context.Context, sucursalID string) (*carta.CartaPublica, error) {
 	return &carta.CartaPublica{}, nil
+}
+func (m *mockStore) ListarFranjasHorarias(ctx context.Context, tenantID string) ([]carta.FranjaHoraria, error) {
+	return []carta.FranjaHoraria{}, nil
+}
+func (m *mockStore) CrearFranjaHoraria(ctx context.Context, tenantID string, input carta.FranjaHorariaInput) (*carta.FranjaHoraria, error) {
+	return &carta.FranjaHoraria{ID: "franja-1", TenantID: tenantID, Nombre: input.Nombre, HoraInicio: input.HoraInicio, HoraFin: input.HoraFin}, nil
+}
+func (m *mockStore) ActualizarFranjaHoraria(ctx context.Context, id, tenantID string, input carta.FranjaHorariaInput) (*carta.FranjaHoraria, error) {
+	return &carta.FranjaHoraria{ID: id, TenantID: tenantID, Nombre: input.Nombre, HoraInicio: input.HoraInicio, HoraFin: input.HoraFin}, nil
+}
+func (m *mockStore) EliminarFranjaHoraria(ctx context.Context, id, tenantID string) error {
+	return nil
+}
+func (m *mockStore) AsignarFranjaCategoria(ctx context.Context, id, tenantID string, franjaID *string) (*carta.Categoria, error) {
+	return &carta.Categoria{ID: id, TenantID: tenantID, FranjaHorariaID: franjaID}, nil
+}
+func (m *mockStore) AsignarFranjaArticulo(ctx context.Context, id, tenantID string, franjaID *string) (*carta.Articulo, error) {
+	return &carta.Articulo{ID: id, TenantID: tenantID, FranjaHorariaID: franjaID}, nil
 }
 func (m *mockStore) ListarVariantes(ctx context.Context, articuloID, tenantID string) ([]carta.Variante, error) {
 	return []carta.Variante{}, nil
@@ -185,5 +204,72 @@ func TestAjustarPrecios_SinProductos(t *testing.T) {
 	_, err := carta.NuevoService(store).AjustarPrecios(context.Background(), "t-1", carta.AjustePreciosInput{Porcentaje: 10})
 	if !errors.Is(err, carta.ErrValidation) {
 		t.Fatalf("se esperaba ErrValidation, obtenido: %v", err)
+	}
+}
+
+func TestCrearFranjaHoraria_Validaciones(t *testing.T) {
+	svc := carta.NuevoService(&mockStore{})
+	casos := []carta.FranjaHorariaInput{
+		{Nombre: "", HoraInicio: "08:00", HoraFin: "12:00"},
+		{Nombre: "Desayuno", HoraInicio: "8", HoraFin: "12:00"},
+		{Nombre: "Desayuno", HoraInicio: "08:00", HoraFin: "08:00"},
+	}
+	for _, input := range casos {
+		if _, err := svc.CrearFranjaHoraria(context.Background(), "t-1", input); !errors.Is(err, carta.ErrValidation) {
+			t.Fatalf("se esperaba ErrValidation para %+v, obtenido: %v", input, err)
+		}
+	}
+}
+
+func TestResolverCartaPorHora_FiltraYConservaOpcionales(t *testing.T) {
+	desayuno := &carta.FranjaHoraria{ID: "f-1", Nombre: "Desayuno", HoraInicio: "08:00", HoraFin: "12:00"}
+	cartaOriginal := &carta.CartaPublica{Categorias: []carta.CategoriaConArticulos{
+		{
+			Categoria: carta.Categoria{ID: "cat-1", Nombre: "Desayunos"},
+			Articulos: []carta.Articulo{
+				{ID: "siempre", Nombre: "Café"},
+				{ID: "desayuno", Nombre: "Tostadas", FranjaEfectiva: desayuno},
+			},
+		},
+	}}
+
+	resultado := carta.ResolverCartaPorHora(cartaOriginal, time.Date(2026, 9, 29, 15, 0, 0, 0, time.UTC))
+	if len(resultado.Categorias) != 1 || len(resultado.Categorias[0].Articulos) != 1 {
+		t.Fatalf("resultado inesperado: %+v", resultado)
+	}
+	if resultado.Categorias[0].Articulos[0].ID != "siempre" {
+		t.Fatalf("el artículo sin franja debe seguir visible")
+	}
+	if !resultado.Categorias[0].Disponible {
+		t.Fatalf("la categoría debe figurar disponible mientras tenga un artículo visible")
+	}
+}
+
+func TestResolverCartaPorHora_InformaProximaDisponibilidad(t *testing.T) {
+	merienda := &carta.FranjaHoraria{ID: "f-2", Nombre: "Merienda", HoraInicio: "16:00", HoraFin: "20:00"}
+	cartaOriginal := &carta.CartaPublica{Categorias: []carta.CategoriaConArticulos{
+		{
+			Categoria: carta.Categoria{ID: "cat-2", Nombre: "Merienda"},
+			Articulos: []carta.Articulo{{ID: "torta", Nombre: "Torta", FranjaEfectiva: merienda}},
+		},
+	}}
+
+	resultado := carta.ResolverCartaPorHora(cartaOriginal, time.Date(2026, 9, 29, 14, 30, 0, 0, time.UTC))
+	categoria := resultado.Categorias[0]
+	if categoria.Disponible || len(categoria.Articulos) != 0 || categoria.DisponibleDesde != "16:00" {
+		t.Fatalf("categoría inesperada: %+v", categoria)
+	}
+}
+
+func TestResolverCartaPorHora_FranjaQueCruzaMedianoche(t *testing.T) {
+	noche := &carta.FranjaHoraria{ID: "f-3", Nombre: "Noche", HoraInicio: "20:00", HoraFin: "02:00"}
+	base := &carta.CartaPublica{Categorias: []carta.CategoriaConArticulos{{
+		Categoria: carta.Categoria{ID: "cat-3", Nombre: "Noche"},
+		Articulos: []carta.Articulo{{ID: "burger", Nombre: "Burger", FranjaEfectiva: noche}},
+	}}}
+
+	resultado := carta.ResolverCartaPorHora(base, time.Date(2026, 9, 29, 1, 0, 0, 0, time.UTC))
+	if !resultado.Categorias[0].Disponible {
+		t.Fatalf("la franja nocturna debe estar activa después de medianoche")
 	}
 }

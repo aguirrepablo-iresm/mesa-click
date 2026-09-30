@@ -176,6 +176,100 @@ func (h *Handlers) CartaPublica(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, c)
 }
 
+func (h *Handlers) ListarFranjasHorarias(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	franjas, err := h.svc.ListarFranjasHorarias(r.Context(), claims.TenantID)
+	if err != nil {
+		slog.ErrorContext(r.Context(), "error listando franjas horarias", "err", err)
+		jsonError(w, "error listando franjas horarias", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, franjas)
+}
+
+func (h *Handlers) CrearFranjaHoraria(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	var input FranjaHorariaInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		jsonError(w, "body inválido", http.StatusBadRequest)
+		return
+	}
+	franja, err := h.svc.CrearFranjaHoraria(r.Context(), claims.TenantID, input)
+	if err != nil {
+		h.responderErrorFranja(w, r, err)
+		return
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(franja)
+}
+
+func (h *Handlers) ActualizarFranjaHoraria(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	var input FranjaHorariaInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		jsonError(w, "body inválido", http.StatusBadRequest)
+		return
+	}
+	franja, err := h.svc.ActualizarFranjaHoraria(r.Context(), r.PathValue("id"), claims.TenantID, input)
+	if err != nil {
+		h.responderErrorFranja(w, r, err)
+		return
+	}
+	jsonOK(w, franja)
+}
+
+func (h *Handlers) EliminarFranjaHoraria(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	if err := h.svc.EliminarFranjaHoraria(r.Context(), r.PathValue("id"), claims.TenantID); err != nil {
+		h.responderErrorFranja(w, r, err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *Handlers) AsignarFranjaCategoria(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	var input AsignarFranjaInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		jsonError(w, "body inválido", http.StatusBadRequest)
+		return
+	}
+	categoria, err := h.svc.AsignarFranjaCategoria(r.Context(), r.PathValue("id"), claims.TenantID, input.FranjaHorariaID)
+	if err != nil {
+		h.responderErrorFranja(w, r, err)
+		return
+	}
+	jsonOK(w, categoria)
+}
+
+func (h *Handlers) AsignarFranjaArticulo(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	var input AsignarFranjaInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		jsonError(w, "body inválido", http.StatusBadRequest)
+		return
+	}
+	articulo, err := h.svc.AsignarFranjaArticulo(r.Context(), r.PathValue("id"), claims.TenantID, input.FranjaHorariaID)
+	if err != nil {
+		h.responderErrorFranja(w, r, err)
+		return
+	}
+	jsonOK(w, articulo)
+}
+
+func (h *Handlers) responderErrorFranja(w http.ResponseWriter, r *http.Request, err error) {
+	switch {
+	case errors.Is(err, ErrValidation):
+		jsonError(w, err.Error(), http.StatusBadRequest)
+	case errors.Is(err, ErrNotFound):
+		jsonError(w, "franja, categoría o artículo no encontrado", http.StatusNotFound)
+	default:
+		slog.ErrorContext(r.Context(), "error gestionando franja horaria", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
+	}
+}
+
 func (h *Handlers) ListarVariantes(w http.ResponseWriter, r *http.Request) {
 	claims := auth.ClaimsFromContext(r.Context())
 	articuloID := r.PathValue("id")
