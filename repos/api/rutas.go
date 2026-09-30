@@ -142,6 +142,8 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.HandleFunc("POST /pedidos", pedidoH.Crear)
 	mux.Handle("GET /pedidos", auth.Requerir(http.HandlerFunc(pedidoH.ListarActivos)))
 	mux.Handle("PATCH /pedidos/{id}/estado", auth.Requerir(http.HandlerFunc(pedidoH.CambiarEstado)))
+	mux.Handle("PATCH /pedidos/items/{id}/estado", auth.Requerir(http.HandlerFunc(pedidoH.CambiarEstadoItem)))
+	mux.Handle("GET /kds/eventos", auth.Requerir(http.HandlerFunc(pedidoH.EventosKDS)))
 
 	// Notificaciones / SSE
 	notificacionH := notificacion.NuevosHandlers()

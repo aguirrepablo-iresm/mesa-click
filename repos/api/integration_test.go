@@ -165,10 +165,17 @@ func TestIntegracion_FlujoCompletoPedido(t *testing.T) {
 	itemsInput := []pedido.NuevoItemInput{
 		{
 			ArticuloID:     createdArt.ID,
-			Cantidad:       2,
+			Cantidad:       1,
 			Notas:          "sin gas",
 			ComensalID:     "47dc8c9e-fb98-44d7-80a1-b598addc1e8a",
 			ComensalNombre: "Mateo",
+		},
+		{
+			ArticuloID:     createdArt.ID,
+			Cantidad:       1,
+			Notas:          "bien fría",
+			ComensalID:     "5ef10747-503a-4d72-a433-94978a2447e6",
+			ComensalNombre: "Juani",
 		},
 	}
 	createdPedido, err := pedidoSvc.Crear(ctx, pedido.NuevoPedidoInput{
@@ -185,15 +192,41 @@ func TestIntegracion_FlujoCompletoPedido(t *testing.T) {
 	if createdPedido.Estado != "recibido" {
 		t.Errorf("estado inicial del pedido incorrecto: got %q, want %q", createdPedido.Estado, "recibido")
 	}
+	if len(createdPedido.Items) != 2 {
+		t.Fatalf("cantidad de items incorrecta: got %d, want 2", len(createdPedido.Items))
+	}
+	for _, item := range createdPedido.Items {
+		if item.Estado != "pendiente" {
+			t.Errorf("estado inicial del item incorrecto: got %q, want %q", item.Estado, "pendiente")
+		}
+	}
 
-	// F. CAMBIAR ESTADO DEL PEDIDO (Simula la acción del recepcionista / mozo)
-	t.Log("Cambiando estado del pedido a 'preparando'...")
-	updatedPedido, err := pedidoSvc.CambiarEstado(ctx, createdPedido.ID, createdTenant.ID, "preparando")
+	// F.1 CAMBIAR ESTADOS POR ÍTEM (Simula la interacción del KDS)
+	t.Log("Cambiando el primer item a 'preparando'...")
+	updatedPedido, err := pedidoSvc.CambiarEstadoItem(ctx, createdPedido.Items[0].ID, createdTenant.ID, "preparando")
 	if err != nil {
-		t.Fatalf("error actualizando estado del pedido: %v", err)
+		t.Fatalf("error actualizando estado del primer item: %v", err)
 	}
 	if updatedPedido.Estado != "preparando" {
-		t.Errorf("estado final incorrecto: got %q, want %q", updatedPedido.Estado, "preparando")
+		t.Errorf("el pedido debe avanzar a preparando: got %q, want %q", updatedPedido.Estado, "preparando")
+	}
+
+	t.Log("Marcando el primer item como 'listo'...")
+	updatedPedido, err = pedidoSvc.CambiarEstadoItem(ctx, createdPedido.Items[0].ID, createdTenant.ID, "listo")
+	if err != nil {
+		t.Fatalf("error marcando listo el primer item: %v", err)
+	}
+	if updatedPedido.Estado != "preparando" {
+		t.Errorf("el pedido no debe quedar listo mientras falten items: got %q", updatedPedido.Estado)
+	}
+
+	t.Log("Marcando el segundo item como 'listo'...")
+	updatedPedido, err = pedidoSvc.CambiarEstadoItem(ctx, createdPedido.Items[1].ID, createdTenant.ID, "listo")
+	if err != nil {
+		t.Fatalf("error marcando listo el segundo item: %v", err)
+	}
+	if updatedPedido.Estado != "listo" {
+		t.Errorf("todos los items listos deben avanzar el pedido a listo: got %q, want %q", updatedPedido.Estado, "listo")
 	}
 
 	// G. LISTAR PEDIDOS ACTIVOS DE LA SUCURSAL
@@ -207,8 +240,13 @@ func TestIntegracion_FlujoCompletoPedido(t *testing.T) {
 	for _, p := range pedidosActivos {
 		if p.ID == createdPedido.ID {
 			encontrado = true
-			if p.Estado != "preparando" {
-				t.Errorf("el pedido en el listado de activos tiene estado incorrecto: got %q, want %q", p.Estado, "preparando")
+			if p.Estado != "listo" {
+				t.Errorf("el pedido en el listado de activos tiene estado incorrecto: got %q, want %q", p.Estado, "listo")
+			}
+			for _, item := range p.Items {
+				if item.Estado != "listo" {
+					t.Errorf("el item %s debería estar listo y está %q", item.ID, item.Estado)
+				}
 			}
 			break
 		}

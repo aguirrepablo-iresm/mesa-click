@@ -10,9 +10,11 @@ var (
 	ErrValidation       = errors.New("validación fallida")
 	ErrMesaCerrada      = errors.New("mesa cerrada")
 	ErrCuentaSolicitada = errors.New("cuenta solicitada")
+	ErrPedidoCerrado    = errors.New("pedido cerrado")
 )
 
 var EstadosValidos = []string{"recibido", "preparando", "listo", "cerrado"}
+var EstadosItemValidos = []string{"pendiente", "preparando", "listo"}
 
 type Pedido struct {
 	ID            string       `json:"id"`
@@ -41,6 +43,7 @@ type PedidoItem struct {
 	Notas          string               `json:"notas,omitempty"`
 	ComensalID     string               `json:"comensal_id,omitempty"`
 	ComensalNombre string               `json:"comensal_nombre,omitempty"`
+	Estado         string               `json:"estado"`
 	Variantes      []PedidoItemVariante `json:"variantes,omitempty"`
 }
 
@@ -59,5 +62,9 @@ type NuevoItemInput struct {
 }
 
 type CambiarEstadoInput struct {
+	Estado string `json:"estado"`
+}
+
+type CambiarEstadoItemInput struct {
 	Estado string `json:"estado"`
 }

@@ -14,6 +14,8 @@ type Store interface {
 	ListarActivos(ctx context.Context, sucursalID, tenantID string) ([]Pedido, error)
 	ListarCuentaActualPorQR(ctx context.Context, qrToken string) ([]Pedido, error)
 	CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado string) (*Pedido, error)
+	CambiarEstadoItem(ctx context.Context, itemID, tenantID, nuevoEstado string) (*Pedido, error)
+	SucursalPerteneceATenant(ctx context.Context, sucursalID, tenantID string) (bool, error)
 	ObtenerSucursalPorMesa(ctx context.Context, mesaID string) (string, int, error)
 }
 
@@ -162,6 +164,7 @@ func (s *pgStore) Crear(ctx context.Context, input NuevoPedidoInput, sucursalID 
 			Notas:          item.Notas,
 			ComensalID:     item.ComensalID,
 			ComensalNombre: item.ComensalNombre,
+			Estado:         "pendiente",
 			Variantes:      itemVariantes,
 		})
 	}
@@ -234,7 +237,8 @@ func (s *pgStore) listarItems(ctx context.Context, pedidoID string) ([]PedidoIte
 	rows, err := db.Pool.Query(ctx,
 		`SELECT pi.id, pi.pedido_id, pi.articulo_id, a.nombre,
 		        pi.cantidad, pi.precio_unitario, COALESCE(pi.notas, ''),
-		        COALESCE(pi.comensal_id::text, ''), COALESCE(pi.comensal_nombre, '')
+		        COALESCE(pi.comensal_id::text, ''), COALESCE(pi.comensal_nombre, ''),
+		        pi.estado
 		 FROM pedido_items pi
 		 JOIN articulos a ON a.id = pi.articulo_id
 		 WHERE pi.pedido_id = $1
@@ -257,6 +261,7 @@ func (s *pgStore) listarItems(ctx context.Context, pedidoID string) ([]PedidoIte
 			&item.Notas,
 			&item.ComensalID,
 			&item.ComensalNombre,
+			&item.Estado,
 		); err != nil {
 			return nil, err
 		}
@@ -323,4 +328,114 @@ func (s *pgStore) CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado s
 		return nil, fmt.Errorf("error cambiando estado del pedido: %w", err)
 	}
 	return p, nil
+}
+
+func (s *pgStore) CambiarEstadoItem(ctx context.Context, itemID, tenantID, nuevoEstado string) (*Pedido, error) {
+	tx, err := db.Pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("error iniciando actualización de item: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	var pedidoID, estadoPedido string
+	err = tx.QueryRow(ctx,
+		`SELECT p.id, p.estado
+		 FROM pedido_items pi
+		 JOIN pedidos p ON p.id = pi.pedido_id
+		 JOIN sucursales su ON su.id = p.sucursal_id
+		 WHERE pi.id = $1 AND su.tenant_id = $2
+		 FOR UPDATE OF p`,
+		itemID, tenantID,
+	).Scan(&pedidoID, &estadoPedido)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("error obteniendo pedido del item: %w", err)
+	}
+	if estadoPedido == "cerrado" {
+		return nil, ErrPedidoCerrado
+	}
+
+	resultado, err := tx.Exec(ctx,
+		`UPDATE pedido_items SET estado = $1 WHERE id = $2`,
+		nuevoEstado, itemID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error cambiando estado del item: %w", err)
+	}
+	if resultado.RowsAffected() == 0 {
+		return nil, ErrNotFound
+	}
+
+	var total, listos, iniciados int
+	err = tx.QueryRow(ctx,
+		`SELECT COUNT(*),
+		        COUNT(*) FILTER (WHERE estado = 'listo'),
+		        COUNT(*) FILTER (WHERE estado IN ('preparando', 'listo'))
+		 FROM pedido_items
+		 WHERE pedido_id = $1`,
+		pedidoID,
+	).Scan(&total, &listos, &iniciados)
+	if err != nil {
+		return nil, fmt.Errorf("error calculando estado agregado del pedido: %w", err)
+	}
+
+	estadoAgregado := resolverEstadoPedido(total, listos, iniciados)
+	_, err = tx.Exec(ctx,
+		`UPDATE pedidos
+		 SET estado = $1, updated_at = now()
+		 WHERE id = $2 AND estado IS DISTINCT FROM $1`,
+		estadoAgregado, pedidoID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("error actualizando estado agregado del pedido: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("error confirmando estado del item: %w", err)
+	}
+
+	return s.obtenerPedidoPorID(ctx, pedidoID, tenantID)
+}
+
+func resolverEstadoPedido(total, listos, iniciados int) string {
+	if total > 0 && listos == total {
+		return "listo"
+	}
+	if iniciados > 0 {
+		return "preparando"
+	}
+	return "recibido"
+}
+
+func (s *pgStore) obtenerPedidoPorID(ctx context.Context, pedidoID, tenantID string) (*Pedido, error) {
+	pedidos, err := s.listarPedidos(ctx,
+		`SELECT p.id, p.mesa_id, p.sucursal_id, p.cuenta_version, p.estado, p.created_at, p.updated_at
+		 FROM pedidos p
+		 JOIN sucursales su ON su.id = p.sucursal_id
+		 WHERE p.id = $1 AND su.tenant_id = $2`,
+		pedidoID, tenantID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	if len(pedidos) == 0 {
+		return nil, ErrNotFound
+	}
+	return &pedidos[0], nil
+}
+
+func (s *pgStore) SucursalPerteneceATenant(ctx context.Context, sucursalID, tenantID string) (bool, error) {
+	var pertenece bool
+	err := db.Pool.QueryRow(ctx,
+		`SELECT EXISTS(
+			SELECT 1 FROM sucursales WHERE id = $1 AND tenant_id = $2
+		)`,
+		sucursalID, tenantID,
+	).Scan(&pertenece)
+	if err != nil {
+		return false, fmt.Errorf("error validando sucursal: %w", err)
+	}
+	return pertenece, nil
 }
