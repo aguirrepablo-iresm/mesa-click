@@ -368,6 +368,8 @@ function readStoredSession(raw: string): State | null {
 interface MenuCategoryView {
   id: string;
   nombre: string;
+  disponible: boolean;
+  disponibleDesde?: string;
   items: Array<{
     id: string;
     nombre: string;
@@ -726,6 +728,8 @@ export default function MesaPage() {
             const formateadas: MenuCategoryView[] = cartaResp.categorias.map((c: CategoriaPublica) => ({
               id: c.id,
               nombre: c.nombre,
+              disponible: c.disponible,
+              disponibleDesde: c.disponible_desde,
               items: (c.articulos || []).map((a: ArticuloPublico) => ({
                 id: a.id,
                 nombre: a.nombre,
@@ -1176,9 +1180,21 @@ export default function MesaPage() {
                     />
                   ))}
                   {itemsDisponibles.length === 0 && (
-                    <div className="mesa-subtle-text py-16 text-center text-12">
-                      No hay artículos disponibles en esta categoría.
-                    </div>
+                    cat.disponibleDesde ? (
+                      <div className="mesa-surface mesa-border flex items-center gap-12 rounded-xl border px-14 py-14 shadow-2xs">
+                        <span className="mesa-primary material-symbols-outlined flex h-40 w-40 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--mesa-primary)_12%,transparent)] text-20">
+                          schedule
+                        </span>
+                        <div className="min-w-0">
+                          <p className="mesa-text text-13 font-semibold">Disponible desde las {cat.disponibleDesde}</p>
+                          <p className="mesa-muted mt-2 text-11 leading-relaxed">Esta categoría se habilita automáticamente cuando comienza su horario.</p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mesa-subtle-text py-16 text-center text-12">
+                        No hay artículos disponibles en esta categoría.
+                      </div>
+                    )
                   )}
                 </div>
               </section>

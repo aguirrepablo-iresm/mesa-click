@@ -1,6 +1,7 @@
 export interface CategoriaItemNav {
   id: string;
   nombre: string;
+  disponible?: boolean;
 }
 
 interface Props {
@@ -24,7 +25,10 @@ export default function CategoriaNav({ categorias, activa, onSelect }: Props) {
                 : 'mesa-surface mesa-muted mesa-border hover:border-[var(--mesa-primary)]'
             }`}
           >
-            {cat.nombre}
+            <span>{cat.nombre}</span>
+            {cat.disponible === false && (
+              <span className="material-symbols-outlined ml-6 text-15 opacity-70" aria-label="Fuera de horario">schedule</span>
+            )}
           </button>
         ))}
       </div>

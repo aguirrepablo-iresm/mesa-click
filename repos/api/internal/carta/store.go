@@ -2,6 +2,7 @@ package carta
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"strings"
 
@@ -23,6 +24,12 @@ type Store interface {
 	AjustarPrecios(ctx context.Context, tenantID string, input AjustePreciosInput) (*AjustePreciosResultado, error)
 	EliminarArticulo(ctx context.Context, id, tenantID string) error
 	ObtenerCartaPublica(ctx context.Context, sucursalID string) (*CartaPublica, error)
+	ListarFranjasHorarias(ctx context.Context, tenantID string) ([]FranjaHoraria, error)
+	CrearFranjaHoraria(ctx context.Context, tenantID string, input FranjaHorariaInput) (*FranjaHoraria, error)
+	ActualizarFranjaHoraria(ctx context.Context, id, tenantID string, input FranjaHorariaInput) (*FranjaHoraria, error)
+	EliminarFranjaHoraria(ctx context.Context, id, tenantID string) error
+	AsignarFranjaCategoria(ctx context.Context, id, tenantID string, franjaID *string) (*Categoria, error)
+	AsignarFranjaArticulo(ctx context.Context, id, tenantID string, franjaID *string) (*Articulo, error)
 
 	ListarVariantes(ctx context.Context, articuloID, tenantID string) ([]Variante, error)
 	CrearVariante(ctx context.Context, articuloID, tenantID string, input CrearVarianteInput) (*Variante, error)
@@ -36,7 +43,8 @@ func NuevoStore() Store { return &pgStore{} }
 
 func (s *pgStore) ListarCategorias(ctx context.Context, tenantID string) ([]Categoria, error) {
 	rows, err := db.Pool.Query(ctx,
-		`SELECT id, tenant_id, nombre, orden FROM categorias WHERE tenant_id = $1 ORDER BY orden`, tenantID)
+		`SELECT id, tenant_id, nombre, orden, franja_horaria_id
+		 FROM categorias WHERE tenant_id = $1 ORDER BY orden`, tenantID)
 	if err != nil {
 		return nil, err
 	}
@@ -44,9 +52,11 @@ func (s *pgStore) ListarCategorias(ctx context.Context, tenantID string) ([]Cate
 	var cats []Categoria
 	for rows.Next() {
 		var c Categoria
-		if err := rows.Scan(&c.ID, &c.TenantID, &c.Nombre, &c.Orden); err != nil {
+		var franjaID sql.NullString
+		if err := rows.Scan(&c.ID, &c.TenantID, &c.Nombre, &c.Orden, &franjaID); err != nil {
 			return nil, err
 		}
+		c.FranjaHorariaID = nullStringPtr(franjaID)
 		cats = append(cats, c)
 	}
 	if err := rows.Err(); err != nil {
@@ -57,11 +67,13 @@ func (s *pgStore) ListarCategorias(ctx context.Context, tenantID string) ([]Cate
 
 func (s *pgStore) CrearCategoria(ctx context.Context, tenantID string, input CategoriaInput) (*Categoria, error) {
 	c := &Categoria{}
+	var franjaID sql.NullString
 	err := db.Pool.QueryRow(ctx,
 		`INSERT INTO categorias (tenant_id, nombre, orden) VALUES ($1, $2, $3)
-		 RETURNING id, tenant_id, nombre, orden`,
+		 RETURNING id, tenant_id, nombre, orden, franja_horaria_id`,
 		tenantID, input.Nombre, input.Orden,
-	).Scan(&c.ID, &c.TenantID, &c.Nombre, &c.Orden)
+	).Scan(&c.ID, &c.TenantID, &c.Nombre, &c.Orden, &franjaID)
+	c.FranjaHorariaID = nullStringPtr(franjaID)
 	return c, err
 }
 
@@ -116,7 +128,7 @@ func (s *pgStore) BuscarOCrearCategoria(ctx context.Context, tenantID, nombre st
 
 func (s *pgStore) ListarArticulos(ctx context.Context, tenantID string) ([]Articulo, error) {
 	rows, err := db.Pool.Query(ctx,
-		`SELECT id, tenant_id, categoria_id, nombre, COALESCE(descripcion,''), precio, COALESCE(foto_url,''), activo
+		`SELECT id, tenant_id, categoria_id, nombre, COALESCE(descripcion,''), precio, COALESCE(foto_url,''), activo, franja_horaria_id
 		 FROM articulos WHERE tenant_id = $1 ORDER BY nombre`, tenantID)
 	if err != nil {
 		return nil, err
@@ -125,9 +137,11 @@ func (s *pgStore) ListarArticulos(ctx context.Context, tenantID string) ([]Artic
 	var arts []Articulo
 	for rows.Next() {
 		var a Articulo
-		if err := rows.Scan(&a.ID, &a.TenantID, &a.CategoriaID, &a.Nombre, &a.Descripcion, &a.Precio, &a.FotoURL, &a.Activo); err != nil {
+		var franjaID sql.NullString
+		if err := rows.Scan(&a.ID, &a.TenantID, &a.CategoriaID, &a.Nombre, &a.Descripcion, &a.Precio, &a.FotoURL, &a.Activo, &franjaID); err != nil {
 			return nil, err
 		}
+		a.FranjaHorariaID = nullStringPtr(franjaID)
 		arts = append(arts, a)
 	}
 	if err := rows.Err(); err != nil {
@@ -145,32 +159,36 @@ func (s *pgStore) ListarArticulos(ctx context.Context, tenantID string) ([]Artic
 
 func (s *pgStore) CrearArticulo(ctx context.Context, tenantID string, input ArticuloInput) (*Articulo, error) {
 	a := &Articulo{}
+	var franjaID sql.NullString
 	err := db.Pool.QueryRow(ctx,
 		`INSERT INTO articulos (tenant_id, categoria_id, nombre, descripcion, precio, foto_url, activo)
 		 VALUES ($1, $2, $3, $4, $5, $6, true)
-		 RETURNING id, tenant_id, categoria_id, nombre, COALESCE(descripcion,''), precio, COALESCE(foto_url,''), activo`,
+		 RETURNING id, tenant_id, categoria_id, nombre, COALESCE(descripcion,''), precio, COALESCE(foto_url,''), activo, franja_horaria_id`,
 		tenantID, input.CategoriaID, input.Nombre, input.Descripcion, input.Precio, input.FotoURL,
-	).Scan(&a.ID, &a.TenantID, &a.CategoriaID, &a.Nombre, &a.Descripcion, &a.Precio, &a.FotoURL, &a.Activo)
+	).Scan(&a.ID, &a.TenantID, &a.CategoriaID, &a.Nombre, &a.Descripcion, &a.Precio, &a.FotoURL, &a.Activo, &franjaID)
+	a.FranjaHorariaID = nullStringPtr(franjaID)
 	return a, err
 }
 
 func (s *pgStore) ActualizarArticulo(ctx context.Context, id, tenantID string, u ArticuloUpdate) (*Articulo, error) {
 	a := &Articulo{}
+	var franjaID sql.NullString
 	err := db.Pool.QueryRow(ctx,
 		`UPDATE articulos SET
 		   nombre  = COALESCE($3, nombre),
 		   precio  = COALESCE($4, precio),
 		   activo  = COALESCE($5, activo)
 		 WHERE id = $1 AND tenant_id = $2
-		 RETURNING id, tenant_id, categoria_id, nombre, COALESCE(descripcion,''), precio, COALESCE(foto_url,''), activo`,
+		 RETURNING id, tenant_id, categoria_id, nombre, COALESCE(descripcion,''), precio, COALESCE(foto_url,''), activo, franja_horaria_id`,
 		id, tenantID, u.Nombre, u.Precio, u.Activo,
-	).Scan(&a.ID, &a.TenantID, &a.CategoriaID, &a.Nombre, &a.Descripcion, &a.Precio, &a.FotoURL, &a.Activo)
+	).Scan(&a.ID, &a.TenantID, &a.CategoriaID, &a.Nombre, &a.Descripcion, &a.Precio, &a.FotoURL, &a.Activo, &franjaID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
 		}
 		return nil, err
 	}
+	a.FranjaHorariaID = nullStringPtr(franjaID)
 	return a, nil
 }
 
@@ -211,10 +229,12 @@ func (s *pgStore) EliminarArticulo(ctx context.Context, id, tenantID string) err
 
 func (s *pgStore) ObtenerCartaPublica(ctx context.Context, sucursalID string) (*CartaPublica, error) {
 	rows, err := db.Pool.Query(ctx,
-		`SELECT c.id, c.nombre, c.orden,
-		        a.id, a.categoria_id, a.nombre, COALESCE(a.descripcion,''), a.precio, COALESCE(a.foto_url,'')
+		`SELECT c.id, c.nombre, c.orden, c.franja_horaria_id,
+		        a.id, a.categoria_id, a.nombre, COALESCE(a.descripcion,''), a.precio, COALESCE(a.foto_url,''), a.franja_horaria_id,
+		        f.id, f.nombre, TO_CHAR(f.hora_inicio, 'HH24:MI'), TO_CHAR(f.hora_fin, 'HH24:MI')
 		 FROM categorias c
 		 JOIN articulos a ON a.categoria_id = c.id
+		 LEFT JOIN franjas_horarias f ON f.id = COALESCE(a.franja_horaria_id, c.franja_horaria_id)
 		 WHERE a.tenant_id = (SELECT tenant_id FROM sucursales WHERE id = $1)
 		   AND a.activo = true
 		 ORDER BY c.orden, a.nombre`,
@@ -233,15 +253,31 @@ func (s *pgStore) ObtenerCartaPublica(ctx context.Context, sucursalID string) (*
 			catID, catNombre string
 			catOrden         int
 			art              Articulo
+			catFranjaID      sql.NullString
+			artFranjaID      sql.NullString
+			franjaID         sql.NullString
+			franjaNombre     sql.NullString
+			horaInicio       sql.NullString
+			horaFin          sql.NullString
 		)
-		if err := rows.Scan(&catID, &catNombre, &catOrden,
-			&art.ID, &art.CategoriaID, &art.Nombre, &art.Descripcion, &art.Precio, &art.FotoURL); err != nil {
+		if err := rows.Scan(&catID, &catNombre, &catOrden, &catFranjaID,
+			&art.ID, &art.CategoriaID, &art.Nombre, &art.Descripcion, &art.Precio, &art.FotoURL, &artFranjaID,
+			&franjaID, &franjaNombre, &horaInicio, &horaFin); err != nil {
 			return nil, err
 		}
 		art.Activo = true
+		art.FranjaHorariaID = nullStringPtr(artFranjaID)
+		if franjaID.Valid {
+			art.FranjaEfectiva = &FranjaHoraria{
+				ID:         franjaID.String,
+				Nombre:     franjaNombre.String,
+				HoraInicio: horaInicio.String,
+				HoraFin:    horaFin.String,
+			}
+		}
 		if _, ok := catMap[catID]; !ok {
 			catMap[catID] = &CategoriaConArticulos{
-				Categoria: Categoria{ID: catID, Nombre: catNombre, Orden: catOrden},
+				Categoria: Categoria{ID: catID, Nombre: catNombre, Orden: catOrden, FranjaHorariaID: nullStringPtr(catFranjaID)},
 			}
 			orden = append(orden, catID)
 		}
@@ -267,6 +303,113 @@ func (s *pgStore) ObtenerCartaPublica(ctx context.Context, sucursalID string) (*
 		resultado.Categorias = append(resultado.Categorias, *catMap[id])
 	}
 	return resultado, nil
+}
+
+func nullStringPtr(value sql.NullString) *string {
+	if !value.Valid {
+		return nil
+	}
+	result := value.String
+	return &result
+}
+
+func (s *pgStore) ListarFranjasHorarias(ctx context.Context, tenantID string) ([]FranjaHoraria, error) {
+	rows, err := db.Pool.Query(ctx,
+		`SELECT id, tenant_id, nombre, TO_CHAR(hora_inicio, 'HH24:MI'), TO_CHAR(hora_fin, 'HH24:MI')
+		 FROM franjas_horarias WHERE tenant_id = $1 ORDER BY hora_inicio, nombre`, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	franjas := make([]FranjaHoraria, 0)
+	for rows.Next() {
+		var franja FranjaHoraria
+		if err := rows.Scan(&franja.ID, &franja.TenantID, &franja.Nombre, &franja.HoraInicio, &franja.HoraFin); err != nil {
+			return nil, err
+		}
+		franjas = append(franjas, franja)
+	}
+	return franjas, rows.Err()
+}
+
+func (s *pgStore) CrearFranjaHoraria(ctx context.Context, tenantID string, input FranjaHorariaInput) (*FranjaHoraria, error) {
+	franja := &FranjaHoraria{}
+	err := db.Pool.QueryRow(ctx,
+		`INSERT INTO franjas_horarias (tenant_id, nombre, hora_inicio, hora_fin)
+		 VALUES ($1, $2, $3::time, $4::time)
+		 RETURNING id, tenant_id, nombre, TO_CHAR(hora_inicio, 'HH24:MI'), TO_CHAR(hora_fin, 'HH24:MI')`,
+		tenantID, input.Nombre, input.HoraInicio, input.HoraFin,
+	).Scan(&franja.ID, &franja.TenantID, &franja.Nombre, &franja.HoraInicio, &franja.HoraFin)
+	return franja, err
+}
+
+func (s *pgStore) ActualizarFranjaHoraria(ctx context.Context, id, tenantID string, input FranjaHorariaInput) (*FranjaHoraria, error) {
+	franja := &FranjaHoraria{}
+	err := db.Pool.QueryRow(ctx,
+		`UPDATE franjas_horarias
+		 SET nombre = $3, hora_inicio = $4::time, hora_fin = $5::time, updated_at = NOW()
+		 WHERE id = $1 AND tenant_id = $2
+		 RETURNING id, tenant_id, nombre, TO_CHAR(hora_inicio, 'HH24:MI'), TO_CHAR(hora_fin, 'HH24:MI')`,
+		id, tenantID, input.Nombre, input.HoraInicio, input.HoraFin,
+	).Scan(&franja.ID, &franja.TenantID, &franja.Nombre, &franja.HoraInicio, &franja.HoraFin)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return franja, err
+}
+
+func (s *pgStore) EliminarFranjaHoraria(ctx context.Context, id, tenantID string) error {
+	tag, err := db.Pool.Exec(ctx, `DELETE FROM franjas_horarias WHERE id = $1 AND tenant_id = $2`, id, tenantID)
+	if err != nil {
+		return err
+	}
+	if tag.RowsAffected() == 0 {
+		return ErrNotFound
+	}
+	return nil
+}
+
+func (s *pgStore) AsignarFranjaCategoria(ctx context.Context, id, tenantID string, franjaID *string) (*Categoria, error) {
+	categoria := &Categoria{}
+	var franjaAsignada sql.NullString
+	err := db.Pool.QueryRow(ctx,
+		`UPDATE categorias c
+		 SET franja_horaria_id = $3::uuid
+		 WHERE c.id = $1 AND c.tenant_id = $2
+		   AND ($3::uuid IS NULL OR EXISTS (
+		       SELECT 1 FROM franjas_horarias f WHERE f.id = $3::uuid AND f.tenant_id = $2
+		   ))
+		 RETURNING c.id, c.tenant_id, c.nombre, c.orden, c.franja_horaria_id`,
+		id, tenantID, franjaID,
+	).Scan(&categoria.ID, &categoria.TenantID, &categoria.Nombre, &categoria.Orden, &franjaAsignada)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	categoria.FranjaHorariaID = nullStringPtr(franjaAsignada)
+	return categoria, err
+}
+
+func (s *pgStore) AsignarFranjaArticulo(ctx context.Context, id, tenantID string, franjaID *string) (*Articulo, error) {
+	articulo := &Articulo{}
+	var franjaAsignada sql.NullString
+	err := db.Pool.QueryRow(ctx,
+		`UPDATE articulos a
+		 SET franja_horaria_id = $3::uuid
+		 WHERE a.id = $1 AND a.tenant_id = $2
+		   AND ($3::uuid IS NULL OR EXISTS (
+		       SELECT 1 FROM franjas_horarias f WHERE f.id = $3::uuid AND f.tenant_id = $2
+		   ))
+		 RETURNING a.id, a.tenant_id, a.categoria_id, a.nombre, COALESCE(a.descripcion,''),
+		           a.precio, COALESCE(a.foto_url,''), a.activo, a.franja_horaria_id`,
+		id, tenantID, franjaID,
+	).Scan(&articulo.ID, &articulo.TenantID, &articulo.CategoriaID, &articulo.Nombre, &articulo.Descripcion,
+		&articulo.Precio, &articulo.FotoURL, &articulo.Activo, &franjaAsignada)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	articulo.FranjaHorariaID = nullStringPtr(franjaAsignada)
+	return articulo, err
 }
 
 func (s *pgStore) cargarVariantesPunteros(ctx context.Context, articulos []*Articulo) error {
