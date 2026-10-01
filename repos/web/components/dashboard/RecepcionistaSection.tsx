@@ -772,13 +772,25 @@ export default function RecepcionistaSection() {
             }
           </p>
         </div>
-        <div className="flex h-44 items-center gap-8 self-start rounded-full border border-concrete bg-canvas-white px-14 shadow-sm sm:self-auto">
-          <span
-            className={`h-8 w-8 rounded-full ${sseConectado ? 'bg-success animate-pulse' : 'bg-sage-green'}`}
-          />
-          <span className="text-11 font-mono text-sage-green uppercase tracking-wide">
-            {sseConectado ? 'En vivo (SSE)' : 'Conectando...'}
-          </span>
+        <div className="flex flex-wrap items-center gap-8 self-start sm:self-auto">
+          <a
+            href="/kds"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex h-44 items-center gap-6 rounded-full border border-amber-500/40 bg-amber-500/10 px-14 text-12 font-bold text-amber-800 hover:bg-amber-500/20 transition-all shadow-xs cursor-pointer"
+            title="Abrir pantalla de cocina (KDS) en una pestaña nueva"
+          >
+            <span>🍳</span>
+            <span>KDS Cocina ↗</span>
+          </a>
+          <div className="flex h-44 items-center gap-8 rounded-full border border-concrete bg-canvas-white px-14 shadow-sm">
+            <span
+              className={`h-8 w-8 rounded-full ${sseConectado ? 'bg-success animate-pulse' : 'bg-sage-green'}`}
+            />
+            <span className="text-11 font-mono text-sage-green uppercase tracking-wide">
+              {sseConectado ? 'En vivo (SSE)' : 'Conectando...'}
+            </span>
+          </div>
         </div>
       </div>
 

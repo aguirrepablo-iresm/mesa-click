@@ -392,6 +392,7 @@ export interface PedidoItemAPI {
   notas?: string;
   comensal_id?: string;
   comensal_nombre?: string;
+  estado?: 'pendiente' | 'preparando' | 'listo';
   variantes?: PedidoItemVarianteAPI[];
 }
 
@@ -744,6 +745,13 @@ export const api = {
     });
   },
 
+  cambiarEstadoItem: async (itemId: string, estado: 'pendiente' | 'preparando' | 'listo') => {
+    return apiFetch<PedidoAPI>(`/pedidos/items/${encodeURIComponent(itemId)}/estado`, {
+      method: 'PATCH',
+      body: JSON.stringify({ estado }),
+    });
+  },
+
   obtenerEventosPedidoUrl: (pedidoId: string) => {
     return `${getApiBaseUrl()}/pedidos/${encodeURIComponent(pedidoId)}/eventos`;
   },
@@ -756,6 +764,12 @@ export const api = {
     const token = obtenerToken();
     const tokenQuery = token ? `?token=${encodeURIComponent(token)}` : '';
     return `${getApiBaseUrl()}/sucursales/${encodeURIComponent(sucursalId)}/eventos${tokenQuery}`;
+  },
+
+  obtenerEventosKDSUrl: (sucursalId: string) => {
+    const token = obtenerToken();
+    const tokenQuery = token ? `&token=${encodeURIComponent(token)}` : '';
+    return `${getApiBaseUrl()}/kds/eventos?sucursal_id=${encodeURIComponent(sucursalId)}${tokenQuery}`;
   },
 
   // 9. Carga masiva de catálogo (US-58 / US-59)

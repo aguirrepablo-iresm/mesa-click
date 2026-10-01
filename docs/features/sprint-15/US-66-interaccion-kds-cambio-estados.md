@@ -3,9 +3,9 @@
 > **Sprint**: Sprint 15 (05/10 – 11/10/2026)  
 > **Épica**: Kitchen Display System (KDS) & Impresión de Comandas  
 > **Tipo**: `Integración`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
-> **Rama de trabajo**: `feat/US-66-interaccion-kds`  
+> **Estado**: ✅ **Resuelta**  
+> **Asignado a**: Pablo Aguirre  
+> **Rama de trabajo**: `feat/US-65-pantalla-kds`  
 
 ---
 
@@ -17,19 +17,19 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Tap sobre un ítem individual tacha el producto y lo marca 'listo'.
-- [ ] Botón 'Comanda Completa Lista' para despachar todos los ítems de una sola vez.
-- [ ] Al completarse el pedido, suena una señal auditiva opcional y se notifica al dashboard de salón/mozos.
-- [ ] Historial de comandas despachadas recientemente con posibilidad de deshacer (reabrir).
+- [x] Tap sobre un ítem individual tacha el producto y lo marca 'listo'.
+- [x] Botón 'Comanda Completa Lista' para despachar todos los ítems de una sola vez.
+- [x] Al completarse el pedido, suena una señal auditiva opcional y se notifica al dashboard de salón/mozos.
+- [x] Historial de comandas despachadas recientemente con posibilidad de deshacer (reabrir).
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Vincular clicks táctiles con `api.actualizarEstadoItem`.
-- [ ] Sonido de campana o beep configurable al recibir nueva comanda.
-- [ ] Modal o panel de pedidos recientemente despachados.
-- [ ] Validación de sincronización sin parpadeos.
+- [x] Vincular clicks táctiles con `api.actualizarEstadoItem`.
+- [x] Sonido de campana o beep configurable al recibir nueva comanda.
+- [x] Modal o panel de pedidos recientemente despachados.
+- [x] Validación de sincronización sin parpadeos.
 
 ---
 

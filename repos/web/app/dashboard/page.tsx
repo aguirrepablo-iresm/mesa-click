@@ -127,6 +127,9 @@ export default function DashboardPage() {
                     <p className="mt-2 truncate text-11 text-sage-green">Sesión activa</p>
                   </div>
                   <UserMenuItem icon="account_circle" label="Perfil" />
+                  <Link href="/kds" target="_blank" onClick={() => setIsUserMenuOpen(false)}>
+                    <UserMenuItem icon="skillet" label="Pantalla Cocina (KDS) ↗" />
+                  </Link>
                   <div onClick={() => { setIsTourOpen(true); setIsUserMenuOpen(false); }}>
                     <UserMenuItem icon="school" label="Recorrido tutorial" />
                   </div>
@@ -211,6 +214,15 @@ export default function DashboardPage() {
                 setIsExpanded(false);
               }}
             />
+            <Link
+              href="/kds"
+              target="_blank"
+              className="flex h-44 items-center gap-12 rounded-xl px-12 text-ash-graphite hover:bg-ghost-fog transition-colors font-medium text-13"
+              onClick={() => setIsExpanded(false)}
+            >
+              <span className="material-symbols-outlined text-20 text-amber-600">skillet</span>
+              <span>Cocina (KDS) ↗</span>
+            </Link>
           </div>
         </aside>
 
@@ -234,6 +246,17 @@ export default function DashboardPage() {
             ))}
           </nav>
           <div className={`pt-16 border-t border-ghost-fog space-y-4 flex flex-col ${isExpanded ? "px-8" : "items-center"}`}>
+            <Link
+              href="/kds"
+              target="_blank"
+              className={`flex h-44 items-center rounded-xl transition-colors hover:bg-ghost-fog text-ash-graphite ${
+                isExpanded ? "w-full gap-12 px-12 py-8" : "w-44 justify-center"
+              }`}
+              title="Abrir pantalla de cocina (KDS)"
+            >
+              <span className="material-symbols-outlined text-20 text-amber-600">skillet</span>
+              {isExpanded && <span className="text-13 font-medium whitespace-nowrap">Cocina (KDS) ↗</span>}
+            </Link>
             <NavItem
               icon="settings"
               label="Configuración"

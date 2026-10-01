@@ -86,8 +86,8 @@
 | ID | Tipo | Título | Estado | Asignado | Archivo |
 |---|---|---|---|---|---|
 | **US-64** | `Backend` | Modelo de Estados por Ítem y Canal SSE de Cocina | ✅ Resuelta | Mateo Silvestrin | [Ver detalle](sprint-15/US-64-backend-estados-item-sse-cocina.md) |
-| **US-65** | `Frontend` | Pantalla KDS Dedicada de Cocina con Temporizadores | 📋 Pendiente | Por asignar | [Ver detalle](sprint-15/US-65-pantalla-kds-cocina.md) |
-| **US-66** | `Integración` | Interacción Táctil en KDS y Notificación al Salón | 📋 Pendiente | Por asignar | [Ver detalle](sprint-15/US-66-interaccion-kds-cambio-estados.md) |
+| **US-65** | `Frontend` | Pantalla KDS Dedicada de Cocina con Temporizadores | ✅ Resuelta | Pablo Aguirre | [Ver detalle](sprint-15/US-65-pantalla-kds-cocina.md) |
+| **US-66** | `Integración` | Interacción Táctil en KDS y Notificación al Salón | ✅ Resuelta | Pablo Aguirre | [Ver detalle](sprint-15/US-66-interaccion-kds-cambio-estados.md) |
 | **US-67** | `Integración` | Impresión Térmica de Comandas (58/80 mm) y Reintento Manual | 📋 Pendiente | Por asignar | [Ver detalle](sprint-15/US-67-impresion-comandas-termicas.md) |
 
 ### 📌 Sprint 16: Modelo Freemium (Free vs Pro) & Control de Suscripciones (12/10 – 18/10/2026)
