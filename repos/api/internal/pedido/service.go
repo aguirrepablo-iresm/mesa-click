@@ -91,10 +91,11 @@ func (svc *Service) CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado
 		return nil, fmt.Errorf("error cambiando estado: %w", err)
 	}
 
-	// Notificar en tiempo real al comensal (pedido) y al recepcionista (sucursal)
+	// Notificar en tiempo real al comensal (pedido), al recepcionista (sucursal) y a cocina (kds)
 	notificacion.Instancia.Publicar(fmt.Sprintf("pedido:%s", p.ID), "pedido_actualizado", p)
 	notificacion.Instancia.Publicar(fmt.Sprintf("sucursal:%s", p.SucursalID), "pedido_actualizado", p)
 	notificacion.Instancia.Publicar(fmt.Sprintf("mesa:%s", p.MesaID), "pedido_actualizado", p)
+	notificacion.Instancia.Publicar(fmt.Sprintf("kds:%s", p.SucursalID), "pedido_actualizado", p)
 
 	return p, nil
 }

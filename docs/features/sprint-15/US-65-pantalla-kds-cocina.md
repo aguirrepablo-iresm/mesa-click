@@ -3,8 +3,8 @@
 > **Sprint**: Sprint 15 (05/10 – 11/10/2026)  
 > **Épica**: Kitchen Display System (KDS) & Impresión de Comandas  
 > **Tipo**: `Frontend`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
+> **Estado**: ✅ **Resuelta**  
+> **Asignado a**: Pablo Aguirre  
 > **Rama de trabajo**: `feat/US-65-pantalla-kds`  
 
 ---
@@ -17,19 +17,19 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Ruta `/kds` con diseño de alto contraste optimizado para pantallas y tablets de cocina.
-- [ ] Columnas kanban: 'Pendientes', 'En Preparación' y 'Listos para Servir'.
-- [ ] Temporizador por comanda con código de color: Verde (<10 min), Amarillo (10-20 min), Rojo (>20 min).
-- [ ] Visualización clara de número de mesa, comanda, ítems, variantes y notas del comensal.
+- [x] Ruta `/kds` con diseño de alto contraste optimizado para pantallas y tablets de cocina.
+- [x] Columnas kanban: 'Pendientes', 'En Preparación' y 'Listos para Servir'.
+- [x] Temporizador por comanda con código de color: Verde (<10 min), Amarillo (10-20 min), Rojo (>20 min).
+- [x] Visualización clara de número de mesa, comanda, ítems, variantes y notas del comensal.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Crear página `/kds` y componentes de tarjetas de comanda.
-- [ ] Conectar conexión SSE al canal de cocina.
-- [ ] Implementar lógica de temporizador en vivo con alertas cromáticas.
-- [ ] Diseñar modo pantalla completa (Full Screen) para monitores táctiles.
+- [x] Crear página `/kds` y componentes de tarjetas de comanda.
+- [x] Conectar conexión SSE al canal de cocina.
+- [x] Implementar lógica de temporizador en vivo con alertas cromáticas.
+- [x] Diseñar modo pantalla completa (Full Screen) para monitores táctiles.
 
 ---
 
