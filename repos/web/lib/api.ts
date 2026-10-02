@@ -174,6 +174,21 @@ async function apiFetch<T>(
 
 // --- TIPOS ---
 
+export type PlanTenant = 'free' | 'pro';
+
+export interface EstadoPlan {
+  plan: PlanTenant;
+  plan_desde?: string | null;
+  plan_hasta?: string | null;
+  dias_restantes_pro?: number | null;
+  upgrade_solicitado_at?: string | null;
+  upgrade_nota?: string | null;
+  limites: Record<string, number>;
+  uso: Record<string, number>;
+  disponibles: Record<string, number>;
+  alcanzado: Record<string, boolean>;
+}
+
 export interface Tenant {
   id: string;
   nombre: string;
@@ -190,6 +205,11 @@ export interface Tenant {
   mp_access_token?: string;
   mp_public_key?: string;
   mp_activo?: boolean;
+  plan?: PlanTenant;
+  plan_desde?: string | null;
+  plan_hasta?: string | null;
+  upgrade_solicitado_at?: string | null;
+  upgrade_nota?: string | null;
   slug: string;
   activo?: boolean;
   created_at: string;
@@ -475,6 +495,17 @@ export const api = {
     return apiFetch<Tenant>('/tenants/me', {
       method: 'PATCH',
       body: JSON.stringify(data),
+    });
+  },
+
+  obtenerMiPlan: async () => {
+    return apiFetch<EstadoPlan>('/tenants/me/plan');
+  },
+
+  solicitarUpgradePro: async (nota: string) => {
+    return apiFetch<Tenant>('/tenants/me/upgrade', {
+      method: 'POST',
+      body: JSON.stringify({ nota }),
     });
   },
 

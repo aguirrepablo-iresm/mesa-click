@@ -19,18 +19,23 @@ const SECTIONS: { id: Section; icon: string; label: string }[] = [
   { id: 'recepcionista', icon: 'receipt_long', label: 'Recepcionista' },
 ];
 
-function renderSection(section: Section) {
+function renderSection(
+  section: Section,
+  configuracionTab: "negocio" | "apariencia" | "equipo" | "sucursales" | "planes" | "mercadopago",
+  onTenantUpdate: (t: Tenant) => void,
+) {
   switch (section) {
     case 'carta': return <CartaSection />;
     case 'mesas': return <MesasSection />;
     case 'recepcionista': return <RecepcionistaSection />;
-    case 'configuracion': return <ConfiguracionSection />;
+    case 'configuracion': return <ConfiguracionSection initialTab={configuracionTab} onTenantUpdate={onTenantUpdate} />;
   }
 }
 
 export default function DashboardPage() {
   const router = useRouter();
   const [activeSection, setActiveSection] = useState<Section>('carta');
+  const [configuracionTab, setConfiguracionTab] = useState<"negocio" | "apariencia" | "equipo" | "sucursales" | "planes" | "mercadopago">("negocio");
   const [isExpanded, setIsExpanded] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [tenant, setTenant] = useState<Tenant | null>(null);
@@ -97,9 +102,27 @@ export default function DashboardPage() {
             {tenant ? tenant.nombre : "Admin"}
           </span>
           {tenant && (
-            <span className="hidden rounded-full border border-concrete bg-ghost-fog px-8 py-2 text-10 font-mono text-sage-green lg:inline-block">
-              /{tenant.slug}
-            </span>
+            <>
+              <span className="hidden rounded-full border border-concrete bg-ghost-fog px-8 py-2 text-10 font-mono text-sage-green lg:inline-block">
+                /{tenant.slug}
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setConfiguracionTab("planes");
+                  setActiveSection("configuracion");
+                }}
+                className={`inline-flex items-center gap-4 rounded-full border px-8 py-2 text-10 font-mono transition-colors ${
+                  tenant.plan === "pro"
+                    ? "border-ash-graphite bg-ash-graphite text-canvas-white hover:bg-stone"
+                    : "border-concrete bg-ghost-fog text-sage-green hover:border-stone hover:text-ash-graphite"
+                }`}
+                title="Ver planes y suscripción"
+                aria-label={`Plan ${tenant.plan === "pro" ? "Pro" : "Free"}. Clic para gestionar plan.`}
+              >
+                {tenant.plan === "pro" ? "PRO" : "FREE"}
+              </button>
+            </>
           )}
         </div>
         <div className="flex shrink-0 items-center gap-4 sm:gap-8">
@@ -127,6 +150,9 @@ export default function DashboardPage() {
                     <p className="mt-2 truncate text-11 text-sage-green">Sesión activa</p>
                   </div>
                   <UserMenuItem icon="account_circle" label="Perfil" />
+                  <div onClick={() => { setConfiguracionTab("planes"); setActiveSection("configuracion"); setIsUserMenuOpen(false); }}>
+                    <UserMenuItem icon="credit_card" label="Planes y suscripción" />
+                  </div>
                   <Link href="/kds" target="_blank" onClick={() => setIsUserMenuOpen(false)}>
                     <UserMenuItem icon="skillet" label="Pantalla Cocina (KDS) ↗" />
                   </Link>
@@ -287,7 +313,7 @@ export default function DashboardPage() {
         </aside>
 
         <main className="min-w-0 flex-1 overflow-hidden">
-          {renderSection(activeSection)}
+          {renderSection(activeSection, configuracionTab, setTenant)}
         </main>
       </div>
 
