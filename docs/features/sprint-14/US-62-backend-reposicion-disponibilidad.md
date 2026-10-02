@@ -3,8 +3,8 @@
 > **Sprint**: Sprint 14 (28/09 – 04/10/2026)  
 > **Épica**: Disponibilidad de Ítems (86) & Menús por Franja Horaria  
 > **Tipo**: `Backend`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
+> **Estado**: ✅ **Resuelta**  
+> **Asignado a**: Antigravity (AI Agent)  
 > **Rama de trabajo**: `feat/US-62-backend-disponibilidad`  
 
 ---
@@ -17,19 +17,19 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Columna `disponible BOOLEAN DEFAULT true` y `reponer_diariamente BOOLEAN DEFAULT true` en tabla `articulos`.
-- [ ] Endpoint `PATCH /carta/articulos/{id}/disponibilidad`.
-- [ ] Endpoint `POST /carta/reponer-todos` para restaurar stock de todos los ítems de una sucursal con un solo clic.
-- [ ] Lógica de reposición automática al detectar apertura de nuevo turno diario.
+- [x] Columna `disponible BOOLEAN DEFAULT true` y `reponer_diariamente BOOLEAN DEFAULT true` en tabla `articulos`.
+- [x] Endpoint `PATCH /carta/articulos/{id}/disponibilidad`.
+- [x] Endpoint `POST /carta/reponer-todos` para restaurar stock de todos los ítems de una sucursal con un solo clic.
+- [x] Lógica de reposición automática al detectar apertura de nuevo turno diario.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Migración SQL para columnas de disponibilidad.
-- [ ] Actualizar store y handler en Go.
-- [ ] Endpoint masivo de reposición de stock.
-- [ ] Tests unitarios en `carta/service_test.go`.
+- [x] Migración SQL para columnas de disponibilidad.
+- [x] Actualizar store y handler en Go.
+- [x] Endpoint masivo de reposición de stock.
+- [x] Tests unitarios en `carta/service_test.go`.
 
 ---
 

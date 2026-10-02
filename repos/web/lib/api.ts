@@ -281,6 +281,8 @@ export interface ArticuloAPI {
   precio: number;
   foto_url?: string;
   activo: boolean;
+  disponible?: boolean;
+  reponer_diariamente?: boolean;
   orden: number;
   created_at: string;
   updated_at: string;
@@ -348,6 +350,7 @@ export interface ArticuloPublico {
   precio: number;
   foto_url?: string;
   activo: boolean;
+  disponible?: boolean;
   variantes?: VariantePublica[];
 }
 
@@ -534,6 +537,19 @@ export const api = {
     });
   },
 
+  actualizarDisponibilidadArticulo: async (id: string, disponible: boolean) => {
+    return apiFetch<ArticuloAPI>(`/carta/articulos/${id}/disponibilidad`, {
+      method: 'PATCH',
+      body: JSON.stringify({ disponible }),
+    });
+  },
+
+  reponerTodosLosArticulos: async () => {
+    return apiFetch<{ repuestos: number }>('/carta/reponer-todos', {
+      method: 'POST',
+    });
+  },
+
   ajustarPrecios: async (data: AjustePreciosInput) => {
     return apiFetch<AjustePreciosResultado>('/carta/precios/ajuste-porcentual', {
       method: 'PATCH',
@@ -691,8 +707,12 @@ export const api = {
     return `${getApiBaseUrl()}/pedidos/${encodeURIComponent(pedidoId)}/eventos`;
   },
 
-  obtenerEventosMesaUrl: (mesaId: string) => {
-    return `${getApiBaseUrl()}/publica/mesas/${encodeURIComponent(mesaId)}/eventos`;
+  obtenerEventosMesaUrl: (mesaId: string, tenantId?: string, sucursalId?: string) => {
+    const params = new URLSearchParams();
+    if (tenantId) params.set('tenant_id', tenantId);
+    if (sucursalId) params.set('sucursal_id', sucursalId);
+    const qs = params.toString();
+    return `${getApiBaseUrl()}/publica/mesas/${encodeURIComponent(mesaId)}/eventos${qs ? `?${qs}` : ''}`;
   },
 
   obtenerEventosSucursalUrl: (sucursalId: string) => {

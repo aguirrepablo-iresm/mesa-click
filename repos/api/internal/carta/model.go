@@ -16,15 +16,17 @@ type Categoria struct {
 }
 
 type Articulo struct {
-	ID          string     `json:"id"`
-	TenantID    string     `json:"tenant_id,omitempty"`
-	CategoriaID string     `json:"categoria_id"`
-	Nombre      string     `json:"nombre"`
-	Descripcion string     `json:"descripcion,omitempty"`
-	Precio      float64    `json:"precio"`
-	FotoURL     string     `json:"foto_url,omitempty"`
-	Activo      bool       `json:"activo"`
-	Variantes   []Variante `json:"variantes,omitempty"`
+	ID                 string     `json:"id"`
+	TenantID           string     `json:"tenant_id,omitempty"`
+	CategoriaID        string     `json:"categoria_id"`
+	Nombre             string     `json:"nombre"`
+	Descripcion        string     `json:"descripcion,omitempty"`
+	Precio             float64    `json:"precio"`
+	FotoURL            string     `json:"foto_url,omitempty"`
+	Activo             bool       `json:"activo"`
+	Disponible         bool       `json:"disponible"`
+	ReponerDiariamente bool       `json:"reponer_diariamente"`
+	Variantes          []Variante `json:"variantes,omitempty"`
 }
 
 type Variante struct {
@@ -67,9 +69,19 @@ type ArticuloInput struct {
 }
 
 type ArticuloUpdate struct {
-	Nombre *string  `json:"nombre"`
-	Precio *float64 `json:"precio"`
-	Activo *bool    `json:"activo"`
+	Nombre             *string  `json:"nombre"`
+	Precio             *float64 `json:"precio"`
+	Activo             *bool    `json:"activo"`
+	Disponible         *bool    `json:"disponible"`
+	ReponerDiariamente *bool    `json:"reponer_diariamente"`
+}
+
+type ActualizarDisponibilidadInput struct {
+	Disponible bool `json:"disponible"`
+}
+
+type ReponerTodosResultado struct {
+	Repuestos int `json:"repuestos"`
 }
 
 const (

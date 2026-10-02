@@ -9,9 +9,11 @@ import (
 )
 
 type mockStore struct {
-	categorias       []carta.Categoria
-	articulos        []carta.Articulo
-	ajustarPreciosFn func(ctx context.Context, tenantID string, input carta.AjustePreciosInput) (*carta.AjustePreciosResultado, error)
+	categorias         []carta.Categoria
+	articulos          []carta.Articulo
+	ajustarPreciosFn   func(ctx context.Context, tenantID string, input carta.AjustePreciosInput) (*carta.AjustePreciosResultado, error)
+	actualizarDispFn   func(ctx context.Context, id, tenantID string, disponible bool) (*carta.Articulo, error)
+	reponerTodosFn     func(ctx context.Context, tenantID string) (int, error)
 }
 
 func (m *mockStore) ListarCategorias(ctx context.Context, tenantID string) ([]carta.Categoria, error) {
@@ -48,6 +50,31 @@ func (m *mockStore) CrearArticulo(ctx context.Context, tenantID string, input ca
 }
 func (m *mockStore) ActualizarArticulo(ctx context.Context, id, tenantID string, u carta.ArticuloUpdate) (*carta.Articulo, error) {
 	return &carta.Articulo{ID: id}, nil
+}
+func (m *mockStore) ActualizarDisponibilidad(ctx context.Context, id, tenantID string, disponible bool) (*carta.Articulo, error) {
+	if m.actualizarDispFn != nil {
+		return m.actualizarDispFn(ctx, id, tenantID, disponible)
+	}
+	for i, a := range m.articulos {
+		if a.ID == id {
+			m.articulos[i].Disponible = disponible
+			return &m.articulos[i], nil
+		}
+	}
+	return &carta.Articulo{ID: id, Disponible: disponible}, nil
+}
+func (m *mockStore) ReponerTodos(ctx context.Context, tenantID string) (int, error) {
+	if m.reponerTodosFn != nil {
+		return m.reponerTodosFn(ctx, tenantID)
+	}
+	count := 0
+	for i := range m.articulos {
+		if !m.articulos[i].Disponible {
+			m.articulos[i].Disponible = true
+			count++
+		}
+	}
+	return count, nil
 }
 func (m *mockStore) AjustarPrecios(ctx context.Context, tenantID string, input carta.AjustePreciosInput) (*carta.AjustePreciosResultado, error) {
 	if m.ajustarPreciosFn != nil {
@@ -185,5 +212,64 @@ func TestAjustarPrecios_SinProductos(t *testing.T) {
 	_, err := carta.NuevoService(store).AjustarPrecios(context.Background(), "t-1", carta.AjustePreciosInput{Porcentaje: 10})
 	if !errors.Is(err, carta.ErrValidation) {
 		t.Fatalf("se esperaba ErrValidation, obtenido: %v", err)
+	}
+}
+
+func TestActualizarDisponibilidad(t *testing.T) {
+	store := &mockStore{
+		articulos: []carta.Articulo{
+			{ID: "art-1", TenantID: "t-1", Nombre: "Hamburguesa", Disponible: true},
+		},
+	}
+	svc := carta.NuevoService(store)
+
+	// Marcar como 86 (agotado)
+	art, err := svc.ActualizarDisponibilidad(context.Background(), "art-1", "t-1", false)
+	if err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+	if art.Disponible {
+		t.Fatalf("se esperaba disponible=false, obtenido: %v", art.Disponible)
+	}
+
+	// Marcar nuevamente como disponible
+	art, err = svc.ActualizarDisponibilidad(context.Background(), "art-1", "t-1", true)
+	if err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+	if !art.Disponible {
+		t.Fatalf("se esperaba disponible=true, obtenido: %v", art.Disponible)
+	}
+}
+
+func TestActualizarDisponibilidad_Validacion(t *testing.T) {
+	svc := carta.NuevoService(&mockStore{})
+	_, err := svc.ActualizarDisponibilidad(context.Background(), "   ", "t-1", false)
+	if !errors.Is(err, carta.ErrValidation) {
+		t.Fatalf("se esperaba ErrValidation por ID vacío, obtenido: %v", err)
+	}
+}
+
+func TestReponerTodos(t *testing.T) {
+	store := &mockStore{
+		articulos: []carta.Articulo{
+			{ID: "art-1", TenantID: "t-1", Nombre: "Hamburguesa", Disponible: false},
+			{ID: "art-2", TenantID: "t-1", Nombre: "Cerveza", Disponible: false},
+			{ID: "art-3", TenantID: "t-1", Nombre: "Papas", Disponible: true},
+		},
+	}
+	svc := carta.NuevoService(store)
+
+	res, err := svc.ReponerTodos(context.Background(), "t-1")
+	if err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+	if res.Repuestos != 2 {
+		t.Fatalf("repuestos: se esperaba 2, obtenido: %d", res.Repuestos)
+	}
+	for _, a := range store.articulos {
+		if !a.Disponible {
+			t.Fatalf("el artículo %s debería estar disponible", a.Nombre)
+		}
 	}
 }

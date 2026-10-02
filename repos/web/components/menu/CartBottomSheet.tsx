@@ -7,6 +7,7 @@ import type { MesaBranding } from "./BrandHeader";
 interface Props {
   branding: MesaBranding;
   items: CartItem[];
+  itemsAgotadosIds?: Set<string>;
   totalPrecio: number;
   enviando?: boolean;
   isOpen: boolean;
@@ -19,6 +20,7 @@ interface Props {
 export default function CartBottomSheet({
   branding,
   items,
+  itemsAgotadosIds,
   totalPrecio,
   enviando = false,
   isOpen,
@@ -123,6 +125,8 @@ export default function CartBottomSheet({
     }
   };
 
+  const tieneItemsAgotados = items.some(i => itemsAgotadosIds?.has(i.articuloId));
+
   return (
     <div
       className="fixed inset-0 z-40 flex items-end justify-center bg-black/60 backdrop-blur-xs transition-opacity duration-200"
@@ -195,11 +199,34 @@ export default function CartBottomSheet({
 
         {/* Lista de ítems deslizable */}
         <div className="min-h-0 flex-1 overflow-y-auto px-16 py-14 space-y-12 overscroll-contain">
-          {items.map(item => (
-            <div key={item.id} className="mesa-surface mesa-border space-y-10 rounded-lg border p-14 shadow-2xs">
-              <div className="flex items-start justify-between gap-8">
-                <div className="min-w-0 flex-1">
-                  <span className="mesa-text text-14 font-medium leading-snug">{item.nombre}</span>
+          {tieneItemsAgotados && (
+            <div className="flex items-center gap-8 rounded-lg border border-alert-red/30 bg-warm-pink/20 p-12 text-12 text-alert-red">
+              <span className="material-symbols-outlined text-18 shrink-0">error</span>
+              <span>Hay productos sin stock (86) en tu pedido. Por favor quitalos para poder confirmar.</span>
+            </div>
+          )}
+
+          {items.map(item => {
+            const estaAgotado = Boolean(itemsAgotadosIds?.has(item.articuloId));
+            return (
+              <div
+                key={item.id}
+                className={`mesa-surface mesa-border space-y-10 rounded-lg border p-14 shadow-2xs ${
+                  estaAgotado ? "border-alert-red/40 bg-warm-pink/10 opacity-80" : ""
+                }`}
+              >
+                <div className="flex items-start justify-between gap-8">
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-6 flex-wrap">
+                      <span className={`text-14 font-medium leading-snug ${estaAgotado ? "line-through text-stone" : "mesa-text"}`}>
+                        {item.nombre}
+                      </span>
+                      {estaAgotado && (
+                        <span className="inline-flex items-center rounded-md bg-stone/15 px-6 py-1 text-10 font-semibold text-stone border border-stone/30">
+                          Agotado (86)
+                        </span>
+                      )}
+                    </div>
                   {item.variantes && item.variantes.length > 0 && (
                     <div className="mt-4 flex flex-wrap gap-4">
                       {item.variantes.map(v => (
@@ -253,7 +280,8 @@ export default function CartBottomSheet({
                 onChange={e => onSetNota(item.id, e.target.value)}
               />
             </div>
-          ))}
+          );
+        })}
 
           {items.length === 0 && (
             <div className="mesa-subtle-text py-36 text-center text-13">
@@ -272,10 +300,16 @@ export default function CartBottomSheet({
           </div>
           <button
             onClick={onConfirmar}
-            disabled={items.length === 0 || enviando}
+            disabled={items.length === 0 || enviando || tieneItemsAgotados}
             className="mesa-primary-bg flex min-h-52 w-full items-center justify-center gap-8 rounded-lg px-16 py-14 text-15 font-semibold shadow-md transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
-            <span>{enviando ? "Enviando pedido..." : "Confirmar pedido"}</span>
+            <span>
+              {enviando
+                ? "Enviando pedido..."
+                : tieneItemsAgotados
+                ? "Quitar platos agotados para pedir"
+                : "Confirmar pedido"}
+            </span>
             <span className="text-16" aria-hidden="true">→</span>
           </button>
         </footer>

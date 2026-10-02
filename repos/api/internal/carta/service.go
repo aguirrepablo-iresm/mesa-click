@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"math"
 	"strings"
+
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/notificacion"
 )
 
 type Service struct {
@@ -50,6 +52,29 @@ func (svc *Service) ActualizarArticulo(ctx context.Context, id, tenantID string,
 		return nil, fmt.Errorf("precio no puede ser negativo: %w", ErrValidation)
 	}
 	return svc.store.ActualizarArticulo(ctx, id, tenantID, u)
+}
+
+func (svc *Service) ActualizarDisponibilidad(ctx context.Context, id, tenantID string, disponible bool) (*Articulo, error) {
+	if strings.TrimSpace(id) == "" {
+		return nil, fmt.Errorf("id requerido: %w", ErrValidation)
+	}
+	art, err := svc.store.ActualizarDisponibilidad(ctx, id, tenantID, disponible)
+	if err != nil {
+		return nil, err
+	}
+	// Notificar en tiempo real por SSE
+	notificacion.Instancia.Publicar(fmt.Sprintf("tenant:%s:carta", tenantID), "articulo_disponibilidad_cambiada", art)
+	return art, nil
+}
+
+func (svc *Service) ReponerTodos(ctx context.Context, tenantID string) (*ReponerTodosResultado, error) {
+	cant, err := svc.store.ReponerTodos(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+	res := &ReponerTodosResultado{Repuestos: cant}
+	notificacion.Instancia.Publicar(fmt.Sprintf("tenant:%s:carta", tenantID), "carta_repuesta", res)
+	return res, nil
 }
 
 func (svc *Service) AjustarPrecios(ctx context.Context, tenantID string, input AjustePreciosInput) (*AjustePreciosResultado, error) {

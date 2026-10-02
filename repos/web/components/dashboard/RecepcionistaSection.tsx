@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { api, PedidoAPI, Sucursal, MesaAPI } from "@/lib/api";
 import { agruparPorComensal } from "@/lib/desgloseCuenta";
 import { EmptyState, Skeleton, useToast, useConfirm } from "@/components/ui";
+import StockModal from "./StockModal";
 
 export interface PedidoVista {
   id: string;
@@ -353,6 +354,7 @@ export default function RecepcionistaSection() {
   const [sseConectado, setSseConectado] = useState(false);
   const [mesaAccionEnCurso, setMesaAccionEnCurso] = useState<'todo-listo' | 'cerrar-cuenta' | null>(null);
   const [mesaDetalleKey, setMesaDetalleKey] = useState<string | null>(null);
+  const [stockModalAbierto, setStockModalAbierto] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
 
   const transformarPedidoApi = useCallback((p: PedidoAPI, mesasMap: Record<string, MesaAPI>): PedidoVista => {
@@ -651,13 +653,22 @@ export default function RecepcionistaSection() {
             }
           </p>
         </div>
-        <div className="flex h-44 items-center gap-8 self-start rounded-full border border-concrete bg-canvas-white px-14 shadow-sm sm:self-auto">
-          <span
-            className={`h-8 w-8 rounded-full ${sseConectado ? 'bg-success animate-pulse' : 'bg-sage-green'}`}
-          />
-          <span className="text-11 font-mono text-sage-green uppercase tracking-wide">
-            {sseConectado ? 'En vivo (SSE)' : 'Conectando...'}
-          </span>
+        <div className="flex items-center gap-12 self-start sm:self-auto flex-wrap">
+          <button
+            onClick={() => setStockModalAbierto(true)}
+            className="flex h-44 items-center gap-6 rounded-lg border border-concrete bg-canvas-white px-14 text-12 font-medium text-ash-graphite shadow-2xs hover:bg-ghost-fog active:scale-95 transition-all"
+          >
+            <span className="material-symbols-outlined text-18">inventory_2</span>
+            <span>Stock (86)</span>
+          </button>
+          <div className="flex h-44 items-center gap-8 rounded-full border border-concrete bg-canvas-white px-14 shadow-sm">
+            <span
+              className={`h-8 w-8 rounded-full ${sseConectado ? 'bg-success animate-pulse' : 'bg-sage-green'}`}
+            />
+            <span className="text-11 font-mono text-sage-green uppercase tracking-wide">
+              {sseConectado ? 'En vivo (SSE)' : 'Conectando...'}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -735,6 +746,11 @@ export default function RecepcionistaSection() {
           mesaAccionEnCurso={mesaAccionEnCurso}
         />
       )}
+
+      <StockModal
+        isOpen={stockModalAbierto}
+        onClose={() => setStockModalAbierto(false)}
+      />
     </div>
   );
 }

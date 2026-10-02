@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useReducer, useState, useEffect, useRef, type CSSProperties } from "react";
+import { useCallback, useMemo, useReducer, useState, useEffect, useRef, type CSSProperties } from "react";
 import { useParams } from "next/navigation";
 import { api } from "@/lib/api";
 import type { ArticuloPublico, CategoriaPublica, MesaPublica, PedidoAPI, VariantePublica } from "@/lib/api";
@@ -400,6 +400,18 @@ export default function MesaPage() {
   const skipNextPersistRef = useRef(false);
   const hydratedTokenRef = useRef<string | null>(null);
 
+  const itemsAgotadosIds = useMemo(() => {
+    const set = new Set<string>();
+    for (const cat of menu) {
+      for (const item of cat.items) {
+        if (item.disponible === false) {
+          set.add(item.id);
+        }
+      }
+    }
+    return set;
+  }, [menu]);
+
   const isManualScrollRef = useRef(false);
   const manualScrollTimeoutRef = useRef<number | null>(null);
   const intersectingCategoriesRef = useRef<Map<string, boolean>>(new Map());
@@ -725,7 +737,7 @@ export default function MesaPage() {
                 nombre: a.nombre,
                 descripcion: a.descripcion,
                 precio: a.precio,
-                disponible: a.activo !== false,
+                disponible: a.disponible !== false && a.activo !== false,
                 variantes: a.variantes,
               })),
             }));
@@ -764,11 +776,39 @@ export default function MesaPage() {
   useEffect(() => {
     if (!mesaId || !token) return;
 
-    const eventSource = new EventSource(api.obtenerEventosMesaUrl(mesaId));
+    const eventSource = new EventSource(api.obtenerEventosMesaUrl(mesaId, mesa?.tenant_id, mesa?.sucursal_id));
     eventSource.onopen = () => {
       // SSE no conserva historial: al conectar o reconectar recuperamos el snapshot actual.
       void sincronizarPedidosMesa();
     };
+
+    eventSource.addEventListener('articulo_disponibilidad_cambiada', (event: MessageEvent<string>) => {
+      try {
+        const payload: unknown = JSON.parse(event.data);
+        if (!isRecord(payload) || typeof payload.id !== 'string') return;
+        const artId = payload.id;
+        const disponible = payload.disponible !== false;
+        setMenu(prevMenu =>
+          prevMenu.map(cat => ({
+            ...cat,
+            items: cat.items.map(item =>
+              item.id === artId ? { ...item, disponible } : item
+            ),
+          }))
+        );
+      } catch (error) {
+        console.warn('Error parseando articulo_disponibilidad_cambiada:', error);
+      }
+    });
+
+    eventSource.addEventListener('carta_repuesta', () => {
+      setMenu(prevMenu =>
+        prevMenu.map(cat => ({
+          ...cat,
+          items: cat.items.map(item => ({ ...item, disponible: true })),
+        }))
+      );
+    });
 
     eventSource.addEventListener('pedido_creado', (event: MessageEvent<string>) => {
       try {
@@ -841,8 +881,13 @@ export default function MesaPage() {
     nombre: string;
     descripcion?: string;
     precio: number;
+    disponible?: boolean;
     variantes?: VariantePublica[];
   }) => {
+    if (item.disponible === false) {
+      alert(`"${item.nombre}" se encuentra agotado momentáneamente.`);
+      return;
+    }
     if (item.variantes && item.variantes.length > 0) {
       setItemParaPersonalizar(item);
     } else {
@@ -890,6 +935,21 @@ export default function MesaPage() {
       setEditandoComensal(false);
       return;
     }
+
+    // Validación preventiva de stock en carrito (US-61)
+    const itemsAgotados = state.items.filter(cartItem => {
+      for (const cat of menu) {
+        const found = cat.items.find(i => i.id === cartItem.articuloId);
+        if (found && found.disponible === false) return true;
+      }
+      return false;
+    });
+    if (itemsAgotados.length > 0) {
+      const nombres = itemsAgotados.map(i => `"${i.nombre}"`).join(', ');
+      alert(`El producto ${nombres} se encuentra agotado (86) en cocina/barra. Por favor quitalo de tu carrito para poder confirmar.`);
+      return;
+    }
+
     setEnviandoPedido(true);
     const itemsEnviados = state.items.map(item => ({
       ...item,
@@ -915,6 +975,11 @@ export default function MesaPage() {
       setCarritoAbierto(false);
     } catch (err) {
       console.error("No se pudo enviar el pedido a la API:", err);
+      const mensaje = err instanceof Error && err.message ? err.message : '';
+      if (mensaje.toLowerCase().includes('agotado')) {
+        alert(mensaje);
+        return;
+      }
       try {
         if (token) {
           const mesaActualizada = await api.obtenerMesaPorQR(token);
@@ -1129,35 +1194,32 @@ export default function MesaPage() {
           onSelect={handleSeleccionarCategoria}
         />
         <div className="space-y-28 px-16 pt-16 pb-40">
-          {menu.map(cat => {
-            const itemsDisponibles = cat.items.filter(i => i.disponible);
-            return (
-              <section
-                key={cat.id}
-                id={`categoria-${cat.id}`}
-                className="scroll-mt-[140px] space-y-12"
-              >
-                <div className="border-b mesa-border pb-6">
-                  <h2 className="mesa-text text-16 font-semibold tracking-tight">{cat.nombre}</h2>
-                </div>
-                <div className="space-y-12">
-                  {itemsDisponibles.map(item => (
-                    <ItemCard
-                      key={item.id}
-                      item={item}
-                      cantidad={state.items.filter(i => i.articuloId === item.id).reduce((sum, i) => sum + i.cantidad, 0)}
-                      onAgregar={() => handleIntentarAgregarItem(item)}
-                    />
-                  ))}
-                  {itemsDisponibles.length === 0 && (
-                    <div className="mesa-subtle-text py-16 text-center text-12">
-                      No hay artículos disponibles en esta categoría.
-                    </div>
-                  )}
-                </div>
-              </section>
-            );
-          })}
+          {menu.map(cat => (
+            <section
+              key={cat.id}
+              id={`categoria-${cat.id}`}
+              className="scroll-mt-[140px] space-y-12"
+            >
+              <div className="border-b mesa-border pb-6">
+                <h2 className="mesa-text text-16 font-semibold tracking-tight">{cat.nombre}</h2>
+              </div>
+              <div className="space-y-12">
+                {cat.items.map(item => (
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    cantidad={state.items.filter(i => i.articuloId === item.id).reduce((sum, i) => sum + i.cantidad, 0)}
+                    onAgregar={() => handleIntentarAgregarItem(item)}
+                  />
+                ))}
+                {cat.items.length === 0 && (
+                  <div className="mesa-subtle-text py-16 text-center text-12">
+                    No hay artículos en esta categoría.
+                  </div>
+                )}
+              </div>
+            </section>
+          ))}
 
           {menu.length === 0 && (
             <div className="mesa-subtle-text py-40 text-center text-13">
@@ -1208,6 +1270,7 @@ export default function MesaPage() {
       <CartBottomSheet
         branding={branding}
         items={state.items}
+        itemsAgotadosIds={itemsAgotadosIds}
         totalPrecio={totalPrecio}
         enviando={enviandoPedido}
         isOpen={carritoAbierto}
