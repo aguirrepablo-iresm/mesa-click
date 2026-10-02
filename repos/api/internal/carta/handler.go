@@ -417,6 +417,46 @@ func (h *Handlers) ImportarCarta(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resultado)
 }
 
+func (h *Handlers) ActualizarDisponibilidad(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		jsonError(w, "id requerido", http.StatusBadRequest)
+		return
+	}
+
+	var input ActualizarDisponibilidadInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		jsonError(w, "cuerpo de solicitud inválido", http.StatusBadRequest)
+		return
+	}
+
+	claims := auth.ClaimsFromContext(r.Context())
+	a, err := h.svc.ActualizarDisponibilidad(r.Context(), id, claims.TenantID, input.Disponible)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			jsonError(w, "artículo no encontrado", http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, ErrValidation) {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		jsonError(w, "error actualizando disponibilidad", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, a)
+}
+
+func (h *Handlers) ReponerTodos(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	res, err := h.svc.ReponerTodos(r.Context(), claims.TenantID)
+	if err != nil {
+		jsonError(w, "error reponiendo stock", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, res)
+}
+
 func jsonOK(w http.ResponseWriter, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(v)

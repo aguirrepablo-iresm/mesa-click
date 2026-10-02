@@ -17,17 +17,19 @@ type Categoria struct {
 }
 
 type Articulo struct {
-	ID              string         `json:"id"`
-	TenantID        string         `json:"tenant_id,omitempty"`
-	CategoriaID     string         `json:"categoria_id"`
-	Nombre          string         `json:"nombre"`
-	Descripcion     string         `json:"descripcion,omitempty"`
-	Precio          float64        `json:"precio"`
-	FotoURL         string         `json:"foto_url,omitempty"`
-	Activo          bool           `json:"activo"`
-	FranjaHorariaID *string        `json:"franja_horaria_id,omitempty"`
-	Variantes       []Variante     `json:"variantes,omitempty"`
-	FranjaEfectiva  *FranjaHoraria `json:"-"`
+	ID                 string         `json:"id"`
+	TenantID           string         `json:"tenant_id,omitempty"`
+	CategoriaID        string         `json:"categoria_id"`
+	Nombre             string         `json:"nombre"`
+	Descripcion        string         `json:"descripcion,omitempty"`
+	Precio             float64        `json:"precio"`
+	FotoURL            string         `json:"foto_url,omitempty"`
+	Activo             bool           `json:"activo"`
+	Disponible         bool           `json:"disponible"`
+	ReponerDiariamente bool           `json:"reponer_diariamente"`
+	FranjaHorariaID    *string        `json:"franja_horaria_id,omitempty"`
+	Variantes          []Variante     `json:"variantes,omitempty"`
+	FranjaEfectiva     *FranjaHoraria `json:"-"`
 }
 
 // FranjaHoraria define una ventana diaria. Si el horario final es menor que el
@@ -90,9 +92,19 @@ type ArticuloInput struct {
 }
 
 type ArticuloUpdate struct {
-	Nombre *string  `json:"nombre"`
-	Precio *float64 `json:"precio"`
-	Activo *bool    `json:"activo"`
+	Nombre             *string  `json:"nombre"`
+	Precio             *float64 `json:"precio"`
+	Activo             *bool    `json:"activo"`
+	Disponible         *bool    `json:"disponible"`
+	ReponerDiariamente *bool    `json:"reponer_diariamente"`
+}
+
+type ActualizarDisponibilidadInput struct {
+	Disponible bool `json:"disponible"`
+}
+
+type ReponerTodosResultado struct {
+	Repuestos int `json:"repuestos"`
 }
 
 const (

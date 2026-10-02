@@ -3,9 +3,9 @@
 > **Sprint**: Sprint 14 (28/09 – 04/10/2026)  
 > **Épica**: Disponibilidad de Ítems (86) & Menús por Franja Horaria  
 > **Tipo**: `Integración`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
-> **Rama de trabajo**: `feat/US-61-marcado-sin-stock`  
+> **Estado**: ✅ **Resuelta**  
+> **Asignado a**: Antigravity (AI Agent)  
+> **Rama de trabajo**: `feat/US-62-backend-disponibilidad`  
 
 ---
 
@@ -17,19 +17,19 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Botón/switch rápido en la lista de platos del dashboard para alternar estado 'En stock' / 'Agotado (86)'.
-- [ ] Propagación inmediata por SSE al canal público del comensal.
-- [ ] En la vista del cliente, el plato se atenúa visualmente, se marca con badge 'Agotado' y el botón de agregar queda deshabilitado.
-- [ ] Si un cliente ya tenía el producto en el carrito, se le advierte al intentar confirmar el pedido.
+- [x] Botón/switch rápido en la lista de platos del dashboard para alternar estado 'En stock' / 'Agotado (86)'.
+- [x] Propagación inmediata por SSE al canal público del comensal.
+- [x] En la vista del cliente, el plato se atenúa visualmente, se marca con badge 'Agotado' y el botón de agregar queda deshabilitado.
+- [x] Si un cliente ya tenía el producto en el carrito, se le advierte al intentar confirmar el pedido.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Conectar evento de stock en el SSE de la carta.
-- [ ] Agregar toggle visual en `CartaSection.tsx` y en dashboard de recepción.
-- [ ] Adaptar renderizado de ítems agotados en la vista móvil comensal.
-- [ ] Validar en backend que no se puedan crear pedidos con ítems agotados.
+- [x] Conectar evento de stock en el SSE de la carta.
+- [x] Agregar toggle visual en `CartaSection.tsx` y en dashboard de recepción.
+- [x] Adaptar renderizado de ítems agotados en la vista móvil comensal.
+- [x] Validar en backend que no se puedan crear pedidos con ítems agotados.
 
 ---
 

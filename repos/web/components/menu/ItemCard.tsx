@@ -18,16 +18,31 @@ interface Props {
 
 export default function ItemCard({ item, cantidad, onAgregar }: Props) {
   const tieneVariantes = Boolean(item.variantes && item.variantes.length > 0);
+  const agotado = item.disponible === false;
 
   return (
-    <div className="mesa-surface mesa-border flex w-full min-w-0 items-start justify-between gap-12 rounded-lg border p-16 shadow-2xs transition-colors hover:border-[var(--mesa-primary)]">
+    <div
+      className={`mesa-surface mesa-border flex w-full min-w-0 items-start justify-between gap-12 rounded-lg border p-16 shadow-2xs transition-colors ${
+        agotado
+          ? "opacity-60 bg-ghost-fog/40 border-concrete"
+          : "hover:border-[var(--mesa-primary)]"
+      }`}
+    >
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-6 flex-wrap">
-          <h3 className="mesa-text break-words text-14 font-medium">{item.nombre}</h3>
-          {tieneVariantes && (
-            <span className="inline-flex items-center px-6 py-2 text-10 font-medium rounded-md bg-slate-200/60 text-slate-700">
-              Personalizable
+          <h3 className={`break-words text-14 font-medium ${agotado ? "text-stone line-through" : "mesa-text"}`}>
+            {item.nombre}
+          </h3>
+          {agotado ? (
+            <span className="inline-flex items-center px-6 py-2 text-10 font-semibold rounded-md bg-stone/15 text-stone border border-stone/30">
+              Agotado (86)
             </span>
+          ) : (
+            tieneVariantes && (
+              <span className="inline-flex items-center px-6 py-2 text-10 font-medium rounded-md bg-slate-200/60 text-slate-700">
+                Personalizable
+              </span>
+            )
           )}
         </div>
         {item.descripcion && (
@@ -35,17 +50,31 @@ export default function ItemCard({ item, cantidad, onAgregar }: Props) {
             {item.descripcion}
           </p>
         )}
-        <p className="mesa-primary mt-8 text-14 font-mono font-medium">${item.precio.toLocaleString()}</p>
+        <p className={`mt-8 text-14 font-mono font-medium ${agotado ? "text-stone" : "mesa-primary"}`}>
+          ${item.precio.toLocaleString()}
+        </p>
       </div>
-      <button
-        onClick={onAgregar}
-        aria-label={`Agregar ${item.nombre}`}
-        className={`mesa-primary-bg flex h-48 w-48 flex-shrink-0 items-center justify-center rounded-full border border-transparent text-16 font-semibold transition-all active:scale-90 ${
-          cantidad > 0 ? 'shadow-sm' : 'hover:brightness-95'
-        }`}
-      >
-        {cantidad > 0 ? cantidad : '+'}
-      </button>
+
+      {agotado ? (
+        <button
+          disabled
+          aria-label={`${item.nombre} agotado`}
+          title="Este producto se encuentra agotado momentáneamente"
+          className="flex h-48 w-48 flex-shrink-0 items-center justify-center rounded-full border border-concrete bg-ghost-fog text-stone text-12 font-medium cursor-not-allowed opacity-60"
+        >
+          ✕
+        </button>
+      ) : (
+        <button
+          onClick={onAgregar}
+          aria-label={`Agregar ${item.nombre}`}
+          className={`mesa-primary-bg flex h-48 w-48 flex-shrink-0 items-center justify-center rounded-full border border-transparent text-16 font-semibold transition-all active:scale-90 ${
+            cantidad > 0 ? 'shadow-sm' : 'hover:brightness-95'
+          }`}
+        >
+          {cantidad > 0 ? cantidad : '+'}
+        </button>
+      )}
     </div>
   );
 }
