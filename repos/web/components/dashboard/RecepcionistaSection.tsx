@@ -3,6 +3,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { api, PedidoAPI, Sucursal, MesaAPI } from "@/lib/api";
 import { agruparPorComensal } from "@/lib/desgloseCuenta";
 import { EmptyState, Skeleton, useToast, useConfirm } from "@/components/ui";
+import { playOrderReadySound } from "@/components/kds/AudioAlerts";
 
 export interface PedidoVista {
   id: string;
@@ -118,9 +119,10 @@ function PedidoDetalle({
         {pedido.estado === 'listo' && !pedido.finalizado && (
           <button
             onClick={() => onCerrar(pedido.id)}
-            className="flex min-h-44 flex-1 items-center justify-center rounded-lg bg-ash-graphite px-16 py-8 text-center text-12 font-semibold text-canvas-white transition-all hover:bg-plain-green-muted active:scale-[0.98] sm:flex-initial"
+            className="flex min-h-44 flex-1 items-center justify-center gap-6 rounded-lg bg-emerald-600 hover:bg-emerald-500 px-16 py-8 text-center text-12 font-bold text-canvas-white transition-all active:scale-[0.98] sm:flex-initial shadow-xs cursor-pointer"
           >
-            Cerrar pedido
+            <span>✓</span>
+            <span>Marcar entregado a la mesa</span>
           </button>
         )}
         {pedido.finalizado && (
@@ -152,10 +154,43 @@ function MesaCard({
   );
   const estadoMesa = calcularEstadoMesa(grupo.pedidos);
   const cuentaSolicitada = grupo.cuentaSolicitada;
+  const tienePedidosListos = grupo.pedidos.some(p => p.estado === 'listo' && !p.finalizado);
 
   return (
-    <article className={`overflow-hidden rounded-xl border bg-canvas-white shadow-sm transition-shadow hover:shadow-md ${cuentaSolicitada ? 'border-alert-red/40' : 'border-concrete'}`}>
-      <div className={`flex items-center justify-between gap-12 border-b px-16 py-14 sm:px-20 ${cuentaSolicitada ? 'border-alert-red/30 bg-warm-pink/15' : 'border-concrete/70 bg-canvas-white'}`}>
+    <article
+      className={`overflow-hidden rounded-xl border bg-canvas-white shadow-sm transition-all hover:shadow-md ${
+        tienePedidosListos
+          ? 'border-emerald-500 ring-2 ring-emerald-500/40 shadow-emerald-500/15 shadow-lg'
+          : cuentaSolicitada
+          ? 'border-alert-red/40'
+          : 'border-concrete'
+      }`}
+    >
+      {/* LUZ Y ALERTA VISUAL: PEDIDO LISTO PARA RETIRAR DE COCINA */}
+      {tienePedidosListos && (
+        <div className="flex items-center justify-between bg-emerald-600 px-16 py-8 text-white font-bold text-12 shadow-inner">
+          <div className="flex items-center gap-8">
+            <span className="relative flex h-10 w-10">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-10 w-10 bg-white"></span>
+            </span>
+            <span className="tracking-wide uppercase font-black">¡Pedido listo en cocina!</span>
+          </div>
+          <span className="text-11 bg-white/20 px-8 py-2 rounded-full font-mono">
+            Retirar y servir
+          </span>
+        </div>
+      )}
+
+      <div
+        className={`flex items-center justify-between gap-12 border-b px-16 py-14 sm:px-20 ${
+          tienePedidosListos
+            ? 'border-emerald-200/80 bg-emerald-50/60'
+            : cuentaSolicitada
+            ? 'border-alert-red/30 bg-warm-pink/15'
+            : 'border-concrete/70 bg-canvas-white'
+        }`}
+      >
         <div className="flex min-w-0 flex-wrap items-center gap-8 sm:gap-12">
           <span className="text-16 font-semibold text-ash-graphite">Mesa {grupo.mesa}</span>
           <span className="text-11 font-mono text-sage-green">
@@ -173,9 +208,16 @@ function MesaCard({
             </span>
           )}
         </div>
-        <span className={`shrink-0 rounded-full border px-10 py-3 text-11 font-semibold ${ESTADO_STYLES[estadoMesa]}`}>
-          {ESTADO_LABELS[estadoMesa]}
-        </span>
+        {tienePedidosListos ? (
+          <span className="flex items-center gap-6 rounded-full border border-emerald-500 bg-emerald-100 text-emerald-800 px-10 py-3 text-11 font-black shadow-xs animate-pulse">
+            <span className="inline-block h-8 w-8 rounded-full bg-emerald-500"></span>
+            <span>¡Listo para servir!</span>
+          </span>
+        ) : (
+          <span className={`shrink-0 rounded-full border px-10 py-3 text-11 font-semibold ${ESTADO_STYLES[estadoMesa]}`}>
+            {ESTADO_LABELS[estadoMesa]}
+          </span>
+        )}
       </div>
 
       <div className="space-y-12 px-16 py-14 sm:px-20">
@@ -201,10 +243,14 @@ function MesaCard({
           <button
             type="button"
             onClick={onOpen}
-            className={`flex min-h-44 ${cuentaSolicitada && !grupo.pagoHabilitado && onHabilitarPago ? 'flex-1' : 'w-full'} items-center justify-center gap-6 rounded-lg border border-concrete px-12 py-8 text-12 font-semibold text-ash-graphite transition-colors hover:border-stone hover:bg-ghost-fog cursor-pointer`}
+            className={`flex min-h-44 ${cuentaSolicitada && !grupo.pagoHabilitado && onHabilitarPago ? 'flex-1' : 'w-full'} items-center justify-center gap-8 rounded-lg font-bold text-12 transition-all cursor-pointer ${
+              tienePedidosListos
+                ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-sm active:scale-[0.98]'
+                : 'border border-concrete text-ash-graphite hover:border-stone hover:bg-ghost-fog'
+            }`}
           >
-            <span>Ver más</span>
-            <span aria-hidden="true">↓</span>
+            <span>{tienePedidosListos ? '🛎️ Ver / Entregar pedido' : 'Ver más'}</span>
+            <span aria-hidden="true">{tienePedidosListos ? '→' : '↓'}</span>
           </button>
         </div>
       </div>
@@ -504,17 +550,25 @@ export default function RecepcionistaSection() {
       try {
         const data: PedidoAPI = JSON.parse(e.data);
         if (data && data.id) {
-          setPedidos(prev =>
-            prev.map(p =>
-              p.id === data.id
-                ? {
-                    ...p,
-                    estado: data.estado === 'cerrado' ? 'listo' : data.estado,
-                    finalizado: data.estado === 'cerrado',
-                  }
-                : p
-            )
-          );
+          setPedidos(prev => {
+            const pedidoAnterior = prev.find(p => p.id === data.id);
+            const eraListo = pedidoAnterior?.estado === 'listo';
+            const esAhoraListo = data.estado === 'listo';
+
+            // Alerta sonora y toast cuando un pedido pasa a estar listo para retirar de cocina
+            if (esAhoraListo && !eraListo) {
+              const numMesa = mesas[data.mesa_id]?.numero || pedidoAnterior?.mesa || 'asignada';
+              toast.success(`🛎️ ¡Mesa ${numMesa}: Pedido listo para retirar de cocina!`);
+              playOrderReadySound();
+            }
+
+            const actualizado = transformarPedidoApi(data, mesas);
+            const existe = prev.some(p => p.id === data.id);
+            if (existe) {
+              return prev.map(p => (p.id === data.id ? actualizado : p));
+            }
+            return [actualizado, ...prev];
+          });
         }
       } catch (err) {
         console.warn("Error parseando pedido_actualizado SSE:", err);
@@ -758,7 +812,12 @@ export default function RecepcionistaSection() {
   }, [mesas, pedidos]);
   const mesaDetalle = mesasAgrupadas.find(grupo => grupo.key === mesaDetalleKey);
   const conAlerta = mesasAgrupadas.filter(grupo => grupo.cuentaSolicitada);
-  const sinAlerta = mesasAgrupadas.filter(grupo => !grupo.cuentaSolicitada);
+  const listosParaRetirar = mesasAgrupadas.filter(
+    grupo => !grupo.cuentaSolicitada && grupo.pedidos.some(p => p.estado === 'listo' && !p.finalizado)
+  );
+  const enCurso = mesasAgrupadas.filter(
+    grupo => !grupo.cuentaSolicitada && !grupo.pedidos.some(p => p.estado === 'listo' && !p.finalizado)
+  );
 
   return (
     <div className="h-full space-y-24 overflow-y-auto bg-ghost-fog/45 p-16 font-inter sm:p-24 md:p-32">
@@ -773,6 +832,16 @@ export default function RecepcionistaSection() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-8 self-start sm:self-auto">
+          {/* LUZ DE ALERTA: PEDIDOS LISTOS PARA RETIRAR EN COCINA */}
+          {listosParaRetirar.length > 0 && (
+            <div className="flex items-center gap-8 rounded-full border border-emerald-500 bg-emerald-500/15 px-14 py-8 text-12 font-bold text-emerald-900 shadow-sm animate-pulse">
+              <span className="relative flex h-10 w-10">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-10 w-10 bg-emerald-600"></span>
+              </span>
+              <span>🛎️ ¡{listosParaRetirar.length} {listosParaRetirar.length === 1 ? 'pedido listo en cocina!' : 'pedidos listos en cocina!'}</span>
+            </div>
+          )}
           <a
             href="/kds"
             target="_blank"
@@ -809,11 +878,12 @@ export default function RecepcionistaSection() {
         </div>
       )}
 
+      {/* 1. SOLICITUDES DE CUENTA */}
       {!loading && conAlerta.length > 0 && (
         <div className="space-y-8">
           <div className="flex items-center gap-6 text-alert-red">
             <span className="material-symbols-outlined text-18">notifications_active</span>
-            <p className="text-12 font-semibold">Solicitudes de cuenta</p>
+            <p className="text-12 font-semibold">Solicitudes de cuenta ({conAlerta.length})</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
             {conAlerta.map(grupo => (
@@ -828,14 +898,46 @@ export default function RecepcionistaSection() {
         </div>
       )}
 
-      {!loading && sinAlerta.length > 0 && (
+      {/* 2. ALERTA DESTACADA: LISTOS PARA RETIRAR DE COCINA */}
+      {!loading && listosParaRetirar.length > 0 && (
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-8 text-emerald-800">
+              <span className="relative flex h-10 w-10">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-10 w-10 bg-emerald-600"></span>
+              </span>
+              <span className="material-symbols-outlined text-20 text-emerald-600">restaurant</span>
+              <h3 className="text-13 font-black uppercase tracking-wide">
+                Listos para retirar de cocina ({listosParaRetirar.length})
+              </h3>
+            </div>
+            <span className="text-11 font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 rounded-full px-10 py-3">
+              Llevar a la mesa
+            </span>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
+            {listosParaRetirar.map(grupo => (
+              <MesaCard
+                key={grupo.key}
+                grupo={grupo}
+                onOpen={() => setMesaDetalleKey(grupo.key)}
+                onHabilitarPago={habilitarPago}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 3. PEDIDOS EN CURSO / PREPARACIÓN */}
+      {!loading && enCurso.length > 0 && (
         <div className="space-y-8">
           <div className="flex items-center gap-6 text-sage-green">
             <span className="material-symbols-outlined text-18">receipt_long</span>
-            <p className="text-12 font-semibold">Pedidos en curso</p>
+            <p className="text-12 font-semibold">Pedidos en preparación / en curso ({enCurso.length})</p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
-            {sinAlerta.map(grupo => (
+            {enCurso.map(grupo => (
               <MesaCard
                 key={grupo.key}
                 grupo={grupo}

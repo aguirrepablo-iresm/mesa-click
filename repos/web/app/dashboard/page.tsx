@@ -191,6 +191,19 @@ export default function DashboardPage() {
                 }}
               />
             ))}
+            {/* Botón Cocina (KDS) justo abajo de Recepcionista */}
+            <Link
+              href="/kds"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex min-h-44 items-center gap-12 rounded-xl px-12 text-ash-graphite hover:bg-amber-500/15 hover:text-amber-950 transition-colors font-medium text-13 border border-amber-500/30 bg-amber-500/5 group"
+              onClick={() => setIsExpanded(false)}
+              title="Abrir Pantalla de Cocina (KDS)"
+            >
+              <span className="material-symbols-outlined text-20 text-amber-600 group-hover:scale-110 transition-transform">skillet</span>
+              <span className="flex-1 font-semibold">Cocina (KDS)</span>
+              <span className="rounded bg-amber-500/20 px-6 py-1 text-10 font-bold text-amber-700">PRO ↗</span>
+            </Link>
           </nav>
           <div className="pt-16 border-t border-ghost-fog space-y-4 px-8">
             <NavItem
@@ -214,15 +227,6 @@ export default function DashboardPage() {
                 setIsExpanded(false);
               }}
             />
-            <Link
-              href="/kds"
-              target="_blank"
-              className="flex h-44 items-center gap-12 rounded-xl px-12 text-ash-graphite hover:bg-ghost-fog transition-colors font-medium text-13"
-              onClick={() => setIsExpanded(false)}
-            >
-              <span className="material-symbols-outlined text-20 text-amber-600">skillet</span>
-              <span>Cocina (KDS) ↗</span>
-            </Link>
           </div>
         </aside>
 
@@ -244,19 +248,26 @@ export default function DashboardPage() {
                 onClick={() => setActiveSection(s.id)}
               />
             ))}
-          </nav>
-          <div className={`pt-16 border-t border-ghost-fog space-y-4 flex flex-col ${isExpanded ? "px-8" : "items-center"}`}>
+            {/* Botón Cocina (KDS) justo abajo de Recepcionista */}
             <Link
               href="/kds"
               target="_blank"
-              className={`flex h-44 items-center rounded-xl transition-colors hover:bg-ghost-fog text-ash-graphite ${
+              rel="noopener noreferrer"
+              className={`flex h-44 items-center rounded-xl transition-all border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/15 hover:text-amber-950 text-ash-graphite group ${
                 isExpanded ? "w-full gap-12 px-12 py-8" : "w-44 justify-center"
               }`}
-              title="Abrir pantalla de cocina (KDS)"
+              title="Abrir Pantalla de Cocina (KDS) en nueva pestaña"
             >
-              <span className="material-symbols-outlined text-20 text-amber-600">skillet</span>
-              {isExpanded && <span className="text-13 font-medium whitespace-nowrap">Cocina (KDS) ↗</span>}
+              <span className="material-symbols-outlined text-20 text-amber-600 group-hover:scale-110 transition-transform">skillet</span>
+              {isExpanded && (
+                <div className="flex items-center justify-between flex-1 min-w-0">
+                  <span className="text-13 font-semibold whitespace-nowrap">Cocina (KDS)</span>
+                  <span className="rounded bg-amber-500/20 px-6 py-1 text-10 font-bold text-amber-700">PRO ↗</span>
+                </div>
+              )}
             </Link>
+          </nav>
+          <div className={`pt-16 border-t border-ghost-fog space-y-4 flex flex-col ${isExpanded ? "px-8" : "items-center"}`}>
             <NavItem
               icon="settings"
               label="Configuración"
