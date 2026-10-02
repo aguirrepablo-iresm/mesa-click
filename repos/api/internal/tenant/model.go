@@ -27,9 +27,14 @@ type Tenant struct {
 	GoogleReviewURL *string        `json:"google_review_url,omitempty"`
 	MPAccessToken   *string        `json:"mp_access_token,omitempty"`
 	MPPublicKey     *string        `json:"mp_public_key,omitempty"`
-	MPActivo        bool           `json:"mp_activo"`
-	Slug            string         `json:"slug"`
-	CreatedAt       time.Time      `json:"created_at"`
+	MPActivo            bool           `json:"mp_activo"`
+	Plan                string         `json:"plan"`
+	PlanDesde           *time.Time     `json:"plan_desde,omitempty"`
+	PlanHasta           *time.Time     `json:"plan_hasta,omitempty"`
+	UpgradeSolicitadoAt *time.Time     `json:"upgrade_solicitado_at,omitempty"`
+	UpgradeNota         *string        `json:"upgrade_nota,omitempty"`
+	Slug                string         `json:"slug"`
+	CreatedAt           time.Time      `json:"created_at"`
 }
 
 type OnboardingInput struct {

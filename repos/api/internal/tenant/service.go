@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/auth"
 )
@@ -136,3 +137,112 @@ func normalizarRubro(r string) string {
 		return "otro"
 	}
 }
+
+type EstadoPlanDTO struct {
+	Plan                string          `json:"plan"`
+	PlanDesde           *time.Time      `json:"plan_desde"`
+	PlanHasta           *time.Time      `json:"plan_hasta"`
+	DiasRestantesPro    *int            `json:"dias_restantes_pro"`
+	UpgradeSolicitadoAt *time.Time      `json:"upgrade_solicitado_at"`
+	UpgradeNota         *string         `json:"upgrade_nota"`
+	Limites             map[string]int  `json:"limites"`
+	Uso                 map[string]int  `json:"uso"`
+	Disponibles         map[string]int  `json:"disponibles"`
+	Alcanzado           map[string]bool `json:"alcanzado"`
+}
+
+func (svc *Service) EstadoPlan(ctx context.Context, tenantID string) (*EstadoPlanDTO, error) {
+	cuotas, err := svc.store.ObtenerEstadoCuotas(ctx, tenantID)
+	if err != nil {
+		return nil, err
+	}
+
+	now := time.Now()
+	planEfectivo := cuotas.PlanEfectivo(now)
+
+	var diasRestantes *int
+	if planEfectivo == PlanPro && cuotas.PlanHasta != nil {
+		dias := int(cuotas.PlanHasta.Sub(now).Hours() / 24)
+		if dias < 0 {
+			dias = 0
+		}
+		diasRestantes = &dias
+	}
+
+	usoMesas := cuotas.Uso[RecursoMesas]
+	usoProductos := cuotas.Uso[RecursoProductos]
+	usoSucursales := cuotas.Uso[RecursoSucursales]
+
+	dto := &EstadoPlanDTO{
+		Plan:                planEfectivo,
+		PlanDesde:           cuotas.PlanDesde,
+		PlanHasta:           cuotas.PlanHasta,
+		DiasRestantesPro:    diasRestantes,
+		UpgradeSolicitadoAt: cuotas.UpgradeSolicitadoAt,
+		UpgradeNota:         cuotas.UpgradeNota,
+		Uso: map[string]int{
+			string(RecursoMesas):      usoMesas,
+			string(RecursoProductos):  usoProductos,
+			string(RecursoSucursales): usoSucursales,
+		},
+	}
+
+	if planEfectivo == PlanPro {
+		dto.Limites = map[string]int{
+			string(RecursoMesas):      Ilimitado,
+			string(RecursoProductos):  Ilimitado,
+			string(RecursoSucursales): Ilimitado,
+		}
+		dto.Disponibles = map[string]int{
+			string(RecursoMesas):      Ilimitado,
+			string(RecursoProductos):  Ilimitado,
+			string(RecursoSucursales): Ilimitado,
+		}
+		dto.Alcanzado = map[string]bool{
+			string(RecursoMesas):      false,
+			string(RecursoProductos):  false,
+			string(RecursoSucursales): false,
+		}
+	} else {
+		dto.Limites = map[string]int{
+			string(RecursoMesas):      limitesFree[RecursoMesas],
+			string(RecursoProductos):  limitesFree[RecursoProductos],
+			string(RecursoSucursales): limitesFree[RecursoSucursales],
+		}
+
+		dispMesas := limitesFree[RecursoMesas] - usoMesas
+		if dispMesas < 0 {
+			dispMesas = 0
+		}
+		dispProductos := limitesFree[RecursoProductos] - usoProductos
+		if dispProductos < 0 {
+			dispProductos = 0
+		}
+		dispSucursales := limitesFree[RecursoSucursales] - usoSucursales
+		if dispSucursales < 0 {
+			dispSucursales = 0
+		}
+
+		dto.Disponibles = map[string]int{
+			string(RecursoMesas):      dispMesas,
+			string(RecursoProductos):  dispProductos,
+			string(RecursoSucursales): dispSucursales,
+		}
+
+		dto.Alcanzado = map[string]bool{
+			string(RecursoMesas):      usoMesas >= limitesFree[RecursoMesas],
+			string(RecursoProductos):  usoProductos >= limitesFree[RecursoProductos],
+			string(RecursoSucursales): usoSucursales >= limitesFree[RecursoSucursales],
+		}
+	}
+
+	return dto, nil
+}
+
+func (svc *Service) SolicitarUpgrade(ctx context.Context, tenantID, nota string) (*Tenant, error) {
+	if strings.TrimSpace(tenantID) == "" {
+		return nil, fmt.Errorf("%w: tenant_id requerido", ErrValidation)
+	}
+	return svc.store.RegistrarSolicitudUpgrade(ctx, tenantID, strings.TrimSpace(nota))
+}
+
