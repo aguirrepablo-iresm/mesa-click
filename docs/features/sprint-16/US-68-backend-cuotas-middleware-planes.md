@@ -3,8 +3,8 @@
 > **Sprint**: Sprint 16 (12/10 – 18/10/2026)  
 > **Épica**: Modelo Freemium (Free vs Pro) & Control de Suscripciones  
 > **Tipo**: `Backend`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
+> **Estado**: ✅ **Resuelta**  
+> **Asignado a**: Dev  
 > **Rama de trabajo**: `feat/US-68-backend-planes-cuotas`  
 
 ---
@@ -17,19 +17,19 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Estructura de datos con plan del tenant (`plan: 'free' | 'pro'`) y fechas de validez.
-- [ ] Límites plan Free: máx 10 mesas activas, máx 30 productos en carta, máx 1 sucursal.
-- [ ] Middleware en Go que intercepta creación de mesas, artículos y sucursales.
-- [ ] Retorno de error HTTP 403 Forbidden con código estructurado `PLAN_LIMIT_REACHED` y detalle de cuota.
+- [x] Estructura de datos con plan del tenant (`plan: 'free' | 'pro'`) y fechas de validez.
+- [x] Límites plan Free: máx 10 mesas activas, máx 30 productos en carta, máx 1 sucursal.
+- [x] Middleware en Go que intercepta creación de mesas, artículos y sucursales.
+- [x] Retorno de error HTTP 403 Forbidden con código estructurado `PLAN_LIMIT_REACHED` y detalle de cuota.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Migración de base de datos para plan en tabla `tenants`.
-- [ ] Middleware de verificación de límites de cuota en Go.
-- [ ] Pruebas unitarias de rechazo cuando se supera el límite en plan Free.
-- [ ] Endpoint `GET /tenants/me/plan` con estado de cuotas.
+- [x] Migración de base de datos para plan en tabla `tenants` (`024_plan_freemium_tenants.sql`).
+- [x] Middleware de verificación de límites de cuota en Go (`internal/tenant/middleware.go`).
+- [x] Pruebas unitarias de rechazo cuando se supera el límite en plan Free (`internal/tenant/middleware_test.go`, `plan_test.go`).
+- [x] Endpoint `GET /tenants/me/plan` con estado de cuotas y `POST /tenants/me/upgrade` para registrar solicitudes.
 
 ---
 

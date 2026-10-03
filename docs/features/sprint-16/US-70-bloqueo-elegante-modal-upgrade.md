@@ -3,8 +3,8 @@
 > **Sprint**: Sprint 16 (12/10 – 18/10/2026)  
 > **Épica**: Modelo Freemium (Free vs Pro) & Control de Suscripciones  
 > **Tipo**: `Integración`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
+> **Estado**: ✅ **Resuelta**  
+> **Asignado a**: Dev  
 > **Rama de trabajo**: `feat/US-70-bloqueo-upgrade-modal`  
 
 ---
@@ -17,19 +17,19 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Al presionar '+ Nueva Mesa' o '+ Nuevo Producto' habiendo alcanzado el cupo, se despliega modal educativo.
-- [ ] Mensaje explicativo sin frustración: 'Has alcanzado el límite de 10 mesas de tu plan Free'.
-- [ ] Botón directo de contacto / upgrade a Pro.
-- [ ] Manejo del error HTTP 403 `PLAN_LIMIT_REACHED` en el cliente API para abrir automáticamente el modal.
+- [x] Al presionar '+ Nueva Mesa' o '+ Nuevo Producto' habiendo alcanzado el cupo, se despliega modal educativo.
+- [x] Mensaje explicativo sin frustración: 'Has alcanzado el límite de 10 mesas de tu plan Free'.
+- [x] Botón directo de contacto / upgrade a Pro (registro en backend + mailto).
+- [x] Manejo del error HTTP 403 `PLAN_LIMIT_REACHED` en el cliente API para abrir automáticamente el modal y suprimir mensajes de error genéricos.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Diseñar modal `UpgradeModal.tsx` con estética moderna.
-- [ ] Conectar interceptor de errores en `lib/api.ts`.
-- [ ] Deshabilitar preventivamente botones de adición si el cupo está al 100%.
-- [ ] Validar experiencia de usuario fluida.
+- [x] Diseñar modal `UpgradeModal.tsx` con estética moderna, accesible y monocromática.
+- [x] Conectar interceptor y tipos en `lib/api.ts` (`DetallePlanLimit`, `esPlanLimitReached`, `detallePlanLimit`).
+- [x] Deshabilitar o interceptar preventivamente botones de adición si el cupo está al 100% en `MesasSection.tsx` y `CartaSection.tsx`.
+- [x] Validar experiencia de usuario fluida con supresión de banner de error al abrirse el modal.
 
 ---
 

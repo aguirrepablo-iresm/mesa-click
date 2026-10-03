@@ -3,8 +3,8 @@
 > **Sprint**: Sprint 16 (12/10 – 18/10/2026)  
 > **Épica**: Modelo Freemium (Free vs Pro) & Control de Suscripciones  
 > **Tipo**: `Frontend`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
+> **Estado**: ✅ **Resuelta**  
+> **Asignado a**: Dev  
 > **Rama de trabajo**: `feat/US-69-interfaz-planes`  
 
 ---
@@ -17,25 +17,28 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Pestaña o modal de suscripción en el dashboard.
-- [ ] Barras de progreso visuales con uso actual (ej. 8/10 mesas usadas, 25/30 platos).
-- [ ] Badge visible en la barra superior indicando si el comercio está en plan 'Free' o 'Pro'.
-- [ ] Comparativo claro de características entre Free y Pro.
+- [x] Pestaña o modal de suscripción en el dashboard (`PlanesSection.tsx` en `ConfiguracionSection.tsx`).
+- [x] Barras de progreso visuales con uso actual (`Progress.tsx` con soporte monocromático y métricas de cuota).
+- [x] Badge visible en la barra superior indicando si el comercio está en plan 'Free' o 'Pro' con acceso directo a planes.
+- [x] Comparativo claro de características entre Free y Pro (canónico de `LandingPricing.tsx`).
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Crear componente `PlanesSection.tsx` o integrar en `ConfiguracionSection.tsx`.
-- [ ] Diseñar barras de progreso y comparativa de planes.
-- [ ] Conectar con endpoint de estado de plan.
-- [ ] Botón interactivo 'Solicitar Upgrade Pro'.
+- [x] Crear componente `PlanesSection.tsx` e integrar pestaña `planes` en `ConfiguracionSection.tsx`.
+- [x] Diseñar barras de progreso accesibles `Progress.tsx` y tabla comparativa de planes.
+- [x] Conectar con endpoint `GET /tenants/me/plan` en `lib/api.ts`.
+- [x] Botón interactivo de doble acción 'Solicitar Upgrade Pro' (`POST /tenants/me/upgrade` + apertura de cliente de correo/WhatsApp).
 
 ---
 
 ## 4. Archivos Clave Involucrados
 
+- `repos/web/components/ui/Progress.tsx`
+- `repos/web/components/dashboard/PlanesSection.tsx`
 - `repos/web/components/dashboard/ConfiguracionSection.tsx`
+- `repos/web/app/dashboard/page.tsx`
 - `repos/web/lib/api.ts`
 
 ---

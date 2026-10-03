@@ -11,6 +11,11 @@
   * **Sprint 7:** Integración del flujo Admin (login magic link real, onboarding de negocio/sucursal y CRUD de carta/mesas conectado a PostgreSQL).
   * **Sprint 8:** Integración del flujo Cliente y Recepcionista en tiempo real (carta pública vía QR token, creación de pedidos reales y sincronización SSE en vivo).
   * **Sprint 9:** QA end-to-end de ambos happy paths, optimización responsive mobile, pipeline de CI/CD en GitHub Actions y deploy automático en Render (Docker).
+- **Sprint 16 Freemium (Free vs Pro) Completado (02/10/2026):**
+  * **US-68 (Backend cuotas):** Migración 024_plan_freemium_tenants.sql, middleware `tenant.RequerirCuota` fail-closed (401 si no hay claims, 500 en DB error, 403 con error estructurado `PLAN_LIMIT_REACHED`), endpoints `GET /tenants/me/plan` y `POST /tenants/me/upgrade`.
+  * **US-69 (Planes & Suscripción):** Componente `PlanesSection.tsx` con barras de progreso monocromáticas `Progress.tsx`, comparativa canónica Free vs Pro, badge en navbar y CTA de upgrade a Pro.
+  * **US-70 (Bloqueo elegante):** Interceptor de error 403 `PLAN_LIMIT_REACHED` en `lib/api.ts`, componente accesible `UpgradeModal.tsx`, y bloqueo preventivo con apertura automática de modal en `MesasSection.tsx` y `CartaSection.tsx`.
+  * **US-71 (Personalización Pro & Marca de Agua):** Migración 025_personalizacion_pro_tenants.sql, fail-safe SQL en consulta pública de comensal, componente `MarcaAgua.tsx` ('Potenciado por Mesa CLICK'), variables de estilo `--mesa-accent` y `--mesa-font`, y controles en `AparienciaTab` con candados Pro.
 - **Estrategia Git y Ambientes de Despliegue:**
   * Ramas principales: `main` (Producción) y `qa` (Testing).
   * Todo desarrollo de nueva feature o corrección de bug inicia a partir de `qa` (`feat/*`, `fix/*`).

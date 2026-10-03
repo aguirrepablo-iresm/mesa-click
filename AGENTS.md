@@ -39,7 +39,7 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
 | | |
 |---|---|
 | **Fase actual** | Fase 4 — Evolución, Monetización & Analítica (2do Cuatrimestre) |
-| **Sprint en curso** | **Sprint 14 (Disponibilidad de Ítems (86) & Menús por Franja Horaria)** — sprints semanales (S10 a S19, 31/08 → 08/11/2026) |
+| **Sprint en curso** | **Sprint 17 (Dashboard con Métricas (KPIs))** — sprints semanales (S10 a S19, 31/08 → 08/11/2026) |
 | **Objetivo Fase 4** | Llevar Mesa CLICK a nivel comercial: SaaS Freemium (Free vs Pro), Mobile-First comensal, carga masiva CSV/Excel, KDS de cocina, disponibilidad/franjas horarias, métricas y analítica de negocio |
 
 ### Sprints detallados
@@ -59,10 +59,10 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
 | 11 | Rediseño UI/UX Base & Onboarding guiado (tour interactivo) · 07/09–13/09 | ✓ Completado |
 | 12 | Mobile-First Comensal (sticky, bottom-sheet, personalización, pedidos colaborativos) · 14/09–20/09 | ✓ Completado |
 | 13 | Carga masiva CSV/Excel & ajuste porcentual de precios · 21/09–27/09 | ✓ Completado |
-| 14 | Disponibilidad de ítems (86) & menús por franja horaria · 28/09–04/10 | ⚡ En Curso |
-| 15 | Kitchen Display System (KDS) & impresión de comandas térmicas · 05/10–11/10 | 📋 Planificado |
-| 16 | Modelo Freemium (Free vs Pro) & control de suscripciones · 12/10–18/10 | 📋 Planificado |
-| 17 | Dashboard con métricas (KPIs, agregaciones SQL) · 19/10–25/10 | 📋 Planificado |
+| 14 | Disponibilidad de ítems (86) & menús por franja horaria · 28/09–04/10 | ✓ Completado |
+| 15 | Kitchen Display System (KDS) & impresión de comandas térmicas · 05/10–11/10 | ⚡ En Curso |
+| 16 | Modelo Freemium (Free vs Pro) & control de suscripciones · 12/10–18/10 | ✓ Completado |
+| 17 | Dashboard con métricas (KPIs, agregaciones SQL) · 19/10–25/10 | ⚡ En Curso |
 | 18 | Business Analytics, Reputación (Reseñas & Google Funnel) & exportación · 26/10–01/11 | 📋 Planificado |
 | 19 | QA E2E, Load Testing, Polish final & Demo de cierre · 02/11–08/11 | 📋 Planificado |
 
@@ -104,9 +104,8 @@ mesa-click/
 ## Reglas por fase
  
 ### Fase 4 — Evolución, Monetización & Analítica (Actual - 2do Cuatrimestre)
-- **UI/UX & Mobile-First**: Todo componente del flujo de mesa debe priorizar la interacción táctil en dispositivos móviles (tap targets de al menos 44px, gestos bottom-sheet, tabs sticky).
-- **Control de Suscripciones**: El backend debe validar las cuotas del plan (Free vs Pro) en middleware antes de permitir la creación de mesas, ítems o sucursales adicionales.
-- **Carga Masiva**: Las operaciones de importación de menús por CSV/Excel deben ser atómicas y devolver reportes claros de filas procesadas con error.
+- **Control de Suscripciones (Freemium)**: El backend valida cuotas del plan (Free: 10 mesas activas, 30 productos, 1 sucursal; Pro: ilimitado) en middleware `tenant.RequerirCuota`. Al alcanzar el límite, responde HTTP 403 Forbidden con formato estructurado `{"error": "...", "codigo": "PLAN_LIMIT_REACHED", "detalle": {"recurso": "...", "limite": N, "actual": N}}`. El cliente frontend (`lib/api.ts`) detecta `PLAN_LIMIT_REACHED` y abre preventivamente `UpgradeModal` sin mostrar carteles de error genéricos.
+- **Carga Masiva**: Las operaciones de importación de menús por CSV/Excel deben ser atómicas y devolver reportes claros de filas procesadas con error. Exclusivo de Plan Pro.
 - **Métricas**: Consultas de agregación SQL optimizadas con índices adecuados para no penalizar la performance del servidor.
 - **KDS (cocina)**: La pantalla de cocina es una vista independiente del dashboard de mozo. Los estados por ítem se propagan por SSE; la impresión térmica (ESC/POS 58/80 mm) debe tolerar fallos con reintento manual.
 - **Disponibilidad & Franjas horarias**: La carta visible del comensal se resuelve combinando disponibilidad del ítem (86), franja horaria de la sucursal y estado de apertura en una sola consulta.
