@@ -5,6 +5,7 @@ import { api, Tenant, Sucursal, getErrorMessage, getApiBaseUrl } from "@/lib/api
 import { DEFAULT_MESA_PRIMARY } from "@/components/menu/BrandHeader";
 import EquipoSection from "./EquipoSection";
 import PlanesSection from "./PlanesSection";
+import UpgradeModal from "./UpgradeModal";
 
 /* ─────────────────────────── contenedor ─────────────────────────── */
 
@@ -117,6 +118,10 @@ export default function ConfiguracionSection({
           key={`${tenant?.id ?? "sin-tenant"}-${sucursalSel?.id ?? "sin-sucursal"}`}
           sucursal={sucursalSel}
           tenant={tenant}
+          onTenantUpdate={(actualizado) => {
+            setTenant(actualizado);
+            if (onTenantUpdate) onTenantUpdate(actualizado);
+          }}
         />
       )}
       {tab === "equipo" && <EquipoTab />}
@@ -459,6 +464,9 @@ type AparienciaForm = {
   color: string;
   estilo: EstiloVisual;
   logoUrl: string;
+  colorSecundario: string;
+  tipoFuente: string;
+  mostrarMarcaAgua: boolean;
 };
 
 const COLOR_DEFAULT = DEFAULT_MESA_PRIMARY;
@@ -474,6 +482,9 @@ function aparienciaDefault(sucursal: Sucursal | null, tenant: Tenant | null): Ap
     color: tenant?.color_primario && esColorHex(tenant.color_primario) ? tenant.color_primario : COLOR_DEFAULT,
     estilo: tenant?.estilo_visual === "claro" || tenant?.estilo_visual === "oscuro" ? tenant.estilo_visual : "oscuro",
     logoUrl: tenant?.logo_url ?? "",
+    colorSecundario: tenant?.color_secundario && esColorHex(tenant.color_secundario) ? tenant.color_secundario : "",
+    tipoFuente: tenant?.tipo_fuente ?? "Inter",
+    mostrarMarcaAgua: tenant?.mostrar_marca_agua ?? true,
   };
 }
 
@@ -488,6 +499,9 @@ function leerAparienciaGuardada(storageKey: string, fallback: AparienciaForm): A
       color: typeof data.color === "string" && esColorHex(data.color) ? data.color : fallback.color,
       estilo: data.estilo === "claro" || data.estilo === "oscuro" ? data.estilo : fallback.estilo,
       logoUrl: typeof data.logoUrl === "string" ? data.logoUrl : fallback.logoUrl,
+      colorSecundario: typeof data.colorSecundario === "string" ? data.colorSecundario : fallback.colorSecundario,
+      tipoFuente: typeof data.tipoFuente === "string" ? data.tipoFuente : fallback.tipoFuente,
+      mostrarMarcaAgua: typeof data.mostrarMarcaAgua === "boolean" ? data.mostrarMarcaAgua : fallback.mostrarMarcaAgua,
     };
   } catch {
     return fallback;
@@ -503,7 +517,18 @@ function guardarAparienciaLocal(storageKey: string, apariencia: AparienciaForm) 
   }
 }
 
-function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant: Tenant | null }) {
+function AparienciaTab({
+  sucursal,
+  tenant,
+  onTenantUpdate,
+}: {
+  sucursal: Sucursal | null;
+  tenant: Tenant | null;
+  onTenantUpdate?: (t: Tenant) => void;
+}) {
+  const esPro = tenant?.plan === "pro";
+  const [modalUpgradeOpen, setModalUpgradeOpen] = useState(false);
+
   const storageKey = `mesa-click:apariencia:${tenant?.id ?? "sin-tenant"}:${sucursal?.id ?? "sin-sucursal"}`;
   const [apariencia, setApariencia] = useState(() =>
     leerAparienciaGuardada(storageKey, aparienciaDefault(sucursal, tenant)),
@@ -512,7 +537,7 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
   const [guardando, setGuardando] = useState(false);
   const [ok, setOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { nombreVisible, color, estilo, logoUrl } = apariencia;
+  const { nombreVisible, color, estilo, logoUrl, colorSecundario, tipoFuente, mostrarMarcaAgua } = apariencia;
 
   useEffect(() => {
     guardarAparienciaLocal(storageKey, apariencia);
@@ -525,12 +550,16 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
     try {
       guardarAparienciaLocal(storageKey, apariencia);
       if (tenant) {
-        await api.actualizarMiTenant({
+        const actualizado = await api.actualizarMiTenant({
           nombre_fantasia: nombreVisible.trim() || undefined,
           color_primario: esColorHex(color) ? color : undefined,
           estilo_visual: estilo,
           logo_url: logoUrl || undefined,
+          color_secundario: esPro ? (colorSecundario.trim() || undefined) : undefined,
+          tipo_fuente: esPro ? tipoFuente : undefined,
+          mostrar_marca_agua: esPro ? mostrarMarcaAgua : undefined,
         });
+        if (onTenantUpdate) onTenantUpdate(actualizado);
       }
       setOk(true);
     } catch (err: unknown) {
@@ -563,12 +592,19 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
 
   const oscuro = estilo === "oscuro";
   const colorPrincipal = esColorHex(color) ? color : COLOR_DEFAULT;
+  const colorAcentoSecundario = esColorHex(colorSecundario) ? colorSecundario : undefined;
   const phoneScreenBg = oscuro ? "#111611" : "#f7f7f7";
   const phonePanelBg = oscuro ? "#18201b" : "#ffffff";
   const phoneHeaderBg = oscuro ? "#0c100d" : "#ffffff";
   const phoneText = oscuro ? "#f5f5f5" : "#0a0a0a";
   const phoneMutedText = oscuro ? "#b8beb9" : "#595959";
   const phoneBorder = oscuro ? "#283229" : "#e6e6e6";
+  const previewFont =
+    tipoFuente === "system-ui"
+      ? "system-ui, sans-serif"
+      : tipoFuente
+      ? `${tipoFuente}, sans-serif`
+      : "inherit";
 
   return (
     <div className="grid lg:grid-cols-[1fr_300px] gap-16 items-start">
@@ -620,7 +656,7 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
             <div className="h-72 w-full px-12 rounded-md border border-concrete bg-canvas-white flex items-center gap-12">
               <div
                 className="relative w-48 h-48 rounded-md border border-concrete overflow-hidden shrink-0"
-                style={{ backgroundColor: color }}
+                style={{ backgroundColor: colorPrincipal }}
               >
                 <input
                   type="color"
@@ -666,8 +702,180 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
           </div>
         </Campo>
 
+        {/* ─── Personalización Avanzada Pro (US-71) ─── */}
+        <div className="pt-16 border-t border-concrete space-y-14">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-8">
+              <span className="text-12 font-mono text-ash-graphite font-semibold uppercase tracking-wider">
+                Personalización de Marca
+              </span>
+              <span className="rounded-full bg-ash-graphite text-canvas-white px-8 py-2 text-10 font-mono font-semibold uppercase">
+                Pro
+              </span>
+            </div>
+            {!esPro && (
+              <button
+                type="button"
+                onClick={() => setModalUpgradeOpen(true)}
+                className="text-11 font-medium text-ash-graphite hover:underline flex items-center gap-4 cursor-pointer"
+              >
+                <span className="material-symbols-outlined text-14 text-stone">lock</span>
+                Desbloquear con Pro
+              </button>
+            )}
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-12">
+            {/* Color secundario */}
+            <Campo label="Color secundario / Acentos (Opcional)">
+              {esPro ? (
+                <div className="h-72 w-full px-12 rounded-md border border-concrete bg-canvas-white flex items-center gap-12">
+                  <div
+                    className="relative w-48 h-48 rounded-md border border-concrete overflow-hidden shrink-0"
+                    style={{ backgroundColor: colorAcentoSecundario || "transparent" }}
+                  >
+                    <input
+                      type="color"
+                      value={colorAcentoSecundario || "#1A1A1A"}
+                      aria-label="Elegir color secundario"
+                      onChange={(e) => {
+                        setApariencia((prev) => ({ ...prev, colorSecundario: e.target.value }));
+                        setOk(false);
+                      }}
+                      className="absolute inset-0 h-full w-full opacity-0 cursor-pointer"
+                    />
+                  </div>
+                  <input
+                    className="h-48 min-w-0 flex-1 rounded-lg border border-concrete bg-canvas-white px-12 text-13 font-mono outline-none focus:border-system-black"
+                    placeholder="#Opcional"
+                    value={colorSecundario.toUpperCase()}
+                    onChange={(e) => {
+                      setApariencia((prev) => ({ ...prev, colorSecundario: e.target.value }));
+                      setOk(false);
+                    }}
+                  />
+                  {colorSecundario && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setApariencia((prev) => ({ ...prev, colorSecundario: "" }));
+                        setOk(false);
+                      }}
+                      className="text-11 text-sage-green hover:text-alert-red px-6 py-4 cursor-pointer"
+                      title="Quitar color secundario"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              ) : (
+                <div
+                  onClick={() => setModalUpgradeOpen(true)}
+                  className="h-72 w-full px-12 rounded-md border border-concrete/70 bg-ghost-fog/40 flex items-center justify-between cursor-pointer group"
+                >
+                  <div className="flex items-center gap-10">
+                    <div className="w-48 h-48 rounded-md border border-concrete bg-concrete/40 grid place-items-center">
+                      <span className="material-symbols-outlined text-18 text-stone">palette</span>
+                    </div>
+                    <div>
+                      <span className="block text-12 font-medium text-ash-graphite">Personalizar acentos</span>
+                      <span className="block text-10 text-sage-green">Disponible en plan Pro</span>
+                    </div>
+                  </div>
+                  <span className="material-symbols-outlined text-16 text-stone group-hover:text-ash-graphite">lock</span>
+                </div>
+              )}
+            </Campo>
+
+            {/* Tipografía de la carta */}
+            <Campo label="Tipografía de la carta digital">
+              {esPro ? (
+                <select
+                  className={INPUT}
+                  value={tipoFuente}
+                  onChange={(e) => {
+                    setApariencia((prev) => ({ ...prev, tipoFuente: e.target.value }));
+                    setOk(false);
+                  }}
+                >
+                  <option value="Inter">Inter (Predeterminada / Moderna)</option>
+                  <option value="Space Grotesk">Space Grotesk (Técnica / Urbana)</option>
+                  <option value="Playfair Display">Playfair Display (Elegante / Carta Clásica)</option>
+                  <option value="system-ui">Sistema (system-ui / Nativa)</option>
+                </select>
+              ) : (
+                <div
+                  onClick={() => setModalUpgradeOpen(true)}
+                  className="h-44 w-full px-12 rounded-lg border border-concrete/70 bg-ghost-fog/40 flex items-center justify-between cursor-pointer group"
+                >
+                  <span className="text-13 text-sage-green font-sans">Inter (Moderna)</span>
+                  <div className="flex items-center gap-4 text-stone group-hover:text-ash-graphite">
+                    <span className="text-10 font-mono uppercase font-semibold">Pro</span>
+                    <span className="material-symbols-outlined text-16">lock</span>
+                  </div>
+                </div>
+              )}
+            </Campo>
+          </div>
+
+          {/* Toggle Marca de Agua */}
+          <div className="pt-4">
+            <div
+              className={`p-14 rounded-xl border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-12 transition-colors ${
+                esPro
+                  ? "border-concrete bg-canvas-white"
+                  : "border-concrete/70 bg-ghost-fog/30 cursor-pointer"
+              }`}
+              onClick={!esPro ? () => setModalUpgradeOpen(true) : undefined}
+            >
+              <div className="space-y-2">
+                <div className="flex items-center gap-6">
+                  <p className="text-13 font-semibold text-ash-graphite">
+                    Marca de agua &quot;Potenciado por Mesa CLICK&quot;
+                  </p>
+                  {!esPro && (
+                    <span className="material-symbols-outlined text-16 text-stone">lock</span>
+                  )}
+                </div>
+                <p className="text-12 text-sage-green max-w-lg">
+                  {esPro
+                    ? "Activá o desactivá el crédito de Mesa CLICK al pie de la carta digital de tus comensales."
+                    : "En el plan Free, la carta incluye un pie discreto 'Potenciado por Mesa CLICK'. Actualizá a Pro para una experiencia 100% marca blanca."}
+                </p>
+              </div>
+
+              <div className="shrink-0 flex items-center gap-8">
+                {esPro ? (
+                  <label className="flex items-center gap-8 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={mostrarMarcaAgua}
+                      onChange={(e) => {
+                        setApariencia((prev) => ({ ...prev, mostrarMarcaAgua: e.target.checked }));
+                        setOk(false);
+                      }}
+                      className="h-18 w-18 rounded border-concrete accent-plain-green cursor-pointer"
+                    />
+                    <span className="text-12 font-medium text-ash-graphite">
+                      {mostrarMarcaAgua ? "Visible" : "Oculta (Marca blanca)"}
+                    </span>
+                  </label>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setModalUpgradeOpen(true)}
+                    className="h-36 px-12 rounded-lg border border-ash-graphite bg-canvas-white text-11 font-semibold text-ash-graphite hover:bg-ghost-fog transition-colors cursor-pointer"
+                  >
+                    Quitar marca de agua
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {error && <p className="text-12 text-alert-red">{error}</p>}
-        <div className="flex items-center gap-16">
+        <div className="flex items-center gap-16 pt-8">
           <PillPrimaria onClick={handleGuardar} disabled={guardando}>
             {guardando ? "Guardando..." : "Guardar apariencia"}
           </PillPrimaria>
@@ -683,9 +891,9 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
           <div className="mx-auto w-full max-w-[260px] rounded-[30px] bg-ash-graphite p-[6px] shadow-lg">
             <div
               className="flex h-[430px] flex-col overflow-hidden rounded-[24px]"
-              style={{ background: phoneScreenBg, color: phoneText }}
+              style={{ background: phoneScreenBg, color: phoneText, fontFamily: previewFont }}
             >
-              <div className="relative flex h-[32px] shrink-0 items-start justify-between px-[16px] pt-[9px] text-[10px] font-bold leading-none">
+              <div className="relative flex h-[32px] shrink-0 items-start justify-between px-[16px] pt-[9px] text-[10px] font-bold leading-none font-sans">
                 <div className="absolute left-1/2 top-[12px] h-[4px] w-[64px] -translate-x-1/2 rounded-full bg-system-black opacity-70" />
                 <span>9:41</span>
                 <div className="flex items-center gap-[4px]">
@@ -700,7 +908,7 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
                 <div className="flex items-center gap-[9px]">
                   <div
                     className="h-[38px] w-[38px] shrink-0 overflow-hidden rounded-lg border grid place-items-center"
-                    style={{ background: phonePanelBg, borderColor: phoneBorder }}
+                    style={{ background: phonePanelBg, borderColor: colorAcentoSecundario || phoneBorder }}
                   >
                     {logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -730,7 +938,11 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
                   </span>
                   <span
                     className="grid h-[38px] shrink-0 place-items-center rounded-full border px-[10px] text-[12px] font-medium leading-none"
-                    style={{ color: phoneMutedText, borderColor: phoneBorder, background: phonePanelBg }}
+                    style={{
+                      color: phoneMutedText,
+                      borderColor: colorAcentoSecundario || phoneBorder,
+                      background: phonePanelBg,
+                    }}
                   >
                     Dulces
                   </span>
@@ -771,6 +983,15 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
                 </div>
               </div>
 
+              {mostrarMarcaAgua && (
+                <div
+                  className="px-[12px] py-[4px] text-center text-[9px] font-mono tracking-wider opacity-60 shrink-0"
+                  style={{ color: phoneMutedText }}
+                >
+                  ⚡ Potenciado por <span className="font-bold">Mesa CLICK</span>
+                </div>
+              )}
+
               <div
                 className="mx-[12px] mb-[12px] flex h-[42px] shrink-0 items-center justify-between rounded-full px-[14px] text-white"
                 style={{ background: colorPrincipal }}
@@ -782,6 +1003,12 @@ function AparienciaTab({ sucursal, tenant }: { sucursal: Sucursal | null; tenant
           </div>
         </div>
       </div>
+
+      <UpgradeModal
+        isOpen={modalUpgradeOpen}
+        onClose={() => setModalUpgradeOpen(false)}
+        recurso="personalizacion"
+      />
     </div>
   );
 }

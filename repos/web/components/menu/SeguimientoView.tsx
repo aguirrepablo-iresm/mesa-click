@@ -3,6 +3,7 @@ import type { CartItem, EstadoPedido } from "@/app/mesa/[token]/page";
 import { agruparPorComensal } from "@/lib/desgloseCuenta";
 import BrandHeader from "./BrandHeader";
 import type { MesaBranding } from "./BrandHeader";
+import MarcaAgua from "./MarcaAgua";
 
 interface Props {
   branding: MesaBranding;
@@ -14,6 +15,7 @@ interface Props {
   mesa: number;
   comensalId?: string;
   comensalNombre?: string;
+  mostrarMarcaAgua?: boolean;
   onCambiarComensal?: () => void;
   onAgregarMas: () => void;
   onPedirCuenta: () => Promise<void> | void;
@@ -49,6 +51,7 @@ export default function SeguimientoView({
   mesa,
   comensalId,
   comensalNombre,
+  mostrarMarcaAgua = true,
   onCambiarComensal,
   onAgregarMas,
   onPedirCuenta,
@@ -340,6 +343,8 @@ export default function SeguimientoView({
               )}
             </div>
           ) : null}
+
+          {mostrarMarcaAgua && <MarcaAgua />}
         </div>
       </div>
 

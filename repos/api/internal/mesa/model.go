@@ -49,4 +49,8 @@ type MesaPublica struct {
 	ColorPrimario         *string `json:"color_primario,omitempty"`
 	EstiloVisual          *string `json:"estilo_visual,omitempty"`
 	MercadoPagoHabilitado bool    `json:"mercadopago_habilitado"`
+	Plan                  string  `json:"plan"`
+	MostrarMarcaAgua      bool    `json:"mostrar_marca_agua"`
+	ColorSecundario       *string `json:"color_secundario,omitempty"`
+	TipoFuente            *string `json:"tipo_fuente,omitempty"`
 }

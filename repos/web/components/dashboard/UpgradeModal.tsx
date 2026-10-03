@@ -7,14 +7,14 @@ import { Progress } from "@/components/ui/Progress";
 export interface UpgradeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  recurso: "mesas" | "productos" | "sucursales" | "carga_masiva";
+  recurso: "mesas" | "productos" | "sucursales" | "carga_masiva" | "personalizacion";
   limite?: number;
   uso?: number;
   onUpgradeSolicitado?: () => void;
 }
 
 const RECURSO_INFO: Record<
-  "mesas" | "productos" | "sucursales" | "carga_masiva",
+  "mesas" | "productos" | "sucursales" | "carga_masiva" | "personalizacion",
   {
     nombre: string;
     nombrePlural: string;
@@ -55,6 +55,14 @@ const RECURSO_INFO: Record<
       "La importación masiva de productos vía archivo es una función exclusiva del plan Pro.",
     icono: "upload_file",
   },
+  personalizacion: {
+    nombre: "personalización",
+    nombrePlural: "personalizaciones",
+    limiteDefault: 0,
+    mensaje:
+      "El retiro de la marca de agua y los colores y tipografías extendidas son funciones exclusivas del plan Pro.",
+    icono: "palette",
+  },
 };
 
 const BENEFICIOS_PRO = [
@@ -91,7 +99,7 @@ export default function UpgradeModal({
   const info = RECURSO_INFO[recurso] || RECURSO_INFO.mesas;
   const limiteEfectivo = limite ?? info.limiteDefault;
   const usoEfectivo = uso ?? limiteEfectivo;
-  const esCargaMasiva = recurso === "carga_masiva";
+  const esProOnlyFeature = recurso === "carga_masiva" || recurso === "personalizacion";
 
   const handleContactarPro = async () => {
     if (solicitando) return;
@@ -168,8 +176,8 @@ export default function UpgradeModal({
             {info.mensaje}
           </p>
 
-          {/* Métrica de cupo (si no es carga masiva) */}
-          {!esCargaMasiva && (
+          {/* Métrica de cupo (si no es función Pro-only) */}
+          {!esProOnlyFeature && (
             <div className="rounded-xl border border-concrete bg-ghost-fog/40 p-16 space-y-8">
               <div className="flex items-center justify-between text-12 font-medium">
                 <span className="text-ash-graphite">Cupo utilizado</span>
@@ -178,10 +186,8 @@ export default function UpgradeModal({
                 </span>
               </div>
               <Progress
-                value={usoEfectivo}
+                valor={usoEfectivo}
                 max={limiteEfectivo}
-                variant="danger"
-                aria-label={`Uso de ${info.nombrePlural}: ${usoEfectivo} de ${limiteEfectivo}`}
               />
             </div>
           )}

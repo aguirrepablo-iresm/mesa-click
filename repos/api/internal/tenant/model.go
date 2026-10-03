@@ -33,6 +33,9 @@ type Tenant struct {
 	PlanHasta           *time.Time     `json:"plan_hasta,omitempty"`
 	UpgradeSolicitadoAt *time.Time     `json:"upgrade_solicitado_at,omitempty"`
 	UpgradeNota         *string        `json:"upgrade_nota,omitempty"`
+	MostrarMarcaAgua    bool           `json:"mostrar_marca_agua"`
+	ColorSecundario     *string        `json:"color_secundario,omitempty"`
+	TipoFuente          *string        `json:"tipo_fuente,omitempty"`
 	Slug                string         `json:"slug"`
 	CreatedAt           time.Time      `json:"created_at"`
 }
@@ -65,4 +68,7 @@ type ActualizarTenantInput struct {
 	MPAccessToken   *string        `json:"mp_access_token,omitempty"`
 	MPPublicKey     *string        `json:"mp_public_key,omitempty"`
 	MPActivo        *bool          `json:"mp_activo,omitempty"`
+	MostrarMarcaAgua *bool         `json:"mostrar_marca_agua,omitempty"`
+	ColorSecundario  *string       `json:"color_secundario,omitempty"`
+	TipoFuente       *string       `json:"tipo_fuente,omitempty"`
 }

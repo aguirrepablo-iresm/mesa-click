@@ -189,14 +189,23 @@ func (s *pgStore) ObtenerPorQRToken(ctx context.Context, token string) (*MesaPub
 		                COALESCE(NULLIF(TRIM(su.mp_access_token), ''), NULLIF(TRIM(t.mp_access_token), '')) IS NOT NULL
 		                OR NULLIF(TRIM($2), '') IS NOT NULL
 		            )
-		        ) AS mp_habilitado
+		        ) AS mp_habilitado,
+		        COALESCE(t.plan, 'free') AS plan,
+		        CASE
+		            WHEN COALESCE(t.plan, 'free') = 'pro' AND (t.plan_hasta IS NULL OR t.plan_hasta > NOW())
+		            THEN COALESCE(t.mostrar_marca_agua, true)
+		            ELSE true
+		        END AS mostrar_marca_agua,
+		        t.color_secundario,
+		        t.tipo_fuente
 		 FROM mesas m
 		 JOIN sucursales su ON su.id = m.sucursal_id
 		 JOIN tenants t ON t.id = su.tenant_id
 		 WHERE m.qr_token = $1`, token, defaultToken,
 	).Scan(&mp.ID, &mp.Numero, &mp.SucursalID, &mp.TenantID, &mp.Estado,
 		&mp.CuentaSolicitada, &mp.PagoHabilitado, &mp.CuentaVersion,
-		&mp.Nombre, &mp.LogoURL, &mp.ColorPrimario, &mp.EstiloVisual, &mp.MercadoPagoHabilitado)
+		&mp.Nombre, &mp.LogoURL, &mp.ColorPrimario, &mp.EstiloVisual, &mp.MercadoPagoHabilitado,
+		&mp.Plan, &mp.MostrarMarcaAgua, &mp.ColorSecundario, &mp.TipoFuente)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound

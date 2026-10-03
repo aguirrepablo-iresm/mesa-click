@@ -7,6 +7,9 @@ export interface MesaBranding {
   logo_url?: string | null;
   color_primario?: string | null;
   estilo_visual?: string | null;
+  plan?: string | null;
+  color_secundario?: string | null;
+  tipo_fuente?: string | null;
 }
 
 export interface MesaTheme {
@@ -49,23 +52,32 @@ export function buildMesaTheme(branding: MesaBranding): MesaTheme {
   const { r, g, b } = hexToRgb(primaryColor);
   const dark = visualStyle === "oscuro";
 
+  const styleObj: Record<string, string> = {
+    "--mesa-primary": primaryColor,
+    "--mesa-primary-contrast": getContrastColor(primaryColor),
+    "--mesa-primary-soft": `rgba(${r}, ${g}, ${b}, 0.14)`,
+    // Mantener estos valores alineados con la vista previa de Configuración.
+    "--mesa-background": dark ? "#111611" : "#f7f7f7",
+    "--mesa-header": dark ? "#0c100d" : "#ffffff",
+    "--mesa-surface": dark ? "#18201b" : "#ffffff",
+    "--mesa-subtle-surface": dark ? "#202a23" : "#f0f0f0",
+    "--mesa-text": dark ? "#f5f5f5" : "#0a0a0a",
+    "--mesa-muted": dark ? "#b8beb9" : "#595959",
+    "--mesa-subtle-text": dark ? "#8f9891" : "#737373",
+    "--mesa-border": dark ? "#283229" : "#e6e6e6",
+  };
+
+  if (branding.color_secundario && isHexColor(branding.color_secundario)) {
+    styleObj["--mesa-accent"] = branding.color_secundario;
+  }
+  if (branding.tipo_fuente && branding.tipo_fuente.trim() !== "") {
+    styleObj["--mesa-font"] = branding.tipo_fuente;
+  }
+
   return {
     primaryColor,
     visualStyle,
-    style: {
-      "--mesa-primary": primaryColor,
-      "--mesa-primary-contrast": getContrastColor(primaryColor),
-      "--mesa-primary-soft": `rgba(${r}, ${g}, ${b}, 0.14)`,
-      // Mantener estos valores alineados con la vista previa de Configuración.
-      "--mesa-background": dark ? "#111611" : "#f7f7f7",
-      "--mesa-header": dark ? "#0c100d" : "#ffffff",
-      "--mesa-surface": dark ? "#18201b" : "#ffffff",
-      "--mesa-subtle-surface": dark ? "#202a23" : "#f0f0f0",
-      "--mesa-text": dark ? "#f5f5f5" : "#0a0a0a",
-      "--mesa-muted": dark ? "#b8beb9" : "#595959",
-      "--mesa-subtle-text": dark ? "#8f9891" : "#737373",
-      "--mesa-border": dark ? "#283229" : "#e6e6e6",
-    } as CSSProperties,
+    style: styleObj as CSSProperties,
   };
 }
 
