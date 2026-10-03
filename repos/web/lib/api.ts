@@ -29,9 +29,40 @@ export class ApiError extends Error {
   }
 }
 
+export interface DetallePlanLimit {
+  recurso: 'mesas' | 'productos' | 'sucursales' | 'carga_masiva';
+  limite: number;
+  uso: number;
+  plan: 'free' | 'pro';
+}
+
+export function esPlanLimitReached(err: unknown): boolean {
+  if (typeof err === 'object' && err !== null) {
+    const apiErr = err as { status?: number; data?: unknown };
+    if (apiErr.status === 403 && typeof apiErr.data === 'object' && apiErr.data !== null) {
+      const data = apiErr.data as Record<string, unknown>;
+      return data.codigo === 'PLAN_LIMIT_REACHED';
+    }
+  }
+  return false;
+}
+
+export function detallePlanLimit(err: unknown): DetallePlanLimit | null {
+  if (!esPlanLimitReached(err)) return null;
+  const data = (err as { data: Record<string, unknown> }).data;
+  if (typeof data.detalle === 'object' && data.detalle !== null) {
+    return data.detalle as DetallePlanLimit;
+  }
+  return null;
+}
+
 function getApiErrorMessage(data: unknown, fallback: string) {
   if (typeof data === 'object' && data !== null) {
     const payload = data as Record<string, unknown>;
+    if (payload.codigo === 'PLAN_LIMIT_REACHED') {
+      if (typeof payload.error === 'string') return payload.error;
+      if (typeof payload.mensaje === 'string') return payload.mensaje;
+    }
     if (typeof payload.error === 'string') return payload.error;
     if (typeof payload.mensaje === 'string') return payload.mensaje;
   }
@@ -39,6 +70,10 @@ function getApiErrorMessage(data: unknown, fallback: string) {
 }
 
 export function getErrorMessage(error: unknown, fallback: string) {
+  if (esPlanLimitReached(error)) {
+    const err = error as ApiError;
+    if (typeof err.message === 'string' && err.message) return err.message;
+  }
   const message = error instanceof Error && error.message ? error.message : fallback;
   return toUserMessage(message, fallback);
 }

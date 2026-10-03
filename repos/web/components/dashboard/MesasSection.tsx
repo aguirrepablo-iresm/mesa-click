@@ -1,8 +1,9 @@
 "use client";
 import { useState, useEffect, useRef, useCallback } from "react";
 import QRCode from "qrcode";
-import { api, MesaAPI, Sucursal, getErrorMessage } from "@/lib/api";
+import { api, MesaAPI, Sucursal, EstadoPlan, esPlanLimitReached, detallePlanLimit, getErrorMessage } from "@/lib/api";
 import { EmptyState, Skeleton, useToast, useConfirm } from "@/components/ui";
+import UpgradeModal from "./UpgradeModal";
 
 function QRCanvas({ token }: { token: string }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -62,6 +63,18 @@ export default function MesasSection() {
   const [nuevoNumero, setNuevoNumero] = useState('');
   const [nuevaCapacidad, setNuevaCapacidad] = useState('4');
   const [errorMsg, setErrorMsg] = useState('');
+  const [estadoPlan, setEstadoPlan] = useState<EstadoPlan | null>(null);
+  const [modalUpgradeOpen, setModalUpgradeOpen] = useState(false);
+  const [modalLimiteInfo, setModalLimiteInfo] = useState<{ limite?: number; uso?: number }>({});
+
+  const cargarPlan = useCallback(async () => {
+    try {
+      const plan = await api.obtenerMiPlan();
+      setEstadoPlan(plan);
+    } catch (err) {
+      console.warn("No se pudo cargar el plan en MesasSection:", err);
+    }
+  }, []);
 
   const cargarMesas = useCallback(async () => {
     try {
@@ -95,10 +108,31 @@ export default function MesasSection() {
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       void cargarMesas();
+      void cargarPlan();
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [cargarMesas]);
+  }, [cargarMesas, cargarPlan]);
+
+  const limiteMesasAlcanzado = Boolean(
+    estadoPlan &&
+      estadoPlan.plan === "free" &&
+      (estadoPlan.alcanzado?.mesas === true ||
+        (estadoPlan.disponibles?.mesas !== undefined && estadoPlan.disponibles.mesas <= 0))
+  );
+
+  const handleAbrirCrearMesa = () => {
+    if (limiteMesasAlcanzado) {
+      setModalLimiteInfo({
+        limite: estadoPlan?.limites?.mesas ?? 10,
+        uso: estadoPlan?.uso?.mesas ?? mesas.length,
+      });
+      setModalUpgradeOpen(true);
+      return;
+    }
+    setErrorMsg('');
+    setMostrarFormMesa(true);
+  };
 
   const handleCrearMesa = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,7 +176,17 @@ export default function MesasSection() {
       setNuevaCapacidad('4');
       setMostrarFormMesa(false);
       toast.success('Mesa creada correctamente.');
+      void cargarPlan();
     } catch (err: unknown) {
+      if (esPlanLimitReached(err)) {
+        const detalle = detallePlanLimit(err);
+        setModalLimiteInfo({
+          limite: detalle?.limite ?? 10,
+          uso: detalle?.uso ?? 10,
+        });
+        setModalUpgradeOpen(true);
+        return;
+      }
       setErrorMsg(getErrorMessage(err, 'Error al crear la mesa.'));
     }
   };
@@ -159,6 +203,7 @@ export default function MesasSection() {
       await api.eliminarMesa(id);
       setMesas(prev => prev.filter(m => m.id !== id));
       toast.success('Mesa eliminada.');
+      void cargarPlan();
     } catch (err: unknown) {
       console.error("No se pudo eliminar mesa:", err);
       setErrorMsg(getErrorMessage(err, 'Error al eliminar la mesa.'));
@@ -174,16 +219,31 @@ export default function MesasSection() {
             {loading ? 'Cargando mesas...' : `${mesas.length} mesas configuradas con QR activo`}
           </p>
         </div>
-        <button
-          onClick={() => {
-            setErrorMsg('');
-            setMostrarFormMesa(true);
-          }}
-          className="flex h-48 shrink-0 items-center justify-center gap-8 whitespace-nowrap rounded-lg bg-plain-green px-20 text-13 font-semibold text-canvas-white shadow-sm transition-colors hover:bg-plain-green-muted"
-        >
-          <span className="material-symbols-outlined text-16">add</span>
-          Nueva mesa
-        </button>
+        <div className="flex items-center gap-8">
+          {limiteMesasAlcanzado && (
+            <span
+              className="inline-flex items-center gap-4 rounded-full border border-stone/30 bg-ghost-fog px-10 py-4 text-11 font-mono font-medium text-stone"
+              title="Límite del plan Free alcanzado"
+            >
+              <span className="material-symbols-outlined text-14">lock</span>
+              Límite alcanzado
+            </span>
+          )}
+          <button
+            onClick={handleAbrirCrearMesa}
+            className={`flex h-48 shrink-0 items-center justify-center gap-8 whitespace-nowrap rounded-lg px-20 text-13 font-semibold shadow-sm transition-colors ${
+              limiteMesasAlcanzado
+                ? "border border-concrete bg-ghost-fog text-ash-graphite hover:border-stone hover:bg-stone/10"
+                : "bg-plain-green text-canvas-white hover:bg-plain-green-muted"
+            }`}
+            aria-label={limiteMesasAlcanzado ? "Límite de mesas alcanzado. Ver opciones de plan Pro." : "Nueva mesa"}
+          >
+            <span className="material-symbols-outlined text-16">
+              {limiteMesasAlcanzado ? "lock" : "add"}
+            </span>
+            Nueva mesa
+          </button>
+        </div>
       </div>
 
       {errorMsg && (
@@ -294,11 +354,20 @@ export default function MesasSection() {
               title="No hay mesas configuradas"
               description="Creá tu primera mesa para generar el código QR que los clientes escanean."
               actionLabel="Nueva Mesa"
-              onAction={() => { setErrorMsg(''); setMostrarFormMesa(true); }}
+              onAction={handleAbrirCrearMesa}
             />
           )}
         </>
       )}
+
+      <UpgradeModal
+        isOpen={modalUpgradeOpen}
+        onClose={() => setModalUpgradeOpen(false)}
+        recurso="mesas"
+        limite={modalLimiteInfo.limite ?? estadoPlan?.limites?.mesas ?? 10}
+        uso={modalLimiteInfo.uso ?? estadoPlan?.uso?.mesas ?? mesas.length}
+        onUpgradeSolicitado={() => void cargarPlan()}
+      />
     </div>
   );
 }
