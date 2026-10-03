@@ -28,12 +28,13 @@ export default function ConfiguracionSection({
   onTenantUpdate?: (t: Tenant) => void;
 } = {}) {
   const [tab, setTab] = useState<Tab>(initialTab || "negocio");
-
-  useEffect(() => {
+  const [prevInitialTab, setPrevInitialTab] = useState(initialTab);
+  if (initialTab !== prevInitialTab) {
+    setPrevInitialTab(initialTab);
     if (initialTab) {
       setTab(initialTab);
     }
-  }, [initialTab]);
+  }
 
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
@@ -464,7 +465,6 @@ type AparienciaForm = {
   color: string;
   estilo: EstiloVisual;
   logoUrl: string;
-  colorSecundario: string;
   tipoFuente: string;
   mostrarMarcaAgua: boolean;
 };
@@ -482,7 +482,6 @@ function aparienciaDefault(sucursal: Sucursal | null, tenant: Tenant | null): Ap
     color: tenant?.color_primario && esColorHex(tenant.color_primario) ? tenant.color_primario : COLOR_DEFAULT,
     estilo: tenant?.estilo_visual === "claro" || tenant?.estilo_visual === "oscuro" ? tenant.estilo_visual : "oscuro",
     logoUrl: tenant?.logo_url ?? "",
-    colorSecundario: tenant?.color_secundario && esColorHex(tenant.color_secundario) ? tenant.color_secundario : "",
     tipoFuente: tenant?.tipo_fuente ?? "Inter",
     mostrarMarcaAgua: tenant?.mostrar_marca_agua ?? true,
   };
@@ -499,7 +498,6 @@ function leerAparienciaGuardada(storageKey: string, fallback: AparienciaForm): A
       color: typeof data.color === "string" && esColorHex(data.color) ? data.color : fallback.color,
       estilo: data.estilo === "claro" || data.estilo === "oscuro" ? data.estilo : fallback.estilo,
       logoUrl: typeof data.logoUrl === "string" ? data.logoUrl : fallback.logoUrl,
-      colorSecundario: typeof data.colorSecundario === "string" ? data.colorSecundario : fallback.colorSecundario,
       tipoFuente: typeof data.tipoFuente === "string" ? data.tipoFuente : fallback.tipoFuente,
       mostrarMarcaAgua: typeof data.mostrarMarcaAgua === "boolean" ? data.mostrarMarcaAgua : fallback.mostrarMarcaAgua,
     };
@@ -537,7 +535,7 @@ function AparienciaTab({
   const [guardando, setGuardando] = useState(false);
   const [ok, setOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { nombreVisible, color, estilo, logoUrl, colorSecundario, tipoFuente, mostrarMarcaAgua } = apariencia;
+  const { nombreVisible, color, estilo, logoUrl, tipoFuente, mostrarMarcaAgua } = apariencia;
 
   useEffect(() => {
     guardarAparienciaLocal(storageKey, apariencia);
@@ -555,7 +553,6 @@ function AparienciaTab({
           color_primario: esColorHex(color) ? color : undefined,
           estilo_visual: estilo,
           logo_url: logoUrl || undefined,
-          color_secundario: esPro ? (colorSecundario.trim() || undefined) : undefined,
           tipo_fuente: esPro ? tipoFuente : undefined,
           mostrar_marca_agua: esPro ? mostrarMarcaAgua : undefined,
         });
@@ -592,7 +589,6 @@ function AparienciaTab({
 
   const oscuro = estilo === "oscuro";
   const colorPrincipal = esColorHex(color) ? color : COLOR_DEFAULT;
-  const colorAcentoSecundario = esColorHex(colorSecundario) ? colorSecundario : undefined;
   const phoneScreenBg = oscuro ? "#111611" : "#f7f7f7";
   const phonePanelBg = oscuro ? "#18201b" : "#ffffff";
   const phoneHeaderBg = oscuro ? "#0c100d" : "#ffffff";
@@ -725,68 +721,7 @@ function AparienciaTab({
             )}
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-12">
-            {/* Color secundario */}
-            <Campo label="Color secundario / Acentos (Opcional)">
-              {esPro ? (
-                <div className="h-72 w-full px-12 rounded-md border border-concrete bg-canvas-white flex items-center gap-12">
-                  <div
-                    className="relative w-48 h-48 rounded-md border border-concrete overflow-hidden shrink-0"
-                    style={{ backgroundColor: colorAcentoSecundario || "transparent" }}
-                  >
-                    <input
-                      type="color"
-                      value={colorAcentoSecundario || "#1A1A1A"}
-                      aria-label="Elegir color secundario"
-                      onChange={(e) => {
-                        setApariencia((prev) => ({ ...prev, colorSecundario: e.target.value }));
-                        setOk(false);
-                      }}
-                      className="absolute inset-0 h-full w-full opacity-0 cursor-pointer"
-                    />
-                  </div>
-                  <input
-                    className="h-48 min-w-0 flex-1 rounded-lg border border-concrete bg-canvas-white px-12 text-13 font-mono outline-none focus:border-system-black"
-                    placeholder="#Opcional"
-                    value={colorSecundario.toUpperCase()}
-                    onChange={(e) => {
-                      setApariencia((prev) => ({ ...prev, colorSecundario: e.target.value }));
-                      setOk(false);
-                    }}
-                  />
-                  {colorSecundario && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setApariencia((prev) => ({ ...prev, colorSecundario: "" }));
-                        setOk(false);
-                      }}
-                      className="text-11 text-sage-green hover:text-alert-red px-6 py-4 cursor-pointer"
-                      title="Quitar color secundario"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div
-                  onClick={() => setModalUpgradeOpen(true)}
-                  className="h-72 w-full px-12 rounded-md border border-concrete/70 bg-ghost-fog/40 flex items-center justify-between cursor-pointer group"
-                >
-                  <div className="flex items-center gap-10">
-                    <div className="w-48 h-48 rounded-md border border-concrete bg-concrete/40 grid place-items-center">
-                      <span className="material-symbols-outlined text-18 text-stone">palette</span>
-                    </div>
-                    <div>
-                      <span className="block text-12 font-medium text-ash-graphite">Personalizar acentos</span>
-                      <span className="block text-10 text-sage-green">Disponible en plan Pro</span>
-                    </div>
-                  </div>
-                  <span className="material-symbols-outlined text-16 text-stone group-hover:text-ash-graphite">lock</span>
-                </div>
-              )}
-            </Campo>
-
+          <div>
             {/* Tipografía de la carta */}
             <Campo label="Tipografía de la carta digital">
               {esPro ? (
@@ -819,7 +754,7 @@ function AparienciaTab({
           </div>
 
           {/* Toggle Marca de Agua */}
-          <div className="pt-4">
+          <div className="pt-2">
             <div
               className={`p-14 rounded-xl border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-12 transition-colors ${
                 esPro
@@ -908,7 +843,7 @@ function AparienciaTab({
                 <div className="flex items-center gap-[9px]">
                   <div
                     className="h-[38px] w-[38px] shrink-0 overflow-hidden rounded-lg border grid place-items-center"
-                    style={{ background: phonePanelBg, borderColor: colorAcentoSecundario || phoneBorder }}
+                    style={{ background: phonePanelBg, borderColor: phoneBorder }}
                   >
                     {logoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -940,7 +875,7 @@ function AparienciaTab({
                     className="grid h-[38px] shrink-0 place-items-center rounded-full border px-[10px] text-[12px] font-medium leading-none"
                     style={{
                       color: phoneMutedText,
-                      borderColor: colorAcentoSecundario || phoneBorder,
+                      borderColor: phoneBorder,
                       background: phonePanelBg,
                     }}
                   >

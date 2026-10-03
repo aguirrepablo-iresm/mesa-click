@@ -1,6 +1,7 @@
 # Memory Index — Mesa CLICK
 
 - [Mantener docs actualizados](feedback_mantener-docs-actualizados.md) — Soy el encargado de actualizar AGENTS.md, GEMINI.md, CLAUDE.md y READMEs ante cualquier cambio de fase, sprint o arquitectura
+- [Probar antes de pushear](feedback_probar-antes-de-pushear.md) — Antes de hacer git push, siempre indicar los pasos para probar lo implementado y pedir confirmación explícita al usuario. NUNCA pushear sin confirmación.
 - **EmailSender Abstraction:** Se implementó `auth.EmailSender` para usar `LogEmailSender` localmente y `ResendEmailSender` en producción, destrabando la configuración de magic link.
 - **Sprint 4 Backend Completado:** Creados los paquetes y handlers para `internal/sucursal` (CRUD sucursales y sectores) e `internal/usuario` (CRUD equipo e invitaciones).
 - **Sprint 5 & 6 Backend Completados (25/06/2026):**

@@ -8,7 +8,6 @@ export interface MesaBranding {
   color_primario?: string | null;
   estilo_visual?: string | null;
   plan?: string | null;
-  color_secundario?: string | null;
   tipo_fuente?: string | null;
 }
 
@@ -67,9 +66,6 @@ export function buildMesaTheme(branding: MesaBranding): MesaTheme {
     "--mesa-border": dark ? "#283229" : "#e6e6e6",
   };
 
-  if (branding.color_secundario && isHexColor(branding.color_secundario)) {
-    styleObj["--mesa-accent"] = branding.color_secundario;
-  }
   if (branding.tipo_fuente && branding.tipo_fuente.trim() !== "") {
     styleObj["--mesa-font"] = branding.tipo_fuente;
   }
