@@ -863,6 +863,16 @@ function AparienciaTab({
                 </div>
               </div>
 
+              {mostrarMarcaAgua && (
+                <div
+                  className="mx-[14px] mt-[8px] flex items-center justify-center gap-[4px] rounded-md border border-dashed py-[4px] text-center text-[9px] font-mono tracking-wider opacity-75 shrink-0"
+                  style={{ borderColor: phoneBorder, color: phoneMutedText, background: phonePanelBg }}
+                >
+                  <span>⚡ Digitalizado con</span>
+                  <span className="font-bold" style={{ color: phoneText }}>Mesa CLICK</span>
+                </div>
+              )}
+
               <div className="min-h-0 flex-1 overflow-hidden px-[12px] py-[12px]">
                 <div className="mb-[10px] flex gap-[6px] overflow-hidden">
                   <span
@@ -917,15 +927,6 @@ function AparienciaTab({
                   ))}
                 </div>
               </div>
-
-              {mostrarMarcaAgua && (
-                <div
-                  className="px-[12px] py-[4px] text-center text-[9px] font-mono tracking-wider opacity-60 shrink-0"
-                  style={{ color: phoneMutedText }}
-                >
-                  ⚡ Potenciado por <span className="font-bold">Mesa CLICK</span>
-                </div>
-              )}
 
               <div
                 className="mx-[12px] mb-[12px] flex h-[42px] shrink-0 items-center justify-between rounded-full px-[14px] text-white"
