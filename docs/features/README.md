@@ -94,10 +94,10 @@
 
 | ID | Tipo | Título | Estado | Asignado | Archivo |
 |---|---|---|---|---|---|
-| **US-68** | `Backend` | Esquema de Suscripciones y Middleware de Control de Cuotas | ✅ Resuelta | Antigravity (AI Agent) | [Ver detalle](sprint-16/US-68-backend-cuotas-middleware-planes.md) |
-| **US-69** | `Frontend` | Sección 'Planes y Suscripción' con Métricas de Uso de Cuota | ✅ Resuelta | Antigravity (AI Agent) | [Ver detalle](sprint-16/US-69-interfaz-gestion-planes-uso.md) |
-| **US-70** | `Integración` | Bloqueo Elegante con Modal de Upgrade al Superar Límites | ✅ Resuelta | Antigravity (AI Agent) | [Ver detalle](sprint-16/US-70-bloqueo-elegante-modal-upgrade.md) |
-| **US-71** | `Frontend / Backend` | Personalización Exclusiva Pro y Retiro de Marca de Agua | ✅ Resuelta | Antigravity (AI Agent) | [Ver detalle](sprint-16/US-71-personalizacion-pro-marca-agua.md) |
+| **US-68** | `Backend` | Esquema de Suscripciones y Middleware de Control de Cuotas | ✅ Resuelta | Martín Oviedo + Antigravity (AI Agent) | [Ver detalle](sprint-16/US-68-backend-cuotas-middleware-planes.md) |
+| **US-69** | `Frontend` | Sección 'Planes y Suscripción' con Métricas de Uso de Cuota | ✅ Resuelta | Martín Oviedo + Antigravity (AI Agent) | [Ver detalle](sprint-16/US-69-interfaz-gestion-planes-uso.md) |
+| **US-70** | `Integración` | Bloqueo Elegante con Modal de Upgrade al Superar Límites | ✅ Resuelta | Martín Oviedo + Antigravity (AI Agent) | [Ver detalle](sprint-16/US-70-bloqueo-elegante-modal-upgrade.md) |
+| **US-71** | `Frontend / Backend` | Personalización Exclusiva Pro y Retiro de Marca de Agua | ✅ Resuelta | Martín Oviedo + Antigravity (AI Agent) | [Ver detalle](sprint-16/US-71-personalizacion-pro-marca-agua.md) |
 
 ### 📌 Sprint 17: Dashboard con Métricas (KPIs) (19/10 – 25/10/2026)
 

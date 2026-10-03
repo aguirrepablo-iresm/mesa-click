@@ -4,7 +4,7 @@
 > **Épica**: Modelo Freemium (Free vs Pro) & Control de Suscripciones  
 > **Tipo**: `Frontend / Backend`  
 > **Estado**: ✅ **Resuelta**  
-> **Asignado a**: Dev  
+> **Asignado a**: Martín Oviedo + Antigravity (AI Agent)  
 > **Rama de trabajo**: `feat/US-71-personalizacion-pro`  
 
 ---
