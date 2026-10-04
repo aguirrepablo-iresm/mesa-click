@@ -1,10 +1,11 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
-import { api, CategoriaAPI, ArticuloAPI, FranjaHorariaAPI, getErrorMessage } from "@/lib/api";
+import { api, CategoriaAPI, ArticuloAPI, FranjaHorariaAPI, EstadoPlan, esPlanLimitReached, detallePlanLimit, getErrorMessage } from "@/lib/api";
 import { EmptyState, Skeleton, useToast, useConfirm } from "@/components/ui";
 import ImportarCartaModal from "@/components/dashboard/ImportarCartaModal";
 import AjustePreciosModal from "./AjustePreciosModal";
 import FranjasHorariasModal from "./FranjasHorariasModal";
+import UpgradeModal from "./UpgradeModal";
 
 export interface CategoriaConItems extends CategoriaAPI {
   items: ArticuloAPI[];
@@ -166,6 +167,20 @@ export default function CartaSection() {
   const [menuCategoriaAbierto, setMenuCategoriaAbierto] = useState<string | null>(null);
   const [menuItemAbierto, setMenuItemAbierto] = useState<string | null>(null);
 
+  const [estadoPlan, setEstadoPlan] = useState<EstadoPlan | null>(null);
+  const [modalUpgradeOpen, setModalUpgradeOpen] = useState(false);
+  const [modalUpgradeRecurso, setModalUpgradeRecurso] = useState<"productos" | "carga_masiva">("productos");
+  const [modalLimiteInfo, setModalLimiteInfo] = useState<{ limite?: number; uso?: number }>({});
+
+  const cargarPlan = useCallback(async () => {
+    try {
+      const plan = await api.obtenerMiPlan();
+      setEstadoPlan(plan);
+    } catch (err) {
+      console.warn("No se pudo cargar plan en CartaSection:", err);
+    }
+  }, []);
+
   const cargarCarta = useCallback(async () => {
     try {
       setLoading(true);
@@ -199,10 +214,11 @@ export default function CartaSection() {
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       void cargarCarta();
+      void cargarPlan();
     }, 0);
 
     return () => window.clearTimeout(timeoutId);
-  }, [cargarCarta]);
+  }, [cargarCarta, cargarPlan]);
 
   useEffect(() => {
     const cerrarMenus = () => {
@@ -289,7 +305,18 @@ export default function CartaSection() {
       setNuevoItem({ nombre: '', descripcion: '', precio: '' });
       setMostrarFormItem(null);
       toast.success('Ítem agregado a la carta.');
+      void cargarPlan();
     } catch (err: unknown) {
+      if (esPlanLimitReached(err)) {
+        const detalle = detallePlanLimit(err);
+        setModalUpgradeRecurso("productos");
+        setModalLimiteInfo({
+          limite: detalle?.limite ?? 30,
+          uso: detalle?.uso ?? 30,
+        });
+        setModalUpgradeOpen(true);
+        return;
+      }
       setErrorMsg(getErrorMessage(err, 'Error al crear el artículo.'));
     }
   };
@@ -310,6 +337,7 @@ export default function CartaSection() {
         )
       );
       toast.success('Ítem eliminado.');
+      void cargarPlan();
     } catch (err: unknown) {
       console.error("No se pudo eliminar artículo:", err);
       setErrorMsg(getErrorMessage(err, 'Error al eliminar artículo.'));
@@ -510,6 +538,41 @@ export default function CartaSection() {
 
   const totalItems = categorias.reduce((n, c) => n + c.items.length, 0);
 
+  const limiteProductosAlcanzado = Boolean(
+    estadoPlan &&
+      estadoPlan.plan === "free" &&
+      (estadoPlan.alcanzado?.productos === true ||
+        (estadoPlan.disponibles?.productos !== undefined && estadoPlan.disponibles.productos <= 0))
+  );
+
+  const handleAbrirCrearItem = (catId: string) => {
+    if (limiteProductosAlcanzado) {
+      setModalUpgradeRecurso("productos");
+      setModalLimiteInfo({
+        limite: estadoPlan?.limites?.productos ?? 30,
+        uso: estadoPlan?.uso?.productos ?? totalItems,
+      });
+      setModalUpgradeOpen(true);
+      return;
+    }
+    setMostrarFormItem(catId);
+    setNuevoItem({ nombre: '', descripcion: '', precio: '' });
+    setNuevoItemErrors({});
+  };
+
+  const handleAbrirImportar = () => {
+    if (estadoPlan && estadoPlan.plan === "free") {
+      setModalUpgradeRecurso("carga_masiva");
+      setModalLimiteInfo({
+        limite: 0,
+        uso: 0,
+      });
+      setModalUpgradeOpen(true);
+      return;
+    }
+    setModalImportarAbierto(true);
+  };
+
   const handlePreciosActualizados = async (actualizados: number) => {
     await cargarCarta();
     toast.success(
@@ -526,9 +589,20 @@ export default function CartaSection() {
           <h2 className="text-24 font-semibold tracking-[-0.02em] text-ash-graphite sm:text-32">
             Gestión de Carta
           </h2>
-          <p className="mt-4 text-13 text-sage-green sm:text-14">
-            {loading ? 'Cargando carta...' : `${categorias.length} categorías · ${totalItems} ítems`}
-          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-8">
+            <p className="text-13 text-sage-green sm:text-14">
+              {loading ? 'Cargando carta...' : `${categorias.length} categorías · ${totalItems} ítems`}
+            </p>
+            {limiteProductosAlcanzado && (
+              <span
+                className="inline-flex items-center gap-4 rounded-full border border-stone/30 bg-ghost-fog px-10 py-2 text-11 font-mono font-medium text-stone"
+                title="Límite del plan Free alcanzado (30 productos)"
+              >
+                <span className="material-symbols-outlined text-14">lock</span>
+                Límite alcanzado
+              </span>
+            )}
+          </div>
         </div>
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:flex xl:shrink-0">
           <button
@@ -541,7 +615,7 @@ export default function CartaSection() {
           </button>
           <button
             type="button"
-            onClick={() => setModalImportarAbierto(true)}
+            onClick={handleAbrirImportar}
             className="flex h-48 items-center justify-center gap-8 rounded-lg border border-concrete bg-canvas-white px-16 text-12 font-semibold text-ash-graphite shadow-sm transition-colors hover:border-stone hover:bg-vanilla-cream"
           >
             <span className="material-symbols-outlined text-18">upload_file</span>
@@ -687,14 +761,18 @@ export default function CartaSection() {
                     onSelect={franjaId => void asignarFranjaCategoria(cat.id, franjaId)}
                   />
                   <button
-                    onClick={() => {
-                      setMostrarFormItem(cat.id);
-                      setNuevoItem({ nombre: '', descripcion: '', precio: '' });
-                      setNuevoItemErrors({});
-                    }}
-                    className="flex h-44 shrink-0 items-center gap-6 whitespace-nowrap rounded-lg border border-concrete bg-canvas-white px-10 text-12 font-semibold text-ash-graphite transition-colors hover:border-stone hover:bg-ghost-fog sm:px-12"
+                    onClick={() => handleAbrirCrearItem(cat.id)}
+                    className={`flex h-44 shrink-0 items-center gap-6 whitespace-nowrap rounded-lg border px-10 text-12 font-semibold transition-colors sm:px-12 ${
+                      limiteProductosAlcanzado
+                        ? "border-concrete bg-ghost-fog text-stone hover:border-stone hover:bg-stone/10"
+                        : "border-concrete bg-canvas-white text-ash-graphite hover:border-stone hover:bg-ghost-fog"
+                    }`}
+                    title={limiteProductosAlcanzado ? "Límite de productos alcanzado en plan Free" : undefined}
+                    aria-label={limiteProductosAlcanzado ? `Límite de productos alcanzado. Ver plan Pro para agregar a ${cat.nombre}` : `Agregar ítem a ${cat.nombre}`}
                   >
-                    <span className="material-symbols-outlined text-18">add</span>
+                    <span className="material-symbols-outlined text-18">
+                      {limiteProductosAlcanzado ? "lock" : "add"}
+                    </span>
                     Agregar ítem
                   </button>
                   <div className="relative" onClick={event => event.stopPropagation()}>
@@ -1029,11 +1107,7 @@ export default function CartaSection() {
                       title="Sin ítems"
                       description="Agregá platos o bebidas a esta categoría."
                       actionLabel="Agregar ítem"
-                      onAction={() => {
-                        setMostrarFormItem(cat.id);
-                        setNuevoItem({ nombre: '', descripcion: '', precio: '' });
-                        setNuevoItemErrors({});
-                      }}
+                      onAction={() => handleAbrirCrearItem(cat.id)}
                     />
                   </div>
                 )}
@@ -1122,6 +1196,15 @@ export default function CartaSection() {
           )}
         </div>
       )}
+
+      <UpgradeModal
+        isOpen={modalUpgradeOpen}
+        onClose={() => setModalUpgradeOpen(false)}
+        recurso={modalUpgradeRecurso}
+        limite={modalLimiteInfo.limite ?? (modalUpgradeRecurso === "carga_masiva" ? 0 : (estadoPlan?.limites?.productos ?? 30))}
+        uso={modalLimiteInfo.uso ?? (modalUpgradeRecurso === "carga_masiva" ? 0 : (estadoPlan?.uso?.productos ?? totalItems))}
+        onUpgradeSolicitado={() => void cargarPlan()}
+      />
     </div>
   );
 }
