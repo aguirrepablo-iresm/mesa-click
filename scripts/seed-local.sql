@@ -129,4 +129,95 @@ ON CONFLICT (id) DO UPDATE SET
   precio = EXCLUDED.precio,
   activo = EXCLUDED.activo;
 
+-- Tablero local del recepcionista: cuatro mesas con situaciones distintas.
+-- Los UUID fijos y los upserts mantienen el seed idempotente entre ejecuciones.
+UPDATE mesas
+SET
+  cuenta_solicitada = (numero = 1),
+  pago_habilitado = FALSE
+WHERE sucursal_id = '10000000-0000-0000-0000-000000000001'::uuid
+  AND numero BETWEEN 1 AND 4;
+
+WITH pedidos_demo AS (
+  SELECT *
+  FROM (VALUES
+    ('50000000-0000-0000-0000-000000000001', 1, 'listo',      24),
+    ('50000000-0000-0000-0000-000000000002', 1, 'listo',      16),
+    ('50000000-0000-0000-0000-000000000003', 2, 'preparando', 11),
+    ('50000000-0000-0000-0000-000000000004', 2, 'preparando',  6),
+    ('50000000-0000-0000-0000-000000000005', 3, 'listo',       4),
+    ('50000000-0000-0000-0000-000000000006', 4, 'recibido',    2)
+  ) AS v(id, mesa_numero, estado, minutos_atras)
+), pedidos_resueltos AS (
+  SELECT
+    d.id::uuid AS id,
+    m.id AS mesa_id,
+    m.sucursal_id,
+    m.cuenta_version,
+    d.estado,
+    NOW() - make_interval(mins => d.minutos_atras) AS creado
+  FROM pedidos_demo d
+  JOIN mesas m
+    ON m.sucursal_id = '10000000-0000-0000-0000-000000000001'::uuid
+   AND m.numero = d.mesa_numero
+)
+INSERT INTO pedidos (id, mesa_id, sucursal_id, cuenta_version, estado, created_at, updated_at)
+SELECT id, mesa_id, sucursal_id, cuenta_version, estado, creado, creado
+FROM pedidos_resueltos
+ON CONFLICT (id) DO UPDATE SET
+  mesa_id = EXCLUDED.mesa_id,
+  sucursal_id = EXCLUDED.sucursal_id,
+  cuenta_version = EXCLUDED.cuenta_version,
+  estado = EXCLUDED.estado,
+  created_at = EXCLUDED.created_at,
+  updated_at = EXCLUDED.updated_at;
+
+WITH items_demo AS (
+  SELECT *
+  FROM (VALUES
+    ('60000000-0000-0000-0000-000000000001', '50000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000002', 2, 'Sin aceitunas',       '70000000-0000-0000-0000-000000000001', 'Mateo', 'listo'),
+    ('60000000-0000-0000-0000-000000000002', '50000000-0000-0000-0000-000000000001', '40000000-0000-0000-0000-000000000005', 1, NULL,                 '70000000-0000-0000-0000-000000000002', 'Sofi',   'listo'),
+    ('60000000-0000-0000-0000-000000000003', '50000000-0000-0000-0000-000000000002', '40000000-0000-0000-0000-000000000004', 1, NULL,                 '70000000-0000-0000-0000-000000000001', 'Mateo', 'listo'),
+    ('60000000-0000-0000-0000-000000000004', '50000000-0000-0000-0000-000000000003', '40000000-0000-0000-0000-000000000003', 2, 'Una sin panceta',      '70000000-0000-0000-0000-000000000003', 'Juli',   'preparando'),
+    ('60000000-0000-0000-0000-000000000005', '50000000-0000-0000-0000-000000000003', '40000000-0000-0000-0000-000000000001', 1, NULL,                 '70000000-0000-0000-0000-000000000004', 'Nico',   'preparando'),
+    ('60000000-0000-0000-0000-000000000006', '50000000-0000-0000-0000-000000000004', '40000000-0000-0000-0000-000000000006', 2, 'Bien frías',            '70000000-0000-0000-0000-000000000003', 'Juli',   'pendiente'),
+    ('60000000-0000-0000-0000-000000000007', '50000000-0000-0000-0000-000000000005', '40000000-0000-0000-0000-000000000003', 1, NULL,                 '70000000-0000-0000-0000-000000000005', 'Luz',    'listo'),
+    ('60000000-0000-0000-0000-000000000008', '50000000-0000-0000-0000-000000000005', '40000000-0000-0000-0000-000000000001', 1, NULL,                 '70000000-0000-0000-0000-000000000006', 'Tomás',  'listo'),
+    ('60000000-0000-0000-0000-000000000009', '50000000-0000-0000-0000-000000000006', '40000000-0000-0000-0000-000000000002', 4, 'Dos suaves',            '70000000-0000-0000-0000-000000000007', 'Cami',   'pendiente'),
+    ('60000000-0000-0000-0000-000000000010', '50000000-0000-0000-0000-000000000006', '40000000-0000-0000-0000-000000000005', 2, 'Sin jengibre',          '70000000-0000-0000-0000-000000000008', 'Fede',   'pendiente')
+  ) AS v(id, pedido_id, articulo_id, cantidad, notas, comensal_id, comensal_nombre, estado)
+)
+INSERT INTO pedido_items (
+  id,
+  pedido_id,
+  articulo_id,
+  cantidad,
+  precio_unitario,
+  notas,
+  comensal_id,
+  comensal_nombre,
+  estado
+)
+SELECT
+  d.id::uuid,
+  d.pedido_id::uuid,
+  d.articulo_id::uuid,
+  d.cantidad,
+  a.precio,
+  d.notas,
+  d.comensal_id::uuid,
+  d.comensal_nombre,
+  d.estado
+FROM items_demo d
+JOIN articulos a ON a.id = d.articulo_id::uuid
+ON CONFLICT (id) DO UPDATE SET
+  pedido_id = EXCLUDED.pedido_id,
+  articulo_id = EXCLUDED.articulo_id,
+  cantidad = EXCLUDED.cantidad,
+  precio_unitario = EXCLUDED.precio_unitario,
+  notas = EXCLUDED.notas,
+  comensal_id = EXCLUDED.comensal_id,
+  comensal_nombre = EXCLUDED.comensal_nombre,
+  estado = EXCLUDED.estado;
+
 COMMIT;

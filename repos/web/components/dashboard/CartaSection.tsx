@@ -164,7 +164,6 @@ export default function CartaSection() {
   const [mostrarFranjasHorarias, setMostrarFranjasHorarias] = useState(false);
   const [guardandoHorarioId, setGuardandoHorarioId] = useState<string | null>(null);
   const [menuHorarioCategoriaAbierto, setMenuHorarioCategoriaAbierto] = useState<string | null>(null);
-  const [menuCategoriaAbierto, setMenuCategoriaAbierto] = useState<string | null>(null);
   const [menuItemAbierto, setMenuItemAbierto] = useState<string | null>(null);
 
   const [estadoPlan, setEstadoPlan] = useState<EstadoPlan | null>(null);
@@ -223,7 +222,6 @@ export default function CartaSection() {
   useEffect(() => {
     const cerrarMenus = () => {
       setMenuHorarioCategoriaAbierto(null);
-      setMenuCategoriaAbierto(null);
       setMenuItemAbierto(null);
     };
     window.addEventListener("click", cerrarMenus);
@@ -545,7 +543,7 @@ export default function CartaSection() {
         (estadoPlan.disponibles?.productos !== undefined && estadoPlan.disponibles.productos <= 0))
   );
 
-  const handleAbrirCrearItem = (catId: string) => {
+  const handleAbrirCrearItem = (catId?: string) => {
     if (limiteProductosAlcanzado) {
       setModalUpgradeRecurso("productos");
       setModalLimiteInfo({
@@ -555,7 +553,12 @@ export default function CartaSection() {
       setModalUpgradeOpen(true);
       return;
     }
-    setMostrarFormItem(catId);
+    if (categorias.length === 0) {
+      setMostrarFormCat(true);
+      toast.error('Primero creá una categoría para poder agregar artículos.');
+      return;
+    }
+    setMostrarFormItem(catId || categorias[0].id);
     setNuevoItem({ nombre: '', descripcion: '', precio: '' });
     setNuevoItemErrors({});
   };
@@ -584,7 +587,7 @@ export default function CartaSection() {
 
   return (
     <div className="h-full space-y-24 overflow-y-auto bg-ghost-fog/45 p-16 font-inter sm:p-24 md:p-32">
-      <div className="flex flex-col justify-between gap-16 lg:flex-row lg:items-center">
+      <div className="flex flex-col justify-between gap-16 2xl:flex-row 2xl:items-center">
         <div className="min-w-0">
           <h2 className="text-24 font-semibold tracking-[-0.02em] text-ash-graphite sm:text-32">
             Gestión de Carta
@@ -604,7 +607,7 @@ export default function CartaSection() {
             )}
           </div>
         </div>
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 xl:flex xl:shrink-0">
+        <div className="grid grid-cols-2 gap-8 sm:grid-cols-3 2xl:flex 2xl:shrink-0">
           <button
             type="button"
             onClick={() => setMostrarFranjasHorarias(true)}
@@ -644,10 +647,18 @@ export default function CartaSection() {
           <button
             type="button"
             onClick={() => setMostrarFormCat(true)}
-            className="flex h-48 items-center justify-center gap-8 rounded-lg bg-plain-green px-20 text-13 font-semibold text-canvas-white shadow-sm transition-colors hover:bg-plain-green-muted"
+            className="flex h-48 items-center justify-center gap-8 rounded-lg border border-concrete bg-canvas-white px-16 text-12 font-semibold text-ash-graphite shadow-sm transition-colors hover:border-stone hover:bg-vanilla-cream"
           >
             <span className="material-symbols-outlined text-18">add</span>
             Nueva categoría
+          </button>
+          <button
+            type="button"
+            onClick={() => handleAbrirCrearItem()}
+            className="flex h-48 items-center justify-center gap-8 rounded-lg bg-plain-green px-20 text-13 font-semibold text-canvas-white shadow-sm transition-colors hover:bg-plain-green-muted"
+          >
+            <span className="material-symbols-outlined text-18">add</span>
+            Nuevo artículo
           </button>
         </div>
       </div>
@@ -688,27 +699,170 @@ export default function CartaSection() {
       )}
 
       {mostrarFormCat && (
-        <div className="flex flex-col items-stretch gap-10 rounded-xl border border-concrete bg-canvas-white p-16 shadow-sm sm:flex-row sm:items-center">
-          <input
-            className="h-44 flex-1 rounded-lg border border-concrete bg-canvas-white px-12 text-13 outline-none focus:border-plain-green"
-            placeholder="Nombre de la categoría"
-            value={nuevaCatNombre}
-            onChange={e => setNuevaCatNombre(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && agregarCategoria()}
-            autoFocus
-          />
-          <div className="flex items-center gap-8 justify-end">
-            <button
-              onClick={agregarCategoria}
-              className="h-44 flex-1 rounded-lg bg-plain-green px-16 text-13 font-semibold text-canvas-white hover:bg-plain-green-muted sm:flex-initial"
-            >
-              Agregar
-            </button>
+        <div className="space-y-14 rounded-xl border border-concrete bg-canvas-white p-16 shadow-sm sm:p-20">
+          <div className="flex items-start justify-between gap-12">
+            <div>
+              <h3 className="text-15 font-semibold text-ash-graphite">Configuración de categorías</h3>
+              <p className="mt-2 text-11 text-sage-green">Creá categorías y definí cuándo estarán disponibles.</p>
+            </div>
             <button
               onClick={() => setMostrarFormCat(false)}
-              className="h-44 rounded-lg px-12 text-13 text-sage-green hover:bg-ghost-fog hover:text-ash-graphite"
+              className="flex h-44 w-44 shrink-0 items-center justify-center rounded-lg text-sage-green hover:bg-ghost-fog hover:text-ash-graphite"
+              aria-label="Cerrar configuración de categorías"
+            >
+              <span className="material-symbols-outlined text-20">close</span>
+            </button>
+          </div>
+
+          <div className="flex flex-col items-stretch gap-8 sm:flex-row sm:items-center">
+            <input
+              className="h-44 flex-1 rounded-lg border border-concrete bg-canvas-white px-12 text-13 outline-none focus:border-plain-green"
+              placeholder="Nombre de la nueva categoría"
+              value={nuevaCatNombre}
+              onChange={e => setNuevaCatNombre(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && agregarCategoria()}
+              autoFocus
+            />
+            <button
+              onClick={agregarCategoria}
+              className="h-44 rounded-lg bg-plain-green px-16 text-12 font-semibold text-canvas-white hover:bg-plain-green-muted"
+            >
+              Crear categoría
+            </button>
+          </div>
+
+          {totalItems > 0 && (
+            <div className="divide-y divide-ghost-fog rounded-lg border border-concrete">
+              {categorias.map(categoria => (
+                <div key={categoria.id} className="flex flex-col gap-10 px-12 py-10 sm:flex-row sm:items-center">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-12 font-semibold text-ash-graphite">{categoria.nombre}</p>
+                    <p className="mt-2 text-10 text-sage-green">
+                      {categoria.items.length} {categoria.items.length === 1 ? 'artículo' : 'artículos'}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-8">
+                    <SelectorFranjaCategoria
+                      categoria={categoria}
+                      franjas={franjas}
+                      abierto={menuHorarioCategoriaAbierto === categoria.id}
+                      guardando={guardandoHorarioId === categoria.id}
+                      onToggle={() => {
+                        setMenuHorarioCategoriaAbierto(actual => actual === categoria.id ? null : categoria.id);
+                        setMenuItemAbierto(null);
+                      }}
+                      onSelect={franjaId => void asignarFranjaCategoria(categoria.id, franjaId)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => void eliminarCategoria(categoria.id)}
+                      className="flex h-44 w-44 shrink-0 items-center justify-center rounded-lg text-sage-green transition-colors hover:bg-warm-pink/20 hover:text-alert-red"
+                      title={`Eliminar categoría ${categoria.nombre}`}
+                      aria-label={`Eliminar categoría ${categoria.nombre}`}
+                    >
+                      <span className="material-symbols-outlined text-18">delete</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {mostrarFormItem && (
+        <div className="space-y-12 rounded-xl border border-concrete bg-canvas-white p-16 shadow-sm sm:p-20">
+          <div className="flex items-start justify-between gap-12">
+            <div>
+              <h3 className="text-15 font-semibold text-ash-graphite">Nuevo artículo</h3>
+              <p className="mt-2 text-11 text-sage-green">Completá sus datos y elegí la categoría a la que pertenece.</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setMostrarFormItem(null);
+                setNuevoItemErrors({});
+              }}
+              className="flex h-44 w-44 shrink-0 items-center justify-center rounded-lg text-sage-green hover:bg-ghost-fog hover:text-ash-graphite"
+              aria-label="Cerrar formulario de artículo"
+            >
+              <span className="material-symbols-outlined text-20">close</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-[minmax(0,1.4fr)_minmax(180px,0.8fr)_minmax(140px,0.5fr)]">
+            <div className="space-y-4">
+              <input
+                className={`h-44 w-full rounded-lg border bg-canvas-white px-10 text-13 outline-none focus:border-plain-green ${
+                  nuevoItemErrors.nombre ? "border-alert-red" : "border-concrete"
+                }`}
+                placeholder="Nombre del artículo *"
+                value={nuevoItem.nombre}
+                onChange={e => {
+                  setNuevoItem(p => ({ ...p, nombre: e.target.value }));
+                  setNuevoItemErrors(p => ({ ...p, nombre: undefined }));
+                }}
+                aria-invalid={Boolean(nuevoItemErrors.nombre)}
+                autoFocus
+              />
+              {nuevoItemErrors.nombre && (
+                <p className="text-11 text-alert-red">{nuevoItemErrors.nombre}</p>
+              )}
+            </div>
+            <select
+              className="h-44 w-full rounded-lg border border-concrete bg-canvas-white px-10 text-13 text-ash-graphite outline-none focus:border-plain-green"
+              value={mostrarFormItem}
+              onChange={event => setMostrarFormItem(event.target.value)}
+              aria-label="Categoría del artículo"
+            >
+              {categorias.map(categoria => (
+                <option key={categoria.id} value={categoria.id}>{categoria.nombre}</option>
+              ))}
+            </select>
+            <div className="space-y-4">
+              <input
+                type="number"
+                min="0.01"
+                step="0.01"
+                className={`h-44 w-full rounded-lg border bg-canvas-white px-12 text-13 outline-none focus:border-plain-green ${
+                  nuevoItemErrors.precio ? "border-alert-red" : "border-concrete"
+                }`}
+                placeholder="Precio *"
+                value={nuevoItem.precio}
+                onChange={e => {
+                  setNuevoItem(p => ({ ...p, precio: e.target.value }));
+                  setNuevoItemErrors(p => ({ ...p, precio: undefined }));
+                }}
+                aria-invalid={Boolean(nuevoItemErrors.precio)}
+              />
+              {nuevoItemErrors.precio && (
+                <p className="text-11 text-alert-red">{nuevoItemErrors.precio}</p>
+              )}
+            </div>
+          </div>
+          <input
+            className="h-44 w-full rounded-lg border border-concrete bg-canvas-white px-10 text-13 outline-none focus:border-plain-green"
+            placeholder="Descripción (opcional)"
+            value={nuevoItem.descripcion}
+            onChange={e => setNuevoItem(p => ({ ...p, descripcion: e.target.value }))}
+          />
+          <div className="flex items-center justify-end gap-8">
+            <button
+              type="button"
+              onClick={() => {
+                setMostrarFormItem(null);
+                setNuevoItemErrors({});
+              }}
+              className="h-44 rounded-lg px-12 text-12 text-sage-green hover:bg-ghost-fog hover:text-ash-graphite"
             >
               Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={() => agregarItem(mostrarFormItem)}
+              className="h-44 rounded-lg bg-plain-green px-16 text-12 font-semibold text-canvas-white hover:bg-plain-green-muted"
+            >
+              Crear artículo
             </button>
           </div>
         </div>
@@ -733,176 +887,118 @@ export default function CartaSection() {
         </div>
       )}
 
-      {/* Lista de categorías */}
+      {/* Catálogo en formato tabla, con agrupación operativa por categoría */}
       {!loading && (
-        <div className="space-y-20">
-          {categorias.map(cat => (
-            <section key={cat.id} className="rounded-xl border border-concrete bg-canvas-white shadow-sm">
-              <header className="flex flex-col justify-between gap-12 border-b border-concrete/70 px-16 py-16 sm:flex-row sm:items-center sm:px-20">
-                <div className="min-w-0">
-                  <h3 className="truncate text-16 font-semibold text-ash-graphite sm:text-20">{cat.nombre}</h3>
-                  <div className="mt-2 flex flex-wrap items-center gap-6 text-12 text-sage-green">
-                    <span>{cat.items.length} {cat.items.length === 1 ? 'ítem' : 'ítems'}</span>
-                    <span aria-hidden="true">·</span>
-                    <span>{cat.franja_horaria_id ? franjas.find(franja => franja.id === cat.franja_horaria_id)?.nombre || 'Horario configurado' : 'Siempre disponible'}</span>
-                  </div>
-                </div>
-                <div className="flex w-full shrink-0 items-center justify-end gap-8 sm:w-auto">
-                  <SelectorFranjaCategoria
-                    categoria={cat}
-                    franjas={franjas}
-                    abierto={menuHorarioCategoriaAbierto === cat.id}
-                    guardando={guardandoHorarioId === cat.id}
-                    onToggle={() => {
-                      setMenuHorarioCategoriaAbierto(actual => actual === cat.id ? null : cat.id);
-                      setMenuCategoriaAbierto(null);
-                      setMenuItemAbierto(null);
-                    }}
-                    onSelect={franjaId => void asignarFranjaCategoria(cat.id, franjaId)}
-                  />
-                  <button
-                    onClick={() => handleAbrirCrearItem(cat.id)}
-                    className={`flex h-44 shrink-0 items-center gap-6 whitespace-nowrap rounded-lg border px-10 text-12 font-semibold transition-colors sm:px-12 ${
-                      limiteProductosAlcanzado
-                        ? "border-concrete bg-ghost-fog text-stone hover:border-stone hover:bg-stone/10"
-                        : "border-concrete bg-canvas-white text-ash-graphite hover:border-stone hover:bg-ghost-fog"
-                    }`}
-                    title={limiteProductosAlcanzado ? "Límite de productos alcanzado en plan Free" : undefined}
-                    aria-label={limiteProductosAlcanzado ? `Límite de productos alcanzado. Ver plan Pro para agregar a ${cat.nombre}` : `Agregar ítem a ${cat.nombre}`}
-                  >
-                    <span className="material-symbols-outlined text-18">
-                      {limiteProductosAlcanzado ? "lock" : "add"}
-                    </span>
-                    Agregar ítem
-                  </button>
-                  <div className="relative" onClick={event => event.stopPropagation()}>
-                    <button
-                      type="button"
-                      onClick={event => {
-                        event.stopPropagation();
-                        setMenuCategoriaAbierto(actual => actual === cat.id ? null : cat.id);
-                        setMenuHorarioCategoriaAbierto(null);
-                        setMenuItemAbierto(null);
-                      }}
-                      className="flex h-44 w-44 items-center justify-center rounded-lg text-sage-green transition-colors hover:bg-ghost-fog hover:text-ash-graphite"
-                      title="Más acciones de la categoría"
-                      aria-label={`Más acciones de ${cat.nombre}`}
-                      aria-expanded={menuCategoriaAbierto === cat.id}
-                    >
-                      <span className="material-symbols-outlined text-24">more_horiz</span>
-                    </button>
-                    {menuCategoriaAbierto === cat.id && (
-                      <div className="absolute right-0 top-[48px] z-30 min-w-[190px] rounded-lg border border-concrete bg-canvas-white p-4 shadow-xl">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setMenuCategoriaAbierto(null);
-                            void eliminarCategoria(cat.id);
-                          }}
-                          className="flex h-44 w-full items-center gap-8 rounded-md px-10 text-left text-12 font-medium text-alert-red transition-colors hover:bg-warm-pink/20"
-                        >
-                          <span className="material-symbols-outlined text-18">delete</span>
-                          Eliminar categoría
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </header>
-
-              <div className="divide-y divide-ghost-fog">
-                {cat.items.map(item => {
+        <div className="rounded-2xl border border-concrete bg-canvas-white shadow-sm">
+          {categorias.length > 0 && (
+            <div className="hidden grid-cols-[minmax(260px,2.2fr)_minmax(120px,0.85fr)_100px_minmax(150px,1fr)_minmax(125px,0.85fr)_44px] items-center gap-16 rounded-t-2xl border-b border-concrete bg-ghost-fog/55 px-20 py-12 text-10 font-semibold uppercase tracking-[0.08em] text-sage-green lg:grid">
+              <span>Artículo</span>
+              <span>Categoría</span>
+              <span>Precio</span>
+              <span>Disponibilidad</span>
+              <span>Variantes</span>
+              <span className="sr-only">Acciones</span>
+            </div>
+          )}
+          {categorias.flatMap(cat =>
+            cat.items.map(item => {
                   const visible = item.activo !== false;
+                  const disponible = item.disponible !== false;
+                  const gruposVariantes = new Set(
+                    (item.variantes || []).map(variante => variante.grupo?.trim() || 'General')
+                  ).size;
 
                   return (
                   <div key={item.id} className="border-b border-ghost-fog last:border-b-0">
-                    <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-14 gap-y-10 px-16 py-16 transition-colors hover:bg-ghost-fog/35 sm:px-20 md:grid-cols-[minmax(0,1fr)_110px_auto]">
-                      <div className="col-span-2 min-w-0 md:col-span-1">
-                        <div className="flex flex-wrap items-center gap-8">
-                          <span className="text-14 font-semibold text-ash-graphite sm:text-16">{item.nombre}</span>
-                          {item.variantes && item.variantes.length > 0 && (
-                            <span className="rounded-full border border-concrete bg-ghost-fog px-8 py-2 text-10 font-medium text-sage-green">
-                              {item.variantes.length} {item.variantes.length === 1 ? 'opción' : 'opciones'}
-                            </span>
-                          )}
-                          {item.franja_horaria_id && (
-                            <span className="inline-flex items-center gap-3 rounded-full border border-concrete bg-vanilla-cream/60 px-8 py-2 text-10 font-medium text-sage-green">
-                              <span className="material-symbols-outlined text-12">schedule</span>
-                              {franjas.find(franja => franja.id === item.franja_horaria_id)?.nombre || 'Horario propio'}
-                            </span>
+                    <div className={`relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-14 gap-y-12 px-16 py-14 transition-colors hover:bg-ghost-fog/35 sm:px-20 lg:grid-cols-[minmax(260px,2.2fr)_minmax(120px,0.85fr)_100px_minmax(150px,1fr)_minmax(125px,0.85fr)_44px] lg:gap-16 ${!visible || !disponible ? 'bg-ghost-fog/15' : ''}`}>
+                      <div className="col-span-2 flex min-w-0 items-center gap-12 pr-44 lg:col-span-1 lg:pr-0">
+                        <div
+                          role={item.foto_url ? 'img' : undefined}
+                          aria-label={item.foto_url ? `Foto de ${item.nombre}` : undefined}
+                          className={`flex h-52 w-52 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-concrete bg-ghost-fog bg-cover bg-center text-sage-green ${!visible || !disponible ? 'grayscale' : ''}`}
+                          style={item.foto_url ? { backgroundImage: `url(${item.foto_url})` } : undefined}
+                        >
+                          {!item.foto_url && (
+                            <span className="material-symbols-outlined text-22">restaurant</span>
                           )}
                         </div>
-                        {item.descripcion && (
-                          <p className="mt-3 line-clamp-2 text-12 leading-relaxed text-sage-green sm:text-13">
-                            {item.descripcion}
+                        <div className="min-w-0">
+                          <div className="flex min-w-0 items-center gap-6">
+                            <span className="truncate text-14 font-semibold text-ash-graphite sm:text-15">{item.nombre}</span>
+                            {item.franja_horaria_id && (
+                              <span
+                                className="material-symbols-outlined shrink-0 text-15 text-sage-green"
+                                title={franjas.find(franja => franja.id === item.franja_horaria_id)?.nombre || 'Horario propio'}
+                              >
+                                schedule
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-3 truncate text-11 text-sage-green" title={item.descripcion || undefined}>
+                            {visible ? 'Visible en la carta digital' : 'Oculto de la carta digital'}
+                            {item.descripcion ? ` · ${item.descripcion}` : ''}
                           </p>
-                        )}
+                        </div>
                       </div>
 
-                      <span className="whitespace-nowrap text-14 font-semibold text-ash-graphite md:text-16">
+                      <div className="min-w-0">
+                        <span className="inline-flex max-w-full items-center rounded-md bg-ghost-fog px-8 py-4 text-10 font-medium text-sage-green">
+                          <span className="truncate">{cat.nombre}</span>
+                        </span>
+                      </div>
+
+                      <span className="whitespace-nowrap text-right text-14 font-semibold text-ash-graphite lg:text-left lg:text-15">
                         ${item.precio.toLocaleString('es-AR')}
                       </span>
 
-                      <div className="flex items-center justify-end gap-6">
-                        {/* Control de Stock (86) */}
-                        <button
-                          type="button"
-                          onClick={() => void toggleStock(cat.id, item)}
-                          className={`inline-flex h-44 items-center gap-6 rounded-full border px-10 text-11 font-semibold transition-colors sm:px-12 ${
-                            item.disponible !== false
-                              ? "border-concrete bg-canvas-white text-ash-graphite hover:bg-ghost-fog"
-                              : "border-alert-red/30 bg-warm-pink/20 text-alert-red hover:bg-warm-pink/30"
-                          }`}
-                          title={item.disponible !== false ? "Marcar plato como agotado (86)" : "Marcar plato como en stock"}
-                          aria-label={item.disponible !== false ? `Marcar ${item.nombre} como agotado` : `Marcar ${item.nombre} en stock`}
-                        >
-                          <span className={`h-8 min-h-0 w-8 min-w-0 rounded-full ${item.disponible !== false ? 'bg-plain-green' : 'bg-alert-red'}`} />
-                          <span>{item.disponible !== false ? 'En stock' : '86 Agotado'}</span>
-                        </button>
+                      {/* Control de Stock (86) */}
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={disponible}
+                        onClick={() => void toggleStock(cat.id, item)}
+                        className="group inline-flex min-h-44 items-center gap-8 justify-self-start rounded-lg px-4 text-11 font-medium text-ash-graphite focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-plain-green/30 lg:px-0"
+                        title={disponible ? "Marcar plato como agotado (86)" : "Marcar plato como disponible"}
+                        aria-label={disponible ? `Marcar ${item.nombre} como agotado` : `Marcar ${item.nombre} como disponible`}
+                      >
+                        <span className={`relative h-22 w-[38px] shrink-0 rounded-full transition-colors ${disponible ? 'bg-success-muted' : 'bg-stone/40'}`}>
+                          <span className={`absolute left-0 top-[3px] h-16 w-16 rounded-full bg-canvas-white shadow-sm transition-transform ${disponible ? 'translate-x-[19px]' : 'translate-x-[3px]'}`} />
+                        </span>
+                        <span className={disponible ? 'text-[#087645]' : 'text-sage-green'}>
+                          {disponible ? 'Disponible' : 'Agotado'}
+                        </span>
+                      </button>
 
-                        <button
-                          type="button"
-                          onClick={() => void toggleDisponible(cat.id, item)}
-                          className={`inline-flex h-44 items-center gap-6 rounded-full border px-10 text-11 font-semibold transition-colors sm:px-12 ${
-                            visible
-                              ? "border-success/30 bg-success/10 text-[#087645] hover:bg-success/20"
-                              : "border-concrete bg-ghost-fog text-sage-green hover:bg-vanilla-cream"
-                          }`}
-                          title={visible ? "Ocultar del menú público" : "Mostrar en el menú público"}
-                          aria-label={visible ? `Ocultar ${item.nombre}` : `Mostrar ${item.nombre}`}
-                        >
-                          <span className={`h-8 min-h-0 w-8 min-w-0 rounded-full ${visible ? 'bg-success-muted' : 'bg-stone'}`} />
-                          <span>{visible ? 'Visible' : 'Oculto'}</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (articuloVariantesAbierto === item.id) {
-                              setArticuloVariantesAbierto(null);
-                            } else {
-                              setArticuloVariantesAbierto(item.id);
-                              setNuevaVariante({ nombre: '', grupo: '', precioAdicional: '0', seleccionUnica: false });
-                            }
-                          }}
-                          className={`flex h-44 w-44 items-center justify-center rounded-lg border transition-colors ${
-                            articuloVariantesAbierto === item.id
-                              ? "border-plain-green bg-plain-green text-canvas-white"
-                              : "border-concrete bg-canvas-white text-ash-graphite hover:border-stone hover:bg-ghost-fog"
-                          }`}
-                          title="Gestionar opciones y variantes"
-                          aria-label={`Gestionar opciones de ${item.nombre}`}
-                          aria-expanded={articuloVariantesAbierto === item.id}
-                        >
-                          <span className="material-symbols-outlined text-20">tune</span>
-                        </button>
-                        <div className="relative" onClick={event => event.stopPropagation()}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (articuloVariantesAbierto === item.id) {
+                            setArticuloVariantesAbierto(null);
+                          } else {
+                            setArticuloVariantesAbierto(item.id);
+                            setNuevaVariante({ nombre: '', grupo: '', precioAdicional: '0', seleccionUnica: false });
+                          }
+                        }}
+                        className={`inline-flex min-h-44 items-center gap-4 justify-self-start rounded-lg px-4 text-11 font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-plain-green/30 ${
+                          articuloVariantesAbierto === item.id
+                            ? "text-plain-green"
+                            : "text-sage-green hover:text-ash-graphite"
+                        }`}
+                        title="Gestionar opciones y variantes"
+                        aria-label={`Gestionar opciones de ${item.nombre}`}
+                        aria-expanded={articuloVariantesAbierto === item.id}
+                      >
+                        <span>{gruposVariantes > 0 ? `${gruposVariantes} ${gruposVariantes === 1 ? 'grupo' : 'grupos'}` : 'Sin variantes'}</span>
+                        <span className={`material-symbols-outlined text-18 transition-transform ${articuloVariantesAbierto === item.id ? 'rotate-90' : ''}`}>chevron_right</span>
+                      </button>
+
+                      <div className="absolute right-10 top-10 lg:static" onClick={event => event.stopPropagation()}>
                           <button
                             type="button"
                             onClick={event => {
                               event.stopPropagation();
                               setMenuItemAbierto(actual => actual === item.id ? null : item.id);
                               setMenuHorarioCategoriaAbierto(null);
-                              setMenuCategoriaAbierto(null);
                             }}
                             className="flex h-44 w-44 items-center justify-center rounded-lg text-sage-green transition-colors hover:bg-ghost-fog hover:text-ash-graphite"
                             title="Más acciones del ítem"
@@ -913,6 +1009,18 @@ export default function CartaSection() {
                           </button>
                           {menuItemAbierto === item.id && (
                             <div className="absolute right-0 top-[48px] z-30 w-[250px] rounded-lg border border-concrete bg-canvas-white p-6 shadow-xl">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setMenuItemAbierto(null);
+                                  void toggleDisponible(cat.id, item);
+                                }}
+                                className="flex min-h-44 w-full items-center gap-8 rounded-md px-10 text-left text-12 font-medium text-ash-graphite transition-colors hover:bg-ghost-fog"
+                              >
+                                <span className="material-symbols-outlined text-18">{visible ? 'visibility_off' : 'visibility'}</span>
+                                {visible ? 'Ocultar de la carta' : 'Mostrar en la carta'}
+                              </button>
+                              <div className="my-4 border-t border-ghost-fog" />
                               <div className="px-6 pb-8 pt-6">
                                 <p className="px-4 text-10 font-semibold uppercase tracking-[0.08em] text-sage-green">
                                   Horario del producto
@@ -976,7 +1084,6 @@ export default function CartaSection() {
                               </button>
                             </div>
                           )}
-                        </div>
                       </div>
                     </div>
 
@@ -1097,93 +1204,8 @@ export default function CartaSection() {
                     )}
                   </div>
                   );
-                })}
-
-                {cat.items.length === 0 && mostrarFormItem !== cat.id && (
-                  <div className="px-20 py-16">
-                    <EmptyState
-                      compact
-                      icon="restaurant_menu"
-                      title="Sin ítems"
-                      description="Agregá platos o bebidas a esta categoría."
-                      actionLabel="Agregar ítem"
-                      onAction={() => handleAbrirCrearItem(cat.id)}
-                    />
-                  </div>
-                )}
-
-                {mostrarFormItem === cat.id && (
-                  <div className="space-y-10 bg-ghost-fog/70 px-16 py-16 sm:px-20">
-                    <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,3fr)_minmax(150px,1fr)] gap-8">
-                      <div className="space-y-4">
-                        <input
-                          className={`h-44 w-full rounded-lg border bg-canvas-white px-10 text-13 outline-none focus:border-plain-green ${
-                            nuevoItemErrors.nombre ? "border-alert-red" : "border-concrete"
-                          }`}
-                          placeholder="Nombre del ítem *"
-                          value={nuevoItem.nombre}
-                          onChange={e => {
-                            setNuevoItem(p => ({ ...p, nombre: e.target.value }));
-                            setNuevoItemErrors(p => ({ ...p, nombre: undefined }));
-                          }}
-                          aria-invalid={Boolean(nuevoItemErrors.nombre)}
-                          autoFocus
-                        />
-                        {nuevoItemErrors.nombre && (
-                          <p className="text-11 text-alert-red">{nuevoItemErrors.nombre}</p>
-                        )}
-                      </div>
-                      <div className="space-y-4">
-                        <input
-                          type="number"
-                          min="0.01"
-                          step="0.01"
-                          className={`h-44 w-full rounded-lg border bg-canvas-white px-12 text-14 outline-none focus:border-plain-green ${
-                            nuevoItemErrors.precio ? "border-alert-red" : "border-concrete"
-                          }`}
-                          placeholder="Precio *"
-                          value={nuevoItem.precio}
-                          onChange={e => {
-                            setNuevoItem(p => ({ ...p, precio: e.target.value }));
-                            setNuevoItemErrors(p => ({ ...p, precio: undefined }));
-                          }}
-                          aria-invalid={Boolean(nuevoItemErrors.precio)}
-                        />
-                        {nuevoItemErrors.precio && (
-                          <p className="text-11 text-alert-red">{nuevoItemErrors.precio}</p>
-                        )}
-                      </div>
-                    </div>
-                    <input
-                      className="h-44 w-full rounded-lg border border-concrete bg-canvas-white px-10 text-13 outline-none focus:border-plain-green"
-                      placeholder="Descripción (opcional)"
-                      value={nuevoItem.descripcion}
-                      onChange={e => setNuevoItem(p => ({ ...p, descripcion: e.target.value }))}
-                    />
-                    <div className="flex items-center gap-8 pt-4">
-                      <button
-                        type="button"
-                        onClick={() => agregarItem(cat.id)}
-                        className="h-44 whitespace-nowrap rounded-lg bg-plain-green px-14 text-13 font-semibold text-canvas-white hover:bg-plain-green-muted"
-                      >
-                        Agregar ítem
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setMostrarFormItem(null);
-                          setNuevoItemErrors({});
-                        }}
-                        className="h-44 rounded-lg px-12 text-13 text-sage-green hover:bg-canvas-white hover:text-ash-graphite"
-                      >
-                        Cancelar
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </section>
-          ))}
+            })
+          )}
 
           {categorias.length === 0 && (
             <EmptyState
@@ -1192,6 +1214,16 @@ export default function CartaSection() {
               description="Creá tu primera categoría para empezar a cargar productos."
               actionLabel="+ Nueva categoría"
               onAction={() => setMostrarFormCat(true)}
+            />
+          )}
+
+          {categorias.length > 0 && totalItems === 0 && (
+            <EmptyState
+              icon="restaurant_menu"
+              title="Todavía no hay artículos"
+              description="Creá el primero y elegí a qué categoría pertenece."
+              actionLabel="+ Nuevo artículo"
+              onAction={() => handleAbrirCrearItem()}
             />
           )}
         </div>
