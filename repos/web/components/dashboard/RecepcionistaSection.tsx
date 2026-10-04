@@ -44,8 +44,40 @@ const ESTADO_LABELS: Record<'recibido' | 'preparando' | 'listo', string> = {
 
 const ESTADO_STYLES: Record<'recibido' | 'preparando' | 'listo', string> = {
   recibido: 'bg-ghost-fog text-ash-graphite border-concrete',
-  preparando: 'bg-canvas-white text-sage-green border-stone/50',
+  preparando: 'border-[#BFDBFE] bg-[#EFF6FF] text-[#1D4ED8]',
   listo: 'bg-success/15 text-[#087645] border-success/30',
+};
+
+type MesaCardTone = 'account' | 'ready' | 'progress';
+
+const MESA_CARD_TONES: Record<MesaCardTone, {
+  border: string;
+  accent: string;
+  badge: string;
+  dot: string;
+  action: string;
+}> = {
+  account: {
+    border: 'border-[#F3D4A3]',
+    accent: 'border-l-[#F2A51A]',
+    badge: 'border-[#F7DCA8] bg-[#FFF4DB] text-[#9A5700]',
+    dot: 'bg-[#F2A51A]',
+    action: 'border-[#F3D4A3] bg-[#FFF9EF] text-[#8A4D00] hover:bg-[#FFF2D9]',
+  },
+  ready: {
+    border: 'border-[#A7E4CC]',
+    accent: 'border-l-[#14A77B]',
+    badge: 'border-[#B7EAD8] bg-[#EAF8F2] text-[#087657]',
+    dot: 'bg-[#14A77B]',
+    action: 'border-[#B7EAD8] bg-[#F0FBF7] text-[#087657] hover:bg-[#E2F7EF]',
+  },
+  progress: {
+    border: 'border-[#C9DCF7]',
+    accent: 'border-l-[#4D8EDB]',
+    badge: 'border-[#CFE1FA] bg-[#EFF6FF] text-[#285F9F]',
+    dot: 'bg-[#4D8EDB]',
+    action: 'border-[#D6E5F8] bg-[#F7FAFF] text-[#285F9F] hover:bg-[#EDF5FF]',
+  },
 };
 
 function calcularEstadoMesa(pedidos: PedidoVista[]): PedidoVista['estado'] {
@@ -153,109 +185,119 @@ function MesaCard({
     (sum, pedido) => sum + pedido.items.reduce((pedidoItems, item) => pedidoItems + item.cantidad, 0),
     0,
   );
-  const estadoMesa = calcularEstadoMesa(grupo.pedidos);
   const cuentaSolicitada = grupo.cuentaSolicitada;
   const tienePedidosListos = grupo.pedidos.some(p => p.estado === 'listo' && !p.finalizado);
+  const tone: MesaCardTone = cuentaSolicitada ? 'account' : tienePedidosListos ? 'ready' : 'progress';
+  const toneStyles = MESA_CARD_TONES[tone];
+  const statusLabel = cuentaSolicitada
+    ? grupo.pagoHabilitado ? 'Pago habilitado' : 'Cuenta'
+    : tienePedidosListos ? 'Listo' : 'En curso';
+  const ultimaHora = grupo.pedidos[grupo.pedidos.length - 1]?.timestamp;
+  const comensales = new Set(
+    grupo.pedidos.flatMap(pedido => pedido.items.map(item => item.comensalId).filter(Boolean)),
+  ).size;
 
   return (
     <article
-      className={`overflow-hidden rounded-xl border bg-canvas-white shadow-sm transition-all hover:shadow-md ${
-        tienePedidosListos
-          ? 'border-emerald-500 ring-2 ring-emerald-500/40 shadow-emerald-500/15 shadow-lg'
-          : cuentaSolicitada
-          ? 'border-alert-red/40'
-          : 'border-concrete'
-      }`}
+      className={`overflow-hidden rounded-xl border border-l-[3px] bg-canvas-white shadow-[0_1px_2px_rgba(15,23,42,0.04)] transition-all hover:-translate-y-0.5 hover:shadow-md ${toneStyles.border} ${toneStyles.accent}`}
     >
-      {/* LUZ Y ALERTA VISUAL: PEDIDO LISTO PARA RETIRAR DE COCINA */}
-      {tienePedidosListos && (
-        <div className="flex items-center justify-between bg-emerald-600 px-16 py-8 text-white font-bold text-12 shadow-inner">
-          <div className="flex items-center gap-8">
-            <span className="relative flex h-10 w-10">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-10 w-10 bg-white"></span>
-            </span>
-            <span className="tracking-wide uppercase font-black">¡Pedido listo en cocina!</span>
+      <div className="px-16 py-12">
+        <div className="flex items-start justify-between gap-12">
+          <div className="min-w-0">
+            <h3 className="text-16 font-bold tracking-[-0.01em] text-ash-graphite">Mesa {grupo.mesa}</h3>
           </div>
-          <span className="text-11 bg-white/20 px-8 py-2 rounded-full font-mono">
-            Retirar y servir
+          <span className={`inline-flex shrink-0 items-center gap-6 rounded-full border px-8 py-4 text-10 font-semibold ${toneStyles.badge}`}>
+            <span className={`h-6 w-6 rounded-full ${toneStyles.dot}`} aria-hidden="true" />
+            {statusLabel}
           </span>
         </div>
-      )}
 
-      <div
-        className={`flex items-center justify-between gap-12 border-b px-16 py-14 sm:px-20 ${
-          tienePedidosListos
-            ? 'border-emerald-200/80 bg-emerald-50/60'
-            : cuentaSolicitada
-            ? 'border-alert-red/30 bg-warm-pink/15'
-            : 'border-concrete/70 bg-canvas-white'
-        }`}
-      >
-        <div className="flex min-w-0 flex-wrap items-center gap-8 sm:gap-12">
-          <span className="text-16 font-semibold text-ash-graphite">Mesa {grupo.mesa}</span>
-          <span className="text-11 font-mono text-sage-green">
-            {grupo.pedidos.length} {grupo.pedidos.length === 1 ? 'pedido' : 'pedidos'} activos
-          </span>
-          {cuentaSolicitada && (
-            <span
-              className={`flex items-center gap-4 rounded-full border px-8 py-2 text-11 font-semibold ${
-                grupo.pagoHabilitado
-                  ? 'border-plain-green/30 bg-plain-green/15 text-plain-green'
-                  : 'border-alert-red/20 bg-warm-pink/20 text-alert-red'
-              }`}
-            >
-              {grupo.pagoHabilitado ? '✓ Pago habilitado' : 'Cuenta solicitada'}
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-8 text-11 text-sage-green">
+          {comensales > 0 && (
+            <span className="flex items-center gap-4">
+              <span className="material-symbols-outlined text-15" aria-hidden="true">group</span>
+              {comensales} {comensales === 1 ? 'comensal' : 'comensales'}
             </span>
           )}
+          <span className="rounded-full bg-ghost-fog px-8 py-4 font-medium text-ash-graphite">
+            {totalItems} {totalItems === 1 ? 'producto' : 'productos'}
+          </span>
         </div>
-        {tienePedidosListos ? (
-          <span className="flex items-center gap-6 rounded-full border border-emerald-500 bg-emerald-100 text-emerald-800 px-10 py-3 text-11 font-black shadow-xs animate-pulse">
-            <span className="inline-block h-8 w-8 rounded-full bg-emerald-500"></span>
-            <span>¡Listo para servir!</span>
+
+        <div className="mt-10 flex items-center justify-between gap-12 border-t border-ghost-fog pt-8">
+          <span className="flex min-w-0 items-center gap-6 text-10 text-sage-green">
+            <span className="material-symbols-outlined text-15" aria-hidden="true">schedule</span>
+            {ultimaHora ? `Último pedido ${ultimaHora}` : 'Pedido activo'}
           </span>
-        ) : (
-          <span className={`shrink-0 rounded-full border px-10 py-3 text-11 font-semibold ${ESTADO_STYLES[estadoMesa]}`}>
-            {ESTADO_LABELS[estadoMesa]}
-          </span>
-        )}
+          <span className="shrink-0 font-mono text-14 font-semibold text-ash-graphite">${total.toLocaleString()}</span>
+        </div>
       </div>
 
-      <div className="space-y-12 px-16 py-14 sm:px-20">
-        <div className="flex items-end justify-between gap-12">
-          <div>
-            <p className="text-13 font-medium text-ash-graphite">Resumen de la mesa</p>
-            <p className="mt-2 text-11 text-sage-green">{totalItems} {totalItems === 1 ? 'ítem solicitado' : 'ítems solicitados'}</p>
-          </div>
-          <span className="shrink-0 font-mono text-15 font-semibold text-ash-graphite">${total.toLocaleString()}</span>
-        </div>
-
-        <div className="flex gap-8">
+      <div className={`flex gap-8 border-t px-10 py-6 ${toneStyles.action}`}>
           {cuentaSolicitada && !grupo.pagoHabilitado && onHabilitarPago && (
             <button
               type="button"
               onClick={() => onHabilitarPago(grupo)}
-              className="flex min-h-44 flex-1 items-center justify-center gap-6 rounded-lg bg-[#009EE3] px-12 py-8 text-12 font-semibold text-white transition-opacity hover:opacity-90 shadow-2xs cursor-pointer"
+              className="flex min-h-44 flex-1 items-center justify-center gap-6 rounded-lg bg-[#168AC1] px-10 py-8 text-12 font-semibold text-white shadow-2xs transition-all hover:bg-[#0E78AA] active:scale-[0.98]"
             >
-              <span>💳</span>
+              <span className="material-symbols-outlined text-17" aria-hidden="true">payments</span>
               <span>Habilitar pago</span>
             </button>
           )}
           <button
             type="button"
             onClick={onOpen}
-            className={`flex min-h-44 ${cuentaSolicitada && !grupo.pagoHabilitado && onHabilitarPago ? 'flex-1' : 'w-full'} items-center justify-center gap-8 rounded-lg font-bold text-12 transition-all cursor-pointer ${
-              tienePedidosListos
-                ? 'bg-emerald-600 text-white hover:bg-emerald-500 shadow-sm active:scale-[0.98]'
-                : 'border border-concrete text-ash-graphite hover:border-stone hover:bg-ghost-fog'
-            }`}
+            className={`flex min-h-44 ${cuentaSolicitada && !grupo.pagoHabilitado && onHabilitarPago ? 'flex-1' : 'w-full'} items-center justify-center gap-6 rounded-lg border border-current/15 bg-white/70 px-10 text-12 font-semibold transition-all hover:bg-white active:scale-[0.98]`}
           >
-            <span>{tienePedidosListos ? '🛎️ Ver / Entregar pedido' : 'Ver más'}</span>
-            <span aria-hidden="true">{tienePedidosListos ? '→' : '↓'}</span>
+            <span>{tienePedidosListos ? 'Ver pedido' : 'Ver detalle'}</span>
+            <span className="material-symbols-outlined text-16" aria-hidden="true">arrow_forward</span>
           </button>
-        </div>
       </div>
     </article>
+  );
+}
+
+function PedidosSectionHeader({
+  tone,
+  icon,
+  title,
+  subtitle,
+  count,
+}: {
+  tone: MesaCardTone;
+  icon: string;
+  title: string;
+  subtitle: string;
+  count: number;
+}) {
+  const styles = {
+    account: {
+      icon: 'bg-[#FFF1D8] text-[#B86B00]',
+      badge: 'bg-[#FFF1D8] text-[#9A5700]',
+    },
+    ready: {
+      icon: 'bg-[#E4F7F0] text-[#087657]',
+      badge: 'bg-[#E4F7F0] text-[#087657]',
+    },
+    progress: {
+      icon: 'bg-[#EAF3FF] text-[#2D6FB7]',
+      badge: 'bg-[#EAF3FF] text-[#285F9F]',
+    },
+  }[tone];
+
+  return (
+    <div className="flex items-start gap-10">
+      <span className={`flex h-32 w-32 shrink-0 items-center justify-center rounded-lg ${styles.icon}`}>
+        <span className="material-symbols-outlined text-18" aria-hidden="true">{icon}</span>
+      </span>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-8">
+          <h3 className="text-14 font-semibold text-ash-graphite">{title}</h3>
+          <span className={`rounded-full px-8 py-2 text-10 font-semibold ${styles.badge}`}>{count}</span>
+        </div>
+        <p className="mt-2 text-10 text-sage-green">{subtitle}</p>
+      </div>
+    </div>
   );
 }
 
@@ -822,7 +864,7 @@ export default function RecepcionistaSection() {
   );
 
   return (
-    <div className="h-full space-y-24 overflow-y-auto bg-ghost-fog/45 p-16 font-inter sm:p-24 md:p-32">
+    <div className="h-full space-y-28 overflow-y-auto bg-[#F7F8F8] p-16 font-inter sm:p-24 md:p-32">
       <div className="flex flex-col justify-between gap-16 sm:flex-row sm:items-center">
         <div className="min-w-0">
           <h2 className="text-24 font-semibold tracking-[-0.02em] text-ash-graphite sm:text-32">Panel Recepcionista</h2>
@@ -834,16 +876,6 @@ export default function RecepcionistaSection() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-8 self-start sm:self-auto">
-          {/* LUZ DE ALERTA: PEDIDOS LISTOS PARA RETIRAR EN COCINA */}
-          {listosParaRetirar.length > 0 && (
-            <div className="flex items-center gap-8 rounded-full border border-emerald-500 bg-emerald-500/15 px-14 py-8 text-12 font-bold text-emerald-900 shadow-sm animate-pulse">
-              <span className="relative flex h-10 w-10">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-10 w-10 bg-emerald-600"></span>
-              </span>
-              <span>🛎️ ¡{listosParaRetirar.length} {listosParaRetirar.length === 1 ? 'pedido listo en cocina!' : 'pedidos listos en cocina!'}</span>
-            </div>
-          )}
           <a
             href="/kds"
             target="_blank"
@@ -889,12 +921,17 @@ export default function RecepcionistaSection() {
 
       {/* 1. SOLICITUDES DE CUENTA */}
       {!loading && conAlerta.length > 0 && (
-        <div className="space-y-8">
-          <div className="flex items-center gap-6 text-alert-red">
-            <span className="material-symbols-outlined text-18">notifications_active</span>
-            <p className="text-12 font-semibold">Solicitudes de cuenta ({conAlerta.length})</p>
+        <section className="space-y-12" aria-labelledby="solicitudes-cuenta-title">
+          <div id="solicitudes-cuenta-title">
+            <PedidosSectionHeader
+              tone="account"
+              icon="receipt_long"
+              title="Solicitudes de cuenta"
+              subtitle="Atender primero"
+              count={conAlerta.length}
+            />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
+          <div className="grid grid-cols-1 gap-14 md:grid-cols-2 lg:grid-cols-3">
             {conAlerta.map(grupo => (
               <MesaCard
                 key={grupo.key}
@@ -904,28 +941,22 @@ export default function RecepcionistaSection() {
               />
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {/* 2. ALERTA DESTACADA: LISTOS PARA RETIRAR DE COCINA */}
       {!loading && listosParaRetirar.length > 0 && (
-        <div className="space-y-8">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-8 text-emerald-800">
-              <span className="relative flex h-10 w-10">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-10 w-10 bg-emerald-600"></span>
-              </span>
-              <span className="material-symbols-outlined text-20 text-emerald-600">restaurant</span>
-              <h3 className="text-13 font-black uppercase tracking-wide">
-                Listos para retirar de cocina ({listosParaRetirar.length})
-              </h3>
-            </div>
-            <span className="text-11 font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 rounded-full px-10 py-3">
-              Llevar a la mesa
-            </span>
+        <section className="space-y-12" aria-labelledby="listos-retirar-title">
+          <div id="listos-retirar-title">
+            <PedidosSectionHeader
+              tone="ready"
+              icon="notifications"
+              title="Listos para retirar"
+              subtitle="Llevar a la mesa"
+              count={listosParaRetirar.length}
+            />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
+          <div className="grid grid-cols-1 gap-14 md:grid-cols-2 lg:grid-cols-3">
             {listosParaRetirar.map(grupo => (
               <MesaCard
                 key={grupo.key}
@@ -935,17 +966,22 @@ export default function RecepcionistaSection() {
               />
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {/* 3. PEDIDOS EN CURSO / PREPARACIÓN */}
       {!loading && enCurso.length > 0 && (
-        <div className="space-y-8">
-          <div className="flex items-center gap-6 text-sage-green">
-            <span className="material-symbols-outlined text-18">receipt_long</span>
-            <p className="text-12 font-semibold">Pedidos en preparación / en curso ({enCurso.length})</p>
+        <section className="space-y-12" aria-labelledby="pedidos-preparacion-title">
+          <div id="pedidos-preparacion-title">
+            <PedidosSectionHeader
+              tone="progress"
+              icon="schedule"
+              title="En preparación"
+              subtitle="Pedidos activos en cocina"
+              count={enCurso.length}
+            />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-16">
+          <div className="grid grid-cols-1 gap-14 md:grid-cols-2 lg:grid-cols-3">
             {enCurso.map(grupo => (
               <MesaCard
                 key={grupo.key}
@@ -955,7 +991,7 @@ export default function RecepcionistaSection() {
               />
             ))}
           </div>
-        </div>
+        </section>
       )}
 
       {!loading && pedidos.length === 0 && (

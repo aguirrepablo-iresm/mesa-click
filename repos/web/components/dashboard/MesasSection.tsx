@@ -5,50 +5,79 @@ import { api, MesaAPI, Sucursal, EstadoPlan, esPlanLimitReached, detallePlanLimi
 import { EmptyState, Skeleton, useToast, useConfirm } from "@/components/ui";
 import UpgradeModal from "./UpgradeModal";
 
-function QRCanvas({ token }: { token: string }) {
+function QRCanvas({ token, mesaNumero }: { token: string; mesaNumero: number }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [publicUrl, setPublicUrl] = useState('');
+  const toast = useToast();
 
   useEffect(() => {
     if (!canvasRef.current) return;
     const origin = typeof window !== 'undefined' ? window.location.origin : '';
     const url = `${origin}/mesa/${token}`;
     setPublicUrl(url);
-    QRCode.toCanvas(canvasRef.current, url, { width: 140, margin: 1 });
+    QRCode.toCanvas(canvasRef.current, url, { width: 180, margin: 1 });
   }, [token]);
 
   const handleDownload = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const link = document.createElement('a');
-    link.download = `qr-mesa-${token}.png`;
+    link.download = `qr-mesa-${mesaNumero}.png`;
     link.href = canvas.toDataURL('image/png');
     link.click();
   };
 
+  const handleCopy = async () => {
+    if (!publicUrl) return;
+    try {
+      await navigator.clipboard.writeText(publicUrl);
+      toast.success(`Enlace de Mesa ${mesaNumero} copiado.`);
+    } catch {
+      toast.error('No se pudo copiar el enlace.');
+    }
+  };
+
   return (
-    <div className="flex w-full flex-col items-center gap-10">
-      <div className="flex items-center justify-center rounded-xl border border-concrete bg-canvas-white p-8 shadow-sm">
-        <canvas ref={canvasRef} className="max-w-full h-auto rounded" />
+    <div className="flex w-full flex-col gap-10">
+      <div className="flex min-h-200 items-center justify-center rounded-xl border border-ghost-fog bg-[#F7F8F8] p-10">
+        <canvas ref={canvasRef} className="h-auto w-full max-w-[180px] rounded-lg bg-white" />
       </div>
       {publicUrl && (
+        <div className="flex h-40 w-full items-center gap-8 rounded-lg border border-ghost-fog bg-[#F7F8F8] px-10">
+          <span className="min-w-0 flex-1 truncate text-10 font-mono text-sage-green" title={publicUrl}>
+            {publicUrl}
+          </span>
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="flex h-32 w-32 shrink-0 items-center justify-center rounded-md text-sage-green transition-colors hover:bg-canvas-white hover:text-ash-graphite"
+            aria-label={`Copiar enlace de Mesa ${mesaNumero}`}
+            title="Copiar enlace"
+          >
+            <span className="material-symbols-outlined text-16">content_copy</span>
+          </button>
+        </div>
+      )}
+      <div className="grid grid-cols-2 gap-8">
         <a
           href={publicUrl}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={`Abrir menú de la Mesa ${token} en una nueva pestaña`}
-          className="w-full truncate text-center text-10 font-mono text-sage-green underline decoration-sage-green/40 underline-offset-2 transition-colors hover:text-ash-graphite"
+          className="flex min-h-44 items-center justify-center gap-6 rounded-lg border border-concrete bg-canvas-white px-8 text-center text-11 font-semibold text-ash-graphite transition-colors hover:border-stone hover:bg-ghost-fog"
+          aria-label={`Abrir menú de la Mesa ${mesaNumero} en una nueva pestaña`}
         >
-          {publicUrl}
+          <span className="material-symbols-outlined text-16">open_in_new</span>
+          <span>Abrir menú</span>
         </a>
-      )}
-      <button
-        onClick={handleDownload}
-        className="flex h-44 w-full items-center justify-center gap-6 rounded-lg border border-concrete bg-canvas-white px-10 text-12 font-semibold text-ash-graphite transition-colors hover:border-stone hover:bg-ghost-fog"
-      >
-        <span className="material-symbols-outlined text-16">download</span>
-        Descargar QR
-      </button>
+        <button
+          type="button"
+          onClick={handleDownload}
+          className="flex min-h-44 items-center justify-center gap-6 rounded-lg bg-[#1685F8] px-8 text-center text-11 font-semibold text-white shadow-2xs transition-colors hover:bg-[#0F73DB]"
+        >
+          <span className="material-symbols-outlined text-16">download</span>
+          <span>Descargar QR</span>
+        </button>
+      </div>
     </div>
   );
 }
@@ -211,7 +240,7 @@ export default function MesasSection() {
   };
 
   return (
-    <div className="h-full space-y-24 overflow-y-auto bg-ghost-fog/45 p-16 font-inter sm:p-24 md:p-32">
+    <div className="h-full space-y-24 overflow-y-auto bg-[#F7F8F8] p-16 font-inter sm:p-24 md:p-32">
       <div className="flex flex-col justify-between gap-16 sm:flex-row sm:items-center">
         <div className="min-w-0">
           <h2 className="text-24 font-semibold tracking-[-0.02em] text-ash-graphite sm:text-32">Mesas & Códigos QR</h2>
@@ -318,31 +347,37 @@ export default function MesasSection() {
         <>
           <div className="grid grid-cols-1 gap-16 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {mesas.map(mesa => (
-              <article key={mesa.id} className="flex flex-col items-center space-y-14 rounded-xl border border-concrete bg-canvas-white p-16 shadow-sm transition-shadow hover:shadow-md sm:p-20">
-                <div className="flex w-full items-center justify-between gap-8">
-                  <div className="flex min-w-0 items-center gap-10">
-                    <span className="flex h-44 w-44 shrink-0 items-center justify-center rounded-lg bg-ghost-fog text-ash-graphite">
-                      <span className="material-symbols-outlined text-20">table_restaurant</span>
-                    </span>
-                    <div className="min-w-0">
-                      <p className="truncate text-16 font-semibold text-ash-graphite">Mesa {mesa.numero}</p>
-                      <p className="mt-2 text-11 text-sage-green">{mesa.capacidad} personas</p>
-                    </div>
+              <article key={mesa.id} className="overflow-visible rounded-xl border border-concrete bg-canvas-white shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
+                <div className="flex items-start justify-between gap-10 px-14 pb-10 pt-14">
+                  <div className="min-w-0">
+                    <p className="truncate text-16 font-semibold text-ash-graphite">Mesa {mesa.numero}</p>
+                    <p className="mt-4 flex items-center gap-4 text-11 text-sage-green">
+                      <span className="material-symbols-outlined text-15">group</span>
+                      {mesa.capacidad} personas
+                    </p>
                   </div>
-                  <button
-                    onClick={() => handleEliminarMesa(mesa.id)}
-                    title="Eliminar mesa"
-                    className="flex h-44 w-44 shrink-0 items-center justify-center rounded-lg text-alert-red transition-colors hover:bg-warm-pink/20"
-                    aria-label={`Eliminar Mesa ${mesa.numero}`}
-                  >
-                    <span className="material-symbols-outlined text-18">delete</span>
-                  </button>
+                  <details className="group relative shrink-0">
+                    <summary
+                      className="flex h-40 w-40 cursor-pointer list-none items-center justify-center rounded-lg text-sage-green transition-colors hover:bg-ghost-fog hover:text-ash-graphite [&::-webkit-details-marker]:hidden"
+                      aria-label={`Acciones de Mesa ${mesa.numero}`}
+                      title="Más acciones"
+                    >
+                      <span className="material-symbols-outlined text-20">more_vert</span>
+                    </summary>
+                    <div className="absolute right-0 top-44 z-20 min-w-160 rounded-lg border border-concrete bg-canvas-white p-4 shadow-lg">
+                      <button
+                        type="button"
+                        onClick={() => handleEliminarMesa(mesa.id)}
+                        className="flex min-h-40 w-full items-center gap-8 rounded-md px-10 text-left text-11 font-medium text-alert-red transition-colors hover:bg-warm-pink/20"
+                      >
+                        <span className="material-symbols-outlined text-17">delete</span>
+                        Eliminar mesa
+                      </button>
+                    </div>
+                  </details>
                 </div>
-                <QRCanvas token={mesa.qr_token} />
-                <div className="w-full space-y-2 border-t border-ghost-fog pt-10">
-                  <p className="text-9 font-mono text-sage-green text-center break-all truncate">
-                    {mesa.qr_token}
-                  </p>
+                <div className="px-14 pb-14">
+                  <QRCanvas token={mesa.qr_token} mesaNumero={mesa.numero} />
                 </div>
               </article>
             ))}
