@@ -245,6 +245,9 @@ export interface Tenant {
   plan_hasta?: string | null;
   upgrade_solicitado_at?: string | null;
   upgrade_nota?: string | null;
+  mostrar_marca_agua?: boolean;
+  color_secundario?: string;
+  tipo_fuente?: string;
   slug: string;
   activo?: boolean;
   created_at: string;
@@ -266,6 +269,9 @@ export interface ActualizarTenantInput {
   mp_access_token?: string;
   mp_public_key?: string;
   mp_activo?: boolean;
+  mostrar_marca_agua?: boolean;
+  color_secundario?: string;
+  tipo_fuente?: string;
 }
 
 export interface OnboardingInput {
@@ -400,6 +406,10 @@ export interface MesaPublica {
   color_primario?: string | null;
   estilo_visual?: 'claro' | 'oscuro' | null;
   mercadopago_habilitado?: boolean;
+  plan?: PlanTenant;
+  mostrar_marca_agua?: boolean;
+  color_secundario?: string | null;
+  tipo_fuente?: string | null;
 }
 
 export interface ArticuloPublico {

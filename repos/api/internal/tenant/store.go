@@ -96,12 +96,14 @@ func (s *pgStore) ObtenerPorID(ctx context.Context, id string) (*Tenant, error) 
 		        logo_url, color_primario, estilo_visual, datos_fiscales, google_review_url,
 		        mp_access_token, mp_public_key, COALESCE(mp_activo, false),
 		        COALESCE(plan, 'free'), plan_desde, plan_hasta, upgrade_solicitado_at, upgrade_nota,
+		        COALESCE(mostrar_marca_agua, true), color_secundario, tipo_fuente,
 		        slug, created_at
 		 FROM tenants WHERE id = $1`, id,
 	).Scan(&t.ID, &t.Nombre, &t.NombreFantasia, &t.Rubro, &t.Descripcion, &t.EmailContacto, &t.Whatsapp,
 		&t.LogoURL, &t.ColorPrimario, &t.EstiloVisual, &datosFiscalesBytes, &t.GoogleReviewURL,
 		&t.MPAccessToken, &t.MPPublicKey, &t.MPActivo,
 		&t.Plan, &t.PlanDesde, &t.PlanHasta, &t.UpgradeSolicitadoAt, &t.UpgradeNota,
+		&t.MostrarMarcaAgua, &t.ColorSecundario, &t.TipoFuente,
 		&t.Slug, &t.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
@@ -198,6 +200,21 @@ func (s *pgStore) Actualizar(ctx context.Context, id string, input ActualizarTen
 		mpActivo = *input.MPActivo
 	}
 
+	mostrarMarcaAgua := actual.MostrarMarcaAgua
+	if input.MostrarMarcaAgua != nil {
+		mostrarMarcaAgua = *input.MostrarMarcaAgua
+	}
+
+	colorSecundario := actual.ColorSecundario
+	if input.ColorSecundario != nil {
+		colorSecundario = input.ColorSecundario
+	}
+
+	tipoFuente := actual.TipoFuente
+	if input.TipoFuente != nil {
+		tipoFuente = input.TipoFuente
+	}
+
 	var t Tenant
 	var datosFiscalesBytes []byte
 
@@ -206,21 +223,25 @@ func (s *pgStore) Actualizar(ctx context.Context, id string, input ActualizarTen
 		 SET nombre = $1, nombre_fantasia = $2, rubro = $3, descripcion = $4,
 		     email_contacto = $5, whatsapp = $6, logo_url = $7, color_primario = $8,
 		     estilo_visual = $9, datos_fiscales = $10, google_review_url = $11,
-		     mp_access_token = $12, mp_public_key = $13, mp_activo = $14
-		 WHERE id = $15
+		     mp_access_token = $12, mp_public_key = $13, mp_activo = $14,
+		     mostrar_marca_agua = $15, color_secundario = $16, tipo_fuente = $17
+		 WHERE id = $18
 		 RETURNING id, nombre, nombre_fantasia, rubro, descripcion, email_contacto, whatsapp,
 		           logo_url, color_primario, estilo_visual, datos_fiscales, google_review_url,
 		           mp_access_token, mp_public_key, COALESCE(mp_activo, false),
 		           COALESCE(plan, 'free'), plan_desde, plan_hasta, upgrade_solicitado_at, upgrade_nota,
+		           COALESCE(mostrar_marca_agua, true), color_secundario, tipo_fuente,
 		           slug, created_at`,
 		nombre, nombreFantasia, rubro, descripcion,
 		emailContacto, whatsapp, logoURL, colorPrimario,
 		estiloVisual, datosFiscalesJSON, googleReviewURL,
-		mpAccessToken, mpPublicKey, mpActivo, id,
+		mpAccessToken, mpPublicKey, mpActivo,
+		mostrarMarcaAgua, colorSecundario, tipoFuente, id,
 	).Scan(&t.ID, &t.Nombre, &t.NombreFantasia, &t.Rubro, &t.Descripcion, &t.EmailContacto, &t.Whatsapp,
 		&t.LogoURL, &t.ColorPrimario, &t.EstiloVisual, &datosFiscalesBytes, &t.GoogleReviewURL,
 		&t.MPAccessToken, &t.MPPublicKey, &t.MPActivo,
 		&t.Plan, &t.PlanDesde, &t.PlanHasta, &t.UpgradeSolicitadoAt, &t.UpgradeNota,
+		&t.MostrarMarcaAgua, &t.ColorSecundario, &t.TipoFuente,
 		&t.Slug, &t.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

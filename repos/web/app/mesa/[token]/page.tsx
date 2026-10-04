@@ -18,6 +18,7 @@ import CartBottomSheet from "@/components/menu/CartBottomSheet";
 import SeguimientoView from "@/components/menu/SeguimientoView";
 import BrandHeader, { buildMesaTheme } from "@/components/menu/BrandHeader";
 import type { MesaBranding } from "@/components/menu/BrandHeader";
+import MarcaAgua from "@/components/menu/MarcaAgua";
 
 export type CartItem = {
   id: string;
@@ -401,6 +402,9 @@ export default function MesaPage() {
   const [comensal, setComensal] = useState<ComensalIdentity | null>(null);
   const [identidadLista, setIdentidadLista] = useState(false);
   const [editandoComensal, setEditandoComensal] = useState(false);
+  const [pagandoMP, setPagandoMP] = useState(false);
+  const [pagoExitoso, setPagoExitoso] = useState(false);
+  const [pagoError, setPagoError] = useState(false);
 
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
   const skipNextPersistRef = useRef(false);
@@ -1044,10 +1048,6 @@ export default function MesaPage() {
     }
   };
 
-  const [pagandoMP, setPagandoMP] = useState(false);
-  const [pagoExitoso, setPagoExitoso] = useState(false);
-  const [pagoError, setPagoError] = useState(false);
-
   useEffect(() => {
     if (typeof window === 'undefined') return;
     const params = new URLSearchParams(window.location.search);
@@ -1195,6 +1195,7 @@ export default function MesaPage() {
           mesa={mesa.numero}
           comensalId={comensal?.id}
           comensalNombre={comensal?.nombre}
+          mostrarMarcaAgua={mesa.mostrar_marca_agua !== false}
           onCambiarComensal={state.cuentaSolicitada ? undefined : () => setEditandoComensal(true)}
           onAgregarMas={() => dispatch({ type: 'SET_VISTA', payload: 'carta' })}
           onPedirCuenta={handlePedirCuenta}
@@ -1268,6 +1269,8 @@ export default function MesaPage() {
               No hay categorías cargadas en la carta.
             </div>
           )}
+
+          {mesa.mostrar_marca_agua !== false && <MarcaAgua />}
         </div>
       </div>
 

@@ -197,6 +197,18 @@ button,
   color: var(--mesa-text, #0f172a);
 }
 
+.mesa-page {
+  font-family: var(--mesa-font, var(--font-inter));
+}
+
+.mesa-accent {
+  color: var(--mesa-accent, var(--mesa-primary));
+}
+
+.mesa-accent-bg {
+  background-color: var(--mesa-accent, var(--mesa-primary));
+}
+
 .mesa-background {
   background-color: var(--mesa-background, #f8fafc);
 }
