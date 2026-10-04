@@ -4,21 +4,36 @@ import React, { useEffect, useMemo, useState } from "react";
 import { api, Tenant, Sucursal, getErrorMessage, getApiBaseUrl } from "@/lib/api";
 import { DEFAULT_MESA_PRIMARY } from "@/components/menu/BrandHeader";
 import EquipoSection from "./EquipoSection";
+import PlanesSection from "./PlanesSection";
 
 /* ─────────────────────────── contenedor ─────────────────────────── */
 
-const TABS = ["negocio", "apariencia", "equipo", "sucursales", "mercadopago"] as const;
+const TABS = ["negocio", "apariencia", "equipo", "sucursales", "planes", "mercadopago"] as const;
 type Tab = (typeof TABS)[number];
 const TAB_LABELS: Record<Tab, string> = {
   negocio: "Negocio",
   apariencia: "Apariencia",
   equipo: "Equipo de trabajo",
   sucursales: "Sucursales",
+  planes: "Planes y Suscripción",
   mercadopago: "Mercado Pago",
 };
 
-export default function ConfiguracionSection() {
-  const [tab, setTab] = useState<Tab>("negocio");
+export default function ConfiguracionSection({
+  initialTab,
+  onTenantUpdate,
+}: {
+  initialTab?: Tab;
+  onTenantUpdate?: (t: Tenant) => void;
+} = {}) {
+  const [tab, setTab] = useState<Tab>(initialTab || "negocio");
+
+  useEffect(() => {
+    if (initialTab) {
+      setTab(initialTab);
+    }
+  }, [initialTab]);
+
   const [tenant, setTenant] = useState<Tenant | null>(null);
   const [sucursales, setSucursales] = useState<Sucursal[]>([]);
   const [sucursalSelId, setSucursalSelId] = useState("");
@@ -94,6 +109,7 @@ export default function ConfiguracionSection() {
           key={tenant?.id ?? "sin-tenant"}
           tenant={tenant}
           onIrAMercadoPago={() => setTab("mercadopago")}
+          onIrAPlanes={() => setTab("planes")}
         />
       )}
       {tab === "apariencia" && (
@@ -107,11 +123,23 @@ export default function ConfiguracionSection() {
       {tab === "sucursales" && (
         <SucursalesTab
           key={sucursalSelId || "sin-sucursal"}
+          tenant={tenant}
           sucursales={sucursales}
           setSucursales={setSucursales}
           selId={sucursalSelId}
           setSelId={setSucursalSelId}
           onIrAMercadoPago={() => setTab("mercadopago")}
+          onIrAPlanes={() => setTab("planes")}
+        />
+      )}
+      {tab === "planes" && (
+        <PlanesSection
+          key={tenant?.id ?? "sin-tenant"}
+          tenant={tenant}
+          onTenantUpdate={(actualizado) => {
+            setTenant(actualizado);
+            if (onTenantUpdate) onTenantUpdate(actualizado);
+          }}
         />
       )}
       {tab === "mercadopago" && (
@@ -199,9 +227,11 @@ const RUBROS = ["Cafetería", "Bar", "Restaurante", "Cervecería", "Pizzería", 
 function NegocioTab({
   tenant,
   onIrAMercadoPago,
+  onIrAPlanes,
 }: {
   tenant: Tenant | null;
   onIrAMercadoPago?: () => void;
+  onIrAPlanes?: () => void;
 }) {
   const rubro = tenant?.rubro;
   const rubroNormalizado = useMemo(() => {
@@ -385,21 +415,33 @@ function NegocioTab({
 
         <Card titulo="Estado del plan">
           <div>
-            <p className="text-16 font-bold text-ash-graphite">Plan Free</p>
+            <div className="flex items-center gap-8">
+              <p className="text-16 font-bold text-ash-graphite">
+                {tenant?.plan === "pro" ? "Plan Pro" : "Plan Free"}
+              </p>
+              <span
+                className={`inline-flex items-center px-8 py-2 rounded-full text-10 font-mono font-semibold uppercase ${
+                  tenant?.plan === "pro"
+                    ? "bg-ash-graphite text-canvas-white"
+                    : "bg-ghost-fog border border-concrete text-ash-graphite"
+                }`}
+              >
+                {tenant?.plan === "pro" ? "Activo" : "Gratuito"}
+              </span>
+            </div>
             <p className="text-13 text-sage-green mt-4">
-              Incluye una sucursal activa y configuración básica del menú.
+              {tenant?.plan === "pro"
+                ? "Disfrutás de sucursales, mesas y productos ilimitados."
+                : "Plan con límites de hasta 1 sucursal, 10 mesas y 30 productos."}
             </p>
           </div>
-          <div className="flex flex-wrap gap-8">
-            <span className="px-10 py-6 text-12 rounded-md border border-concrete text-sage-green">
-              1 sucursal activa
-            </span>
+          <div className="flex flex-wrap items-center gap-8 pt-4">
             <button
-              disabled
-              className="h-44 cursor-not-allowed rounded-lg border border-concrete px-12 text-12 text-ash-graphite opacity-50"
-              title="Disponible con el modelo Freemium (Sprint 16)"
+              type="button"
+              onClick={onIrAPlanes}
+              className="h-44 rounded-lg border border-concrete bg-canvas-white px-16 text-12 font-medium text-ash-graphite hover:bg-ghost-fog active:scale-95 transition-all cursor-pointer"
             >
-              Upgrade Pro
+              Ver límites y suscripción →
             </button>
           </div>
         </Card>
@@ -811,20 +853,50 @@ function serializeHorarios(abiertos: Set<string>, turnos: Turno[]): string {
 }
 
 function SucursalesTab({
+  tenant,
   sucursales,
   setSucursales,
   selId,
   setSelId,
   onIrAMercadoPago,
+  onIrAPlanes,
 }: {
+  tenant: Tenant | null;
   sucursales: Sucursal[];
   setSucursales: React.Dispatch<React.SetStateAction<Sucursal[]>>;
   selId: string;
   setSelId: (id: string) => void;
   onIrAMercadoPago?: () => void;
+  onIrAPlanes?: () => void;
 }) {
   const sel = useMemo(() => sucursales.find((s) => s.id === selId) ?? null, [sucursales, selId]);
   const horariosIniciales = parseHorarios(sel?.horarios);
+
+  const [nuevaSucursalNombre, setNuevaSucursalNombre] = useState("");
+  const [nuevaSucursalWhatsapp, setNuevaSucursalWhatsapp] = useState("");
+  const [creandoSucursal, setCreandoSucursal] = useState(false);
+  const [errorCrearSucursal, setErrorCrearSucursal] = useState<string | null>(null);
+
+  const handleCrearSucursalPro = async () => {
+    if (!nuevaSucursalNombre.trim()) return;
+    setCreandoSucursal(true);
+    setErrorCrearSucursal(null);
+    try {
+      const nueva = await api.crearSucursal({
+        tenant_id: tenant?.id,
+        nombre: nuevaSucursalNombre.trim(),
+        whatsapp: nuevaSucursalWhatsapp.trim() || undefined,
+      });
+      setSucursales((prev) => [...prev, nueva]);
+      setSelId(nueva.id);
+      setNuevaSucursalNombre("");
+      setNuevaSucursalWhatsapp("");
+    } catch (err) {
+      setErrorCrearSucursal(getErrorMessage(err, "No se pudo crear la sucursal."));
+    } finally {
+      setCreandoSucursal(false);
+    }
+  };
 
   const [form, setForm] = useState(() => ({
     nombre: sel?.nombre ?? "",
@@ -1157,23 +1229,67 @@ function SucursalesTab({
       </Card>
 
       {/* crear PRO */}
-      <aside className="space-y-12 rounded-xl border border-concrete bg-canvas-white p-20 shadow-sm">
-        <p className="text-13 font-bold text-ash-graphite">Crear sucursal PRO</p>
-        <p className="text-12 text-sage-green">Disponible para negocios con más de un local físico.</p>
-        <Campo label="Nombre">
-          <input className={INPUT} placeholder="Sucursal nueva" disabled />
-        </Campo>
-        <Campo label="Contacto">
-          <input className={INPUT} placeholder="+54 9 ..." disabled />
-        </Campo>
-        <button
-          disabled
-          className="h-44 w-full cursor-not-allowed rounded-lg border border-concrete text-11 font-semibold text-ash-graphite opacity-50"
-          title="Disponible con el plan Pro (Sprint 16)"
-        >
-          Actualizar a Pro
-        </button>
-      </aside>
+      {tenant?.plan === "pro" ? (
+        <aside className="space-y-12 rounded-xl border border-concrete bg-canvas-white p-20 shadow-sm">
+          <div className="flex items-center gap-8">
+            <p className="text-13 font-bold text-ash-graphite">Crear sucursal PRO</p>
+            <span className="rounded-full bg-ash-graphite text-canvas-white px-8 py-2 text-10 font-mono font-semibold uppercase">
+              Pro
+            </span>
+          </div>
+          <p className="text-12 text-sage-green">Agregá una nueva sucursal física para tu negocio.</p>
+          <Campo label="Nombre">
+            <input
+              className={INPUT}
+              placeholder="Sucursal nueva"
+              value={nuevaSucursalNombre}
+              onChange={(e) => setNuevaSucursalNombre(e.target.value)}
+            />
+          </Campo>
+          <Campo label="Contacto / WhatsApp">
+            <input
+              className={INPUT}
+              placeholder="+54 9 ..."
+              value={nuevaSucursalWhatsapp}
+              onChange={(e) => setNuevaSucursalWhatsapp(e.target.value)}
+            />
+          </Campo>
+          {errorCrearSucursal && (
+            <p className="text-12 text-alert-red">{errorCrearSucursal}</p>
+          )}
+          <button
+            type="button"
+            onClick={handleCrearSucursalPro}
+            disabled={creandoSucursal || !nuevaSucursalNombre.trim()}
+            className="h-44 w-full rounded-lg bg-plain-green px-16 text-12 font-semibold text-canvas-white transition-colors hover:bg-plain-green-muted disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+          >
+            {creandoSucursal ? "Creando..." : "Crear sucursal"}
+          </button>
+        </aside>
+      ) : (
+        <aside className="space-y-12 rounded-xl border border-concrete bg-canvas-white p-20 shadow-sm">
+          <div className="flex items-center gap-8">
+            <p className="text-13 font-bold text-ash-graphite">Crear sucursal PRO</p>
+            <span className="material-symbols-outlined text-16 text-stone">lock</span>
+          </div>
+          <p className="text-12 text-sage-green">
+            El plan Free incluye 1 sucursal activa. Para gestionar múltiples sucursales con horarios y menús independientes, actualizá a Pro.
+          </p>
+          <Campo label="Nombre">
+            <input className={INPUT} placeholder="Sucursal nueva" disabled />
+          </Campo>
+          <Campo label="Contacto">
+            <input className={INPUT} placeholder="+54 9 ..." disabled />
+          </Campo>
+          <button
+            type="button"
+            onClick={onIrAPlanes}
+            className="h-44 w-full rounded-lg border border-ash-graphite bg-ash-graphite text-11 font-semibold text-canvas-white hover:bg-plain-green-muted transition-colors cursor-pointer"
+          >
+            Solicitar Upgrade Pro
+          </button>
+        </aside>
+      )}
     </div>
   );
 }
