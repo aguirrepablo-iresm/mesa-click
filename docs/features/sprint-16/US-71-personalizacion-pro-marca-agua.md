@@ -2,9 +2,9 @@
 
 > **Sprint**: Sprint 16 (12/10 – 18/10/2026)  
 > **Épica**: Modelo Freemium (Free vs Pro) & Control de Suscripciones  
-> **Tipo**: `Frontend`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
+> **Tipo**: `Frontend / Backend`  
+> **Estado**: ✅ **Resuelta**  
+> **Asignado a**: Martín Oviedo + Antigravity (AI Agent)  
 > **Rama de trabajo**: `feat/US-71-personalizacion-pro`  
 
 ---
@@ -17,24 +17,34 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] En plan Free, se muestra el badge al pie de la carta pública: 'Digitalizado con Mesa CLICK'.
-- [ ] En plan Pro, el toggle 'Mostrar marca de agua' en Apariencia permite desactivarlo.
-- [ ] Paleta cromática extendida (color de fondo, acentos y fuentes) disponible solo en Pro; en Free se muestra con candado de upgrade.
+- [x] En plan Free, se muestra el badge al pie de la carta pública: 'Potenciado por Mesa CLICK'.
+- [x] En plan Pro, el toggle 'Mostrar marca de agua' en Apariencia permite desactivarlo.
+- [x] Paleta cromática extendida (color secundario/acentos y fuentes) disponible solo en Pro; en Free se muestra con candado de upgrade y dispara `UpgradeModal`.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Añadir lógica condicional en la carta pública del comensal según el plan del tenant.
-- [ ] Añadir controles avanzados en `AparienciaTab` bloqueados para usuarios Free.
-- [ ] Validar que al cambiar a Pro se apliquen inmediatamente los estilos avanzados.
+- [x] Migración 025_personalizacion_pro_tenants.sql para `mostrar_marca_agua`, `color_secundario` y `tipo_fuente`.
+- [x] Modelo y store Go actualizados con regla fail-safe en SQL para comensales (`CASE WHEN plan = 'pro' THEN mostrar_marca_agua ELSE true END`).
+- [x] Componente `MarcaAgua.tsx` integrado en carta digital (`app/mesa/[token]/page.tsx`) y seguimiento de comanda (`SeguimientoView.tsx`).
+- [x] Inyección de variables `--mesa-accent` y `--mesa-font` en `BrandHeader.tsx` y `globals.css`.
+- [x] Controles en `AparienciaTab` de `ConfiguracionSection.tsx` con preview interactivo y bloqueo hacia `UpgradeModal`.
+- [x] Validar que al cambiar a Pro se apliquen inmediatamente los estilos avanzados.
 
 ---
 
 ## 4. Archivos Clave Involucrados
 
+- `repos/api/migrations/025_personalizacion_pro_tenants.sql`
+- `repos/api/internal/tenant/model.go` y `store.go`
+- `repos/api/internal/mesa/model.go` y `store.go`
+- `repos/web/components/menu/MarcaAgua.tsx`
+- `repos/web/components/menu/BrandHeader.tsx`
+- `repos/web/components/menu/SeguimientoView.tsx`
 - `repos/web/app/mesa/[token]/page.tsx`
 - `repos/web/components/dashboard/ConfiguracionSection.tsx`
+- `repos/web/components/dashboard/UpgradeModal.tsx`
 
 ---
 

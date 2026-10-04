@@ -1225,6 +1225,7 @@ export default function MesaPage() {
           onSelect={handleSeleccionarCategoria}
         />
         <div className="space-y-28 px-16 pt-16 pb-40">
+          {mesa.mostrar_marca_agua !== false && <MarcaAgua className="mb-8" />}
           {menu.map(cat => (
             <section
               key={cat.id}
@@ -1269,8 +1270,6 @@ export default function MesaPage() {
               No hay categorías cargadas en la carta.
             </div>
           )}
-
-          {mesa.mostrar_marca_agua !== false && <MarcaAgua />}
         </div>
       </div>
 

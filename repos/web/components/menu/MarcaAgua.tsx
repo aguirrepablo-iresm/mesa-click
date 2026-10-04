@@ -1,10 +1,16 @@
 import React from "react";
 
-export function MarcaAgua() {
+export function MarcaAgua({ className = "" }: { className?: string }) {
   return (
-    <footer className="py-16 text-center text-11 text-sage-green font-mono select-none">
-      Digitalizado con <span className="font-bold text-ash-graphite">Mesa CLICK</span>
-    </footer>
+    <div
+      className={`mx-auto flex items-center justify-center gap-6 rounded-lg border border-dashed border-concrete/90 bg-ghost-fog/50 px-12 py-6 text-center text-11 font-mono text-sage-green select-none ${className}`}
+    >
+      <span className="text-12">⚡</span>
+      <span>
+        Carta digitalizada con{" "}
+        <strong className="font-bold text-ash-graphite">Mesa CLICK</strong>
+      </span>
+    </div>
   );
 }
 

@@ -60,8 +60,8 @@ const RECURSO_INFO: Record<
     nombrePlural: "personalizaciones",
     limiteDefault: 0,
     mensaje:
-      "El retiro de la marca de agua y los colores y tipografías extendidas son funciones exclusivas del plan Pro.",
-    icono: "palette",
+      "El retiro de la marca de agua y las tipografías exclusivas son funciones del plan Pro.",
+    icono: "branding_watermark",
   },
 };
 

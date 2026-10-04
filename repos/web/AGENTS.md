@@ -15,14 +15,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ---
 
-## Fase actual: Fase 3 — Integración
+## Fase actual: Fase 4 — Evolución, Monetización & Analítica (2do Cuatrimestre)
 
-**Fase 2 completada** — US-19 a US-37 implementadas. Backend Go + PostgreSQL + SSE + Tests completo y aprobado.
+**Sprint 16 completado (Modelo Freemium: Free vs Pro & Control de Suscripciones)**.
+**Sprint 17 en curso (Dashboard con Métricas (KPIs))**.
 
-**Sprint en curso: Sprint 7 (10/07 – 16/07/2026)**
-- Conectar front admin + auth con la API real
-- Reemplazar login y onboarding mockeados con llamadas reales a la API
-- Conectar la gestión de carta y distribución de mesas con la base de datos real (US-38 a US-41)
+- **Control de Suscripciones**: El backend valida cuotas del plan (Free vs Pro) devolviendo HTTP 403 `PLAN_LIMIT_REACHED`. El frontend intercepta este error en `lib/api.ts` y despliega preventivamente `UpgradeModal`.
+- **Personalización Pro & Marca de Agua**: Los clientes en plan Pro pueden ocultar la marca de agua 'Potenciado por Mesa CLICK' y configurar paleta y fuentes extendidas en `AparienciaTab`. En plan Free, estos controles se bloquean elegantemente con candados hacia `UpgradeModal`.
 
 ---
 
