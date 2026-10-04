@@ -178,10 +178,8 @@ export default function UpgradeModal({
                 </span>
               </div>
               <Progress
-                value={usoEfectivo}
+                valor={usoEfectivo}
                 max={limiteEfectivo}
-                variant="danger"
-                aria-label={`Uso de ${info.nombrePlural}: ${usoEfectivo} de ${limiteEfectivo}`}
               />
             </div>
           )}
