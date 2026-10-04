@@ -122,8 +122,70 @@ func (h *Handlers) EmailAdminDisponible(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(map[string]bool{"disponible": disponible})
 }
 
-func jsonError(w http.ResponseWriter, msg string, status int) {
+func (h *Handlers) ObtenerMiPlan(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	if claims == nil {
+		jsonError(w, "no autenticado", http.StatusUnauthorized)
+		return
+	}
+
+	dto, err := h.svc.EstadoPlan(r.Context(), claims.TenantID)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			jsonError(w, "tenant no encontrado", http.StatusNotFound)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error obteniendo estado de plan", "tenant_id", claims.TenantID, "error", err)
+		jsonError(w, "error interno al obtener estado del plan", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(dto)
+}
+
+type SolicitarUpgradeInput struct {
+	Nota string `json:"nota"`
+}
+
+func (h *Handlers) SolicitarUpgrade(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	if claims == nil {
+		jsonError(w, "no autenticado", http.StatusUnauthorized)
+		return
+	}
+
+	var input SolicitarUpgradeInput
+	if r.Body != nil {
+		_ = json.NewDecoder(r.Body).Decode(&input)
+	}
+
+	t, err := h.svc.SolicitarUpgrade(r.Context(), claims.TenantID, input.Nota)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			jsonError(w, "tenant no encontrado", http.StatusNotFound)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error solicitando upgrade", "tenant_id", claims.TenantID, "error", err)
+		jsonError(w, "error interno al solicitar upgrade", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_ = json.NewEncoder(w).Encode(t)
+}
+
+func jsonError(w http.ResponseWriter, msg string, status int, extras ...any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(map[string]string{"error": msg})
+	res := map[string]any{"error": msg}
+	if len(extras) > 0 {
+		if codigo, ok := extras[0].(string); ok && codigo != "" {
+			res["codigo"] = codigo
+		}
+	}
+	if len(extras) > 1 && extras[1] != nil {
+		res["detalle"] = extras[1]
+	}
+	_ = json.NewEncoder(w).Encode(res)
 }

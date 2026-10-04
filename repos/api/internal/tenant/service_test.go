@@ -9,8 +9,10 @@ import (
 )
 
 type mockStore struct {
-	crearFn      func(ctx context.Context, input tenant.OnboardingInput) (*tenant.Tenant, error)
-	actualizarFn func(ctx context.Context, id string, input tenant.ActualizarTenantInput) (*tenant.Tenant, error)
+	crearFn                     func(ctx context.Context, input tenant.OnboardingInput) (*tenant.Tenant, error)
+	actualizarFn                func(ctx context.Context, id string, input tenant.ActualizarTenantInput) (*tenant.Tenant, error)
+	obtenerEstadoCuotasFn       func(ctx context.Context, tenantID string) (*tenant.EstadoCuotas, error)
+	registrarSolicitudUpgradeFn func(ctx context.Context, tenantID, nota string) (*tenant.Tenant, error)
 }
 
 func (m *mockStore) Crear(ctx context.Context, input tenant.OnboardingInput) (*tenant.Tenant, error) {
@@ -27,6 +29,18 @@ func (m *mockStore) Actualizar(ctx context.Context, id string, input tenant.Actu
 }
 func (m *mockStore) EmailAdminEnUso(ctx context.Context, email string) (bool, error) {
 	return false, nil
+}
+func (m *mockStore) ObtenerEstadoCuotas(ctx context.Context, tenantID string) (*tenant.EstadoCuotas, error) {
+	if m.obtenerEstadoCuotasFn != nil {
+		return m.obtenerEstadoCuotasFn(ctx, tenantID)
+	}
+	return nil, nil
+}
+func (m *mockStore) RegistrarSolicitudUpgrade(ctx context.Context, tenantID, nota string) (*tenant.Tenant, error) {
+	if m.registrarSolicitudUpgradeFn != nil {
+		return m.registrarSolicitudUpgradeFn(ctx, tenantID, nota)
+	}
+	return nil, nil
 }
 
 func TestCrear_Exitoso(t *testing.T) {

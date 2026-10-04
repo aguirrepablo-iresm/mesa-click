@@ -37,3 +37,7 @@ func ClaimsFromContext(ctx context.Context) *Claims {
 	c, _ := ctx.Value(claimsKey).(*Claims)
 	return c
 }
+
+func ContextConClaims(ctx context.Context, c *Claims) context.Context {
+	return context.WithValue(ctx, claimsKey, c)
+}

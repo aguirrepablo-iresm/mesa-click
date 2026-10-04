@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/db"
 )
 
 type Handlers struct{}
@@ -114,18 +116,39 @@ func (h *Handlers) EventosMesa(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
-	canal := fmt.Sprintf("mesa:%s", mesaID)
-	ch, desuscribir := Instancia.Suscribir(canal)
-	defer desuscribir()
+	tenantID := r.URL.Query().Get("tenant_id")
+	sucursalID := r.URL.Query().Get("sucursal_id")
+	if (tenantID == "" || sucursalID == "") && db.Pool != nil {
+		_ = db.Pool.QueryRow(r.Context(),
+			`SELECT tenant_id, sucursal_id FROM mesas WHERE id = $1`, mesaID,
+		).Scan(&tenantID, &sucursalID)
+	}
 
-	slog.InfoContext(r.Context(), "comensal conectado a eventos de mesa", "mesa_id", mesaID)
+	canal := fmt.Sprintf("mesa:%s", mesaID)
+	chMesa, desuscribirMesa := Instancia.Suscribir(canal)
+	defer desuscribirMesa()
+
+	var chCarta chan Evento
+	var desuscribirCarta func()
+	if tenantID != "" {
+		chCarta, desuscribirCarta = Instancia.Suscribir(fmt.Sprintf("tenant:%s:carta", tenantID))
+		defer desuscribirCarta()
+	}
+
+	slog.InfoContext(r.Context(), "comensal conectado a eventos de mesa", "mesa_id", mesaID, "tenant_id", tenantID)
 
 	fmt.Fprintf(w, "event: ping\ndata: conectado\n\n")
 	flusher.Flush()
 
 	for {
 		select {
-		case ev, ok := <-ch:
+		case ev, ok := <-chMesa:
+			if !ok {
+				return
+			}
+			fmt.Fprintf(w, "event: %s\ndata: %s\n\n", ev.Nombre, ev.Data)
+			flusher.Flush()
+		case ev, ok := <-chCarta:
 			if !ok {
 				return
 			}

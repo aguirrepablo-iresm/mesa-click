@@ -82,6 +82,12 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.Handle("GET /tenants/email-disponible", http.HandlerFunc(tenantH.EmailAdminDisponible))
 	mux.Handle("GET /tenants/me", auth.Requerir(http.HandlerFunc(tenantH.ObtenerMe)))
 	mux.Handle("PATCH /tenants/me", auth.Requerir(http.HandlerFunc(tenantH.ActualizarMe)))
+	mux.Handle("GET /tenants/me/plan", auth.Requerir(http.HandlerFunc(tenantH.ObtenerMiPlan)))
+	mux.Handle("POST /tenants/me/upgrade", auth.Requerir(http.HandlerFunc(tenantH.SolicitarUpgrade)))
+
+	protegido := func(rec tenant.Recurso, h http.HandlerFunc) http.Handler {
+		return auth.Requerir(tenant.RequerirCuota(tenantStore, rec)(h))
+	}
 
 	// Sucursales y Sectores (admin — protegidas)
 	sucursalStore := sucursal.NuevoStore()
@@ -89,7 +95,7 @@ func registrarRutas(mux *http.ServeMux) {
 	sucursalH := sucursal.NuevosHandlers(sucursalSvc)
 	mux.Handle("GET /sucursales", auth.Requerir(http.HandlerFunc(sucursalH.Listar)))
 	mux.Handle("GET /sucursales/{id}", auth.Requerir(http.HandlerFunc(sucursalH.ObtenerPorID)))
-	mux.Handle("POST /sucursales", auth.Requerir(http.HandlerFunc(sucursalH.Crear)))
+	mux.Handle("POST /sucursales", protegido(tenant.RecursoSucursales, sucursalH.Crear))
 	mux.Handle("PATCH /sucursales/{id}", auth.Requerir(http.HandlerFunc(sucursalH.Actualizar)))
 	mux.Handle("DELETE /sucursales/{id}", auth.Requerir(http.HandlerFunc(sucursalH.Eliminar)))
 
@@ -115,7 +121,7 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.Handle("PATCH /carta/categorias/{id}/franja-horaria", auth.Requerir(http.HandlerFunc(cartaH.AsignarFranjaCategoria)))
 	mux.Handle("DELETE /carta/categorias/{id}", auth.Requerir(http.HandlerFunc(cartaH.EliminarCategoria)))
 	mux.Handle("GET /carta/articulos", auth.Requerir(http.HandlerFunc(cartaH.ListarArticulos)))
-	mux.Handle("POST /carta/articulos", auth.Requerir(http.HandlerFunc(cartaH.CrearArticulo)))
+	mux.Handle("POST /carta/articulos", protegido(tenant.RecursoProductos, cartaH.CrearArticulo))
 	mux.Handle("PATCH /carta/articulos/{id}", auth.Requerir(http.HandlerFunc(cartaH.ActualizarArticulo)))
 	mux.Handle("PATCH /carta/articulos/{id}/franja-horaria", auth.Requerir(http.HandlerFunc(cartaH.AsignarFranjaArticulo)))
 	mux.Handle("PATCH /carta/precios/ajuste-porcentual", auth.Requerir(http.HandlerFunc(cartaH.AjustarPrecios)))
@@ -128,14 +134,16 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.Handle("PATCH /carta/variantes/{id}", auth.Requerir(http.HandlerFunc(cartaH.ActualizarVariante)))
 	mux.Handle("DELETE /carta/variantes/{id}", auth.Requerir(http.HandlerFunc(cartaH.EliminarVariante)))
 	mux.Handle("DELETE /carta/articulos/{id}", auth.Requerir(http.HandlerFunc(cartaH.EliminarArticulo)))
-	mux.Handle("POST /carta/importar", auth.Requerir(http.HandlerFunc(cartaH.ImportarCarta)))
+	mux.Handle("PATCH /carta/articulos/{id}/disponibilidad", auth.Requerir(http.HandlerFunc(cartaH.ActualizarDisponibilidad)))
+	mux.Handle("POST /carta/reponer-todos", auth.Requerir(http.HandlerFunc(cartaH.ReponerTodos)))
+	mux.Handle("POST /carta/importar", protegido(tenant.RecursoCargaMasiva, cartaH.ImportarCarta))
 
 	// Mesas (admin — protegidas)
 	mesaStore := mesa.NuevoStore()
 	mesaSvc := mesa.NuevoService(mesaStore)
 	mesaH := mesa.NuevosHandlers(mesaSvc)
 	mux.Handle("GET /mesas", auth.Requerir(http.HandlerFunc(mesaH.Listar)))
-	mux.Handle("POST /mesas", auth.Requerir(http.HandlerFunc(mesaH.Crear)))
+	mux.Handle("POST /mesas", protegido(tenant.RecursoMesas, mesaH.Crear))
 	mux.Handle("PATCH /mesas/{id}", auth.Requerir(http.HandlerFunc(mesaH.Actualizar)))
 	mux.Handle("POST /mesas/{id}/habilitar-pago", auth.Requerir(http.HandlerFunc(mesaH.HabilitarPago)))
 	mux.Handle("POST /mesas/{id}/cerrar-cuenta", auth.Requerir(http.HandlerFunc(mesaH.CerrarCuenta)))

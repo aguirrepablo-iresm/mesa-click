@@ -16,6 +16,8 @@ type Store interface {
 	ObtenerPorID(ctx context.Context, id string) (*Tenant, error)
 	Actualizar(ctx context.Context, id string, input ActualizarTenantInput) (*Tenant, error)
 	EmailAdminEnUso(ctx context.Context, email string) (bool, error)
+	ObtenerEstadoCuotas(ctx context.Context, tenantID string) (*EstadoCuotas, error)
+	RegistrarSolicitudUpgrade(ctx context.Context, tenantID, nota string) (*Tenant, error)
 }
 
 type pgStore struct{}
@@ -92,11 +94,15 @@ func (s *pgStore) ObtenerPorID(ctx context.Context, id string) (*Tenant, error) 
 	err := db.Pool.QueryRow(ctx,
 		`SELECT id, nombre, nombre_fantasia, rubro, descripcion, email_contacto, whatsapp,
 		        logo_url, color_primario, estilo_visual, datos_fiscales, google_review_url,
-		        mp_access_token, mp_public_key, COALESCE(mp_activo, false), slug, created_at
+		        mp_access_token, mp_public_key, COALESCE(mp_activo, false),
+		        COALESCE(plan, 'free'), plan_desde, plan_hasta, upgrade_solicitado_at, upgrade_nota,
+		        slug, created_at
 		 FROM tenants WHERE id = $1`, id,
 	).Scan(&t.ID, &t.Nombre, &t.NombreFantasia, &t.Rubro, &t.Descripcion, &t.EmailContacto, &t.Whatsapp,
 		&t.LogoURL, &t.ColorPrimario, &t.EstiloVisual, &datosFiscalesBytes, &t.GoogleReviewURL,
-		&t.MPAccessToken, &t.MPPublicKey, &t.MPActivo, &t.Slug, &t.CreatedAt)
+		&t.MPAccessToken, &t.MPPublicKey, &t.MPActivo,
+		&t.Plan, &t.PlanDesde, &t.PlanHasta, &t.UpgradeSolicitadoAt, &t.UpgradeNota,
+		&t.Slug, &t.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
@@ -204,14 +210,18 @@ func (s *pgStore) Actualizar(ctx context.Context, id string, input ActualizarTen
 		 WHERE id = $15
 		 RETURNING id, nombre, nombre_fantasia, rubro, descripcion, email_contacto, whatsapp,
 		           logo_url, color_primario, estilo_visual, datos_fiscales, google_review_url,
-		           mp_access_token, mp_public_key, COALESCE(mp_activo, false), slug, created_at`,
+		           mp_access_token, mp_public_key, COALESCE(mp_activo, false),
+		           COALESCE(plan, 'free'), plan_desde, plan_hasta, upgrade_solicitado_at, upgrade_nota,
+		           slug, created_at`,
 		nombre, nombreFantasia, rubro, descripcion,
 		emailContacto, whatsapp, logoURL, colorPrimario,
 		estiloVisual, datosFiscalesJSON, googleReviewURL,
 		mpAccessToken, mpPublicKey, mpActivo, id,
 	).Scan(&t.ID, &t.Nombre, &t.NombreFantasia, &t.Rubro, &t.Descripcion, &t.EmailContacto, &t.Whatsapp,
 		&t.LogoURL, &t.ColorPrimario, &t.EstiloVisual, &datosFiscalesBytes, &t.GoogleReviewURL,
-		&t.MPAccessToken, &t.MPPublicKey, &t.MPActivo, &t.Slug, &t.CreatedAt)
+		&t.MPAccessToken, &t.MPPublicKey, &t.MPActivo,
+		&t.Plan, &t.PlanDesde, &t.PlanHasta, &t.UpgradeSolicitadoAt, &t.UpgradeNota,
+		&t.Slug, &t.CreatedAt)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
@@ -234,4 +244,75 @@ func (s *pgStore) EmailAdminEnUso(ctx context.Context, email string) (bool, erro
 		return false, fmt.Errorf("error verificando email admin: %w", err)
 	}
 	return existe, nil
+}
+
+func (s *pgStore) ObtenerEstadoCuotas(ctx context.Context, tenantID string) (*EstadoCuotas, error) {
+	estado := &EstadoCuotas{
+		Uso: make(map[Recurso]int),
+	}
+	var mesasActivas, productos, sucursales int
+	query := `SELECT COALESCE(t.plan, 'free'), t.plan_desde, t.plan_hasta,
+	                 t.upgrade_solicitado_at, t.upgrade_nota,
+	                 (SELECT COUNT(*) FROM mesas m
+	                    JOIN sucursales su ON su.id = m.sucursal_id
+	                   WHERE su.tenant_id = t.id AND m.estado = 'activa'),
+	                 (SELECT COUNT(*) FROM articulos a WHERE a.tenant_id = t.id),
+	                 (SELECT COUNT(*) FROM sucursales su WHERE su.tenant_id = t.id)
+	            FROM tenants t WHERE t.id = $1`
+
+	err := db.Pool.QueryRow(ctx, query, tenantID).Scan(
+		&estado.Plan,
+		&estado.PlanDesde,
+		&estado.PlanHasta,
+		&estado.UpgradeSolicitadoAt,
+		&estado.UpgradeNota,
+		&mesasActivas,
+		&productos,
+		&sucursales,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("error obteniendo estado de cuotas: %w", err)
+	}
+
+	estado.Uso[RecursoMesas] = mesasActivas
+	estado.Uso[RecursoProductos] = productos
+	estado.Uso[RecursoSucursales] = sucursales
+	return estado, nil
+}
+
+func (s *pgStore) RegistrarSolicitudUpgrade(ctx context.Context, tenantID, nota string) (*Tenant, error) {
+	var t Tenant
+	var datosFiscalesBytes []byte
+	notaPtr := optionalString(nota)
+
+	query := `UPDATE tenants
+	             SET upgrade_solicitado_at = NOW(),
+	                 upgrade_nota = $2
+	           WHERE id = $1
+	       RETURNING id, nombre, nombre_fantasia, rubro, descripcion, email_contacto, whatsapp,
+	                 logo_url, color_primario, estilo_visual, datos_fiscales, google_review_url,
+	                 mp_access_token, mp_public_key, COALESCE(mp_activo, false),
+	                 COALESCE(plan, 'free'), plan_desde, plan_hasta, upgrade_solicitado_at, upgrade_nota,
+	                 slug, created_at`
+
+	err := db.Pool.QueryRow(ctx, query, tenantID, notaPtr).Scan(
+		&t.ID, &t.Nombre, &t.NombreFantasia, &t.Rubro, &t.Descripcion, &t.EmailContacto, &t.Whatsapp,
+		&t.LogoURL, &t.ColorPrimario, &t.EstiloVisual, &datosFiscalesBytes, &t.GoogleReviewURL,
+		&t.MPAccessToken, &t.MPPublicKey, &t.MPActivo,
+		&t.Plan, &t.PlanDesde, &t.PlanHasta, &t.UpgradeSolicitadoAt, &t.UpgradeNota,
+		&t.Slug, &t.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, fmt.Errorf("error registrando solicitud de upgrade: %w", err)
+	}
+	if len(datosFiscalesBytes) > 0 {
+		_ = json.Unmarshal(datosFiscalesBytes, &t.DatosFiscales)
+	}
+	return &t, nil
 }

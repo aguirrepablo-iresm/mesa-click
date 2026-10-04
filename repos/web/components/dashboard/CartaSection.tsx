@@ -338,8 +338,53 @@ export default function CartaSection() {
           : 'Ítem visible en el menú público.'
       );
     } catch (err: unknown) {
-      console.error("No se pudo actualizar disponibilidad:", err);
-      setErrorMsg(getErrorMessage(err, 'Error al actualizar disponibilidad.'));
+      console.error("No se pudo actualizar visibilidad:", err);
+      setErrorMsg(getErrorMessage(err, 'Error al actualizar visibilidad.'));
+    }
+  };
+
+  const toggleStock = async (catId: string, item: ArticuloAPI) => {
+    const nuevoStock = !(item.disponible !== false);
+    try {
+      await api.actualizarDisponibilidadArticulo(item.id, nuevoStock);
+      setCategorias(prev =>
+        prev.map(c =>
+          c.id === catId
+            ? {
+                ...c,
+                items: c.items.map(i =>
+                  i.id === item.id ? { ...i, disponible: nuevoStock } : i
+                ),
+              }
+            : c
+        )
+      );
+      toast.success(
+        nuevoStock
+          ? `${item.nombre} marcado como disponible.`
+          : `${item.nombre} marcado como agotado (86).`
+      );
+    } catch (err: unknown) {
+      console.error("No se pudo actualizar stock:", err);
+      setErrorMsg(getErrorMessage(err, 'Error al actualizar stock.'));
+    }
+  };
+
+  const handleReponerTodos = async () => {
+    const ok = await confirmar({
+      titulo: 'Reponer stock de la carta',
+      mensaje: '¿Deseas restablecer el stock de todos los artículos de la carta para el servicio de hoy?',
+      labelAceptar: 'Sí, reponer stock',
+    });
+    if (!ok) return;
+
+    try {
+      const res = await api.reponerTodosLosArticulos();
+      await cargarCarta();
+      toast.success(`Se repuso el stock de ${res.repuestos} productos.`);
+    } catch (err: unknown) {
+      console.error("Error al reponer stock:", err);
+      setErrorMsg(getErrorMessage(err, 'Error al reponer stock.'));
     }
   };
 
@@ -511,6 +556,16 @@ export default function CartaSection() {
           >
             <span className="material-symbols-outlined text-18">percent</span>
             Ajustar precios
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleReponerTodos()}
+            disabled={loading || totalItems === 0}
+            className="flex h-48 items-center justify-center gap-8 rounded-lg border border-concrete bg-canvas-white px-16 text-12 font-semibold text-ash-graphite shadow-sm transition-colors hover:border-stone hover:bg-vanilla-cream disabled:cursor-not-allowed disabled:opacity-40"
+            title="Restablece el stock de todos los artículos de la carta"
+          >
+            <span className="material-symbols-outlined text-18">restart_alt</span>
+            Reponer stock
           </button>
           <button
             type="button"
@@ -711,6 +766,22 @@ export default function CartaSection() {
                       </span>
 
                       <div className="flex items-center justify-end gap-6">
+                        {/* Control de Stock (86) */}
+                        <button
+                          type="button"
+                          onClick={() => void toggleStock(cat.id, item)}
+                          className={`inline-flex h-44 items-center gap-6 rounded-full border px-10 text-11 font-semibold transition-colors sm:px-12 ${
+                            item.disponible !== false
+                              ? "border-concrete bg-canvas-white text-ash-graphite hover:bg-ghost-fog"
+                              : "border-alert-red/30 bg-warm-pink/20 text-alert-red hover:bg-warm-pink/30"
+                          }`}
+                          title={item.disponible !== false ? "Marcar plato como agotado (86)" : "Marcar plato como en stock"}
+                          aria-label={item.disponible !== false ? `Marcar ${item.nombre} como agotado` : `Marcar ${item.nombre} en stock`}
+                        >
+                          <span className={`h-8 min-h-0 w-8 min-w-0 rounded-full ${item.disponible !== false ? 'bg-plain-green' : 'bg-alert-red'}`} />
+                          <span>{item.disponible !== false ? 'En stock' : '86 Agotado'}</span>
+                        </button>
+
                         <button
                           type="button"
                           onClick={() => void toggleDisponible(cat.id, item)}

@@ -21,6 +21,8 @@ type Store interface {
 	ListarArticulos(ctx context.Context, tenantID string) ([]Articulo, error)
 	CrearArticulo(ctx context.Context, tenantID string, input ArticuloInput) (*Articulo, error)
 	ActualizarArticulo(ctx context.Context, id, tenantID string, u ArticuloUpdate) (*Articulo, error)
+	ActualizarDisponibilidad(ctx context.Context, id, tenantID string, disponible bool) (*Articulo, error)
+	ReponerTodos(ctx context.Context, tenantID string) (int, error)
 	AjustarPrecios(ctx context.Context, tenantID string, input AjustePreciosInput) (*AjustePreciosResultado, error)
 	EliminarArticulo(ctx context.Context, id, tenantID string) error
 	ObtenerCartaPublica(ctx context.Context, sucursalID string) (*CartaPublica, error)
@@ -128,7 +130,7 @@ func (s *pgStore) BuscarOCrearCategoria(ctx context.Context, tenantID, nombre st
 
 func (s *pgStore) ListarArticulos(ctx context.Context, tenantID string) ([]Articulo, error) {
 	rows, err := db.Pool.Query(ctx,
-		`SELECT id, tenant_id, categoria_id, nombre, COALESCE(descripcion,''), precio, COALESCE(foto_url,''), activo, franja_horaria_id
+		`SELECT id, tenant_id, categoria_id, nombre, COALESCE(descripcion,''), precio, COALESCE(foto_url,''), activo, disponible, reponer_diariamente, franja_horaria_id
 		 FROM articulos WHERE tenant_id = $1 ORDER BY nombre`, tenantID)
 	if err != nil {
 		return nil, err
@@ -138,7 +140,7 @@ func (s *pgStore) ListarArticulos(ctx context.Context, tenantID string) ([]Artic
 	for rows.Next() {
 		var a Articulo
 		var franjaID sql.NullString
-		if err := rows.Scan(&a.ID, &a.TenantID, &a.CategoriaID, &a.Nombre, &a.Descripcion, &a.Precio, &a.FotoURL, &a.Activo, &franjaID); err != nil {
+		if err := rows.Scan(&a.ID, &a.TenantID, &a.CategoriaID, &a.Nombre, &a.Descripcion, &a.Precio, &a.FotoURL, &a.Activo, &a.Disponible, &a.ReponerDiariamente, &franjaID); err != nil {
 			return nil, err
 		}
 		a.FranjaHorariaID = nullStringPtr(franjaID)
@@ -161,11 +163,11 @@ func (s *pgStore) CrearArticulo(ctx context.Context, tenantID string, input Arti
 	a := &Articulo{}
 	var franjaID sql.NullString
 	err := db.Pool.QueryRow(ctx,
-		`INSERT INTO articulos (tenant_id, categoria_id, nombre, descripcion, precio, foto_url, activo)
-		 VALUES ($1, $2, $3, $4, $5, $6, true)
-		 RETURNING id, tenant_id, categoria_id, nombre, COALESCE(descripcion,''), precio, COALESCE(foto_url,''), activo, franja_horaria_id`,
+		`INSERT INTO articulos (tenant_id, categoria_id, nombre, descripcion, precio, foto_url, activo, disponible, reponer_diariamente)
+		 VALUES ($1, $2, $3, $4, $5, $6, true, true, true)
+		 RETURNING id, tenant_id, categoria_id, nombre, COALESCE(descripcion,''), precio, COALESCE(foto_url,''), activo, disponible, reponer_diariamente, franja_horaria_id`,
 		tenantID, input.CategoriaID, input.Nombre, input.Descripcion, input.Precio, input.FotoURL,
-	).Scan(&a.ID, &a.TenantID, &a.CategoriaID, &a.Nombre, &a.Descripcion, &a.Precio, &a.FotoURL, &a.Activo, &franjaID)
+	).Scan(&a.ID, &a.TenantID, &a.CategoriaID, &a.Nombre, &a.Descripcion, &a.Precio, &a.FotoURL, &a.Activo, &a.Disponible, &a.ReponerDiariamente, &franjaID)
 	a.FranjaHorariaID = nullStringPtr(franjaID)
 	return a, err
 }
@@ -175,13 +177,15 @@ func (s *pgStore) ActualizarArticulo(ctx context.Context, id, tenantID string, u
 	var franjaID sql.NullString
 	err := db.Pool.QueryRow(ctx,
 		`UPDATE articulos SET
-		   nombre  = COALESCE($3, nombre),
-		   precio  = COALESCE($4, precio),
-		   activo  = COALESCE($5, activo)
+		   nombre              = COALESCE($3, nombre),
+		   precio              = COALESCE($4, precio),
+		   activo              = COALESCE($5, activo),
+		   disponible          = COALESCE($6, disponible),
+		   reponer_diariamente = COALESCE($7, reponer_diariamente)
 		 WHERE id = $1 AND tenant_id = $2
-		 RETURNING id, tenant_id, categoria_id, nombre, COALESCE(descripcion,''), precio, COALESCE(foto_url,''), activo, franja_horaria_id`,
-		id, tenantID, u.Nombre, u.Precio, u.Activo,
-	).Scan(&a.ID, &a.TenantID, &a.CategoriaID, &a.Nombre, &a.Descripcion, &a.Precio, &a.FotoURL, &a.Activo, &franjaID)
+		 RETURNING id, tenant_id, categoria_id, nombre, COALESCE(descripcion,''), precio, COALESCE(foto_url,''), activo, disponible, reponer_diariamente, franja_horaria_id`,
+		id, tenantID, u.Nombre, u.Precio, u.Activo, u.Disponible, u.ReponerDiariamente,
+	).Scan(&a.ID, &a.TenantID, &a.CategoriaID, &a.Nombre, &a.Descripcion, &a.Precio, &a.FotoURL, &a.Activo, &a.Disponible, &a.ReponerDiariamente, &franjaID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound
@@ -190,6 +194,36 @@ func (s *pgStore) ActualizarArticulo(ctx context.Context, id, tenantID string, u
 	}
 	a.FranjaHorariaID = nullStringPtr(franjaID)
 	return a, nil
+}
+
+func (s *pgStore) ActualizarDisponibilidad(ctx context.Context, id, tenantID string, disponible bool) (*Articulo, error) {
+	a := &Articulo{}
+	err := db.Pool.QueryRow(ctx,
+		`UPDATE articulos SET disponible = $3
+		 WHERE id = $1 AND tenant_id = $2
+		 RETURNING id, tenant_id, categoria_id, nombre, COALESCE(descripcion,''), precio, COALESCE(foto_url,''), activo, disponible, reponer_diariamente`,
+		id, tenantID, disponible,
+	).Scan(&a.ID, &a.TenantID, &a.CategoriaID, &a.Nombre, &a.Descripcion, &a.Precio, &a.FotoURL, &a.Activo, &a.Disponible, &a.ReponerDiariamente)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrNotFound
+		}
+		return nil, err
+	}
+	return a, nil
+}
+
+func (s *pgStore) ReponerTodos(ctx context.Context, tenantID string) (int, error) {
+	tag, err := db.Pool.Exec(ctx,
+		`UPDATE articulos
+		 SET disponible = true
+		 WHERE tenant_id = $1 AND reponer_diariamente = true AND disponible = false`,
+		tenantID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return int(tag.RowsAffected()), nil
 }
 
 func (s *pgStore) AjustarPrecios(ctx context.Context, tenantID string, input AjustePreciosInput) (*AjustePreciosResultado, error) {
@@ -230,7 +264,7 @@ func (s *pgStore) EliminarArticulo(ctx context.Context, id, tenantID string) err
 func (s *pgStore) ObtenerCartaPublica(ctx context.Context, sucursalID string) (*CartaPublica, error) {
 	rows, err := db.Pool.Query(ctx,
 		`SELECT c.id, c.nombre, c.orden, c.franja_horaria_id,
-		        a.id, a.categoria_id, a.nombre, COALESCE(a.descripcion,''), a.precio, COALESCE(a.foto_url,''), a.franja_horaria_id,
+		        a.id, a.categoria_id, a.nombre, COALESCE(a.descripcion,''), a.precio, COALESCE(a.foto_url,''), a.disponible, a.franja_horaria_id,
 		        f.id, f.nombre, TO_CHAR(f.hora_inicio, 'HH24:MI'), TO_CHAR(f.hora_fin, 'HH24:MI')
 		 FROM categorias c
 		 JOIN articulos a ON a.categoria_id = c.id
@@ -261,7 +295,7 @@ func (s *pgStore) ObtenerCartaPublica(ctx context.Context, sucursalID string) (*
 			horaFin          sql.NullString
 		)
 		if err := rows.Scan(&catID, &catNombre, &catOrden, &catFranjaID,
-			&art.ID, &art.CategoriaID, &art.Nombre, &art.Descripcion, &art.Precio, &art.FotoURL, &artFranjaID,
+			&art.ID, &art.CategoriaID, &art.Nombre, &art.Descripcion, &art.Precio, &art.FotoURL, &art.Disponible, &artFranjaID,
 			&franjaID, &franjaNombre, &horaInicio, &horaFin); err != nil {
 			return nil, err
 		}

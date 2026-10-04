@@ -77,8 +77,8 @@
 
 | ID | Tipo | Título | Estado | Asignado | Archivo |
 |---|---|---|---|---|---|
-| **US-61** | `Integración` | Marcado de Ítem Sin Stock (86) con Actualización en Tiempo Real | 📋 Pendiente | Por asignar | [Ver detalle](sprint-14/US-61-marcado-item-sin-stock-86.md) |
-| **US-62** | `Backend` | Persistencia de Disponibilidad y Reposición Automática | 📋 Pendiente | Por asignar | [Ver detalle](sprint-14/US-62-backend-reposicion-disponibilidad.md) |
+| **US-61** | `Integración` | Marcado de Ítem Sin Stock (86) con Actualización en Tiempo Real | ✅ Resuelta | Antigravity (AI Agent) | [Ver detalle](sprint-14/US-61-marcado-item-sin-stock-86.md) |
+| **US-62** | `Backend` | Persistencia de Disponibilidad y Reposición Automática | ✅ Resuelta | Antigravity (AI Agent) | [Ver detalle](sprint-14/US-62-backend-reposicion-disponibilidad.md) |
 | **US-63** | `Integración` | Menús por Franja Horaria y Resolución Dinámica de Carta | ✅ Resuelta | Mateo Silvestrin | [Ver detalle](sprint-14/US-63-menus-franjas-horarias.md) |
 
 ### 📌 Sprint 15: Kitchen Display System (KDS) & Impresión de Comandas (05/10 – 11/10/2026)
