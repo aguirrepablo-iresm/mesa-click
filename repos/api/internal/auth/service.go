@@ -15,11 +15,71 @@ import (
 )
 
 type Service struct {
-	store Store
-	email EmailSender
+	store          Store
+	email          EmailSender
+	googleClientID string
+	googleVerifier VerificadorGoogle
 }
 
-func NuevoService(s Store, e EmailSender) *Service { return &Service{store: s, email: e} }
+func NuevoService(s Store, e EmailSender) *Service {
+	return NuevoServiceConGoogle(s, e, os.Getenv("GOOGLE_CLIENT_ID"), nuevoVerificadorGoogleIDToken())
+}
+
+func NuevoServiceConGoogle(s Store, e EmailSender, clientID string, verifier VerificadorGoogle) *Service {
+	return &Service{
+		store:          s,
+		email:          e,
+		googleClientID: strings.TrimSpace(clientID),
+		googleVerifier: verifier,
+	}
+}
+
+// AutenticarGoogle valida la credencial con Google y luego emite una sesión
+// únicamente para usuarios que ya existen en Mesa CLICK. En el primer acceso
+// vincula el `sub` estable de Google para no depender de cambios futuros de email.
+func (svc *Service) AutenticarGoogle(ctx context.Context, credencial string) (*UsuarioAuth, error) {
+	if svc.googleClientID == "" || svc.googleVerifier == nil {
+		return nil, ErrGoogleNoConfigurado
+	}
+	credencial = strings.TrimSpace(credencial)
+	if credencial == "" {
+		return nil, ErrCredencialGoogleInvalida
+	}
+
+	identidad, err := svc.googleVerifier.Verificar(ctx, credencial, svc.googleClientID)
+	if err != nil {
+		return nil, err
+	}
+	identidad.Subject = strings.TrimSpace(identidad.Subject)
+	identidad.Email = NormalizarEmail(identidad.Email)
+	if identidad.Subject == "" || identidad.Email == "" {
+		return nil, ErrIdentidadGoogleIncompleta
+	}
+	if !identidad.EmailVerificado {
+		return nil, ErrEmailGoogleNoVerificado
+	}
+
+	usuario, err := svc.store.ObtenerUsuarioPorGoogleSub(ctx, identidad.Subject)
+	if err == nil {
+		return usuario, nil
+	}
+	if !errors.Is(err, ErrUsuarioNoEncontrado) {
+		return nil, err
+	}
+
+	usuario, err = svc.store.ObtenerUsuarioPorEmail(ctx, identidad.Email)
+	if err != nil {
+		if errors.Is(err, ErrUsuarioNoEncontrado) {
+			slog.WarnContext(ctx, "login de Google para correo no registrado", "email", identidad.Email)
+		}
+		return nil, err
+	}
+	if err := svc.store.VincularGoogleSub(ctx, usuario.ID, identidad.Subject); err != nil {
+		return nil, err
+	}
+	usuario.GoogleSub = &identidad.Subject
+	return usuario, nil
+}
 
 // SolicitarLink genera el magic link y lo envía por email.
 // Devuelve el link generado para que el handler pueda exponerlo en entornos de

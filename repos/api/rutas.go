@@ -71,6 +71,7 @@ func registrarRutas(mux *http.ServeMux) {
 	authStore := auth.NuevoStore()
 	authSvc := auth.NuevoService(authStore, emailSender)
 	authH := auth.NuevosHandlers(authSvc, !proveedorReal && !esProduccion)
+	mux.HandleFunc("POST /auth/google", authH.AutenticarGoogle)
 	mux.HandleFunc("POST /auth/magic-link", authH.SolicitarLink)
 	mux.HandleFunc("GET /auth/verify", authH.VerificarToken)
 

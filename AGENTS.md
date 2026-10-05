@@ -39,7 +39,11 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
 | | |
 |---|---|
 | **Fase actual** | Fase 4 — Evolución, Monetización & Analítica (2do Cuatrimestre) |
+<<<<<<< Updated upstream
 | **Sprint en curso** | **Sprint 17 (Dashboard con Métricas (KPIs))** — sprints semanales (S10 a S19, 31/08 → 08/11/2026) |
+=======
+| **Sprint en curso** | **Sprint 14 (Disponibilidad de Ítems (86), Menús por Franja Horaria & Gestión de Equipo)** — sprints semanales (S10 a S19, 31/08 → 08/11/2026) |
+>>>>>>> Stashed changes
 | **Objetivo Fase 4** | Llevar Mesa CLICK a nivel comercial: SaaS Freemium (Free vs Pro), Mobile-First comensal, carga masiva CSV/Excel, KDS de cocina, disponibilidad/franjas horarias, métricas y analítica de negocio |
 
 ### Sprints detallados
@@ -59,10 +63,17 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
 | 11 | Rediseño UI/UX Base & Onboarding guiado (tour interactivo) · 07/09–13/09 | ✓ Completado |
 | 12 | Mobile-First Comensal (sticky, bottom-sheet, personalización, pedidos colaborativos) · 14/09–20/09 | ✓ Completado |
 | 13 | Carga masiva CSV/Excel & ajuste porcentual de precios · 21/09–27/09 | ✓ Completado |
+<<<<<<< Updated upstream
 | 14 | Disponibilidad de ítems (86) & menús por franja horaria · 28/09–04/10 | ✓ Completado |
 | 15 | Kitchen Display System (KDS) & impresión de comandas térmicas · 05/10–11/10 | ⚡ En Curso |
 | 16 | Modelo Freemium (Free vs Pro) & control de suscripciones · 12/10–18/10 | ✓ Completado |
 | 17 | Dashboard con métricas (KPIs, agregaciones SQL) · 19/10–25/10 | ⚡ En Curso |
+=======
+| 14 | Disponibilidad de ítems (86), menús por franja horaria & gestión de equipo · 28/09–04/10 | ⚡ En Curso |
+| 15 | Kitchen Display System (KDS) & impresión de comandas térmicas · 05/10–11/10 | 📋 Planificado |
+| 16 | Modelo Freemium (Free vs Pro) & control de suscripciones · 12/10–18/10 | 📋 Planificado |
+| 17 | Dashboard con métricas (KPIs, agregaciones SQL) · 19/10–25/10 | 📋 Planificado |
+>>>>>>> Stashed changes
 | 18 | Business Analytics, Reputación (Reseñas & Google Funnel) & exportación · 26/10–01/11 | 📋 Planificado |
 | 19 | QA E2E, Load Testing, Polish final & Demo de cierre · 02/11–08/11 | 📋 Planificado |
 

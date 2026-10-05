@@ -15,18 +15,26 @@ import (
 )
 
 type mockStore struct {
-	obtenerUsuarioPorEmailFn func(ctx context.Context, email string) (*auth.UsuarioAuth, error)
-	obtenerUsuarioPorIDFn    func(ctx context.Context, id string) (*auth.UsuarioAuth, error)
-	guardarTokenFn           func(ctx context.Context, usuarioID, token string, expiresAt time.Time) (string, error)
-	obtenerTokenFn           func(ctx context.Context, token string) (*auth.MagicToken, error)
-	marcarTokenUsadoFn       func(ctx context.Context, tokenID string) error
+	obtenerUsuarioPorEmailFn     func(ctx context.Context, email string) (*auth.UsuarioAuth, error)
+	obtenerUsuarioPorGoogleSubFn func(ctx context.Context, googleSub string) (*auth.UsuarioAuth, error)
+	obtenerUsuarioPorIDFn        func(ctx context.Context, id string) (*auth.UsuarioAuth, error)
+	vincularGoogleSubFn          func(ctx context.Context, usuarioID, googleSub string) error
+	guardarTokenFn               func(ctx context.Context, usuarioID, token string, expiresAt time.Time) (string, error)
+	obtenerTokenFn               func(ctx context.Context, token string) (*auth.MagicToken, error)
+	marcarTokenUsadoFn           func(ctx context.Context, tokenID string) error
 }
 
 func (m *mockStore) ObtenerUsuarioPorEmail(ctx context.Context, email string) (*auth.UsuarioAuth, error) {
 	return m.obtenerUsuarioPorEmailFn(ctx, email)
 }
+func (m *mockStore) ObtenerUsuarioPorGoogleSub(ctx context.Context, googleSub string) (*auth.UsuarioAuth, error) {
+	return m.obtenerUsuarioPorGoogleSubFn(ctx, googleSub)
+}
 func (m *mockStore) ObtenerUsuarioPorID(ctx context.Context, id string) (*auth.UsuarioAuth, error) {
 	return m.obtenerUsuarioPorIDFn(ctx, id)
+}
+func (m *mockStore) VincularGoogleSub(ctx context.Context, usuarioID, googleSub string) error {
+	return m.vincularGoogleSubFn(ctx, usuarioID, googleSub)
 }
 func (m *mockStore) GuardarToken(ctx context.Context, usuarioID, token string, expiresAt time.Time) (string, error) {
 	return m.guardarTokenFn(ctx, usuarioID, token, expiresAt)
@@ -40,6 +48,14 @@ func (m *mockStore) MarcarTokenUsado(ctx context.Context, tokenID string) error 
 
 type mockEmailSender struct {
 	enviarMagicLinkFn func(ctx context.Context, email, link string) error
+}
+
+type mockGoogleVerifier struct {
+	verificarFn func(ctx context.Context, credencial, audiencia string) (*auth.IdentidadGoogle, error)
+}
+
+func (m *mockGoogleVerifier) Verificar(ctx context.Context, credencial, audiencia string) (*auth.IdentidadGoogle, error) {
+	return m.verificarFn(ctx, credencial, audiencia)
 }
 
 func (m *mockEmailSender) EnviarMagicLink(ctx context.Context, email, link string) error {
@@ -278,5 +294,121 @@ func TestVerificarToken_Errores(t *testing.T) {
 	_, err = svc3.VerificarToken(context.Background(), "expirado")
 	if err == nil || err.Error() != "token expirado" {
 		t.Errorf("se esperaba error de token expirado, obtenido: %v", err)
+	}
+}
+
+func TestAutenticarGoogle_VinculaUsuarioExistente(t *testing.T) {
+	var emailConsultado string
+	var usuarioVinculado string
+	var subjectVinculado string
+	store := &mockStore{
+		obtenerUsuarioPorGoogleSubFn: func(ctx context.Context, googleSub string) (*auth.UsuarioAuth, error) {
+			return nil, auth.ErrUsuarioNoEncontrado
+		},
+		obtenerUsuarioPorEmailFn: func(ctx context.Context, email string) (*auth.UsuarioAuth, error) {
+			emailConsultado = email
+			return &auth.UsuarioAuth{ID: "usr-1", TenantID: "ten-1", Email: email, Rol: "admin"}, nil
+		},
+		vincularGoogleSubFn: func(ctx context.Context, usuarioID, googleSub string) error {
+			usuarioVinculado = usuarioID
+			subjectVinculado = googleSub
+			return nil
+		},
+	}
+	verifier := &mockGoogleVerifier{verificarFn: func(ctx context.Context, credencial, audiencia string) (*auth.IdentidadGoogle, error) {
+		if audiencia != "client-id.apps.googleusercontent.com" {
+			t.Fatalf("audiencia inesperada: %q", audiencia)
+		}
+		return &auth.IdentidadGoogle{
+			Subject:         "google-sub-1",
+			Email:           "Admin@MiBar.com",
+			EmailVerificado: true,
+		}, nil
+	}}
+
+	svc := auth.NuevoServiceConGoogle(store, &mockEmailSender{}, "client-id.apps.googleusercontent.com", verifier)
+	usuario, err := svc.AutenticarGoogle(context.Background(), "google-id-token")
+	if err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+	if usuario.ID != "usr-1" {
+		t.Fatalf("usuario inesperado: %q", usuario.ID)
+	}
+	if emailConsultado != "admin@mibar.com" {
+		t.Errorf("email no normalizado: %q", emailConsultado)
+	}
+	if usuarioVinculado != "usr-1" || subjectVinculado != "google-sub-1" {
+		t.Errorf("vinculación inesperada: usuario=%q sub=%q", usuarioVinculado, subjectVinculado)
+	}
+}
+
+func TestAutenticarGoogle_UsaSubjectYaVinculado(t *testing.T) {
+	googleSub := "google-sub-1"
+	store := &mockStore{
+		obtenerUsuarioPorGoogleSubFn: func(ctx context.Context, subject string) (*auth.UsuarioAuth, error) {
+			return &auth.UsuarioAuth{
+				ID: "usr-1", TenantID: "ten-1", Email: "admin@mibar.com", Rol: "admin", GoogleSub: &googleSub,
+			}, nil
+		},
+	}
+	verifier := &mockGoogleVerifier{verificarFn: func(ctx context.Context, credencial, audiencia string) (*auth.IdentidadGoogle, error) {
+		return &auth.IdentidadGoogle{Subject: googleSub, Email: "admin@mibar.com", EmailVerificado: true}, nil
+	}}
+
+	svc := auth.NuevoServiceConGoogle(store, &mockEmailSender{}, "client-id", verifier)
+	usuario, err := svc.AutenticarGoogle(context.Background(), "token")
+	if err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+	if usuario.GoogleSub == nil || *usuario.GoogleSub != googleSub {
+		t.Fatalf("identidad Google inesperada: %#v", usuario.GoogleSub)
+	}
+}
+
+func TestAutenticarGoogle_RechazaEmailNoVerificado(t *testing.T) {
+	verifier := &mockGoogleVerifier{verificarFn: func(ctx context.Context, credencial, audiencia string) (*auth.IdentidadGoogle, error) {
+		return &auth.IdentidadGoogle{Subject: "google-sub-1", Email: "admin@mibar.com", EmailVerificado: false}, nil
+	}}
+	svc := auth.NuevoServiceConGoogle(&mockStore{}, &mockEmailSender{}, "client-id", verifier)
+
+	_, err := svc.AutenticarGoogle(context.Background(), "token")
+	if !errors.Is(err, auth.ErrEmailGoogleNoVerificado) {
+		t.Fatalf("se esperaba ErrEmailGoogleNoVerificado, obtenido: %v", err)
+	}
+}
+
+func TestAutenticarGoogle_UsuarioNoRegistrado(t *testing.T) {
+	store := &mockStore{
+		obtenerUsuarioPorGoogleSubFn: func(ctx context.Context, googleSub string) (*auth.UsuarioAuth, error) {
+			return nil, auth.ErrUsuarioNoEncontrado
+		},
+		obtenerUsuarioPorEmailFn: func(ctx context.Context, email string) (*auth.UsuarioAuth, error) {
+			return nil, auth.ErrUsuarioNoEncontrado
+		},
+	}
+	verifier := &mockGoogleVerifier{verificarFn: func(ctx context.Context, credencial, audiencia string) (*auth.IdentidadGoogle, error) {
+		return &auth.IdentidadGoogle{
+			Subject:         "google-sub-no-registrado",
+			Email:           "no-existe@mibar.com",
+			EmailVerificado: true,
+		}, nil
+	}}
+	svc := auth.NuevoServiceConGoogle(store, &mockEmailSender{}, "client-id", verifier)
+
+	_, err := svc.AutenticarGoogle(context.Background(), "token")
+	if !errors.Is(err, auth.ErrUsuarioNoEncontrado) {
+		t.Fatalf("se esperaba ErrUsuarioNoEncontrado, obtenido: %v", err)
+	}
+}
+
+func TestAutenticarGoogle_RechazaCredencialInvalida(t *testing.T) {
+	verifier := &mockGoogleVerifier{verificarFn: func(ctx context.Context, credencial, audiencia string) (*auth.IdentidadGoogle, error) {
+		return nil, auth.ErrCredencialGoogleInvalida
+	}}
+	svc := auth.NuevoServiceConGoogle(&mockStore{}, &mockEmailSender{}, "client-id", verifier)
+
+	_, err := svc.AutenticarGoogle(context.Background(), "token-invalido")
+	if !errors.Is(err, auth.ErrCredencialGoogleInvalida) {
+		t.Fatalf("se esperaba ErrCredencialGoogleInvalida, obtenido: %v", err)
 	}
 }
