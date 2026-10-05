@@ -128,14 +128,9 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
 
   return (
     <div className={`${embedded ? "space-y-20" : "h-full space-y-24 overflow-y-auto bg-ghost-fog/45 p-16 sm:p-24 md:p-32"} font-inter`}>
-      <section className="overflow-hidden rounded-xl border border-concrete bg-canvas-white shadow-sm">
+      <section className="overflow-hidden rounded-xl border border-concrete bg-canvas-white">
         <div className="flex items-center justify-between gap-12 border-b border-concrete/70 px-16 py-14 sm:px-20">
-          <div className="flex items-center gap-8">
-            <span className="flex h-32 w-32 items-center justify-center rounded-lg bg-ghost-fog">
-              <span className="material-symbols-outlined text-18 text-ash-graphite">groups</span>
-            </span>
-            <p className="text-13 font-semibold text-ash-graphite">Miembros actuales</p>
-          </div>
+          <p className="text-15 font-semibold tracking-[-0.01em] text-ash-graphite">Miembros actuales</p>
           <p className="text-11 text-sage-green text-right whitespace-nowrap">{miembrosLabel}</p>
         </div>
 
@@ -208,12 +203,9 @@ export default function EquipoSection({ embedded = false }: { embedded?: boolean
         )}
       </section>
 
-      <section id="form-invitar" className="overflow-hidden rounded-xl border border-concrete bg-canvas-white shadow-sm">
-        <div className="flex items-center gap-8 border-b border-concrete/70 px-16 py-14 sm:px-20">
-          <span className="flex h-32 w-32 items-center justify-center rounded-lg bg-ghost-fog">
-            <span className="material-symbols-outlined text-18 text-ash-graphite">person_add</span>
-          </span>
-          <p className="text-13 font-semibold text-ash-graphite">Invitar nuevo miembro</p>
+      <section id="form-invitar" className="overflow-hidden rounded-xl border border-concrete bg-canvas-white">
+        <div className="border-b border-concrete/70 px-16 py-14 sm:px-20">
+          <p className="text-15 font-semibold tracking-[-0.01em] text-ash-graphite">Invitar nuevo miembro</p>
         </div>
         <form onSubmit={handleInvitar} className="p-16 sm:p-20 space-y-12">
           <div className="rounded-lg border border-concrete bg-ghost-fog/70 p-12 text-12 leading-normal text-sage-green">

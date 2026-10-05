@@ -36,40 +36,42 @@ export function HistorialDespachoDrawer({
     <div className="fixed inset-0 z-50 flex justify-end">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/70 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-black/45 backdrop-blur-sm transition-opacity"
         onClick={onClose}
         aria-hidden="true"
       />
 
       {/* Drawer Panel */}
-      <aside className="relative flex w-full max-w-md flex-col bg-neutral-900 border-l border-neutral-800 text-white shadow-2xl z-10 animate-in slide-in-from-right duration-200">
+      <aside className="animate-in slide-in-from-right relative z-10 flex w-full max-w-md flex-col border-l border-concrete bg-canvas-white text-ash-graphite shadow-2xl duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-800 px-20 py-16 bg-neutral-950/80">
+        <div className="flex items-center justify-between border-b border-concrete bg-canvas-white px-20 py-16">
           <div>
-            <h2 className="text-18 font-black tracking-tight text-white flex items-center gap-8">
-              <span>📋</span> Historial de Despachos
+            <h2 className="flex items-center gap-8 text-18 font-black tracking-tight text-ash-graphite">
+              <span className="material-symbols-outlined text-24">history</span>
+              Historial de despachos
             </h2>
-            <p className="text-12 text-neutral-400 mt-2">
+            <p className="mt-3 text-12 text-sage-green">
               Últimas comandas despachadas / retiradas de cocina
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="flex h-36 w-36 items-center justify-center rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-300 hover:text-white transition-colors cursor-pointer text-18 font-bold"
+            className="flex h-44 w-44 cursor-pointer items-center justify-center rounded-lg border border-concrete bg-canvas-white text-ash-graphite transition-colors hover:border-stone hover:bg-ghost-fog"
             title="Cerrar panel"
+            aria-label="Cerrar historial"
           >
-            ✕
+            <span className="material-symbols-outlined text-20">close</span>
           </button>
         </div>
 
         {/* Content */}
         <div className="flex-1 overflow-y-auto p-16 space-y-12">
           {pedidosDespachados.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-64 text-center text-neutral-400">
-              <span className="text-36 mb-8">🍳</span>
-              <p className="font-semibold text-15 text-neutral-300">Sin comandas despachadas aún</p>
-              <p className="text-12 text-neutral-400 mt-2 max-w-xs">
+            <div className="flex h-64 flex-col items-center justify-center text-center text-sage-green">
+              <span className="material-symbols-outlined mb-8 text-36 text-[#4D8EDB]">skillet</span>
+              <p className="text-15 font-semibold text-ash-graphite">Sin comandas despachadas aún</p>
+              <p className="mt-3 max-w-xs text-12 text-sage-green">
                 A medida que despaches pedidos completados, aparecerán aquí para poder reabrirlos si hubo algún error.
               </p>
             </div>
@@ -87,46 +89,47 @@ export function HistorialDespachoDrawer({
               return (
                 <div
                   key={pedido.id}
-                  className="rounded-xl border border-neutral-800 bg-neutral-950/60 p-14 space-y-10 hover:border-neutral-700 transition-colors"
+                  className="space-y-10 rounded-xl border border-concrete bg-[#F7F8F8] p-14 transition-colors hover:border-stone"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-8">
-                      <span className="font-black text-16 text-emerald-400">
+                      <span className="text-16 font-black text-[#087657]">
                         MESA {numeroMesa}
                       </span>
                       {sector && (
-                        <span className="text-11 text-neutral-400">
+                        <span className="text-11 text-sage-green">
                           ({sector})
                         </span>
                       )}
-                      <span className="rounded bg-neutral-800 px-6 py-1 font-mono text-10 text-neutral-400">
+                      <span className="rounded bg-ghost-fog px-6 py-2 font-mono text-10 text-sage-green">
                         #{pedido.id.slice(0, 6)}
                       </span>
                     </div>
-                    <span className="text-11 font-mono text-neutral-400">
-                      🕒 {hora}
+                    <span className="flex items-center gap-4 text-11 font-mono text-sage-green">
+                      <span className="material-symbols-outlined text-14">schedule</span>
+                      {hora}
                     </span>
                   </div>
 
                   {/* Resumen de ítems */}
-                  <div className="border-t border-neutral-900 pt-8 space-y-3">
+                  <div className="space-y-4 border-t border-concrete pt-8">
                     {pedido.items && pedido.items.length > 0 ? (
                       pedido.items.map((item, idx) => (
                         <div
                           key={item.id || idx}
-                          className="flex items-center justify-between text-12 text-neutral-300"
+                          className="flex items-center justify-between text-12 text-ash-graphite"
                         >
                           <span className="truncate pr-8">
-                            <strong className="text-neutral-100 font-mono">{item.cantidad}×</strong>{" "}
+                            <strong className="font-mono text-ash-graphite">{item.cantidad}×</strong>{" "}
                             {item.nombre_articulo || "Artículo"}
                           </span>
-                          <span className="shrink-0 text-10 text-emerald-400 font-mono">
+                          <span className="shrink-0 font-mono text-10 font-semibold text-[#087657]">
                             ✓ Listo
                           </span>
                         </div>
                       ))
                     ) : (
-                      <span className="text-12 text-neutral-400 italic">Comanda sin ítems</span>
+                      <span className="text-12 italic text-sage-green">Comanda sin ítems</span>
                     )}
                   </div>
 
@@ -136,14 +139,14 @@ export function HistorialDespachoDrawer({
                       type="button"
                       onClick={() => handleReabrir(pedido.id)}
                       disabled={esReabriendo}
-                      className="w-full min-h-[40px] rounded-lg border border-amber-500/40 bg-amber-500/10 hover:bg-amber-500/20 active:scale-[0.98] font-bold text-12 text-amber-300 transition-all flex items-center justify-center gap-6 cursor-pointer disabled:opacity-50"
+                      className="flex min-h-48 w-full cursor-pointer items-center justify-center gap-6 rounded-lg border border-[#C9DCF7] bg-[#EAF3FF] text-12 font-bold text-[#285F9F] transition-all hover:bg-[#DDEBFD] active:scale-[0.98] disabled:opacity-50"
                     >
                       {esReabriendo ? (
                         <span>Reabriendo comanda...</span>
                       ) : (
                         <>
-                          <span>↩️</span>
-                          <span>Reabrir / Devolver a Cocina</span>
+                          <span className="material-symbols-outlined text-18">undo</span>
+                          <span>Reabrir y devolver a cocina</span>
                         </>
                       )}
                     </button>
@@ -155,8 +158,8 @@ export function HistorialDespachoDrawer({
         </div>
 
         {/* Footer */}
-        <div className="border-t border-neutral-800 p-16 bg-neutral-950/80 text-center">
-          <p className="text-11 text-neutral-400">
+        <div className="border-t border-concrete bg-[#F7F8F8] p-16 text-center">
+          <p className="text-11 text-sage-green">
             KDS Mesa CLICK · Pantalla dedicada de cocina
           </p>
         </div>

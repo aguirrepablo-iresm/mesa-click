@@ -13,6 +13,47 @@ import { ComandaCard } from "@/components/kds/ComandaCard";
 import { HistorialDespachoDrawer } from "@/components/kds/HistorialDespachoDrawer";
 import { playNewOrderSound, playOrderReadySound } from "@/components/kds/AudioAlerts";
 
+const VENTANA_AGRUPACION_MS = 5 * 60 * 1000;
+
+interface GrupoComandas {
+  id: string;
+  mesaId: string;
+  pedidos: PedidoAPI[];
+  createdAt: string;
+}
+
+function agruparPedidosPorMesa(pedidos: PedidoAPI[]): GrupoComandas[] {
+  const grupos: GrupoComandas[] = [];
+  const ultimoGrupoPorMesa = new Map<string, GrupoComandas>();
+
+  pedidos.forEach((pedido) => {
+    const grupoExistente = ultimoGrupoPorMesa.get(pedido.mesa_id);
+    const fechaPedido = new Date(pedido.created_at).getTime();
+    const fechaInicioGrupo = grupoExistente
+      ? new Date(grupoExistente.createdAt).getTime()
+      : 0;
+
+    if (
+      grupoExistente &&
+      fechaPedido - fechaInicioGrupo <= VENTANA_AGRUPACION_MS
+    ) {
+      grupoExistente.pedidos.push(pedido);
+      return;
+    }
+
+    const nuevoGrupo: GrupoComandas = {
+      id: `${pedido.mesa_id}-${pedido.id}`,
+      mesaId: pedido.mesa_id,
+      pedidos: [pedido],
+      createdAt: pedido.created_at,
+    };
+    grupos.push(nuevoGrupo);
+    ultimoGrupoPorMesa.set(pedido.mesa_id, nuevoGrupo);
+  });
+
+  return grupos;
+}
+
 export default function KDSPage() {
   const router = useRouter();
 
@@ -104,9 +145,11 @@ export default function KDSPage() {
   }, []);
 
   useEffect(() => {
-    if (sucursalSeleccionadaId) {
-      cargarPedidosSucursal(sucursalSeleccionadaId);
-    }
+    if (!sucursalSeleccionadaId) return;
+    const timeoutId = window.setTimeout(() => {
+      void cargarPedidosSucursal(sucursalSeleccionadaId);
+    }, 0);
+    return () => window.clearTimeout(timeoutId);
   }, [sucursalSeleccionadaId, cargarPedidosSucursal]);
 
   // 3. Conexión en tiempo real SSE al canal KDS (US-64 & US-65)
@@ -208,7 +251,6 @@ export default function KDSPage() {
       });
     } catch (err) {
       console.warn("Error creando EventSource KDS:", err);
-      setConectadoSSE(false);
     }
 
     return () => {
@@ -259,12 +301,14 @@ export default function KDSPage() {
     [sucursalSeleccionadaId, cargarPedidosSucursal]
   );
 
-  const handleComandaCompletaLista = useCallback(
-    async (pedidoId: string) => {
+  const handleComandasCompletasLista = useCallback(
+    async (pedidoIds: string[]) => {
+      const pedidosIds = new Set(pedidoIds);
+
       // Optimistic update
       setPedidosActivos((prev) =>
         prev.map((p) => {
-          if (p.id !== pedidoId) return p;
+          if (!pedidosIds.has(p.id)) return p;
           const itemsListos = p.items?.map((it) => ({ ...it, estado: "listo" as const }));
           return { ...p, estado: "listo", items: itemsListos };
         })
@@ -272,12 +316,15 @@ export default function KDSPage() {
       playOrderReadySound();
 
       try {
-        const actualizado = await api.cambiarEstadoPedido(pedidoId, "listo");
+        const actualizados = await Promise.all(
+          pedidoIds.map((pedidoId) => api.cambiarEstadoPedido(pedidoId, "listo"))
+        );
+        const actualizadosMap = new Map(actualizados.map((pedido) => [pedido.id, pedido]));
         setPedidosActivos((prev) =>
-          prev.map((p) => (p.id === actualizado.id ? actualizado : p))
+          prev.map((pedido) => actualizadosMap.get(pedido.id) ?? pedido)
         );
       } catch (err) {
-        console.error("Error al marcar comanda completa como lista:", err);
+        console.error("Error al marcar grupo de comandas como listo:", err);
         if (sucursalSeleccionadaId) {
           cargarPedidosSucursal(sucursalSeleccionadaId);
         }
@@ -286,20 +333,26 @@ export default function KDSPage() {
     [sucursalSeleccionadaId, cargarPedidosSucursal]
   );
 
-  const handleDespacharComanda = useCallback(
-    async (pedidoId: string) => {
-      const pedidoADespachar = pedidosActivos.find((p) => p.id === pedidoId);
+  const handleDespacharComandas = useCallback(
+    async (pedidoIds: string[]) => {
+      const pedidosIds = new Set(pedidoIds);
+      const pedidosADespachar = pedidosActivos.filter((pedido) => pedidosIds.has(pedido.id));
 
       // Optimistic update
-      setPedidosActivos((prev) => prev.filter((p) => p.id !== pedidoId));
-      if (pedidoADespachar) {
-        setPedidosDespachados((prev) => [{ ...pedidoADespachar, estado: "cerrado" }, ...prev]);
+      setPedidosActivos((prev) => prev.filter((pedido) => !pedidosIds.has(pedido.id)));
+      if (pedidosADespachar.length > 0) {
+        setPedidosDespachados((prev) => [
+          ...pedidosADespachar.map((pedido) => ({ ...pedido, estado: "cerrado" as const })),
+          ...prev,
+        ]);
       }
 
       try {
-        await api.cambiarEstadoPedido(pedidoId, "cerrado");
+        await Promise.all(
+          pedidoIds.map((pedidoId) => api.cambiarEstadoPedido(pedidoId, "cerrado"))
+        );
       } catch (err) {
-        console.error("Error al despachar comanda:", err);
+        console.error("Error al despachar grupo de comandas:", err);
         if (sucursalSeleccionadaId) {
           cargarPedidosSucursal(sucursalSeleccionadaId);
         }
@@ -348,11 +401,15 @@ export default function KDSPage() {
       }
     });
 
-    return { pendientes: pend, enPreparacion: prep, listos: list };
+    return {
+      pendientes: agruparPedidosPorMesa(pend),
+      enPreparacion: agruparPedidosPorMesa(prep),
+      listos: agruparPedidosPorMesa(list),
+    };
   }, [pedidosActivos]);
 
   return (
-    <div className="flex min-h-screen flex-col bg-neutral-950 text-neutral-100 font-sans">
+    <div className="flex min-h-screen flex-col bg-[#F4F6F7] font-inter text-ash-graphite">
       {/* HEADER DE KDS */}
       <KDSHeader
         sucursales={sucursales}
@@ -365,42 +422,42 @@ export default function KDSPage() {
       />
 
       {/* CONTENIDO PRINCIPAL */}
-      <main className="flex-1 p-16 md:p-24 overflow-x-auto">
+      <main className="flex-1 overflow-x-auto p-16 md:p-24">
         {cargando ? (
           <div className="flex h-96 flex-col items-center justify-center text-center">
-            <div className="h-40 w-40 animate-spin rounded-full border-4 border-amber-500 border-t-transparent mb-16" />
-            <p className="text-16 font-bold text-neutral-300">Cargando comandas de cocina...</p>
-            <p className="text-12 text-neutral-500 mt-4">Sincronizando con el servidor</p>
+            <div className="mb-16 h-40 w-40 animate-spin rounded-full border-4 border-[#4D8EDB] border-t-transparent" />
+            <p className="text-16 font-bold text-ash-graphite">Cargando comandas de cocina...</p>
+            <p className="mt-4 text-12 text-sage-green">Sincronizando con el servidor</p>
           </div>
         ) : error ? (
-          <div className="mx-auto max-w-lg rounded-2xl border border-red-500/40 bg-red-950/20 p-24 text-center">
-            <span className="text-36 mb-12 inline-block">⚠️</span>
-            <h2 className="text-18 font-black text-red-300">Error en Pantalla KDS</h2>
-            <p className="text-13 text-neutral-300 mt-6">{error}</p>
+          <div className="mx-auto max-w-lg rounded-xl border border-alert-red/30 bg-canvas-white p-24 text-center shadow-sm">
+            <span className="material-symbols-outlined mb-12 inline-block text-36 text-alert-red">error</span>
+            <h2 className="text-18 font-black text-alert-red">Error en Pantalla KDS</h2>
+            <p className="mt-6 text-13 text-sage-green">{error}</p>
             <button
               type="button"
               onClick={() => router.push("/dashboard")}
-              className="mt-16 rounded-lg bg-neutral-800 px-16 py-8 text-13 font-bold text-white hover:bg-neutral-700 cursor-pointer"
+              className="mt-16 min-h-44 cursor-pointer rounded-lg bg-plain-green px-16 py-8 text-13 font-bold text-canvas-white transition-colors hover:bg-plain-green-muted"
             >
               Volver al Dashboard
             </button>
           </div>
         ) : (
           /* TABLERO KANBAN DE 3 COLUMNAS */
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-16 min-h-[calc(100vh-120px)] items-start">
+          <div className="grid min-h-[calc(100vh-120px)] grid-cols-1 items-start gap-16 md:grid-cols-3">
             {/* COLUMNA 1: PENDIENTES */}
-            <section className="flex flex-col rounded-2xl border border-neutral-800 bg-neutral-900/60 p-12 min-h-[500px]">
+            <section className="flex min-h-[500px] flex-col rounded-xl border border-[#F3D4A3] bg-[#FFF9EF] p-12">
               {/* HEADER COLUMNA */}
-              <div className="flex items-center justify-between border-b border-neutral-800 pb-12 mb-12">
+              <div className="mb-12 flex items-center justify-between border-b border-[#F3D4A3] pb-12">
                 <div className="flex items-center gap-8">
-                  <span className="flex h-28 w-28 items-center justify-center rounded-md bg-neutral-800 text-14">
-                    ⏳
+                  <span className="flex h-40 w-40 items-center justify-center rounded-lg bg-[#FFF1D8] text-[#A96100]">
+                    <span className="material-symbols-outlined text-20">pending_actions</span>
                   </span>
-                  <h2 className="text-16 font-black tracking-wide text-neutral-200 uppercase">
+                  <h2 className="text-16 font-black tracking-wide text-ash-graphite uppercase">
                     Pendientes
                   </h2>
                 </div>
-                <span className="rounded-full bg-neutral-800 px-10 py-3 font-mono text-12 font-black text-neutral-300 border border-neutral-700">
+                <span className="rounded-full border border-[#F3D4A3] bg-[#FFF1D8] px-10 py-3 font-mono text-12 font-black text-[#9A5700]">
                   {pendientes.length}
                 </span>
               </div>
@@ -408,23 +465,23 @@ export default function KDSPage() {
               {/* LISTA DE COMANDAS */}
               <div className="space-y-12 flex-1">
                 {pendientes.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-48 text-center text-neutral-500">
-                    <span className="text-32 mb-8">✨</span>
-                    <p className="font-bold text-14 text-neutral-400">Sin comandas pendientes</p>
-                    <p className="text-11 text-neutral-500 mt-2">Nuevos pedidos ingresarán automáticamente</p>
+                  <div className="flex flex-col items-center justify-center py-48 text-center text-sage-green">
+                    <span className="material-symbols-outlined mb-8 text-32 text-[#B86B00]">check_circle</span>
+                    <p className="text-14 font-bold text-ash-graphite">Sin comandas pendientes</p>
+                    <p className="mt-2 text-11">Nuevos pedidos ingresarán automáticamente</p>
                   </div>
                 ) : (
-                  pendientes.map((p) => {
-                    const mesaInfo = mesasMap[p.mesa_id];
+                  pendientes.map((grupo) => {
+                    const mesaInfo = mesasMap[grupo.mesaId];
                     return (
                       <ComandaCard
-                        key={p.id}
-                        pedido={p}
+                        key={grupo.id}
+                        pedidos={grupo.pedidos}
                         numeroMesa={mesaInfo?.numero ?? 0}
                         nombreSector={mesaInfo?.sector}
                         onCambiarEstadoItem={handleCambiarEstadoItem}
-                        onComandaCompletaLista={handleComandaCompletaLista}
-                        onDespacharComanda={handleDespacharComanda}
+                        onComandasCompletasLista={handleComandasCompletasLista}
+                        onDespacharComandas={handleDespacharComandas}
                       />
                     );
                   })
@@ -433,18 +490,18 @@ export default function KDSPage() {
             </section>
 
             {/* COLUMNA 2: EN PREPARACIÓN */}
-            <section className="flex flex-col rounded-2xl border border-neutral-800 bg-neutral-900/60 p-12 min-h-[500px]">
+            <section className="flex min-h-[500px] flex-col rounded-xl border border-[#C9DCF7] bg-[#F4F8FD] p-12">
               {/* HEADER COLUMNA */}
-              <div className="flex items-center justify-between border-b border-neutral-800 pb-12 mb-12">
+              <div className="mb-12 flex items-center justify-between border-b border-[#C9DCF7] pb-12">
                 <div className="flex items-center gap-8">
-                  <span className="flex h-28 w-28 items-center justify-center rounded-md bg-amber-500/20 text-14 text-amber-300">
-                    🔥
+                  <span className="flex h-40 w-40 items-center justify-center rounded-lg bg-[#EAF3FF] text-[#2D6FB7]">
+                    <span className="material-symbols-outlined text-20">skillet</span>
                   </span>
-                  <h2 className="text-16 font-black tracking-wide text-amber-300 uppercase">
+                  <h2 className="text-16 font-black tracking-wide text-[#285F9F] uppercase">
                     En Preparación
                   </h2>
                 </div>
-                <span className="rounded-full bg-amber-500/20 px-10 py-3 font-mono text-12 font-black text-amber-300 border border-amber-500/40">
+                <span className="rounded-full border border-[#C9DCF7] bg-[#EAF3FF] px-10 py-3 font-mono text-12 font-black text-[#285F9F]">
                   {enPreparacion.length}
                 </span>
               </div>
@@ -452,23 +509,23 @@ export default function KDSPage() {
               {/* LISTA DE COMANDAS */}
               <div className="space-y-12 flex-1">
                 {enPreparacion.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-48 text-center text-neutral-500">
-                    <span className="text-32 mb-8">🍳</span>
-                    <p className="font-bold text-14 text-neutral-400">Nada en preparación</p>
-                    <p className="text-11 text-neutral-500 mt-2">Toca un ítem pendiente para comenzar a elaborarlo</p>
+                  <div className="flex flex-col items-center justify-center py-48 text-center text-sage-green">
+                    <span className="material-symbols-outlined mb-8 text-32 text-[#4D8EDB]">skillet</span>
+                    <p className="text-14 font-bold text-ash-graphite">Nada en preparación</p>
+                    <p className="mt-2 text-11">Tocá un ítem pendiente para comenzar a elaborarlo</p>
                   </div>
                 ) : (
-                  enPreparacion.map((p) => {
-                    const mesaInfo = mesasMap[p.mesa_id];
+                  enPreparacion.map((grupo) => {
+                    const mesaInfo = mesasMap[grupo.mesaId];
                     return (
                       <ComandaCard
-                        key={p.id}
-                        pedido={p}
+                        key={grupo.id}
+                        pedidos={grupo.pedidos}
                         numeroMesa={mesaInfo?.numero ?? 0}
                         nombreSector={mesaInfo?.sector}
                         onCambiarEstadoItem={handleCambiarEstadoItem}
-                        onComandaCompletaLista={handleComandaCompletaLista}
-                        onDespacharComanda={handleDespacharComanda}
+                        onComandasCompletasLista={handleComandasCompletasLista}
+                        onDespacharComandas={handleDespacharComandas}
                       />
                     );
                   })
@@ -477,18 +534,18 @@ export default function KDSPage() {
             </section>
 
             {/* COLUMNA 3: LISTOS PARA SERVIR */}
-            <section className="flex flex-col rounded-2xl border border-neutral-800 bg-neutral-900/60 p-12 min-h-[500px]">
+            <section className="flex min-h-[500px] flex-col rounded-xl border border-[#B7EAD8] bg-[#F0FBF7] p-12">
               {/* HEADER COLUMNA */}
-              <div className="flex items-center justify-between border-b border-neutral-800 pb-12 mb-12">
+              <div className="mb-12 flex items-center justify-between border-b border-[#B7EAD8] pb-12">
                 <div className="flex items-center gap-8">
-                  <span className="flex h-28 w-28 items-center justify-center rounded-md bg-emerald-500/20 text-14 text-emerald-400">
-                    🛎️
+                  <span className="flex h-40 w-40 items-center justify-center rounded-lg bg-[#E4F7F0] text-[#087657]">
+                    <span className="material-symbols-outlined text-20">notifications</span>
                   </span>
-                  <h2 className="text-16 font-black tracking-wide text-emerald-400 uppercase">
+                  <h2 className="text-16 font-black tracking-wide text-[#087657] uppercase">
                     Listos para Retirar
                   </h2>
                 </div>
-                <span className="rounded-full bg-emerald-500/20 px-10 py-3 font-mono text-12 font-black text-emerald-400 border border-emerald-500/40">
+                <span className="rounded-full border border-[#B7EAD8] bg-[#E4F7F0] px-10 py-3 font-mono text-12 font-black text-[#087657]">
                   {listos.length}
                 </span>
               </div>
@@ -496,23 +553,23 @@ export default function KDSPage() {
               {/* LISTA DE COMANDAS */}
               <div className="space-y-12 flex-1">
                 {listos.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center py-48 text-center text-neutral-500">
-                    <span className="text-32 mb-8">🛎️</span>
-                    <p className="font-bold text-14 text-neutral-400">Sin comandas listas</p>
-                    <p className="text-11 text-neutral-500 mt-2">Los pedidos completados aguardando retiro aparecerán aquí</p>
+                  <div className="flex flex-col items-center justify-center py-48 text-center text-sage-green">
+                    <span className="material-symbols-outlined mb-8 text-32 text-[#14A77B]">notifications</span>
+                    <p className="text-14 font-bold text-ash-graphite">Sin comandas listas</p>
+                    <p className="mt-2 text-11">Los pedidos completados aguardando retiro aparecerán aquí</p>
                   </div>
                 ) : (
-                  listos.map((p) => {
-                    const mesaInfo = mesasMap[p.mesa_id];
+                  listos.map((grupo) => {
+                    const mesaInfo = mesasMap[grupo.mesaId];
                     return (
                       <ComandaCard
-                        key={p.id}
-                        pedido={p}
+                        key={grupo.id}
+                        pedidos={grupo.pedidos}
                         numeroMesa={mesaInfo?.numero ?? 0}
                         nombreSector={mesaInfo?.sector}
                         onCambiarEstadoItem={handleCambiarEstadoItem}
-                        onComandaCompletaLista={handleComandaCompletaLista}
-                        onDespacharComanda={handleDespacharComanda}
+                        onComandasCompletasLista={handleComandasCompletasLista}
+                        onDespacharComandas={handleDespacharComandas}
                       />
                     );
                   })
