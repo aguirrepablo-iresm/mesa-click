@@ -504,6 +504,17 @@ export const api = {
     });
   },
 
+  autenticarConGoogle: async (credential: string) => {
+    const res = await apiFetch<{ token: string }>('/auth/google', {
+      method: 'POST',
+      body: JSON.stringify({ credential }),
+    });
+    if (res.token) {
+      guardarSesion(res.token);
+    }
+    return res;
+  },
+
   verificarToken: async (token: string) => {
     const res = await apiFetch<{ token: string }>(`/auth/verify?token=${encodeURIComponent(token)}`);
     if (res.token) {

@@ -9,11 +9,11 @@
 
 | Métrica | Valor |
 |---|---|
-| **Total de User Stories** | **32 US** (US-50 a US-81) |
-| **Completadas** | **9** (28%) |
-| **En Curso** | **1** |
-| **Pendientes** | **22** |
-| **Sprint Actual** | **Sprint 12 (14/09 – 20/09/2026)** |
+| **Total de User Stories** | **36 US** (US-50 a US-85) |
+| **Completadas** | **24** (67%) |
+| **En Curso** | **0** |
+| **Pendientes** | **12** |
+| **Sprint Actual** | **Sprint 17 (19/10 – 25/10/2026)** |
 
 ---
 
@@ -91,6 +91,7 @@
 | **US-65** | `Frontend` | Pantalla KDS Dedicada de Cocina con Temporizadores | ✅ Resuelta | Pablo Aguirre | [Ver detalle](sprint-15/US-65-pantalla-kds-cocina.md) |
 | **US-66** | `Integración` | Interacción Táctil en KDS y Notificación al Salón | ✅ Resuelta | Pablo Aguirre | [Ver detalle](sprint-15/US-66-interaccion-kds-cambio-estados.md) |
 | **US-67** | `Integración` | Impresión Térmica de Comandas (58/80 mm) y Reintento Manual | 📋 Pendiente | Por asignar | [Ver detalle](sprint-15/US-67-impresion-comandas-termicas.md) |
+| **US-85** | `Fullstack` | Inicio de Sesión con Google para Administración | ✅ Resuelta | Mateo Silvestrin / Codex | [Ver detalle](sprint-15/US-85-login-google.md) |
 
 ### 📌 Sprint 16: Modelo Freemium (Free vs Pro) & Control de Suscripciones (12/10 – 18/10/2026)
 

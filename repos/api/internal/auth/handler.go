@@ -61,7 +61,44 @@ func (h *Handlers) VerificarToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	h.crearSesion(w, r, usuario)
+}
+
+func (h *Handlers) AutenticarGoogle(w http.ResponseWriter, r *http.Request) {
+	var body struct {
+		Credencial string `json:"credential"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil || body.Credencial == "" {
+		jsonError(w, "credencial de Google requerida", http.StatusBadRequest)
+		return
+	}
+
+	usuario, err := h.svc.AutenticarGoogle(r.Context(), body.Credencial)
+	if err != nil {
+		switch {
+		case errors.Is(err, ErrUsuarioNoEncontrado):
+			jsonError(w, "No encontramos una cuenta registrada con ese correo.", http.StatusNotFound)
+		case errors.Is(err, ErrGoogleNoConfigurado):
+			jsonError(w, "El inicio con Google no está configurado.", http.StatusServiceUnavailable)
+		case errors.Is(err, ErrCredencialGoogleInvalida),
+			errors.Is(err, ErrEmailGoogleNoVerificado),
+			errors.Is(err, ErrIdentidadGoogleIncompleta):
+			jsonError(w, "No pudimos validar tu cuenta de Google.", http.StatusUnauthorized)
+		default:
+			jsonError(w, "error interno", http.StatusInternalServerError)
+		}
+		return
+	}
+
+	h.crearSesion(w, r, usuario)
+}
+
+func (h *Handlers) crearSesion(w http.ResponseWriter, r *http.Request, usuario *UsuarioAuth) {
 	secreto := os.Getenv("JWT_SECRET")
+	if secreto == "" {
+		jsonError(w, "error generando sesión", http.StatusInternalServerError)
+		return
+	}
 	jwt, err := GenerarJWT(&Claims{
 		UsuarioID: usuario.ID,
 		TenantID:  usuario.TenantID,
@@ -76,6 +113,8 @@ func (h *Handlers) VerificarToken(w http.ResponseWriter, r *http.Request) {
 		Name:     "session",
 		Value:    jwt,
 		HttpOnly: true,
+		Secure:   r.TLS != nil || r.Header.Get("X-Forwarded-Proto") == "https" || os.Getenv("APP_ENV") == "production",
+		SameSite: http.SameSiteLaxMode,
 		Path:     "/",
 		MaxAge:   60 * 60 * 24 * 30,
 	})
