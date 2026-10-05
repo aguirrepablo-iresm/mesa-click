@@ -103,7 +103,7 @@ export default function PlanesSection({ tenant, onTenantUpdate }: Props) {
 
   if (loading) {
     return (
-      <div className="space-y-24 max-w-4xl">
+      <div className="space-y-16">
         <Skeleton className="h-160 w-full rounded-xl" />
         <Skeleton className="h-320 w-full rounded-xl" />
       </div>
@@ -132,9 +132,9 @@ export default function PlanesSection({ tenant, onTenantUpdate }: Props) {
   const limiteSuc = estadoPlan?.limites.sucursales ?? 1;
 
   return (
-    <div className="space-y-24 max-w-4xl font-inter">
+    <div className="space-y-16 font-inter">
       {/* ── CARD ESTADO DEL PLAN ── */}
-      <section className="rounded-xl border border-concrete bg-canvas-white p-24 shadow-sm">
+      <section className="rounded-xl border border-concrete bg-canvas-white p-20">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-12 border-b border-concrete pb-16">
           <div>
             <div className="flex items-center gap-8">
@@ -240,7 +240,7 @@ export default function PlanesSection({ tenant, onTenantUpdate }: Props) {
       </section>
 
       {/* ── TABLA COMPARATIVA FREE VS PRO (CANÓNICA LANDINGPRICING) ── */}
-      <section className="rounded-xl border border-concrete bg-canvas-white p-24 shadow-sm space-y-20">
+      <section className="space-y-20 rounded-xl border border-concrete bg-canvas-white p-20">
         <div>
           <h3 className="text-16 font-bold text-ash-graphite">Comparativa de planes</h3>
           <p className="text-13 text-sage-green mt-2">

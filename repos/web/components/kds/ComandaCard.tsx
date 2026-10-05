@@ -4,31 +4,33 @@ import React, { useState, useEffect } from "react";
 import { PedidoAPI, PedidoItemAPI } from "@/lib/api";
 
 export interface ComandaCardProps {
-  pedido: PedidoAPI;
+  pedidos: PedidoAPI[];
   numeroMesa: number;
   nombreSector?: string;
   onCambiarEstadoItem: (itemId: string, nuevoEstado: "pendiente" | "preparando" | "listo") => Promise<void>;
-  onComandaCompletaLista: (pedidoId: string) => Promise<void>;
-  onDespacharComanda: (pedidoId: string) => Promise<void>;
+  onComandasCompletasLista: (pedidoIds: string[]) => Promise<void>;
+  onDespacharComandas: (pedidoIds: string[]) => Promise<void>;
 }
 
 export function ComandaCard({
-  pedido,
+  pedidos,
   numeroMesa,
   nombreSector,
   onCambiarEstadoItem,
-  onComandaCompletaLista,
-  onDespacharComanda,
+  onComandasCompletasLista,
+  onDespacharComandas,
 }: ComandaCardProps) {
   const [minutos, setMinutos] = useState<number>(0);
   const [segundosTexto, setSegundosTexto] = useState<string>("00:00");
   const [cargandoAccion, setCargandoAccion] = useState<boolean>(false);
   const [cargandoItemId, setCargandoItemId] = useState<string | null>(null);
+  const pedidoPrincipal = pedidos[0]!;
+  const fechaPrimerPedido = pedidoPrincipal.created_at;
 
-  // Temporizador en vivo que calcula la antigüedad de la orden
+  // El grupo conserva como prioridad el horario del primer pedido recibido.
   useEffect(() => {
     function calcularTiempo() {
-      const fechaCreacion = new Date(pedido.created_at).getTime();
+      const fechaCreacion = new Date(fechaPrimerPedido).getTime();
       const ahora = Date.now();
       const difSegundos = Math.max(0, Math.floor((ahora - fechaCreacion) / 1000));
       const mins = Math.floor(difSegundos / 60);
@@ -41,31 +43,32 @@ export function ComandaCard({
     calcularTiempo();
     const interval = setInterval(calcularTiempo, 1000);
     return () => clearInterval(interval);
-  }, [pedido.created_at]);
+  }, [fechaPrimerPedido]);
 
   // Código cromático US-65: Verde (<10m), Amarillo (10-20m), Rojo (>20m)
   const colorTemporizador =
     minutos < 10
       ? {
-          badge: "bg-emerald-500/20 text-emerald-400 border-emerald-500/40",
-          cardBorder: "border-emerald-500/40 hover:border-emerald-500/70",
-          dot: "bg-emerald-400",
+          badge: "bg-[#EAF8F2] text-[#087657] border-[#B7EAD8]",
+          cardBorder: "border-[#B7EAD8] hover:border-[#14A77B]",
+          dot: "bg-[#14A77B]",
         }
       : minutos < 20
       ? {
-          badge: "bg-amber-500/20 text-amber-300 border-amber-500/40",
-          cardBorder: "border-amber-500/50 hover:border-amber-500/80",
-          dot: "bg-amber-400",
+          badge: "bg-[#FFF4DB] text-[#9A5700] border-[#F3D4A3]",
+          cardBorder: "border-[#F3D4A3] hover:border-[#F2A51A]",
+          dot: "bg-[#F2A51A]",
         }
       : {
-          badge: "bg-red-500/25 text-red-300 border-red-500/60 animate-pulse",
-          cardBorder: "border-red-500/70 hover:border-red-500 shadow-red-950/40 shadow-lg",
-          dot: "bg-red-500",
+          badge: "animate-pulse bg-red-50 text-alert-red border-alert-red/30",
+          cardBorder: "border-alert-red/60 hover:border-alert-red shadow-alert-red/10 shadow-lg",
+          dot: "bg-alert-red",
         };
 
-  const items = pedido.items || [];
+  const items = pedidos.flatMap((pedido) => pedido.items || []);
   const todosListos = items.length > 0 && items.every((i) => i.estado === "listo");
-  const estadoPedido = pedido.estado;
+  const pedidosListos = pedidos.every((pedido) => pedido.estado === "listo");
+  const pedidoIds = pedidos.map((pedido) => pedido.id);
 
   // Manejo de tap táctil por ítem (US-66)
   async function handleItemTap(item: PedidoItemAPI) {
@@ -90,7 +93,7 @@ export function ComandaCard({
     if (cargandoAccion) return;
     try {
       setCargandoAccion(true);
-      await onComandaCompletaLista(pedido.id);
+      await onComandasCompletasLista(pedidoIds);
     } finally {
       setCargandoAccion(false);
     }
@@ -100,7 +103,7 @@ export function ComandaCard({
     if (cargandoAccion) return;
     try {
       setCargandoAccion(true);
-      await onDespacharComanda(pedido.id);
+      await onDespacharComandas(pedidoIds);
     } finally {
       setCargandoAccion(false);
     }
@@ -108,32 +111,32 @@ export function ComandaCard({
 
   return (
     <article
-      className={`flex flex-col rounded-xl border-2 bg-neutral-900 transition-all duration-200 select-none shadow-md ${colorTemporizador.cardBorder} ${
-        todosListos ? "ring-2 ring-emerald-500/40" : ""
+      className={`flex select-none flex-col overflow-hidden rounded-xl border-2 bg-canvas-white shadow-sm transition-all duration-200 ${colorTemporizador.cardBorder} ${
+        todosListos ? "ring-2 ring-[#14A77B]/20" : ""
       }`}
     >
       {/* HEADER DE COMANDA */}
-      <div className="flex items-center justify-between border-b border-neutral-800 bg-neutral-900/90 px-14 py-10">
-        <div className="flex items-center gap-10">
-          <div className="flex flex-col">
-            <span className="text-20 font-black tracking-tight text-white leading-none">
+      <div className="flex items-center justify-between gap-8 border-b border-ghost-fog bg-canvas-white px-12 py-8">
+        <div className="flex min-w-0 items-center gap-8">
+          <div className="flex min-w-0 items-center gap-5">
+            <span className="shrink-0 text-18 font-black leading-none tracking-tight text-ash-graphite">
               MESA {numeroMesa}
             </span>
             {nombreSector && (
-              <span className="text-11 font-medium text-neutral-400 mt-2">
-                {nombreSector}
+              <span className="truncate text-10 font-semibold text-sage-green">
+                · {nombreSector}
               </span>
             )}
           </div>
-          <span className="rounded bg-neutral-800 px-6 py-2 text-10 font-mono text-neutral-300">
-            #{pedido.id.slice(0, 6)}
+          <span className="rounded-md bg-ghost-fog px-6 py-3 text-10 font-mono font-semibold text-sage-green">
+            {pedidos.length > 1 ? `${pedidos.length} pedidos` : `#${pedidoPrincipal.id.slice(0, 6)}`}
           </span>
         </div>
 
         {/* TEMPORIZADOR CROMÁTICO */}
         <div
-          className={`flex items-center gap-6 rounded-lg border px-10 py-4 font-mono text-14 font-bold ${colorTemporizador.badge}`}
-          title="Tiempo transcurrido desde el pedido"
+          className={`flex shrink-0 items-center gap-5 rounded-lg border px-8 py-5 font-mono text-13 font-black ${colorTemporizador.badge}`}
+          title="Tiempo transcurrido desde el primer pedido del grupo"
         >
           <span className={`inline-block h-8 w-8 rounded-full ${colorTemporizador.dot}`} />
           <span>{segundosTexto}</span>
@@ -141,7 +144,7 @@ export function ComandaCard({
       </div>
 
       {/* LISTA DE ÍTEMS CON TAP TÁCTIL */}
-      <div className="flex-1 space-y-6 p-12 overflow-y-auto max-h-[360px]">
+      <div className="max-h-[360px] flex-1 space-y-6 overflow-y-auto p-8">
         {items.map((item) => {
           const est = item.estado || "pendiente";
           const estaListo = est === "listo";
@@ -160,37 +163,39 @@ export function ComandaCard({
                   handleItemTap(item);
                 }
               }}
-              className={`group flex items-start gap-10 rounded-lg p-10 transition-all active:scale-[0.98] cursor-pointer min-h-[52px] border ${
+              className={`group flex min-h-56 cursor-pointer items-start gap-8 rounded-lg border p-8 transition-all active:scale-[0.98] ${
                 estaListo
-                  ? "bg-emerald-950/20 border-emerald-900/40 text-neutral-400"
+                  ? "border-[#B7EAD8] bg-[#EAF8F2] text-sage-green"
                   : estaPreparando
-                  ? "bg-amber-950/20 border-amber-500/40 text-neutral-100"
-                  : "bg-neutral-800/60 border-neutral-700/60 hover:bg-neutral-800 text-neutral-100"
+                  ? "border-[#C9DCF7] bg-[#EFF6FF] text-ash-graphite"
+                  : "border-concrete bg-canvas-white text-ash-graphite hover:border-stone hover:bg-ghost-fog/50"
               }`}
             >
               {/* CHECK / INDICADOR DE ESTADO */}
               <div
-                className={`mt-1 flex h-24 w-24 shrink-0 items-center justify-center rounded-md border font-bold text-12 transition-colors ${
+                className={`flex h-28 w-28 shrink-0 items-center justify-center rounded-md border text-13 font-black transition-colors ${
                   estaListo
-                    ? "border-emerald-500 bg-emerald-500 text-neutral-950"
+                    ? "border-[#14A77B] bg-[#14A77B] text-white"
                     : estaPreparando
-                    ? "border-amber-400 bg-amber-400/20 text-amber-300"
-                    : "border-neutral-600 bg-neutral-900 text-transparent group-hover:border-neutral-400"
+                    ? "border-[#4D8EDB] bg-[#EAF3FF] text-[#285F9F]"
+                    : "border-stone bg-canvas-white text-sage-green group-hover:border-ash-graphite"
                 }`}
               >
-                {estaListo ? "✓" : estaPreparando ? "⏱" : "○"}
+                <span className="material-symbols-outlined text-18">
+                  {estaListo ? "check" : estaPreparando ? "skillet" : "radio_button_unchecked"}
+                </span>
               </div>
 
               {/* DETALLE DEL ÍTEM */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-baseline justify-between gap-6">
                   <div className="flex items-baseline gap-6">
-                    <span className="font-mono text-16 font-extrabold text-white">
+                    <span className="font-mono text-15 font-black text-ash-graphite">
                       {item.cantidad}×
                     </span>
                     <span
-                      className={`text-14 font-bold ${
-                        estaListo ? "line-through text-neutral-400" : "text-white"
+                      className={`text-14 font-bold leading-snug ${
+                        estaListo ? "line-through text-sage-green" : "text-ash-graphite"
                       }`}
                     >
                       {item.nombre_articulo || "Artículo"}
@@ -200,10 +205,10 @@ export function ComandaCard({
                   <span
                     className={`shrink-0 rounded px-6 py-1 text-10 font-bold uppercase tracking-wider ${
                       estaListo
-                        ? "bg-emerald-500/20 text-emerald-400"
+                        ? "bg-[#DDF4EA] text-[#087657]"
                         : estaPreparando
-                        ? "bg-amber-500/20 text-amber-300"
-                        : "bg-neutral-700 text-neutral-300"
+                        ? "bg-[#E2EEFC] text-[#285F9F]"
+                        : "bg-ghost-fog text-sage-green"
                     }`}
                   >
                     {esItemCargando ? "..." : est}
@@ -212,11 +217,11 @@ export function ComandaCard({
 
                 {/* VARIANTES / OPCIONES */}
                 {item.variantes && item.variantes.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-4">
+                  <div className="mt-2 flex flex-wrap gap-4">
                     {item.variantes.map((v) => (
                       <span
                         key={v.variante_id}
-                        className="rounded bg-neutral-900 px-6 py-2 text-11 font-medium text-amber-200/90 border border-neutral-700"
+                        className="rounded-md border border-concrete bg-canvas-white px-6 py-2 text-10 font-semibold text-ash-graphite"
                       >
                         + {v.nombre}
                       </span>
@@ -226,18 +231,13 @@ export function ComandaCard({
 
                 {/* NOTAS DEL COMENSAL / ALERTA DE COCINA */}
                 {item.notas && item.notas.trim() !== "" && (
-                  <div className="mt-4 flex items-center gap-4 rounded bg-amber-950/40 px-6 py-2 border border-amber-700/50 text-amber-200 text-11 font-medium">
-                    <span className="font-bold">⚠️ Nota:</span>
+                  <div className="mt-4 flex items-center gap-4 rounded-md border border-[#F3D4A3] bg-[#FFF4DB] px-7 py-4 text-11 font-semibold text-[#7A4700]">
+                    <span className="material-symbols-outlined text-16">warning</span>
+                    <span className="font-black">Nota:</span>
                     <span>{item.notas}</span>
                   </div>
                 )}
 
-                {/* COMENSAL ETIQUETA */}
-                {item.comensal_nombre && (
-                  <span className="mt-4 inline-block text-10 text-neutral-400 font-mono">
-                    👤 {item.comensal_nombre}
-                  </span>
-                )}
               </div>
             </div>
           );
@@ -245,20 +245,20 @@ export function ComandaCard({
       </div>
 
       {/* FOOTER CON BOTONES TÁCTILES RÁPIDOS (US-66) */}
-      <div className="border-t border-neutral-800 bg-neutral-950/70 p-10 flex gap-8">
-        {!todosListos && estadoPedido !== "listo" ? (
+      <div className="flex gap-8 border-t border-ghost-fog bg-[#F7F8F8] p-8">
+        {!todosListos && !pedidosListos ? (
           <button
             type="button"
             onClick={handleComandaCompleta}
             disabled={cargandoAccion}
-            className="flex-1 min-h-[44px] rounded-lg bg-amber-600 hover:bg-amber-500 active:scale-[0.98] font-bold text-13 text-neutral-950 transition-all flex items-center justify-center gap-6 shadow-sm cursor-pointer disabled:opacity-50"
+            className="flex min-h-48 flex-1 cursor-pointer items-center justify-center gap-7 rounded-lg bg-[#285F9F] px-10 text-13 font-black text-white shadow-sm transition-all hover:bg-[#1F548E] active:scale-[0.98] disabled:opacity-50"
           >
             {cargandoAccion ? (
               <span>Actualizando...</span>
             ) : (
               <>
-                <span>✓</span>
-                <span>Comanda Completa Lista</span>
+                <span className="material-symbols-outlined text-18">done_all</span>
+                <span>{pedidos.length > 1 ? "Marcar grupo listo" : "Marcar comanda lista"}</span>
               </>
             )}
           </button>
@@ -267,14 +267,14 @@ export function ComandaCard({
             type="button"
             onClick={handleDespachar}
             disabled={cargandoAccion}
-            className="flex-1 min-h-[44px] rounded-lg bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] font-black text-13 text-neutral-950 transition-all flex items-center justify-center gap-6 shadow-md cursor-pointer disabled:opacity-50 animate-pulse-slow"
+            className="animate-pulse-slow flex min-h-48 flex-1 cursor-pointer items-center justify-center gap-7 rounded-lg bg-[#14A77B] px-10 text-13 font-black text-white shadow-md transition-all hover:bg-[#0E8E68] active:scale-[0.98] disabled:opacity-50"
           >
             {cargandoAccion ? (
               <span>Despachando...</span>
             ) : (
               <>
-                <span>🛎️</span>
-                <span>Despachar / Retirar</span>
+                <span className="material-symbols-outlined text-18">notifications</span>
+                <span>Despachar {pedidos.length > 1 ? "grupo" : "pedido"}</span>
               </>
             )}
           </button>

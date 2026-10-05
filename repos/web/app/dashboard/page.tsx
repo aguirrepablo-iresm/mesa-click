@@ -222,13 +222,13 @@ export default function DashboardPage() {
               href="/kds"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex min-h-44 items-center gap-12 rounded-xl px-12 text-ash-graphite hover:bg-amber-500/15 hover:text-amber-950 transition-colors font-medium text-13 border border-amber-500/30 bg-amber-500/5 group"
+              className="flex min-h-44 items-center gap-12 rounded-lg px-12 py-8 text-sage-green transition-all hover:bg-ghost-fog hover:text-ash-graphite"
               onClick={() => setIsExpanded(false)}
               title="Abrir Pantalla de Cocina (KDS)"
             >
-              <span className="material-symbols-outlined text-20 text-amber-600 group-hover:scale-110 transition-transform">skillet</span>
-              <span className="flex-1 font-semibold">Cocina (KDS)</span>
-              <span className="rounded bg-amber-500/20 px-6 py-1 text-10 font-bold text-amber-700">PRO ↗</span>
+              <span className="material-symbols-outlined text-20">skillet</span>
+              <span className="flex-1 text-13 font-medium">Cocina (KDS)</span>
+              <span className="rounded border border-concrete bg-ghost-fog px-6 py-1 text-10 font-bold text-sage-green">PRO ↗</span>
             </Link>
           </nav>
           <div className="pt-16 border-t border-ghost-fog space-y-4 px-8">
@@ -279,16 +279,16 @@ export default function DashboardPage() {
               href="/kds"
               target="_blank"
               rel="noopener noreferrer"
-              className={`flex h-44 items-center rounded-xl transition-all border border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/15 hover:text-amber-950 text-ash-graphite group ${
+              className={`flex min-h-44 items-center rounded-lg text-sage-green transition-all hover:bg-ghost-fog hover:text-ash-graphite ${
                 isExpanded ? "w-full gap-12 px-12 py-8" : "w-44 justify-center"
               }`}
               title="Abrir Pantalla de Cocina (KDS) en nueva pestaña"
             >
-              <span className="material-symbols-outlined text-20 text-amber-600 group-hover:scale-110 transition-transform">skillet</span>
+              <span className="material-symbols-outlined text-20">skillet</span>
               {isExpanded && (
                 <div className="flex items-center justify-between flex-1 min-w-0">
-                  <span className="text-13 font-semibold whitespace-nowrap">Cocina (KDS)</span>
-                  <span className="rounded bg-amber-500/20 px-6 py-1 text-10 font-bold text-amber-700">PRO ↗</span>
+                  <span className="text-13 font-medium whitespace-nowrap">Cocina (KDS)</span>
+                  <span className="rounded border border-concrete bg-ghost-fog px-6 py-1 text-10 font-bold text-sage-green">PRO ↗</span>
                 </div>
               )}
             </Link>

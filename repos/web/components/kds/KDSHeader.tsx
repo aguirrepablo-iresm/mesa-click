@@ -47,7 +47,8 @@ export function KDSHeader({
 
   // Sincronizar estado inicial de sonido
   useEffect(() => {
-    setAudioActivo(isAudioEnabled());
+    const timeoutId = window.setTimeout(() => setAudioActivo(isAudioEnabled()), 0);
+    return () => window.clearTimeout(timeoutId);
   }, []);
 
   // Listener para estado de pantalla completa
@@ -78,29 +79,34 @@ export function KDSHeader({
   }
 
   return (
-    <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-12 border-b border-neutral-800 bg-neutral-950 px-16 py-10 shadow-md">
+    <header className="sticky top-0 z-30 flex flex-wrap items-center justify-between gap-12 border-b border-concrete bg-canvas-white px-16 py-12 shadow-sm">
       {/* LADO IZQUIERDO: BRAND + SUCURSAL + VOLVER */}
       <div className="flex items-center gap-12">
         <Link
           href="/dashboard"
-          className="flex h-36 w-36 items-center justify-center rounded-lg bg-neutral-900 border border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+          className="flex h-44 w-44 items-center justify-center rounded-lg border border-concrete bg-canvas-white text-ash-graphite transition-colors hover:border-stone hover:bg-ghost-fog"
           title="Volver al Dashboard"
+          aria-label="Volver al dashboard"
         >
-          ←
+          <span className="material-symbols-outlined text-20">arrow_back</span>
         </Link>
 
         <div className="flex items-center gap-8">
-          <span className="text-20">🍳</span>
+          <span className="flex h-44 w-44 items-center justify-center rounded-lg bg-plain-green text-canvas-white">
+            <span className="material-symbols-outlined text-24">skillet</span>
+          </span>
           <div>
             <div className="flex items-center gap-8">
-              <h1 className="text-16 font-black tracking-wider text-white uppercase">
+              <h1 className="text-18 font-black tracking-[-0.01em] text-ash-graphite">
                 KDS Cocina
               </h1>
-              <span className="rounded bg-amber-500/20 px-6 py-1 text-10 font-bold text-amber-400 border border-amber-500/30">
+              <span className="rounded-full border border-concrete bg-ghost-fog px-6 py-2 text-9 font-bold text-sage-green">
                 PRO
               </span>
             </div>
-            <p className="text-11 text-neutral-400 font-medium">Mesa CLICK Display</p>
+            <p className="mt-2 text-11 font-medium text-sage-green">
+              {totalComandasActivas} {totalComandasActivas === 1 ? "comanda activa" : "comandas activas"}
+            </p>
           </div>
         </div>
 
@@ -109,26 +115,27 @@ export function KDSHeader({
           <select
             value={sucursalSeleccionadaId}
             onChange={(e) => onCambiarSucursal(e.target.value)}
-            className="rounded-lg border border-neutral-800 bg-neutral-900 px-10 py-6 text-13 font-semibold text-neutral-200 focus:border-amber-500 focus:outline-none"
+            className="h-44 rounded-lg border border-concrete bg-canvas-white px-10 text-13 font-semibold text-ash-graphite outline-none focus:border-plain-green"
           >
             {sucursales.map((s) => (
               <option key={s.id} value={s.id}>
-                📍 {s.nombre}
+                {s.nombre}
               </option>
             ))}
           </select>
         ) : sucursales.length === 1 ? (
-          <span className="hidden sm:inline-flex items-center gap-4 rounded-lg bg-neutral-900 border border-neutral-800 px-10 py-6 text-12 font-medium text-neutral-300">
-            📍 {sucursales[0].nombre}
+          <span className="hidden h-44 items-center gap-6 rounded-lg border border-concrete bg-ghost-fog px-10 text-12 font-semibold text-ash-graphite sm:inline-flex">
+            <span className="material-symbols-outlined text-16 text-sage-green">location_on</span>
+            {sucursales[0].nombre}
           </span>
         ) : null}
       </div>
 
       {/* CENTRO: RELOJ Y ESTADO SSE */}
-      <div className="flex items-center gap-16">
+      <div className="flex items-center gap-10">
         {/* RELOJ DIGITAL */}
-        <div className="flex items-center gap-6 rounded-lg bg-neutral-900/80 border border-neutral-800 px-12 py-6 font-mono text-16 font-black text-amber-400 shadow-inner">
-          <span>🕒</span>
+        <div className="flex h-44 items-center gap-6 rounded-lg bg-plain-green px-12 font-mono text-18 font-black text-canvas-white shadow-sm">
+          <span className="material-symbols-outlined text-20">schedule</span>
           <span>{horaActual || "--:--:--"}</span>
         </div>
 
@@ -136,14 +143,14 @@ export function KDSHeader({
         <div
           className={`flex items-center gap-6 rounded-full border px-10 py-4 text-11 font-bold ${
             conectadoSSE
-              ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
-              : "border-amber-500/40 bg-amber-500/10 text-amber-300 animate-pulse"
+              ? "border-[#B7EAD8] bg-[#EAF8F2] text-[#087657]"
+              : "animate-pulse border-[#F3D4A3] bg-[#FFF4DB] text-[#9A5700]"
           }`}
           title={conectadoSSE ? "Conectado al servidor en tiempo real" : "Reconectando con el servidor..."}
         >
           <span
             className={`inline-block h-8 w-8 rounded-full ${
-              conectadoSSE ? "bg-emerald-400 animate-pulse" : "bg-amber-400"
+              conectadoSSE ? "animate-pulse bg-[#14A77B]" : "bg-[#F2A51A]"
             }`}
           />
           <span>{conectadoSSE ? "EN VIVO" : "RECONECTANDO"}</span>
@@ -156,13 +163,13 @@ export function KDSHeader({
         <button
           type="button"
           onClick={onAbrirHistorial}
-          className="relative flex items-center gap-6 rounded-lg border border-neutral-800 bg-neutral-900 px-12 py-8 text-12 font-bold text-neutral-300 hover:bg-neutral-800 hover:text-white transition-all cursor-pointer min-h-[40px]"
+          className="relative flex min-h-44 cursor-pointer items-center gap-6 rounded-lg border border-concrete bg-canvas-white px-12 py-8 text-12 font-bold text-ash-graphite transition-all hover:border-stone hover:bg-ghost-fog"
           title="Ver comandas despachadas recientemente"
         >
-          <span>📋</span>
+          <span className="material-symbols-outlined text-18">history</span>
           <span className="hidden md:inline">Despachos</span>
           {totalDespachadas > 0 && (
-            <span className="rounded-full bg-emerald-500 px-6 py-1 text-10 font-black text-neutral-950">
+            <span className="rounded-full bg-[#14A77B] px-6 py-2 text-10 font-black text-white">
               {totalDespachadas}
             </span>
           )}
@@ -172,24 +179,24 @@ export function KDSHeader({
         <button
           type="button"
           onClick={toggleAudio}
-          className={`flex h-40 w-40 items-center justify-center rounded-lg border text-16 transition-all cursor-pointer ${
+          className={`flex h-44 w-44 cursor-pointer items-center justify-center rounded-lg border transition-all ${
             audioActivo
-              ? "border-amber-500/40 bg-amber-500/10 text-amber-300 hover:bg-amber-500/20"
-              : "border-neutral-800 bg-neutral-900 text-neutral-500 hover:text-neutral-300"
+              ? "border-[#C9DCF7] bg-[#EAF3FF] text-[#285F9F] hover:bg-[#DDEBFD]"
+              : "border-concrete bg-ghost-fog text-sage-green hover:text-ash-graphite"
           }`}
           title={audioActivo ? "Sonido activado (clic para silenciar)" : "Sonido silenciado (clic para activar)"}
         >
-          {audioActivo ? "🔔" : "🔕"}
+          <span className="material-symbols-outlined text-20">{audioActivo ? "notifications_active" : "notifications_off"}</span>
         </button>
 
         {/* TOGGLE FULLSCREEN (US-65) */}
         <button
           type="button"
           onClick={togglePantallaCompleta}
-          className="flex h-40 w-40 items-center justify-center rounded-lg border border-neutral-800 bg-neutral-900 text-16 text-neutral-300 hover:bg-neutral-800 hover:text-white transition-all cursor-pointer"
+          className="flex h-44 w-44 cursor-pointer items-center justify-center rounded-lg border border-plain-green bg-plain-green text-canvas-white transition-all hover:bg-plain-green-muted"
           title={esPantallaCompleta ? "Salir de pantalla completa" : "Pantalla completa para cocina"}
         >
-          {esPantallaCompleta ? "🗗" : "⛶"}
+          <span className="material-symbols-outlined text-20">{esPantallaCompleta ? "fullscreen_exit" : "fullscreen"}</span>
         </button>
       </div>
     </header>
