@@ -22,6 +22,11 @@ const anton = Anton({
 export const metadata: Metadata = {
   title: "Mesa CLICK | Digital Workbench",
   description: "Administración gastronómica profesional y precisa.",
+  metadataBase: new URL("https://mesa-click-web.onrender.com"),
+  icons: {
+    icon: "/mesa-click-logo-120.png",
+    apple: "/mesa-click-logo-120.png",
+  },
 };
 
 export default function RootLayout({
@@ -35,10 +40,6 @@ export default function RootLayout({
         <link
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
-        />
-        <link
-          rel="icon"
-          href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect x='14' y='14' width='72' height='72' rx='16' fill='none' stroke='%23000' stroke-width='13'/%3E%3Ccircle cx='50' cy='50' r='10' fill='%23000'/%3E%3C/svg%3E"
         />
       </head>
       <body className="min-h-full flex flex-col bg-canvas-white text-ash-graphite">

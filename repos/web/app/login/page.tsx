@@ -183,6 +183,16 @@ export default function LoginPage() {
               Registrar mi negocio
             </Link>
           </p>
+          <p className="mt-16 border-t border-concrete pt-14 text-11 leading-relaxed text-stone">
+            Al ingresar confirmás que conocés nuestros{" "}
+            <Link href="/terminos" className="font-semibold text-ash-graphite underline underline-offset-4">
+              Términos del Servicio
+            </Link>{" "}
+            y la{" "}
+            <Link href="/privacidad" className="font-semibold text-ash-graphite underline underline-offset-4">
+              Política de Privacidad
+            </Link>.
+          </p>
         </div>
       </div>
     </div>

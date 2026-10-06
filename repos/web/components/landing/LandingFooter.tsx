@@ -13,8 +13,8 @@ export default function LandingFooter() {
           </div>
 
           <FootCol title="Producto" links={[["Cómo funciona", "#features"], ["Precios", "#pricing"], ["FAQ", "#faq"]]} />
-          <FootCol title="Soporte" links={[["FAQ", "#faq"], ["Contacto", "#"], ["Estado", "#"]]} />
-          <FootCol title="Legal" links={[["Términos", "#"], ["Privacidad", "#"]]} />
+          <FootCol title="Soporte" links={[["FAQ", "#faq"], ["Contacto", "mailto:soporte@mesaclick.com"]]} />
+          <FootCol title="Legal" links={[["Términos", "/terminos"], ["Privacidad", "/privacidad"]]} />
         </div>
 
         <div className="mt-40 pt-20 border-t border-concrete flex flex-wrap justify-between items-center gap-10 text-12 text-stone">

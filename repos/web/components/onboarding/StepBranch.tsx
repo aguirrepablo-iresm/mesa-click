@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Link from "next/link";
 
 type DiaKey = "lunes" | "martes" | "miercoles" | "jueves" | "viernes" | "sabado" | "domingo";
 
@@ -176,6 +177,7 @@ export default function StepBranch({
 }: StepBranchProps) {
   const [mostrarAvanzado, setMostrarAvanzado] = useState(false);
   const [diaEditando, setDiaEditando] = useState<DiaKey | null>(null);
+  const [aceptaLegal, setAceptaLegal] = useState(false);
   const horarios = parseHorarios(data.horarios);
   const diasAbiertos = DIAS.filter((dia) => horarios[dia.key].abierto);
   const tramosBase = limpiarTramos(
@@ -558,9 +560,29 @@ export default function StepBranch({
           </div>
         )}
 
+        <label className="flex cursor-pointer items-start gap-10 rounded-lg border border-concrete bg-canvas-white p-14 text-11 leading-relaxed text-deep-forest">
+          <input
+            type="checkbox"
+            required
+            checked={aceptaLegal}
+            onChange={(event) => setAceptaLegal(event.target.checked)}
+            className="mt-1 h-20 w-20 shrink-0 accent-ash-graphite"
+          />
+          <span>
+            Confirmo que tengo facultades para registrar este negocio y acepto los{" "}
+            <Link href="/terminos" target="_blank" className="font-semibold underline underline-offset-4">
+              Términos del Servicio
+            </Link>{" "}
+            y la{" "}
+            <Link href="/privacidad" target="_blank" className="font-semibold underline underline-offset-4">
+              Política de Privacidad
+            </Link>.
+          </span>
+        </label>
+
         <button
           type="submit"
-          disabled={loading || diasAbiertos.length === 0}
+          disabled={loading || diasAbiertos.length === 0 || !aceptaLegal}
           className="w-full h-52 rounded-full bg-plain-green text-canvas-white text-12 font-bold uppercase tracking-wide hover:bg-plain-green-muted active:scale-95 transition-all shadow-lg shadow-plain-green/10 flex items-center justify-center gap-8 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {loading ? (
