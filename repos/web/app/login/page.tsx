@@ -92,14 +92,21 @@ export default function LoginPage() {
               </p>
 
               {linkDev && (
-                <div className="p-12 bg-vanilla-cream border border-dashed border-concrete rounded-lg space-y-6">
+                <div className="space-y-10 rounded-lg border border-dashed border-concrete bg-vanilla-cream p-12">
                   <div className="flex items-center gap-6 text-11 font-mono uppercase tracking-wider text-stone">
                     <span className="material-symbols-outlined text-16">construction</span>
-                    <span>Modo desarrollo — sin email configurado</span>
+                    <span>Acceso local de administrador</span>
                   </div>
-                  <a href={linkDev} className="block text-11 font-mono text-ash-graphite break-all hover:underline">
-                    {linkDev}
+                  <a
+                    href={linkDev}
+                    className="flex h-42 w-full items-center justify-center gap-8 rounded-lg bg-ash-graphite px-14 text-12 font-semibold text-canvas-white transition-opacity hover:opacity-85"
+                  >
+                    <span className="material-symbols-outlined text-18">login</span>
+                    Ingresar como admin local
                   </a>
+                  <p className="text-10 leading-relaxed text-stone">
+                    Disponible únicamente en el entorno local de desarrollo.
+                  </p>
                 </div>
               )}
 

@@ -3,9 +3,9 @@
 > **Sprint**: Sprint 17 (19/10 – 25/10/2026)  
 > **Épica**: Dashboard con Métricas (KPIs)  
 > **Tipo**: `Backend`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
-> **Rama de trabajo**: `feat/US-72-backend-metricas-sql`  
+> **Estado**: ✅ **Resuelta**
+> **Asignado a**: Mateo Silvestrin / Codex
+> **Rama de trabajo**: `feat/US-72-73-metricas`
 
 ---
 
@@ -17,19 +17,19 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Endpoint `GET /metricas/resumen?desde=...&hasta=...&sucursal_id=...`.
-- [ ] Consultas SQL eficientes agrupadas por fecha, turno y estado de pedido.
-- [ ] Cálculo de: Facturación total, ticket promedio, cantidad de pedidos cerrados, plato más vendido y tiempo promedio de despacho.
-- [ ] Creación de índices en PostgreSQL en columnas de fecha y estado de pedidos.
+- [x] Endpoint `GET /metricas/resumen?desde=...&hasta=...&sucursal_id=...`.
+- [x] Consultas SQL eficientes agrupadas por fecha, turno y estado de pedido.
+- [x] Cálculo de: Facturación total, ticket promedio, cantidad de pedidos cerrados, plato más vendido y tiempo promedio de despacho.
+- [x] Creación de índices en PostgreSQL en columnas de fecha y estado de pedidos.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Crear paquete `internal/metrica` con store y service.
-- [ ] Escribir queries de agregación optimizadas con `SUM`, `AVG` y `COUNT`.
-- [ ] Migración SQL de índices para reportes rápidos.
-- [ ] Tests unitarios y benchmarking de consulta.
+- [x] Crear paquete `internal/metrica` con store y service.
+- [x] Escribir queries de agregación optimizadas con `SUM`, `AVG` y `COUNT`.
+- [x] Migración SQL de índices para reportes rápidos.
+- [x] Tests unitarios y benchmarking de consulta.
 
 ---
 

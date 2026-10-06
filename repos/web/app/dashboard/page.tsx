@@ -6,12 +6,13 @@ import CartaSection from "@/components/dashboard/CartaSection";
 import MesasSection from "@/components/dashboard/MesasSection";
 import RecepcionistaSection from "@/components/dashboard/RecepcionistaSection";
 import ConfiguracionSection from "@/components/dashboard/ConfiguracionSection";
+import MetricasSection from "@/components/dashboard/MetricasSection";
 import Logo from "@/components/brand/Logo";
 import { api, cerrarSesion, estaAutenticado, Tenant } from "@/lib/api";
 import { ToastProvider, ConfirmProvider } from "@/components/ui";
 import OnboardingTour from "@/components/dashboard/OnboardingTour";
 
-type Section = 'carta' | 'mesas' | 'recepcionista' | 'configuracion';
+type Section = 'carta' | 'mesas' | 'recepcionista' | 'metricas' | 'configuracion';
 
 const SECTIONS: { id: Section; icon: string; label: string }[] = [
   { id: 'carta', icon: 'restaurant_menu', label: 'Carta' },
@@ -28,6 +29,7 @@ function renderSection(
     case 'carta': return <CartaSection />;
     case 'mesas': return <MesasSection />;
     case 'recepcionista': return <RecepcionistaSection />;
+    case 'metricas': return <MetricasSection />;
     case 'configuracion': return <ConfiguracionSection initialTab={configuracionTab} onTenantUpdate={onTenantUpdate} />;
   }
 }
@@ -230,6 +232,17 @@ export default function DashboardPage() {
               <span className="flex-1 text-13 font-medium">Cocina (KDS)</span>
               <span className="rounded border border-concrete bg-ghost-fog px-6 py-1 text-10 font-bold text-sage-green">PRO ↗</span>
             </Link>
+            <NavItem
+              icon="monitoring"
+              label="Métricas"
+              active={activeSection === "metricas"}
+              expanded={true}
+              dataTour="nav-metricas"
+              onClick={() => {
+                setActiveSection("metricas");
+                setIsExpanded(false);
+              }}
+            />
           </nav>
           <div className="pt-16 border-t border-ghost-fog space-y-4 px-8">
             <NavItem
@@ -292,6 +305,14 @@ export default function DashboardPage() {
                 </div>
               )}
             </Link>
+            <NavItem
+              icon="monitoring"
+              label="Métricas"
+              active={activeSection === "metricas"}
+              expanded={isExpanded}
+              dataTour="nav-metricas"
+              onClick={() => setActiveSection("metricas")}
+            />
           </nav>
           <div className={`pt-16 border-t border-ghost-fog space-y-4 flex flex-col ${isExpanded ? "px-8" : "items-center"}`}>
             <NavItem

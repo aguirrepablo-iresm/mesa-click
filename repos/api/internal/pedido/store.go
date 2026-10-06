@@ -319,7 +319,14 @@ func (s *pgStore) listarItems(ctx context.Context, pedidoID string) ([]PedidoIte
 func (s *pgStore) CambiarEstado(ctx context.Context, id, tenantID, nuevoEstado string) (*Pedido, error) {
 	p := &Pedido{}
 	err := db.Pool.QueryRow(ctx,
-		`UPDATE pedidos SET estado = $1, updated_at = now()
+		`UPDATE pedidos
+		 SET estado = $1,
+		     updated_at = now(),
+		     listo_at = CASE
+		       WHEN $1 = 'listo' THEN COALESCE(listo_at, now())
+		       WHEN $1 IN ('recibido', 'preparando') THEN NULL
+		       ELSE listo_at
+		     END
 		 WHERE id = $2
 		   AND sucursal_id IN (SELECT id FROM sucursales WHERE tenant_id = $3)
 		 RETURNING id, mesa_id, sucursal_id, cuenta_version, estado, created_at, updated_at`,
@@ -388,7 +395,12 @@ func (s *pgStore) CambiarEstadoItem(ctx context.Context, itemID, tenantID, nuevo
 	estadoAgregado := resolverEstadoPedido(total, listos, iniciados)
 	_, err = tx.Exec(ctx,
 		`UPDATE pedidos
-		 SET estado = $1, updated_at = now()
+		 SET estado = $1,
+		     updated_at = now(),
+		     listo_at = CASE
+		       WHEN $1 = 'listo' THEN COALESCE(listo_at, now())
+		       ELSE NULL
+		     END
 		 WHERE id = $2 AND estado IS DISTINCT FROM $1`,
 		estadoAgregado, pedidoID,
 	)

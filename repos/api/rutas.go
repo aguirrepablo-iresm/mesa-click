@@ -3,8 +3,11 @@ package main
 import (
 	"encoding/json"
 	"log/slog"
+	"net"
 	"net/http"
+	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/auth"
@@ -12,6 +15,7 @@ import (
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/db"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/mercadopago"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/mesa"
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/metrica"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/notificacion"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/pedido"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/sucursal"
@@ -19,13 +23,33 @@ import (
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/usuario"
 )
 
+func esEntornoDesarrolloLocal(entorno, appURL string) bool {
+	switch strings.ToLower(strings.TrimSpace(entorno)) {
+	case "development", "local":
+		return true
+	case "":
+		destino, err := url.Parse(strings.TrimSpace(appURL))
+		if err != nil {
+			return false
+		}
+		host := destino.Hostname()
+		if strings.EqualFold(host, "localhost") {
+			return true
+		}
+		ip := net.ParseIP(host)
+		return ip != nil && ip.IsLoopback()
+	default:
+		return false
+	}
+}
+
 func registrarRutas(mux *http.ServeMux) {
 	mux.HandleFunc("GET /health", handlerHealth)
 
 	// Auth & Email Provider
 	// proveedorReal indica si hay un canal de email de verdad configurado.
-	// Si no lo hay, el magic link solo se loguea, así que fuera de producción
-	// lo devolvemos en la respuesta del endpoint para poder probar el login.
+	// Si no lo hay, el magic link solo se escribe en el log. En desarrollo local
+	// también se devuelve en la respuesta para poder probar el acceso rápidamente.
 	proveedorReal := false
 	var emailSender auth.EmailSender = &auth.LogEmailSender{}
 
@@ -62,7 +86,9 @@ func registrarRutas(mux *http.ServeMux) {
 		proveedorReal = true
 	}
 
-	esProduccion := os.Getenv("APP_ENV") == "production"
+	entorno := strings.ToLower(strings.TrimSpace(os.Getenv("APP_ENV")))
+	esProduccion := entorno == "production"
+	esDesarrolloLocal := esEntornoDesarrolloLocal(entorno, os.Getenv("APP_URL"))
 	if !proveedorReal {
 		slog.Warn("sin proveedor de email configurado: el magic link solo se escribe en el log",
 			"produccion", esProduccion)
@@ -70,7 +96,9 @@ func registrarRutas(mux *http.ServeMux) {
 
 	authStore := auth.NuevoStore()
 	authSvc := auth.NuevoService(authStore, emailSender)
-	authH := auth.NuevosHandlers(authSvc, !proveedorReal && !esProduccion)
+	// El acceso rápido se conserva siempre en desarrollo local, incluso si el
+	// equipo tiene un proveedor de correo configurado. Nunca se expone en QA o producción.
+	authH := auth.NuevosHandlers(authSvc, esDesarrolloLocal)
 	mux.HandleFunc("POST /auth/google", authH.AutenticarGoogle)
 	mux.HandleFunc("POST /auth/magic-link", authH.SolicitarLink)
 	mux.HandleFunc("GET /auth/verify", authH.VerificarToken)
@@ -161,6 +189,12 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.Handle("PATCH /pedidos/{id}/estado", auth.Requerir(http.HandlerFunc(pedidoH.CambiarEstado)))
 	mux.Handle("PATCH /pedidos/items/{id}/estado", auth.Requerir(http.HandlerFunc(pedidoH.CambiarEstadoItem)))
 	mux.Handle("GET /kds/eventos", auth.Requerir(http.HandlerFunc(pedidoH.EventosKDS)))
+
+	// Métricas operativas (admin — protegidas y aisladas por tenant)
+	metricaStore := metrica.NuevoStore()
+	metricaSvc := metrica.NuevoService(metricaStore)
+	metricaH := metrica.NuevosHandlers(metricaSvc)
+	mux.Handle("GET /metricas/resumen", auth.Requerir(http.HandlerFunc(metricaH.Resumen)))
 
 	// Notificaciones / SSE
 	notificacionH := notificacion.NuevosHandlers()

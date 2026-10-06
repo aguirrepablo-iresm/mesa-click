@@ -10,9 +10,9 @@
 | Métrica | Valor |
 |---|---|
 | **Total de User Stories** | **36 US** (US-50 a US-85) |
-| **Completadas** | **24** (67%) |
+| **Completadas** | **26** (72%) |
 | **En Curso** | **0** |
-| **Pendientes** | **12** |
+| **Pendientes** | **10** |
 | **Sprint Actual** | **Sprint 17 (19/10 – 25/10/2026)** |
 
 ---
@@ -106,8 +106,8 @@
 
 | ID | Tipo | Título | Estado | Asignado | Archivo |
 |---|---|---|---|---|---|
-| **US-72** | `Backend` | Consultas SQL de Agregación Optimizadas para Métricas | 📋 Pendiente | Por asignar | [Ver detalle](sprint-17/US-72-backend-consultas-agregacion-sql.md) |
-| **US-73** | `Frontend` | Panel Visual con Tarjetas de KPIs y Métricas de Operación | 📋 Pendiente | Por asignar | [Ver detalle](sprint-17/US-73-dashboard-kpis-metricas.md) |
+| **US-72** | `Backend` | Consultas SQL de Agregación Optimizadas para Métricas | ✅ Resuelta | Mateo Silvestrin / Codex | [Ver detalle](sprint-17/US-72-backend-consultas-agregacion-sql.md) |
+| **US-73** | `Frontend` | Panel Visual con Tarjetas de KPIs y Métricas de Operación | ✅ Resuelta | Mateo Silvestrin / Codex | [Ver detalle](sprint-17/US-73-dashboard-kpis-metricas.md) |
 
 ### 📌 Sprint 18: Business Analytics, Reputación & Exportación (26/10 – 01/11/2026)
 

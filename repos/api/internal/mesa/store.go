@@ -149,7 +149,9 @@ func (s *pgStore) CerrarCuenta(ctx context.Context, id, tenantID string) (*Mesa,
 
 	if _, err = tx.Exec(ctx,
 		`UPDATE pedidos
-		 SET estado = 'cerrado', updated_at = now()
+		 SET estado = 'cerrado',
+		     updated_at = now(),
+		     listo_at = COALESCE(listo_at, now())
 		 WHERE mesa_id = $1 AND estado != 'cerrado'`,
 		id,
 	); err != nil {

@@ -475,6 +475,60 @@ export interface PedidoAPI {
   updated_at: string;
 }
 
+export interface PlatoEstrellaAPI {
+  articulo_id: string;
+  nombre: string;
+  unidades: number;
+  monto: number;
+}
+
+export interface MetricaDiariaAPI {
+  fecha: string;
+  facturacion_total: number;
+  pedidos_totales: number;
+  pedidos_cerrados: number;
+}
+
+export interface MetricaTurnoAPI {
+  turno: string;
+  facturacion_total: number;
+  pedidos_totales: number;
+  pedidos_cerrados: number;
+}
+
+export interface MetricaEstadoAPI {
+  estado: 'recibido' | 'preparando' | 'listo' | 'cerrado';
+  cantidad: number;
+}
+
+export interface MetricasResumenAPI {
+  periodo: {
+    desde: string;
+    hasta: string;
+    zona_horaria: string;
+    sucursal_id?: string;
+    comparado_desde: string;
+    comparado_hasta: string;
+  };
+  facturacion_total: number;
+  ticket_promedio: number;
+  pedidos_totales: number;
+  pedidos_cerrados: number;
+  pedidos_activos: number;
+  tiempo_promedio_despacho_minutos: number;
+  plato_mas_vendido: PlatoEstrellaAPI | null;
+  platos_estrella: PlatoEstrellaAPI[];
+  variaciones: {
+    facturacion_total: number | null;
+    ticket_promedio: number | null;
+    pedidos_totales: number | null;
+    tiempo_promedio_despacho_minutos: number | null;
+  };
+  por_dia: MetricaDiariaAPI[];
+  por_turno: MetricaTurnoAPI[];
+  por_estado: MetricaEstadoAPI[];
+}
+
 export interface NuevoPedidoInput {
   mesa_id: string;
   items: Array<{
@@ -878,7 +932,17 @@ export const api = {
     return `${getApiBaseUrl()}/kds/eventos?sucursal_id=${encodeURIComponent(sucursalId)}${tokenQuery}`;
   },
 
-  // 9. Carga masiva de catálogo (US-58 / US-59)
+  // 9. Métricas y KPIs (US-72 / US-73)
+  obtenerMetricasResumen: async (filtros?: { desde?: string; hasta?: string; sucursalId?: string }) => {
+    const params = new URLSearchParams();
+    if (filtros?.desde) params.set('desde', filtros.desde);
+    if (filtros?.hasta) params.set('hasta', filtros.hasta);
+    if (filtros?.sucursalId) params.set('sucursal_id', filtros.sucursalId);
+    const query = params.toString();
+    return apiFetch<MetricasResumenAPI>(`/metricas/resumen${query ? `?${query}` : ''}`, {}, 30000);
+  },
+
+  // 10. Carga masiva de catálogo (US-58 / US-59)
   importarCarta: async (archivo: File): Promise<ResultadoImportacion> => {
     const formData = new FormData();
     formData.append('archivo', archivo);
@@ -903,7 +967,7 @@ export const api = {
     return data as ResultadoImportacion;
   },
 
-  // 10. Pagos con Mercado Pago (US-82)
+  // 11. Pagos con Mercado Pago (US-82)
   crearPreferenciaPagoMP: async (qrToken: string): Promise<PreferenciaPagoMP> => {
     return apiFetch<PreferenciaPagoMP>(`/publica/mesas/${encodeURIComponent(qrToken)}/pago/mercadopago`, {
       method: 'POST',

@@ -78,9 +78,9 @@ export const TOUR_STORAGE_KEY = "mesaclick_admin_tour_completed";
 interface OnboardingTourProps {
   isOpen: boolean;
   onClose: () => void;
-  activeSection: "carta" | "mesas" | "recepcionista" | "configuracion";
+  activeSection: "carta" | "mesas" | "recepcionista" | "metricas" | "configuracion";
   onNavigateSection: (
-    section: "carta" | "mesas" | "recepcionista" | "configuracion"
+    section: "carta" | "mesas" | "recepcionista" | "metricas" | "configuracion"
   ) => void;
   tenantName?: string;
   tenantId?: string;

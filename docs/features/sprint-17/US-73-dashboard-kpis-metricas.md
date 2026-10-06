@@ -3,9 +3,9 @@
 > **Sprint**: Sprint 17 (19/10 – 25/10/2026)  
 > **Épica**: Dashboard con Métricas (KPIs)  
 > **Tipo**: `Frontend`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
-> **Rama de trabajo**: `feat/US-73-dashboard-kpis`  
+> **Estado**: ✅ **Resuelta**
+> **Asignado a**: Mateo Silvestrin / Codex
+> **Rama de trabajo**: `feat/US-72-73-metricas`
 
 ---
 
@@ -17,19 +17,19 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Nueva sección 'Métricas' o panel superior en el dashboard principal.
-- [ ] Tarjetas KPI de alto impacto: Facturación Hoy, Ticket Promedio, Pedidos Totales, Tiempo Medio de Atención.
-- [ ] Indicadores de variación porcentual respecto al día o semana anterior (flechas verdes/rojas).
-- [ ] Ranking de los 5 platos estrella con cantidad de ventas y monto recaudado.
+- [x] Nueva sección 'Métricas' o panel superior en el dashboard principal.
+- [x] Tarjetas KPI de alto impacto: Facturación Hoy, Ticket Promedio, Pedidos Totales, Tiempo Medio de Atención.
+- [x] Indicadores de variación porcentual respecto al día o semana anterior (flechas verdes/rojas).
+- [x] Ranking de los 5 platos estrella con cantidad de ventas y monto recaudado.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Crear componente `MetricasSection.tsx` con tarjetas de resumen.
-- [ ] Integrar llamada a `api.obtenerMetricasResumen`.
-- [ ] Formateo monetario argentino (`$X.XXX`) y de tiempo (`XX min`).
-- [ ] Skeletons de carga durante el cálculo de métricas.
+- [x] Crear componente `MetricasSection.tsx` con tarjetas de resumen.
+- [x] Integrar llamada a `api.obtenerMetricasResumen`.
+- [x] Formateo monetario argentino (`$X.XXX`) y de tiempo (`XX min`).
+- [x] Skeletons de carga durante el cálculo de métricas.
 
 ---
 
