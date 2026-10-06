@@ -14,7 +14,7 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
    - `docs/flows/happy-path-cliente.md` — flujo del cliente / comensal
 
 3. **Consultar el Status Report más reciente** para ver bloqueantes o decisiones pendientes:
-   - `docs/presentations/parte-2/status-report-10.html`
+   - `docs/presentations/parte-2/status-report-20261005.html`
 
 > No implementar nada que no esté cubierto por una US del sprint en curso. Si hay dudas, preguntar antes de avanzar.
 
@@ -39,11 +39,7 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
 | | |
 |---|---|
 | **Fase actual** | Fase 4 — Evolución, Monetización & Analítica (2do Cuatrimestre) |
-<<<<<<< Updated upstream
-| **Sprint en curso** | **Sprint 17 (Dashboard con Métricas (KPIs))** — sprints semanales (S10 a S19, 31/08 → 08/11/2026) |
-=======
-| **Sprint en curso** | **Sprint 14 (Disponibilidad de Ítems (86), Menús por Franja Horaria & Gestión de Equipo)** — sprints semanales (S10 a S19, 31/08 → 08/11/2026) |
->>>>>>> Stashed changes
+| **Sprint en curso** | **Sprint 15 (KDS, Impresión de Comandas & Acceso del Equipo)** — sprints semanales (S10 a S19, 31/08 → 08/11/2026). Sprints 16 y 17 completados por adelantado |
 | **Objetivo Fase 4** | Llevar Mesa CLICK a nivel comercial: SaaS Freemium (Free vs Pro), Mobile-First comensal, carga masiva CSV/Excel, KDS de cocina, disponibilidad/franjas horarias, métricas y analítica de negocio |
 
 ### Sprints detallados
@@ -63,17 +59,10 @@ Estas reglas aplican a cualquier agente de IA (Claude, Gemini, CLI, etc.) que tr
 | 11 | Rediseño UI/UX Base & Onboarding guiado (tour interactivo) · 07/09–13/09 | ✓ Completado |
 | 12 | Mobile-First Comensal (sticky, bottom-sheet, personalización, pedidos colaborativos) · 14/09–20/09 | ✓ Completado |
 | 13 | Carga masiva CSV/Excel & ajuste porcentual de precios · 21/09–27/09 | ✓ Completado |
-<<<<<<< Updated upstream
 | 14 | Disponibilidad de ítems (86) & menús por franja horaria · 28/09–04/10 | ✓ Completado |
-| 15 | Kitchen Display System (KDS) & impresión de comandas térmicas · 05/10–11/10 | ⚡ En Curso |
-| 16 | Modelo Freemium (Free vs Pro) & control de suscripciones · 12/10–18/10 | ✓ Completado |
-| 17 | Dashboard con métricas (KPIs, agregaciones SQL) · 19/10–25/10 | ⚡ En Curso |
-=======
-| 14 | Disponibilidad de ítems (86), menús por franja horaria & gestión de equipo · 28/09–04/10 | ⚡ En Curso |
-| 15 | Kitchen Display System (KDS) & impresión de comandas térmicas · 05/10–11/10 | 📋 Planificado |
-| 16 | Modelo Freemium (Free vs Pro) & control de suscripciones · 12/10–18/10 | 📋 Planificado |
-| 17 | Dashboard con métricas (KPIs, agregaciones SQL) · 19/10–25/10 | 📋 Planificado |
->>>>>>> Stashed changes
+| 15 | KDS, impresión de comandas térmicas & acceso del equipo (credenciales, login por negocio, Google) · 05/10–11/10 | ⚡ En Curso |
+| 16 | Modelo Freemium (Free vs Pro) & control de suscripciones · 12/10–18/10 | ✓ Completado (adelantado) |
+| 17 | Dashboard con métricas (KPIs, agregaciones SQL) · 19/10–25/10 | ✓ Completado (adelantado) |
 | 18 | Business Analytics, Reputación (Reseñas & Google Funnel) & exportación · 26/10–01/11 | 📋 Planificado |
 | 19 | QA E2E, Load Testing, Polish final & Demo de cierre · 02/11–08/11 | 📋 Planificado |
 
@@ -104,11 +93,40 @@ mesa-click/
 │   │   └── status-report-01.html          ← último reporte de estado
 │   ├── product/
 │   │   └── arquitectura-back.md           ← diseño técnico del backend
-│   └── flows/
-│       ├── happy-path-admin-negocio.md
-│       └── happy-path-cliente.md
+│   ├── flows/
+│   │   ├── happy-path-admin-negocio.md
+│   │   └── happy-path-cliente.md
+│   └── diseño/
+│       ├── maqueta/                       ← maqueta de referencia UX (ver "Guía de diseño")
+│       └── old/                           ← propuestas de diseño anteriores (histórico)
 └── AGENTS.md    ← este archivo (fuente de verdad principal)
 ```
+
+---
+
+## Guía de diseño — Maqueta de referencia
+
+En `docs/diseño/maqueta/` hay una maqueta (Vite + React + Tailwind, exportada de Figma Make) con un diseño nuevo propuesto por el grupo. **Es una referencia de experiencia, no un diseño a copiar tal cual.**
+
+| Pantalla de la maqueta | Componente en `src/App.tsx` | Equivalente en `repos/web` |
+|---|---|---|
+| Landing | `LandingApp` | `app/page.tsx` |
+| Comensal (carta, carrito, pedido enviado) | `CustomerApp` | `app/mesa/[token]` |
+| Salón en vivo (mesas por estado + drawer) | `DashboardApp` | `components/dashboard/RecepcionistaSection.tsx` / `MesasSection.tsx` |
+| Gestión de carta | `CatalogModule` | `components/dashboard/CartaSection.tsx` |
+| Configuración (negocio, sucursales, pagos, equipo) | `SettingsModule` | `components/dashboard/ConfiguracionSection.tsx` / `EquipoSection.tsx` |
+| Cocina (KDS) | `KitchenApp` | `app/kds` |
+
+**Qué tomar:**
+- **La experiencia**: flujos, jerarquía de información, orden de las secciones, textos de ayuda y microcopy, feedback (toasts, estados vacíos, confirmaciones), drawers/modales y la navegación.
+- **Patrones de componentes**: estructura de botones (`primary-button`, `secondary-button`, `icon-button`), tarjetas (`metric-card`, `table-card`, `settings-card`), `status-pill`, filtros segmentados, encabezados de página (`eyebrow` + título + descripción) y layouts de drawer. Los estilos están en `src/index.css`.
+
+**Qué NO tomar:**
+- **Colores, tipografías y tokens** de la maqueta (ni `docs/diseño/tokens.json` / `variables.css`). Se mantiene la identidad visual actual de `repos/web`.
+- **Datos y lógica**: la maqueta usa datos mock y estado local. Todo dato real se consume de la API existente (ver "No duplicar lógica").
+- **Código copiado literal**: adaptar cada patrón a los componentes y a Tailwind de `repos/web`, sin agregar dependencias de la maqueta.
+
+Los cambios de UI inspirados en la maqueta siguen la regla general: solo dentro del alcance de una US del sprint en curso.
 
 ---
 

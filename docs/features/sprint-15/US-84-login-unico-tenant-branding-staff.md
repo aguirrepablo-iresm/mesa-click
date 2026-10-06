@@ -1,6 +1,6 @@
 # US-84: Portal de Login Único por Negocio (Tenant-Scoped) con Identidad de Marca y Acceso de Staff
 
-> **Sprint**: Sprint 14 (28/09 – 04/10/2026)  
+> **Sprint**: Sprint 15 (05/10 – 11/10/2026)  
 > **Épica**: Seguridad, Gestión de Personal & Multi-Tenancy  
 > **Tipo**: `Fullstack / Integración`  
 > **Estado**: 📋 **Pendiente**  

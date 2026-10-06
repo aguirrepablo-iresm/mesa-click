@@ -13,7 +13,7 @@
 | **Completadas** | **26** (72%) |
 | **En Curso** | **0** |
 | **Pendientes** | **10** |
-| **Sprint Actual** | **Sprint 17 (19/10 – 25/10/2026)** |
+| **Sprint Actual** | **Sprint 15 (05/10 – 11/10/2026)** · Sprints 16 y 17 completados por adelantado |
 
 ---
 
@@ -73,17 +73,15 @@
 | **US-60** | `Integración` | Ajuste Porcentual Masivo de Precios por Categoría o Carta Completa | ✅ Resuelta | Mateo Silvestrin | [Ver detalle](sprint-13/US-60-ajuste-porcentual-precios.md) |
 | **US-82** | `Integración` | Pago de Cuenta con Mercado Pago (Sandbox Checkout Pro) | ✅ Resuelta | Pablo Aguirre / Antigravity | [Ver detalle](sprint-13/US-82-pago-cuenta-mercadopago.md) |
 
-### 📌 Sprint 14: Disponibilidad (86), Menús & Gestión de Equipo (28/09 – 04/10/2026)
+### 📌 Sprint 14: Disponibilidad (86) & Menús por Franja Horaria (28/09 – 04/10/2026)
 
 | ID | Tipo | Título | Estado | Asignado | Archivo |
 |---|---|---|---|---|---|
 | **US-61** | `Integración` | Marcado de Ítem Sin Stock (86) con Actualización en Tiempo Real | ✅ Resuelta | Antigravity (AI Agent) | [Ver detalle](sprint-14/US-61-marcado-item-sin-stock-86.md) |
 | **US-62** | `Backend` | Persistencia de Disponibilidad y Reposición Automática | ✅ Resuelta | Antigravity (AI Agent) | [Ver detalle](sprint-14/US-62-backend-reposicion-disponibilidad.md) |
 | **US-63** | `Integración` | Menús por Franja Horaria y Resolución Dinámica de Carta | ✅ Resuelta | Mateo Silvestrin | [Ver detalle](sprint-14/US-63-menus-franjas-horarias.md) |
-| **US-83** | `Fullstack` | Gestión de Equipo de Trabajo con Credenciales y Ciclo de Vida | 📋 Pendiente | Por asignar | [Ver detalle](sprint-14/US-83-gestion-equipo-credenciales-ciclo-vida.md) |
-| **US-84** | `Fullstack` | Portal de Login Único por Negocio (Tenant-Scoped) con Branding | 📋 Pendiente | Por asignar | [Ver detalle](sprint-14/US-84-login-unico-tenant-branding-staff.md) |
 
-### 📌 Sprint 15: Kitchen Display System (KDS) & Impresión de Comandas (05/10 – 11/10/2026)
+### 📌 Sprint 15: KDS, Impresión de Comandas & Acceso del Equipo (05/10 – 11/10/2026)
 
 | ID | Tipo | Título | Estado | Asignado | Archivo |
 |---|---|---|---|---|---|
@@ -92,6 +90,8 @@
 | **US-66** | `Integración` | Interacción Táctil en KDS y Notificación al Salón | ✅ Resuelta | Pablo Aguirre | [Ver detalle](sprint-15/US-66-interaccion-kds-cambio-estados.md) |
 | **US-67** | `Integración` | Impresión Térmica de Comandas (58/80 mm) y Reintento Manual | 📋 Pendiente | Por asignar | [Ver detalle](sprint-15/US-67-impresion-comandas-termicas.md) |
 | **US-85** | `Fullstack` | Inicio de Sesión con Google para Administración | ✅ Resuelta | Mateo Silvestrin / Codex | [Ver detalle](sprint-15/US-85-login-google.md) |
+| **US-83** | `Fullstack` | Gestión de Equipo de Trabajo con Credenciales y Ciclo de Vida | 📋 Pendiente | Por asignar | [Ver detalle](sprint-15/US-83-gestion-equipo-credenciales-ciclo-vida.md) |
+| **US-84** | `Fullstack` | Portal de Login Único por Negocio (Tenant-Scoped) con Branding | 📋 Pendiente | Por asignar | [Ver detalle](sprint-15/US-84-login-unico-tenant-branding-staff.md) |
 
 ### 📌 Sprint 16: Modelo Freemium (Free vs Pro) & Control de Suscripciones (12/10 – 18/10/2026)
 

@@ -1,0 +1,10 @@
+{
+  "description": "Streamlines restaurant operations with mobile-first digital menus, real-time kitchen order tracking, collaborative table ordering, and integrated digital payments.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
