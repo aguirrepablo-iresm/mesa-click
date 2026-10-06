@@ -1,52 +1,52 @@
-import React from "react";
+"use client";
 
-const FAQS: [string, string][] = [
-  [
-    "¿El comensal necesita descargar una app?",
-    "No. Escanea el QR de la mesa y la carta se abre en el navegador del celular. Sin instalar nada ni crear cuenta.",
-  ],
-  [
-    "¿Cómo llega el pedido al local?",
-    "Cada pedido aparece al instante en el panel del local (recepción y cocina) por una conexión en vivo. No hace falta refrescar la pantalla.",
-  ],
-  [
-    "¿Qué necesito para empezar?",
-    "Una cuenta, tu carta cargada y los QR impresos por mesa. Se configura en minutos; para catálogos grandes está la carga masiva por Excel/CSV.",
-  ],
-  [
-    "¿Hay un plan gratis?",
-    "Sí. El plan Free cubre 1 sucursal, hasta 10 mesas y 30 productos. El plan Pro suma sucursales, mesas y carta ilimitadas, pantalla de cocina, métricas y personalización de marca.",
-  ],
-  [
-    "¿Se puede pagar desde el celular?",
-    "Por ahora el comensal arma y confirma el pedido, y el pago se hace en el local. La integración de pago online está en el roadmap.",
-  ],
-  [
-    "¿Funciona con impresora de comandas?",
-    "Sí. La pantalla de cocina (KDS) permite imprimir la comanda en impresora térmica de 58/80 mm, con reintento manual si la impresión falla.",
-  ],
+import React, { useState } from "react";
+import Link from "next/link";
+import LandingIcon from "@/components/landing/LandingIcon";
+
+const FAQS = [
+  {
+    question: "¿Necesito instalar equipos especiales?",
+    answer: "No. Mesa CLICK funciona desde cualquier navegador en celulares, tablets y computadoras. Podés empezar con los dispositivos que ya tenés en el local.",
+  },
+  {
+    question: "¿El comensal tiene que descargar una app?",
+    answer: "No. Escanea el QR de la mesa y accede directamente a la carta desde su navegador, sin registros obligatorios ni descargas.",
+  },
+  {
+    question: "¿Puedo actualizar precios y marcar platos agotados?",
+    answer: "Sí. Los cambios de precio, descripción o disponibilidad se reflejan en tiempo real en todos los celulares que tengan la carta abierta.",
+  },
+  {
+    question: "¿Cómo llegan los pedidos a cocina?",
+    answer: "Cada pedido aparece instantáneamente en el KDS de cocina, ordenado por antigüedad y con variantes, notas y alertas claramente visibles.",
+  },
+  {
+    question: "¿Funciona para varias sucursales?",
+    answer: "Sí, con el plan Pro. Podés administrar sucursales, cartas, horarios, mesas y equipos desde una misma cuenta, manteniendo cada operación separada.",
+  },
 ];
 
 export default function LandingFAQ() {
-  return (
-    <section id="faq" className="py-80 md:py-120 bg-canvas-white">
-      <div className="max-w-4xl mx-auto px-24">
-        <h2 className="display text-[34px] md:text-56 text-ash-graphite mb-28">Preguntas frecuentes</h2>
+  const [openFaq, setOpenFaq] = useState(0);
 
-        <div className="border-t border-ash-graphite">
-          {FAQS.map(([q, a], i) => (
-            <details key={q} className="group border-b border-concrete" open={i === 0}>
-              <summary className="flex items-center gap-20 py-22 cursor-pointer list-none text-18 font-medium text-ash-graphite [&::-webkit-details-marker]:hidden">
-                <span className="flex-1">{q}</span>
-                <span className="relative w-20 h-20 shrink-0">
-                  <span className="absolute left-0 top-[9px] w-20 h-[2px] bg-ash-graphite" />
-                  <span className="absolute left-[9px] top-0 w-[2px] h-20 bg-ash-graphite transition-transform group-open:scale-y-0" />
-                </span>
-              </summary>
-              <p className="pb-24 pr-44 text-15 text-deep-forest max-w-[70ch]">{a}</p>
-            </details>
-          ))}
-        </div>
+  return (
+    <section className="landing-section faq-section" id="faq">
+      <div className="faq-intro">
+        <span className="landing-eyebrow">Preguntas frecuentes</span>
+        <h2>Todo lo que necesitás saber antes de empezar</h2>
+        <p>¿Tenés otra pregunta? Creá tu cuenta gratis y probá Mesa CLICK con tu operación real.</p>
+        <Link href="/onboarding" className="landing-demo"><span><LandingIcon name="chevron" /></span> Crear cuenta gratis</Link>
+      </div>
+      <div className="faq-list">
+        {FAQS.map((faq, index) => (
+          <article className={openFaq === index ? "faq-item open" : "faq-item"} key={faq.question}>
+            <button onClick={() => setOpenFaq(openFaq === index ? -1 : index)} aria-expanded={openFaq === index}>
+              <span>{faq.question}</span><i>{openFaq === index ? "−" : "+"}</i>
+            </button>
+            <div><p>{faq.answer}</p></div>
+          </article>
+        ))}
       </div>
     </section>
   );

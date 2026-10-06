@@ -1,64 +1,52 @@
+/* eslint-disable @next/next/no-img-element -- imágenes de referencia de la maqueta (Unsplash) */
 import React from "react";
+import LandingIcon from "@/components/landing/LandingIcon";
 
 export default function LandingFeatures() {
   return (
-    <section id="features" className="py-80 md:py-120 bg-ash-graphite text-canvas-white">
-      <div className="max-w-7xl mx-auto px-24">
-        <h2 className="display text-[34px] md:text-56 text-center mb-48">Ridículamente simple</h2>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-32 md:gap-40">
-          <Step
-            text="Escaneás el QR de la mesa y ves la carta al instante."
-            icon={
-              <>
-                <rect x="6" y="6" width="14" height="14" rx="1" />
-                <rect x="28" y="6" width="14" height="14" rx="1" />
-                <rect x="6" y="28" width="14" height="14" rx="1" />
-                <path d="M28 28h6v6M42 34v8M34 42h8M40 28h2" />
-              </>
-            }
-          />
-          <Step
-            text="Pedís desde el celular, sin descargar ninguna app."
-            icon={
-              <>
-                <rect x="14" y="4" width="20" height="40" rx="3" />
-                <line x1="14" y1="36" x2="34" y2="36" />
-                <path d="M20 16h8M20 22h8M20 28h5" />
-              </>
-            }
-          />
-          <Step
-            text="La cocina y el mozo reciben la comanda en vivo."
-            icon={
-              <>
-                <path d="M24 6c-7 0-12 5-12 12v9l-4 6h32l-4-6v-9c0-7-5-12-12-12Z" />
-                <path d="M20 39a4 4 0 0 0 8 0" />
-                <line x1="24" y1="3" x2="24" y2="6" />
-              </>
-            }
-          />
-        </div>
+    <section className="landing-section how-section" id="como-funciona">
+      <div className="section-intro">
+        <span className="landing-eyebrow">Todo conectado</span>
+        <h2>Una experiencia fluida,<br />de la mesa a la cocina</h2>
+        <p>Cada persona recibe la información que necesita, en el momento indicado. Sin gritos, papeles ni pasos innecesarios.</p>
+      </div>
+      <div className="flow-grid">
+        <article className="flow-card guest-flow">
+          <span className="flow-number">01</span>
+          <span className="flow-icon"><LandingIcon name="qr" /></span>
+          <h3>El comensal pide</h3>
+          <p>Escanea el QR, explora la carta y envía su pedido desde el celular.</p>
+          <div className="mini-phone">
+            <div><span>Bajo Limonero</span><b>Mesa 14</b></div>
+            <img src="https://images.unsplash.com/photo-1643757343278-5d50309dfa44?auto=format&fit=crop&w=700&q=82" alt="" />
+            <span>Smash Limonero <b>$ 9.200</b></span>
+          </div>
+        </article>
+        <article className="flow-card kitchen-flow">
+          <span className="flow-number">02</span>
+          <span className="flow-icon"><LandingIcon name="kitchen" /></span>
+          <h3>Cocina se organiza</h3>
+          <p>La comanda aparece al instante, con tiempos, notas y prioridades claras.</p>
+          <div className="mini-kds">
+            <span><i /> EN PREPARACIÓN <b>08:42</b></span>
+            <strong>Mesa 14</strong>
+            <small>2× Smash Limonero</small>
+            <small>1× Ensalada tibia</small>
+            <span>Marcar como listo</span>
+          </div>
+        </article>
+        <article className="flow-card team-flow">
+          <span className="flow-number">03</span>
+          <span className="flow-icon"><LandingIcon name="bell" /></span>
+          <h3>El equipo entrega</h3>
+          <p>Salón recibe la alerta, entrega a tiempo y cobra sin demoras.</p>
+          <div className="mini-ready">
+            <span><LandingIcon name="bell" /></span>
+            <div><small>LISTO PARA RETIRAR</small><strong>Mesa 14</strong><p>3 platos · Terraza</p></div>
+            <i><LandingIcon name="chevron" size={16} /></i>
+          </div>
+        </article>
       </div>
     </section>
-  );
-}
-
-function Step({ text, icon }: { text: string; icon: React.ReactNode }) {
-  return (
-    <div className="flex flex-col items-center text-center gap-16">
-      <svg
-        className="w-[92px] h-[92px]"
-        viewBox="0 0 48 48"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2.4"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        {icon}
-      </svg>
-      <p className="text-16 max-w-[26ch]">{text}</p>
-    </div>
   );
 }
