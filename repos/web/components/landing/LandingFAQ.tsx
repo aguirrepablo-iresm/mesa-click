@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Link from "next/link";
-import LandingIcon from "@/components/landing/LandingIcon";
+import SessionCta from "@/components/landing/SessionCta";
 
 const FAQS = [
   {
@@ -36,7 +35,7 @@ export default function LandingFAQ() {
         <span className="landing-eyebrow">Preguntas frecuentes</span>
         <h2>Todo lo que necesitás saber antes de empezar</h2>
         <p>¿Tenés otra pregunta? Creá tu cuenta gratis y probá Mesa CLICK con tu operación real.</p>
-        <Link href="/onboarding" className="landing-demo"><span><LandingIcon name="chevron" /></span> Crear cuenta gratis</Link>
+        <SessionCta href="/onboarding" label="Crear cuenta gratis" className="landing-demo" iconFirst />
       </div>
       <div className="faq-list">
         {FAQS.map((faq, index) => (

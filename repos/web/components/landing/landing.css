@@ -23,7 +23,6 @@
   color: var(--l-ink);
   background: var(--l-bg);
 }
-.landing button, .landing a { font: inherit; }
 
 /* Header */
 .landing .landing-header { position: sticky; z-index: 40; top: 0; height: 76px; max-width: 1440px; margin: 0 auto; padding: 0 6%; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--l-line); background: rgba(255,255,255,.9); backdrop-filter: blur(16px); }
@@ -261,4 +260,67 @@
   .landing .landing-footer { padding: 45px 24px; grid-template-columns: 1fr 1fr; }
   .landing .landing-footer-brand, .landing .footer-status { grid-column: 1/-1; }
   .landing .landing-footer .footer-status { margin-top: 20px; align-items: flex-start; text-align: left; }
+}
+
+/* Login y registro — mismo lenguaje visual de la landing */
+.landing.auth-page { display: grid; grid-template-columns: 1fr 1fr; }
+.landing .auth-main { min-height: 100vh; padding: 26px 7% 32px; display: flex; flex-direction: column; }
+.landing .auth-top { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.landing .auth-back { color: var(--l-muted); font-size: 11px; font-weight: 700; text-decoration: none; transition: color .18s; }
+.landing .auth-back:hover { color: var(--l-ink); }
+.landing .auth-body { flex: 1; padding: 48px 0; display: flex; align-items: center; justify-content: center; }
+.landing .auth-card { width: 100%; max-width: 460px; }
+.landing .auth-card h1 { margin-top: 18px; color: var(--l-ink); font-size: clamp(32px,3.4vw,44px); font-weight: 400; line-height: 1.08; letter-spacing: -.05em; }
+.landing .auth-sub { margin-top: 12px; color: var(--l-muted); font-size: 13px; line-height: 1.7; }
+.landing .auth-legal { color: var(--l-soft); font-size: 10px; line-height: 1.6; }
+.landing .auth-legal a { color: var(--l-ink-2); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.landing .auth-switch { margin-top: 24px; color: var(--l-muted); font-size: 12px; }
+.landing .auth-switch a { color: var(--l-ink); font-weight: 700; text-decoration: none; border-bottom: 1px solid var(--l-ink); }
+
+/* Campos: se aplican también a los inputs de los pasos del registro */
+.landing.auth-page label { color: var(--l-ink-2); }
+.landing.auth-page input:is([type="text"],[type="email"],[type="password"],[type="tel"],[type="number"],[type="time"],[type="url"]),
+.landing.auth-page select { height: 48px; border: 1px solid var(--l-line); border-radius: 12px; background-color: var(--l-fog); font-size: 13px; transition: border-color .18s, background-color .18s, box-shadow .18s; }
+.landing.auth-page textarea { border: 1px solid var(--l-line); border-radius: 12px; background-color: var(--l-fog); font-size: 13px; }
+.landing.auth-page :is(input, select, textarea):focus { border-color: var(--l-ink); background-color: white; box-shadow: 0 0 0 4px rgba(0,0,0,.06); }
+.landing.auth-page :is(input, select, textarea)[aria-invalid="true"] { border-color: #b42318; }
+.landing.auth-page button[type="submit"] { min-height: 52px; border-radius: 12px; box-shadow: 0 8px 22px rgba(0,0,0,.18); transition: transform .18s, opacity .18s; }
+.landing.auth-page button[type="submit"]:not(:disabled):hover { transform: translateY(-2px); }
+
+/* Pasos del registro */
+.landing .auth-steps { margin-top: 24px; display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.landing .auth-step { min-height: 40px; padding: 0 10px; display: flex; align-items: center; gap: 8px; color: var(--l-soft); font-size: 10.5px; font-weight: 700; border: 1px solid var(--l-line); border-radius: 12px; background: white; }
+.landing .auth-step > span { width: 22px; height: 22px; display: grid; place-items: center; flex: none; font-size: 10px; border-radius: 50%; background: var(--l-fog); }
+.landing .auth-step.active { color: white; border-color: var(--l-ink); background: var(--l-ink); }
+.landing .auth-step.active > span { color: var(--l-ink); background: white; }
+.landing .auth-step.done { color: var(--l-ink); }
+.landing .auth-step.done > span { color: var(--l-ink); background: var(--l-green); }
+.landing .auth-step-back { margin-top: 20px; padding: 0; color: var(--l-ink); font-size: 11px; font-weight: 700; border: 0; border-bottom: 1px solid var(--l-ink); background: transparent; cursor: pointer; }
+.landing .auth-content { margin-top: 24px; }
+
+/* Panel visual */
+.landing .auth-visual { position: sticky; top: 0; height: 100vh; padding: 20px; }
+.landing .auth-visual .hero-photo { inset: 20px; border-radius: 32px 110px 32px 32px; }
+.landing .auth-visual .hero-photo::after { background: linear-gradient(180deg, transparent 35%, rgba(0,0,0,.7)); }
+.landing .auth-visual .hero-order-card { top: 72px; bottom: auto; left: -6px; }
+.landing .auth-visual-copy { position: absolute; z-index: 2; left: 64px; right: 64px; bottom: 64px; color: white; }
+.landing .auth-visual-copy h2 { max-width: 460px; font-size: clamp(28px,3vw,38px); font-weight: 400; line-height: 1.12; letter-spacing: -.05em; }
+.landing .auth-visual-copy p { max-width: 420px; margin-top: 12px; color: rgba(255,255,255,.78); font-size: 13px; line-height: 1.7; }
+
+/* Pantalla de registro completado */
+.landing .auth-success-icon { width: 56px; height: 56px; display: grid; place-items: center; color: var(--l-ink); border-radius: 16px; background: var(--l-green); }
+.landing .auth-note { margin-top: 20px; padding: 16px; display: flex; gap: 12px; color: var(--l-muted); font-size: 12px; line-height: 1.6; border: 1px solid var(--l-line); border-radius: 14px; background: var(--l-fog); }
+.landing .auth-note strong { color: var(--l-ink); }
+.landing .auth-note > span:first-child { width: 28px; height: 28px; display: grid; place-items: center; flex: none; color: var(--l-ink); border-radius: 50%; background: var(--l-green); }
+.landing .auth-card .landing-cta { width: 100%; margin-top: 24px; }
+
+@media (max-width: 900px) {
+  .landing.auth-page { grid-template-columns: 1fr; }
+  .landing .auth-visual { display: none; }
+  .landing .auth-main { padding: 20px 20px 28px; }
+  .landing .auth-body { padding: 36px 0; align-items: flex-start; }
+}
+@media (max-width: 420px) {
+  .landing .auth-steps { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .landing .auth-step { padding: 0 6px; font-size: 9.5px; }
 }

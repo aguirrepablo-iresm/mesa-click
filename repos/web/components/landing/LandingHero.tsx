@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-img-element -- imágenes de referencia de la maqueta (Unsplash) */
 import React from "react";
-import Link from "next/link";
 import LandingIcon from "@/components/landing/LandingIcon";
+import SessionCta from "@/components/landing/SessionCta";
 
 export default function LandingHero() {
   return (
@@ -12,7 +12,7 @@ export default function LandingHero() {
           <h1>Más mesas atendidas.<br /><em>Menos esperas.</em></h1>
           <p>Conectá salón, cocina y comensales en un solo lugar. Pedidos por QR, comandas en vivo y cuentas más simples para que tu equipo se enfoque en atender.</p>
           <div className="hero-actions">
-            <Link href="/onboarding" className="landing-cta">Empezar prueba gratis <LandingIcon name="chevron" /></Link>
+            <SessionCta href="/onboarding" label="Empezar prueba gratis" className="landing-cta" />
             <a href="#como-funciona" className="landing-demo"><span><LandingIcon name="qr" /></span> Ver experiencia del comensal</a>
           </div>
           <div className="hero-proof">

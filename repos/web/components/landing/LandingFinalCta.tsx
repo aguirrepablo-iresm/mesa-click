@@ -1,6 +1,5 @@
 import React from "react";
-import Link from "next/link";
-import LandingIcon from "@/components/landing/LandingIcon";
+import SessionCta from "@/components/landing/SessionCta";
 
 export default function LandingFinalCta() {
   return (
@@ -11,7 +10,7 @@ export default function LandingFinalCta() {
         <p>Probá Mesa CLICK con tu equipo y descubrí una operación más ágil, clara y conectada.</p>
       </div>
       <div>
-        <Link href="/onboarding" className="landing-cta light-button">Probar gratis <LandingIcon name="chevron" /></Link>
+        <SessionCta href="/onboarding" label="Probar gratis" className="landing-cta light-button" />
         <small>Plan Free sin tarjeta · Configuración en minutos</small>
       </div>
     </section>

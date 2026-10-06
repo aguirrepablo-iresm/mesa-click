@@ -1,6 +1,6 @@
 /* eslint-disable @next/next/no-img-element -- imágenes de referencia de la maqueta (Unsplash) */
 import React from "react";
-import Link from "next/link";
+import SessionCta from "@/components/landing/SessionCta";
 import LandingIcon from "@/components/landing/LandingIcon";
 
 export default function LandingBenefits() {
@@ -20,7 +20,7 @@ export default function LandingBenefits() {
             <li><span><LandingIcon name="check" /></span><div><strong>Información en tiempo real</strong><p>Todos saben qué está pasando, sin depender de recorridas o gritos.</p></div></li>
             <li><span><LandingIcon name="check" /></span><div><strong>Decisiones basadas en datos</strong><p>Entendé tus tiempos, productos y ventas desde un panel simple.</p></div></li>
           </ul>
-          <Link href="/login" className="text-cta">Explorar el dashboard <LandingIcon name="chevron" /></Link>
+          <SessionCta href="/login" label="Explorar el dashboard" className="text-cta" />
         </div>
       </section>
 

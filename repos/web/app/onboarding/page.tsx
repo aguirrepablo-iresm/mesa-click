@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
+import AuthShell from "@/components/auth/AuthShell";
+import LandingIcon from "@/components/landing/LandingIcon";
 import StepAccount from "@/components/onboarding/StepAccount";
 import StepBusiness from "@/components/onboarding/StepBusiness";
 import StepBranch from "@/components/onboarding/StepBranch";
@@ -272,39 +274,29 @@ export default function OnboardingPage() {
 
   if (completado) {
     return (
-      <div className="min-h-screen bg-canvas-white flex flex-col items-center justify-center p-24 font-inter">
-        <div className="w-full max-w-md bg-canvas-white p-32 rounded-lg border border-ash-graphite text-center space-y-24">
-          <span className="material-symbols-outlined text-48 text-success">
-            celebration
-          </span>
-          <div className="space-y-8">
-            <h2 className="text-20 font-medium text-ash-graphite">
-              ¡Negocio creado con éxito!
-            </h2>
-            <p className="text-13 text-sage-green leading-relaxed">
-              Registramos <strong className="text-ash-graphite">{formData.nombreNegocio}</strong> en Mesa CLICK.
-            </p>
-            <div className="p-16 bg-ghost-fog border border-ghost-fog rounded-lg text-left text-12 text-ash-graphite space-y-6">
-              <div className="flex items-center gap-6 text-success-muted font-medium">
-                <span className="material-symbols-outlined text-18">verified_user</span>
-                <span>Tu acceso ya está listo</span>
-              </div>
-              <p className="text-sage-green text-11">
-                Ingresá con <strong className="font-mono text-ash-graphite">{formData.emailAdmin}</strong> y la contraseña que acabás de crear, o utilizá Google con ese mismo correo.
-              </p>
-            </div>
-          </div>
-          <div className="pt-8 flex flex-col gap-12">
-            <Link
-              href="/login"
-              className="w-full h-44 bg-plain-green text-canvas-white text-12 font-bold uppercase tracking-wide rounded-full hover:opacity-85 transition-opacity flex items-center justify-center gap-8"
-            >
-              Ir a Iniciar Sesión
-              <span className="material-symbols-outlined text-16">arrow_forward</span>
-            </Link>
-          </div>
+      <AuthShell
+        image="https://images.unsplash.com/photo-1485182708500-e8f1f318ba72?auto=format&fit=crop&w=1100&q=84"
+        imageAlt="Personas disfrutando en un restaurante"
+        visualTitle="Tu próximo servicio puede ser más simple"
+        visualText="Ya podés cargar tu carta, generar los QR de tus mesas y recibir pedidos en vivo."
+        cardLabel="Registro completo"
+        cardTitle={formData.nombreNegocio}
+      >
+        <span className="auth-success-icon"><LandingIcon name="check" size={26} /></span>
+        <h1>¡Negocio creado con éxito!</h1>
+        <p className="auth-sub">
+          Registramos <strong className="text-ash-graphite">{formData.nombreNegocio}</strong> en Mesa CLICK.
+        </p>
+        <div className="auth-note">
+          <span><LandingIcon name="check" size={14} /></span>
+          <p>
+            <strong>Tu acceso ya está listo.</strong> Ingresá con <strong className="font-mono">{formData.emailAdmin}</strong> y la contraseña que acabás de crear, o utilizá Google con ese mismo correo.
+          </p>
         </div>
-      </div>
+        <Link href="/login" className="landing-cta">
+          Ir a iniciar sesión <LandingIcon name="chevron" size={18} />
+        </Link>
+      </AuthShell>
     );
   }
 

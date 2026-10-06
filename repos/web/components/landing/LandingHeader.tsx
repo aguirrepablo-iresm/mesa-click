@@ -1,7 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import Logo from "@/components/brand/Logo";
-import LandingIcon from "@/components/landing/LandingIcon";
+import { LandingHeaderActions } from "@/components/landing/SessionCta";
 
 export function LandingBrand() {
   return (
@@ -21,10 +21,7 @@ export default function LandingHeader() {
         <a href="#planes">Planes</a>
         <a href="#faq">Preguntas frecuentes</a>
       </nav>
-      <div className="landing-header-actions">
-        <Link href="/login" className="landing-login">Ingresar</Link>
-        <Link href="/onboarding" className="landing-cta small">Probar gratis <LandingIcon name="chevron" size={16} /></Link>
-      </div>
+      <LandingHeaderActions />
     </header>
   );
 }
