@@ -96,6 +96,7 @@ try {
   Write-Host "Celular:   $webUrl" -ForegroundColor Yellow
   Write-Host "Dashboard: http://localhost:3000/dashboard" -ForegroundColor Yellow
   Write-Host "Login:     admin@mesaclick.local" -ForegroundColor Yellow
+  Write-Host "Clave:     MesaClick2026" -ForegroundColor Yellow
   Write-Host "Mesa demo: $webUrl/mesa/mesa-demo-1" -ForegroundColor Yellow
   Write-Host "" 
   Write-Host "Dejá esta terminal abierta. Para cortar, presioná Ctrl+C." -ForegroundColor Cyan

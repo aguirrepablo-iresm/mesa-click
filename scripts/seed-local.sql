@@ -44,13 +44,14 @@ WITH tenant_upsert AS (
   SELECT id FROM tenants WHERE slug = 'mesa-click-demo'
   LIMIT 1
 ), admin_upsert AS (
-  INSERT INTO usuarios (tenant_id, email, nombre, rol)
-  SELECT id, 'admin@mesaclick.local', 'Admin Local', 'admin'
+  INSERT INTO usuarios (tenant_id, email, nombre, rol, password_hash)
+  SELECT id, 'admin@mesaclick.local', 'Admin Local', 'admin', crypt('MesaClick2026', gen_salt('bf', 10))
   FROM tenant_ref
   ON CONFLICT (email) DO UPDATE SET
     tenant_id = EXCLUDED.tenant_id,
     nombre = EXCLUDED.nombre,
-    rol = EXCLUDED.rol
+    rol = EXCLUDED.rol,
+    password_hash = EXCLUDED.password_hash
   RETURNING tenant_id
 ), sucursal_upsert AS (
   INSERT INTO sucursales (id, tenant_id, nombre, whatsapp, email, telefono, horarios)

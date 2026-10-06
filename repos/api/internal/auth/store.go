@@ -28,8 +28,8 @@ func (s *pgStore) ObtenerUsuarioPorEmail(ctx context.Context, email string) (*Us
 	u := &UsuarioAuth{}
 	err := db.Pool.QueryRow(ctx,
 		// lower() para que emails cargados con mayúsculas sigan matcheando.
-		`SELECT id, tenant_id, email, rol, google_sub FROM usuarios WHERE lower(email) = lower($1)`, email,
-	).Scan(&u.ID, &u.TenantID, &u.Email, &u.Rol, &u.GoogleSub)
+		`SELECT id, tenant_id, email, rol, google_sub, password_hash FROM usuarios WHERE lower(email) = lower($1)`, email,
+	).Scan(&u.ID, &u.TenantID, &u.Email, &u.Rol, &u.GoogleSub, &u.PasswordHash)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrUsuarioNoEncontrado
@@ -42,8 +42,8 @@ func (s *pgStore) ObtenerUsuarioPorEmail(ctx context.Context, email string) (*Us
 func (s *pgStore) ObtenerUsuarioPorGoogleSub(ctx context.Context, googleSub string) (*UsuarioAuth, error) {
 	u := &UsuarioAuth{}
 	err := db.Pool.QueryRow(ctx,
-		`SELECT id, tenant_id, email, rol, google_sub FROM usuarios WHERE google_sub = $1`, googleSub,
-	).Scan(&u.ID, &u.TenantID, &u.Email, &u.Rol, &u.GoogleSub)
+		`SELECT id, tenant_id, email, rol, google_sub, password_hash FROM usuarios WHERE google_sub = $1`, googleSub,
+	).Scan(&u.ID, &u.TenantID, &u.Email, &u.Rol, &u.GoogleSub, &u.PasswordHash)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrUsuarioNoEncontrado
@@ -56,8 +56,8 @@ func (s *pgStore) ObtenerUsuarioPorGoogleSub(ctx context.Context, googleSub stri
 func (s *pgStore) ObtenerUsuarioPorID(ctx context.Context, id string) (*UsuarioAuth, error) {
 	u := &UsuarioAuth{}
 	err := db.Pool.QueryRow(ctx,
-		`SELECT id, tenant_id, email, rol, google_sub FROM usuarios WHERE id = $1`, id,
-	).Scan(&u.ID, &u.TenantID, &u.Email, &u.Rol, &u.GoogleSub)
+		`SELECT id, tenant_id, email, rol, google_sub, password_hash FROM usuarios WHERE id = $1`, id,
+	).Scan(&u.ID, &u.TenantID, &u.Email, &u.Rol, &u.GoogleSub, &u.PasswordHash)
 	if err != nil {
 		return nil, fmt.Errorf("usuario no encontrado: %w", err)
 	}

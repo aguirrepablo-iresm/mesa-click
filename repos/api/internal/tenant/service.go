@@ -22,8 +22,14 @@ func (svc *Service) Crear(ctx context.Context, input OnboardingInput) (*Tenant, 
 	if input.EmailAdmin == "" {
 		return nil, fmt.Errorf("%w: email del admin requerido", ErrValidation)
 	}
+	passwordHash, err := auth.HashPassword(input.Password)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrValidation, err)
+	}
+	input.PasswordHash = passwordHash
+	input.Password = ""
 	input.Rubro = normalizarRubro(input.Rubro)
-	// El login por magic link busca al usuario por email; guardarlo siempre en
+	// Los métodos de acceso buscan al usuario por email; guardarlo siempre en
 	// minúsculas evita que un registro con mayúsculas quede inaccesible.
 	input.EmailAdmin = auth.NormalizarEmail(input.EmailAdmin)
 	input.EmailSucursal = auth.NormalizarEmail(input.EmailSucursal)
@@ -245,4 +251,3 @@ func (svc *Service) SolicitarUpgrade(ctx context.Context, tenantID, nota string)
 	}
 	return svc.store.RegistrarSolicitudUpgrade(ctx, tenantID, strings.TrimSpace(nota))
 }
-

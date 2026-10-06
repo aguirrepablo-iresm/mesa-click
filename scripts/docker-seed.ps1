@@ -22,3 +22,4 @@ Invoke-DockerComposeWithInput -InputText $seedSql -Arguments @(
 
 Write-Host "Seed Docker aplicado." -ForegroundColor Green
 Write-Host "Usuario local: admin@mesaclick.local" -ForegroundColor Yellow
+Write-Host "Clave local:   MesaClick2026" -ForegroundColor Yellow

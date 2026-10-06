@@ -71,6 +71,7 @@ func TestIntegracion_FlujoCompletoPedido(t *testing.T) {
 		Slug:        slug,
 		EmailAdmin:  email,
 		NombreAdmin: "Admin Integracion",
+		Password:    "MesaClick2026",
 	})
 	if err != nil {
 		t.Fatalf("error creando tenant: %v", err)

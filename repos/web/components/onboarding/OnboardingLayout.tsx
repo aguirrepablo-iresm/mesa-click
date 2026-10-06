@@ -31,13 +31,16 @@ export default function OnboardingLayout({
         >
           ← Volver al inicio
         </Link>
-        <div>
-          <h1 className="display text-44 md:text-72">
+        <div className="max-w-[520px]">
+          <h1
+            className="display"
+            style={{ fontSize: "clamp(64px, 7vw, 112px)", lineHeight: 0.84 }}
+          >
             Registrá
             <br />
             tu negocio
           </h1>
-          <p className="mt-20 text-16 text-concrete max-w-[34ch]">
+          <p className="mt-28 text-16 text-concrete max-w-[34ch]">
             Creá la cuenta de administrador, definí el perfil público y cargá la primera sucursal.
           </p>
         </div>

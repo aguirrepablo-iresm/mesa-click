@@ -45,9 +45,9 @@ func (s *pgStore) Crear(ctx context.Context, input OnboardingInput) (*Tenant, er
 	}
 
 	_, err = tx.Exec(ctx,
-		`INSERT INTO usuarios (tenant_id, email, nombre, rol)
-		 VALUES ($1, $2, $3, 'admin')`,
-		t.ID, input.EmailAdmin, input.NombreAdmin,
+		`INSERT INTO usuarios (tenant_id, email, nombre, rol, password_hash)
+		 VALUES ($1, $2, $3, 'admin', $4)`,
+		t.ID, input.EmailAdmin, input.NombreAdmin, input.PasswordHash,
 	)
 	if err != nil {
 		if isUniqueConstraint(err, "usuarios_email_key") || isUniqueConstraint(err, "idx_usuarios_email_lower") {

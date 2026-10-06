@@ -62,8 +62,9 @@ const sections: LegalSection[] = [
           credenciales, eludir controles ni acceder a otro negocio sin autorización.
         </p>
         <p>
-          El ingreso puede realizarse mediante Google o enlace mágico. Google verifica la identidad según sus propias
-          condiciones; Mesa CLICK no solicita la contraseña de Google. Debés avisar de inmediato a{" "}
+          El ingreso administrativo puede realizarse mediante correo y contraseña de Mesa CLICK o mediante Google. Los
+          enlaces de un solo uso pueden utilizarse para invitaciones de equipo. Google verifica la identidad según sus
+          propias condiciones; Mesa CLICK no solicita la contraseña de Google. Debés avisar de inmediato a{" "}
           <a className={legalLinkClass} href={`mailto:${LEGAL.supportEmail}`}>{LEGAL.supportEmail}</a> ante un acceso
           sospechoso, pérdida de control del correo o cambio no autorizado.
         </p>

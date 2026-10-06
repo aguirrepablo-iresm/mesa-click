@@ -10,11 +10,11 @@ import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [mostrarPassword, setMostrarPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [enviado, setEnviado] = useState(false);
   const [error, setError] = useState("");
-  const [linkDev, setLinkDev] = useState("");
   const googleClientID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
   const handleGoogleCredential = useCallback(async (credential: string) => {
@@ -30,22 +30,20 @@ export default function LoginPage() {
     }
   }, [router]);
 
-  const handleSolicitarLink = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.trim() || !email.includes("@")) {
-      setError("Por favor ingresa un email válido.");
+  const handlePasswordLogin = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!email.trim() || !password) {
+      setError("Ingresá tu correo y contraseña.");
       return;
     }
 
     setLoading(true);
     setError("");
-
     try {
-      const res = await api.solicitarMagicLink(email);
-      setLinkDev(res?.magic_link_dev || "");
-      setEnviado(true);
+      await api.autenticarConPassword(email, password);
+      router.replace("/dashboard");
     } catch (err: unknown) {
-      setError(getErrorMessage(err, "Error al solicitar el enlace de acceso."));
+      setError(getErrorMessage(err, "No pudimos iniciar sesión."));
     } finally {
       setLoading(false);
     }
@@ -53,15 +51,19 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen grid md:grid-cols-[1.1fr_1fr] font-inter">
-      {/* Izquierda */}
       <div className="bg-ash-graphite text-canvas-white px-32 md:px-56 py-48 md:py-64 flex flex-col justify-between gap-32">
         <Link href="/" className="text-12 uppercase tracking-widest text-stone hover:text-canvas-white transition-colors">
           ← Volver al inicio
         </Link>
-        <div>
-          <h1 className="display text-44 md:text-72">Entrá<br />al panel</h1>
-          <p className="mt-20 text-16 text-concrete max-w-[34ch]">
-            Gestión de sucursales, mesas, carta y pedidos en vivo. Accedé de forma segura con tu cuenta de Google.
+        <div className="max-w-[520px]">
+          <h1
+            className="display"
+            style={{ fontSize: "clamp(64px, 7vw, 112px)", lineHeight: 0.84 }}
+          >
+            Entrá<br />al panel
+          </h1>
+          <p className="mt-28 text-16 text-concrete max-w-[34ch]">
+            Gestioná sucursales, mesas, carta y pedidos en vivo desde un único lugar.
           </p>
         </div>
         <div className="flex items-center gap-10">
@@ -70,112 +72,94 @@ export default function LoginPage() {
         </div>
       </div>
 
-      {/* Derecha */}
       <div className="px-32 md:px-56 py-48 md:py-64 flex flex-col justify-center">
         <div className="w-full max-w-[420px] mx-auto">
           <div className="text-11 uppercase tracking-widest text-stone">Acceso administración</div>
-          <h2 className="display text-40 mt-6 mb-12 text-ash-graphite">Ingresá con Google</h2>
+          <h2 className="display text-40 mt-6 mb-8 text-ash-graphite">Ingresá a tu cuenta</h2>
           <p className="mb-24 text-13 leading-relaxed text-sage-green">
-            Usá el mismo correo con el que registraste tu cuenta en Mesa CLICK.
+            Usá el correo registrado y tu contraseña de Mesa CLICK.
           </p>
 
-          {enviado ? (
-            <div className="space-y-20">
-              <div className="flex items-center gap-12 px-16 py-14 bg-success rounded-lg text-12 font-bold uppercase tracking-wide text-ash-graphite">
-                <span className="material-symbols-outlined text-20">mark_email_read</span>
-                Enlace enviado
-              </div>
-              <p className="text-14 text-deep-forest leading-relaxed">
-                Revisá tu casilla de correo en{" "}
-                <span className="font-mono text-ash-graphite font-medium">{email}</span> y hacé clic en el
-                enlace para ingresar al panel.
-              </p>
-
-              {linkDev && (
-                <div className="space-y-10 rounded-lg border border-dashed border-concrete bg-vanilla-cream p-12">
-                  <div className="flex items-center gap-6 text-11 font-mono uppercase tracking-wider text-stone">
-                    <span className="material-symbols-outlined text-16">construction</span>
-                    <span>Acceso local de administrador</span>
-                  </div>
-                  <a
-                    href={linkDev}
-                    className="flex h-42 w-full items-center justify-center gap-8 rounded-lg bg-ash-graphite px-14 text-12 font-semibold text-canvas-white transition-opacity hover:opacity-85"
-                  >
-                    <span className="material-symbols-outlined text-18">login</span>
-                    Ingresar como admin local
-                  </a>
-                  <p className="text-10 leading-relaxed text-stone">
-                    Disponible únicamente en el entorno local de desarrollo.
-                  </p>
-                </div>
-              )}
-
-              <button
-                onClick={() => {
-                  setEnviado(false);
-                  setLinkDev("");
-                }}
-                className="text-12 font-bold uppercase tracking-wide text-ash-graphite border-b border-ash-graphite"
-              >
-                Intentar con otro email
-              </button>
-            </div>
-          ) : (
-            <div className="space-y-20">
-              <GoogleSignInButton
-                clientID={googleClientID}
-                disabled={googleLoading}
-                onCredential={handleGoogleCredential}
-                onError={setError}
+          <form onSubmit={handlePasswordLogin} className="space-y-16">
+            <div className="space-y-7">
+              <label htmlFor="email" className="block text-11 uppercase tracking-widest text-sage-green">
+                Correo electrónico
+              </label>
+              <input
+                id="email"
+                type="email"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="admin@minegocio.com"
+                className="h-52 w-full rounded-lg border border-concrete bg-canvas-white px-16 text-15 outline-none transition-colors focus:border-plain-green"
               />
-              {error && (
-                <div className="p-12 border border-alert-red/30 rounded-lg text-12 text-alert-red">{error}</div>
-              )}
-
-              <div className="flex items-center gap-12" aria-hidden="true">
-                <span className="h-px flex-1 bg-concrete" />
-                <span className="text-10 font-mono uppercase tracking-wider text-stone">Acceso alternativo</span>
-                <span className="h-px flex-1 bg-concrete" />
-              </div>
-
-              <details className="group rounded-xl border border-concrete bg-ghost-fog/40">
-                <summary className="flex min-h-48 cursor-pointer list-none items-center justify-between gap-12 px-16 py-12 text-12 font-semibold text-ash-graphite">
-                  Recibir un enlace por email
-                  <span className="material-symbols-outlined text-18 transition-transform group-open:rotate-180">expand_more</span>
-                </summary>
-                <form onSubmit={handleSolicitarLink} className="space-y-14 border-t border-concrete p-16">
-                  <p className="text-12 leading-relaxed text-sage-green">
-                    Si no podés usar Google, te enviamos un enlace seguro de un solo uso.
-                  </p>
-                  <div>
-                    <label htmlFor="email" className="mb-8 block text-11 uppercase tracking-widest text-sage-green">
-                      Email del negocio o usuario
-                    </label>
-                    <input
-                      id="email"
-                      type="email"
-                      required
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="admin@mibar.com"
-                      className="h-52 w-full rounded-lg px-16 text-15"
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex h-48 w-full items-center justify-center gap-8 rounded-full bg-plain-green text-12 font-bold uppercase tracking-wide text-canvas-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
-                  >
-                    {loading ? (
-                      <span className="material-symbols-outlined animate-spin text-20">progress_activity</span>
-                    ) : (
-                      "Enviar magic link"
-                    )}
-                  </button>
-                </form>
-              </details>
             </div>
-          )}
+
+            <div className="space-y-7">
+              <label htmlFor="password" className="block text-11 uppercase tracking-widest text-sage-green">
+                Contraseña
+              </label>
+              <div className="relative">
+                <input
+                  id="password"
+                  type={mostrarPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  placeholder="Tu contraseña de Mesa CLICK"
+                  className="h-52 w-full rounded-lg border border-concrete bg-canvas-white px-16 pr-52 text-15 outline-none transition-colors focus:border-plain-green"
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarPassword((actual) => !actual)}
+                  aria-label={mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  className="absolute inset-y-0 right-0 flex w-48 items-center justify-center text-stone hover:text-ash-graphite"
+                >
+                  <span className="material-symbols-outlined text-20">
+                    {mostrarPassword ? "visibility_off" : "visibility"}
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <div role="alert" className="p-12 border border-alert-red/30 rounded-lg text-12 text-alert-red">
+                {error}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || googleLoading}
+              className="flex h-48 w-full items-center justify-center gap-8 rounded-full bg-plain-green text-12 font-bold uppercase tracking-wide text-canvas-white transition-opacity hover:opacity-85 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {loading ? (
+                <span className="material-symbols-outlined animate-spin text-20">progress_activity</span>
+              ) : (
+                "Iniciar sesión"
+              )}
+            </button>
+          </form>
+
+          <div className="my-20 flex items-center gap-12" aria-hidden="true">
+            <span className="h-px flex-1 bg-concrete" />
+            <span className="text-10 font-mono uppercase tracking-wider text-stone">o continuá con</span>
+            <span className="h-px flex-1 bg-concrete" />
+          </div>
+
+          <GoogleSignInButton
+            clientID={googleClientID}
+            disabled={loading || googleLoading}
+            onCredential={handleGoogleCredential}
+            onError={setError}
+          />
+
+          <p className="mt-12 text-11 leading-relaxed text-stone">
+            Mesa CLICK nunca te pedirá la contraseña de tu cuenta de Google.
+          </p>
 
           <p className="mt-26 text-13 text-sage-green">
             ¿No tenés un negocio registrado?{" "}

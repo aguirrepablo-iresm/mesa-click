@@ -40,4 +40,5 @@ try {
 Write-Host "Setup local completo." -ForegroundColor Green
 Write-Host "Desde ahora podés levantar todo con: npm run dev" -ForegroundColor Yellow
 Write-Host "Para entrar al dashboard usá: admin@mesaclick.local" -ForegroundColor Yellow
+Write-Host "Contraseña local: MesaClick2026" -ForegroundColor Yellow
 

@@ -10,8 +10,8 @@
 | Métrica | Valor |
 |---|---|
 | **Total de User Stories** | **36 US** (US-50 a US-85) |
-| **Completadas** | **26** (72%) |
-| **En Curso** | **0** |
+| **Completadas** | **25** (69%) |
+| **En Curso** | **1** |
 | **Pendientes** | **10** |
 | **Sprint Actual** | **Sprint 15 (05/10 – 11/10/2026)** · Sprints 16 y 17 completados por adelantado |
 
@@ -89,7 +89,7 @@
 | **US-65** | `Frontend` | Pantalla KDS Dedicada de Cocina con Temporizadores | ✅ Resuelta | Pablo Aguirre | [Ver detalle](sprint-15/US-65-pantalla-kds-cocina.md) |
 | **US-66** | `Integración` | Interacción Táctil en KDS y Notificación al Salón | ✅ Resuelta | Pablo Aguirre | [Ver detalle](sprint-15/US-66-interaccion-kds-cambio-estados.md) |
 | **US-67** | `Integración` | Impresión Térmica de Comandas (58/80 mm) y Reintento Manual | 📋 Pendiente | Por asignar | [Ver detalle](sprint-15/US-67-impresion-comandas-termicas.md) |
-| **US-85** | `Fullstack` | Inicio de Sesión con Google para Administración | ✅ Resuelta | Mateo Silvestrin / Codex | [Ver detalle](sprint-15/US-85-login-google.md) |
+| **US-85** | `Fullstack` | Inicio de Sesión con Google para Administración | ⚡ En Curso | Mateo Silvestrin / Codex | [Ver detalle](sprint-15/US-85-login-google.md) |
 | **US-83** | `Fullstack` | Gestión de Equipo de Trabajo con Credenciales y Ciclo de Vida | 📋 Pendiente | Por asignar | [Ver detalle](sprint-15/US-83-gestion-equipo-credenciales-ciclo-vida.md) |
 | **US-84** | `Fullstack` | Portal de Login Único por Negocio (Tenant-Scoped) con Branding | 📋 Pendiente | Por asignar | [Ver detalle](sprint-15/US-84-login-unico-tenant-branding-staff.md) |
 

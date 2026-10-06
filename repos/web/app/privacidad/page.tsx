@@ -46,7 +46,7 @@ const sections: LegalSection[] = [
     content: (
       <>
         <ul className="list-disc space-y-6 pl-20">
-          <li><strong>Cuenta y equipo:</strong> nombre, correo, rol, negocio asociado, identificador interno y estado de acceso.</li>
+          <li><strong>Cuenta y equipo:</strong> nombre, correo, rol, negocio asociado, identificador interno, estado de acceso y, cuando corresponda, contraseña protegida mediante hash irreversible. Nunca almacenamos la contraseña en texto plano.</li>
           <li><strong>Identidad de Google:</strong> identificador estable de cuenta (<code>sub</code>), correo y confirmación de que Google verificó ese correo.</li>
           <li><strong>Negocio:</strong> nombre comercial, descripción, rubro, contactos, sucursales, horarios, logo, configuración visual y, cuando se carguen, datos fiscales.</li>
           <li><strong>Operación gastronómica:</strong> mesas, categorías, artículos, precios, variantes, disponibilidad, pedidos, cantidades, notas, estados y marcas de tiempo.</li>
@@ -77,7 +77,7 @@ const sections: LegalSection[] = [
       <>
         <ul className="list-disc space-y-6 pl-20">
           <li>Crear y administrar cuentas, negocios, sucursales, cartas y permisos de equipo.</li>
-          <li>Autenticar usuarios mediante enlace mágico o Google y prevenir accesos no autorizados.</li>
+          <li>Autenticar administradores mediante correo y contraseña de Mesa CLICK o Google, gestionar enlaces de invitación del equipo y prevenir accesos no autorizados.</li>
           <li>Recibir, preparar, entregar y cerrar pedidos; mostrar su estado en tiempo real.</li>
           <li>Facilitar pagos solicitados por el comercio a través de Mercado Pago.</li>
           <li>Producir métricas operativas del propio comercio, sin vender perfiles a terceros.</li>

@@ -64,6 +64,29 @@ func (h *Handlers) VerificarToken(w http.ResponseWriter, r *http.Request) {
 	h.crearSesion(w, r, usuario)
 }
 
+func (h *Handlers) AutenticarPassword(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 8<<10)
+	var body struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		jsonError(w, "body inválido", http.StatusBadRequest)
+		return
+	}
+
+	usuario, err := h.svc.AutenticarPassword(r.Context(), body.Email, body.Password)
+	if err != nil {
+		if errors.Is(err, ErrCredencialesInvalidas) {
+			jsonError(w, "Correo o contraseña incorrectos.", http.StatusUnauthorized)
+			return
+		}
+		jsonError(w, "error interno", http.StatusInternalServerError)
+		return
+	}
+	h.crearSesion(w, r, usuario)
+}
+
 func (h *Handlers) AutenticarGoogle(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Credencial string `json:"credential"`
