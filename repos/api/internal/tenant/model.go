@@ -13,20 +13,20 @@ var (
 )
 
 type Tenant struct {
-	ID              string         `json:"id"`
-	Nombre          string         `json:"nombre"`
-	NombreFantasia  string         `json:"nombre_fantasia,omitempty"`
-	Rubro           string         `json:"rubro"`
-	Descripcion     *string        `json:"descripcion,omitempty"`
-	EmailContacto   *string        `json:"email_contacto,omitempty"`
-	Whatsapp        *string        `json:"whatsapp,omitempty"`
-	LogoURL         *string        `json:"logo_url,omitempty"`
-	ColorPrimario   *string        `json:"color_primario,omitempty"`
-	EstiloVisual    *string        `json:"estilo_visual,omitempty"`
-	DatosFiscales   map[string]any `json:"datos_fiscales,omitempty"`
-	GoogleReviewURL *string        `json:"google_review_url,omitempty"`
-	MPAccessToken   *string        `json:"mp_access_token,omitempty"`
-	MPPublicKey     *string        `json:"mp_public_key,omitempty"`
+	ID                  string         `json:"id"`
+	Nombre              string         `json:"nombre"`
+	NombreFantasia      string         `json:"nombre_fantasia,omitempty"`
+	Rubro               string         `json:"rubro"`
+	Descripcion         *string        `json:"descripcion,omitempty"`
+	EmailContacto       *string        `json:"email_contacto,omitempty"`
+	Whatsapp            *string        `json:"whatsapp,omitempty"`
+	LogoURL             *string        `json:"logo_url,omitempty"`
+	ColorPrimario       *string        `json:"color_primario,omitempty"`
+	EstiloVisual        *string        `json:"estilo_visual,omitempty"`
+	DatosFiscales       map[string]any `json:"datos_fiscales,omitempty"`
+	GoogleReviewURL     *string        `json:"google_review_url,omitempty"`
+	MPAccessToken       *string        `json:"mp_access_token,omitempty"`
+	MPPublicKey         *string        `json:"mp_public_key,omitempty"`
 	MPActivo            bool           `json:"mp_activo"`
 	Plan                string         `json:"plan"`
 	PlanDesde           *time.Time     `json:"plan_desde,omitempty"`
@@ -47,6 +47,8 @@ type OnboardingInput struct {
 	Slug           string         `json:"slug"`
 	EmailAdmin     string         `json:"email_admin"`
 	NombreAdmin    string         `json:"nombre_admin"`
+	Password       string         `json:"password"`
+	PasswordHash   string         `json:"-"`
 	SucursalNombre string         `json:"sucursal_nombre"`
 	Whatsapp       string         `json:"whatsapp"`
 	EmailSucursal  string         `json:"email_sucursal"`
@@ -54,21 +56,21 @@ type OnboardingInput struct {
 }
 
 type ActualizarTenantInput struct {
-	Nombre          *string        `json:"nombre,omitempty"`
-	NombreFantasia  *string        `json:"nombre_fantasia,omitempty"`
-	Rubro           *string        `json:"rubro,omitempty"`
-	Descripcion     *string        `json:"descripcion,omitempty"`
-	EmailContacto   *string        `json:"email_contacto,omitempty"`
-	Whatsapp        *string        `json:"whatsapp,omitempty"`
-	LogoURL         *string        `json:"logo_url,omitempty"`
-	ColorPrimario   *string        `json:"color_primario,omitempty"`
-	EstiloVisual    *string        `json:"estilo_visual,omitempty"`
-	DatosFiscales   map[string]any `json:"datos_fiscales,omitempty"`
-	GoogleReviewURL *string        `json:"google_review_url,omitempty"`
-	MPAccessToken   *string        `json:"mp_access_token,omitempty"`
-	MPPublicKey     *string        `json:"mp_public_key,omitempty"`
-	MPActivo        *bool          `json:"mp_activo,omitempty"`
-	MostrarMarcaAgua *bool         `json:"mostrar_marca_agua,omitempty"`
-	ColorSecundario  *string       `json:"color_secundario,omitempty"`
-	TipoFuente       *string       `json:"tipo_fuente,omitempty"`
+	Nombre           *string        `json:"nombre,omitempty"`
+	NombreFantasia   *string        `json:"nombre_fantasia,omitempty"`
+	Rubro            *string        `json:"rubro,omitempty"`
+	Descripcion      *string        `json:"descripcion,omitempty"`
+	EmailContacto    *string        `json:"email_contacto,omitempty"`
+	Whatsapp         *string        `json:"whatsapp,omitempty"`
+	LogoURL          *string        `json:"logo_url,omitempty"`
+	ColorPrimario    *string        `json:"color_primario,omitempty"`
+	EstiloVisual     *string        `json:"estilo_visual,omitempty"`
+	DatosFiscales    map[string]any `json:"datos_fiscales,omitempty"`
+	GoogleReviewURL  *string        `json:"google_review_url,omitempty"`
+	MPAccessToken    *string        `json:"mp_access_token,omitempty"`
+	MPPublicKey      *string        `json:"mp_public_key,omitempty"`
+	MPActivo         *bool          `json:"mp_activo,omitempty"`
+	MostrarMarcaAgua *bool          `json:"mostrar_marca_agua,omitempty"`
+	ColorSecundario  *string        `json:"color_secundario,omitempty"`
+	TipoFuente       *string        `json:"tipo_fuente,omitempty"`
 }

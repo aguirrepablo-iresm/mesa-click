@@ -412,3 +412,96 @@ func TestAutenticarGoogle_RechazaCredencialInvalida(t *testing.T) {
 		t.Fatalf("se esperaba ErrCredencialGoogleInvalida, obtenido: %v", err)
 	}
 }
+
+func TestAutenticarPassword_Exitoso(t *testing.T) {
+	hash, err := auth.HashPassword("MesaClick2026")
+	if err != nil {
+		t.Fatalf("no se pudo preparar el hash: %v", err)
+	}
+	store := &mockStore{
+		obtenerUsuarioPorEmailFn: func(ctx context.Context, email string) (*auth.UsuarioAuth, error) {
+			if email != "admin@mibar.com" {
+				t.Fatalf("email no normalizado: %q", email)
+			}
+			return &auth.UsuarioAuth{
+				ID: "usr-1", TenantID: "ten-1", Email: email, Rol: "admin", PasswordHash: &hash,
+			}, nil
+		},
+	}
+
+	usuario, err := auth.NuevoService(store, &mockEmailSender{}).
+		AutenticarPassword(context.Background(), " Admin@MiBar.com ", "MesaClick2026")
+	if err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+	if usuario.ID != "usr-1" {
+		t.Fatalf("usuario inesperado: %q", usuario.ID)
+	}
+}
+
+func TestAutenticarPassword_OcultaCorreoInexistenteYPasswordIncorrecta(t *testing.T) {
+	hash, err := auth.HashPassword("MesaClick2026")
+	if err != nil {
+		t.Fatalf("no se pudo preparar el hash: %v", err)
+	}
+	casos := []struct {
+		nombre string
+		store  *mockStore
+	}{
+		{
+			nombre: "correo inexistente",
+			store: &mockStore{obtenerUsuarioPorEmailFn: func(context.Context, string) (*auth.UsuarioAuth, error) {
+				return nil, auth.ErrUsuarioNoEncontrado
+			}},
+		},
+		{
+			nombre: "password incorrecta",
+			store: &mockStore{obtenerUsuarioPorEmailFn: func(context.Context, string) (*auth.UsuarioAuth, error) {
+				return &auth.UsuarioAuth{ID: "usr-1", PasswordHash: &hash}, nil
+			}},
+		},
+		{
+			nombre: "cuenta sin password",
+			store: &mockStore{obtenerUsuarioPorEmailFn: func(context.Context, string) (*auth.UsuarioAuth, error) {
+				return &auth.UsuarioAuth{ID: "usr-1"}, nil
+			}},
+		},
+	}
+
+	for _, caso := range casos {
+		t.Run(caso.nombre, func(t *testing.T) {
+			_, err := auth.NuevoService(caso.store, &mockEmailSender{}).
+				AutenticarPassword(context.Background(), "admin@mibar.com", "incorrecta-2026")
+			if !errors.Is(err, auth.ErrCredencialesInvalidas) {
+				t.Fatalf("se esperaba el mismo error genérico, obtenido: %v", err)
+			}
+		})
+	}
+}
+
+func TestAutenticarPassword_HandlerDevuelveSesion(t *testing.T) {
+	t.Setenv("JWT_SECRET", "secreto-de-prueba")
+	hash, err := auth.HashPassword("MesaClick2026")
+	if err != nil {
+		t.Fatalf("no se pudo preparar el hash: %v", err)
+	}
+	store := &mockStore{obtenerUsuarioPorEmailFn: func(context.Context, string) (*auth.UsuarioAuth, error) {
+		return &auth.UsuarioAuth{
+			ID: "usr-1", TenantID: "ten-1", Rol: "admin", PasswordHash: &hash,
+		}, nil
+	}}
+	handler := auth.NuevosHandlers(auth.NuevoService(store, &mockEmailSender{}), false)
+	req := httptest.NewRequest(http.MethodPost, "/auth/password", strings.NewReader(
+		`{"email":"admin@mibar.com","password":"MesaClick2026"}`,
+	))
+	recorder := httptest.NewRecorder()
+
+	handler.AutenticarPassword(recorder, req)
+
+	if recorder.Code != http.StatusOK {
+		t.Fatalf("status: got %d, want %d; body=%s", recorder.Code, http.StatusOK, recorder.Body.String())
+	}
+	if !strings.Contains(recorder.Body.String(), `"token"`) {
+		t.Fatalf("respuesta sin sesión: %s", recorder.Body.String())
+	}
+}

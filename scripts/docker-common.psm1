@@ -106,6 +106,7 @@ function Set-DockerDevEnvironment {
   Write-Host "API PC:           http://localhost:8080" -ForegroundColor Yellow
   Write-Host "API celular:      $env:NEXT_PUBLIC_API_URL" -ForegroundColor Yellow
   Write-Host "Login local:      admin@mesaclick.local" -ForegroundColor Yellow
+  Write-Host "Clave local:      MesaClick2026" -ForegroundColor Yellow
 }
 
 function Invoke-DockerCompose([string[]]$Arguments) {

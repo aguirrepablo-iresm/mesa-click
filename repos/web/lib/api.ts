@@ -111,6 +111,9 @@ function toUserMessage(message: string, fallback: string) {
   if (normalized.includes('tiempo de espera agotado')) {
     return 'El servidor tardó demasiado en responder. Intentá nuevamente.';
   }
+  if (normalized.includes('correo o contraseña incorrectos')) {
+    return 'Correo o contraseña incorrectos.';
+  }
   if (normalized === 'error interno' || normalized.startsWith('error http 500')) {
     return 'Ocurrió un problema en el servidor. Intentá nuevamente en unos minutos.';
   }
@@ -281,6 +284,7 @@ export interface OnboardingInput {
   slug: string;
   email_admin: string;
   nombre_admin: string;
+  password: string;
   sucursal_nombre?: string;
   email_sucursal?: string;
   direccion?: string;
@@ -556,6 +560,17 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ email: email.trim().toLowerCase() }),
     });
+  },
+
+  autenticarConPassword: async (email: string, password: string) => {
+    const res = await apiFetch<{ token: string }>('/auth/password', {
+      method: 'POST',
+      body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
+    });
+    if (res.token) {
+      guardarSesion(res.token);
+    }
+    return res;
   },
 
   autenticarConGoogle: async (credential: string) => {

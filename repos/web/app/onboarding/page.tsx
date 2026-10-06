@@ -22,6 +22,8 @@ const HORARIOS_DEFAULT = JSON.stringify({
 type OnboardingFormData = {
   nombreAdmin: string;
   emailAdmin: string;
+  password: string;
+  confirmarPassword: string;
   nombreNegocio: string;
   nombreFantasia: string;
   slug: string;
@@ -42,7 +44,12 @@ function emailValido(email: string) {
 }
 
 function pasoParaCampo(campo: keyof OnboardingFormData) {
-  if (campo === "nombreAdmin" || campo === "emailAdmin") return 1;
+  if (
+    campo === "nombreAdmin" ||
+    campo === "emailAdmin" ||
+    campo === "password" ||
+    campo === "confirmarPassword"
+  ) return 1;
   if (
     campo === "nombreNegocio" ||
     campo === "nombreFantasia" ||
@@ -74,14 +81,12 @@ export default function OnboardingPage() {
   const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [completado, setCompletado] = useState(false);
-  // Resultado real del envío del magic link de primer acceso: si falla no
-  // podemos afirmar "revisá tu casilla".
-  const [linkEnviado, setLinkEnviado] = useState(false);
-  const [linkDev, setLinkDev] = useState("");
 
   const [formData, setFormData] = useState<OnboardingFormData>({
     nombreAdmin: "",
     emailAdmin: "",
+    password: "",
+    confirmarPassword: "",
     nombreNegocio: "",
     nombreFantasia: "",
     slug: "",
@@ -120,6 +125,14 @@ export default function OnboardingPage() {
       errors.emailAdmin = "Ingresá el correo de acceso.";
     } else if (!emailValido(formData.emailAdmin)) {
       errors.emailAdmin = "Ingresá un correo de acceso válido.";
+    }
+    if (formData.password.length < 10) {
+      errors.password = "Usá al menos 10 caracteres.";
+    } else if (!/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(formData.password) || !/\d/.test(formData.password)) {
+      errors.password = "Incluí al menos una letra y un número.";
+    }
+    if (formData.confirmarPassword !== formData.password) {
+      errors.confirmarPassword = "Las contraseñas no coinciden.";
     }
 
     if (Object.keys(errors).length > 0) {
@@ -174,6 +187,14 @@ export default function OnboardingPage() {
       errors.emailAdmin = "Ingresá el correo de acceso.";
     } else if (!emailValido(formData.emailAdmin)) {
       errors.emailAdmin = "Ingresá un correo de acceso válido.";
+    }
+    if (formData.password.length < 10) {
+      errors.password = "Usá al menos 10 caracteres.";
+    } else if (!/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(formData.password) || !/\d/.test(formData.password)) {
+      errors.password = "Incluí al menos una letra y un número.";
+    }
+    if (formData.confirmarPassword !== formData.password) {
+      errors.confirmarPassword = "Las contraseñas no coinciden.";
     }
     if (!formData.nombreNegocio.trim()) {
       errors.nombreNegocio = "Ingresá el nombre del negocio.";
@@ -234,21 +255,12 @@ export default function OnboardingPage() {
         rubro: formData.rubro,
         email_admin: formData.emailAdmin,
         nombre_admin: formData.nombreAdmin,
+        password: formData.password,
         sucursal_nombre: formData.sucursalNombre,
         email_sucursal: formData.emailSucursal,
         whatsapp: formData.whatsapp,
         horarios: formData.horarios,
       });
-
-      // 2. Solicitar automáticamente el magic link de primer acceso
-      try {
-        const res = await api.solicitarMagicLink(formData.emailAdmin);
-        setLinkEnviado(true);
-        if (res?.magic_link_dev) setLinkDev(res.magic_link_dev);
-      } catch (linkErr) {
-        console.warn("No se pudo enviar magic link automático:", linkErr);
-        setLinkEnviado(false);
-      }
 
       setCompletado(true);
     } catch (err: unknown) {
@@ -272,42 +284,15 @@ export default function OnboardingPage() {
             <p className="text-13 text-sage-green leading-relaxed">
               Registramos <strong className="text-ash-graphite">{formData.nombreNegocio}</strong> en Mesa CLICK.
             </p>
-            {linkEnviado ? (
-              <div className="p-16 bg-ghost-fog border border-ghost-fog rounded-lg text-left text-12 text-ash-graphite space-y-6">
-                <div className="flex items-center gap-6 text-success-muted font-medium">
-                  <span className="material-symbols-outlined text-18">mark_email_unread</span>
-                  <span>Revisá tu casilla de correo</span>
-                </div>
-                <p className="text-sage-green text-11">
-                  Enviamos un Magic Link de acceso a <strong className="font-mono text-ash-graphite">{formData.emailAdmin}</strong> para que ingreses directamente al panel de control sin contraseñas.
-                </p>
+            <div className="p-16 bg-ghost-fog border border-ghost-fog rounded-lg text-left text-12 text-ash-graphite space-y-6">
+              <div className="flex items-center gap-6 text-success-muted font-medium">
+                <span className="material-symbols-outlined text-18">verified_user</span>
+                <span>Tu acceso ya está listo</span>
               </div>
-            ) : (
-              <div className="p-16 bg-red-50 border border-alert-red/30 rounded-lg text-left text-12 space-y-6">
-                <div className="flex items-center gap-6 text-alert-red font-medium">
-                  <span className="material-symbols-outlined text-18">report</span>
-                  <span>No pudimos enviar el enlace de acceso</span>
-                </div>
-                <p className="text-sage-green text-11">
-                  Tu negocio quedó registrado. Entrá a <strong className="text-ash-graphite">Iniciar Sesión</strong> y pedí el Magic Link de nuevo con <strong className="font-mono text-ash-graphite">{formData.emailAdmin}</strong>.
-                </p>
-              </div>
-            )}
-
-            {linkDev && (
-              <div className="p-16 bg-vanilla-cream border border-dashed border-ash-graphite/30 rounded-lg text-left space-y-6">
-                <div className="flex items-center gap-6 text-11 font-mono uppercase tracking-wider text-sage-green">
-                  <span className="material-symbols-outlined text-16">construction</span>
-                  <span>Modo desarrollo — sin email configurado</span>
-                </div>
-                <a
-                  href={linkDev}
-                  className="block text-11 font-mono text-ash-graphite break-all hover:underline"
-                >
-                  {linkDev}
-                </a>
-              </div>
-            )}
+              <p className="text-sage-green text-11">
+                Ingresá con <strong className="font-mono text-ash-graphite">{formData.emailAdmin}</strong> y la contraseña que acabás de crear, o utilizá Google con ese mismo correo.
+              </p>
+            </div>
           </div>
           <div className="pt-8 flex flex-col gap-12">
             <Link
@@ -331,10 +316,14 @@ export default function OnboardingPage() {
             data={{
               nombreAdmin: formData.nombreAdmin,
               emailAdmin: formData.emailAdmin,
+              password: formData.password,
+              confirmarPassword: formData.confirmarPassword,
             }}
             errors={{
               nombreAdmin: fieldErrors.nombreAdmin,
               emailAdmin: fieldErrors.emailAdmin,
+              password: fieldErrors.password,
+              confirmarPassword: fieldErrors.confirmarPassword,
             }}
             loading={validandoEmail}
             onChange={handleUpdate}

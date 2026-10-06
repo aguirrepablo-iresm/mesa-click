@@ -39,11 +39,12 @@ Usuario local:
 
 ```text
 admin@mesaclick.local
+MesaClick2026
 ```
 
-Entrá a `http://localhost:3000/login`, pedí el magic link con ese email y la pantalla debería mostrar el link de desarrollo porque `APP_ENV=development` y no hay SMTP configurado.
+Entrá a `http://localhost:3000/login` con ese correo y la contraseña local. También podés usar Google con un correo real previamente registrado y autorizado en el entorno.
 
-También podés pedir el link desde consola si el sistema está levantado:
+El comando siguiente queda reservado para probar enlaces de invitación del equipo, no como acceso normal del administrador:
 
 ```powershell
 npm run login:dev

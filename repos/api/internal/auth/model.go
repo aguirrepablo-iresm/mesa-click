@@ -17,11 +17,12 @@ type MagicToken struct {
 }
 
 type UsuarioAuth struct {
-	ID        string
-	TenantID  string
-	Email     string
-	Rol       string
-	GoogleSub *string
+	ID           string
+	TenantID     string
+	Email        string
+	Rol          string
+	GoogleSub    *string
+	PasswordHash *string
 }
 
 type Claims struct {

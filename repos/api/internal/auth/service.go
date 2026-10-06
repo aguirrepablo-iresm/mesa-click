@@ -34,6 +34,32 @@ func NuevoServiceConGoogle(s Store, e EmailSender, clientID string, verifier Ver
 	}
 }
 
+func (svc *Service) AutenticarPassword(ctx context.Context, email, password string) (*UsuarioAuth, error) {
+	email = NormalizarEmail(email)
+	if email == "" || password == "" {
+		_ = CompararPassword(dummyPasswordHash, password)
+		return nil, ErrCredencialesInvalidas
+	}
+
+	usuario, err := svc.store.ObtenerUsuarioPorEmail(ctx, email)
+	if err != nil {
+		if errors.Is(err, ErrUsuarioNoEncontrado) {
+			_ = CompararPassword(dummyPasswordHash, password)
+			return nil, ErrCredencialesInvalidas
+		}
+		return nil, err
+	}
+
+	hash := dummyPasswordHash
+	if usuario.PasswordHash != nil && strings.TrimSpace(*usuario.PasswordHash) != "" {
+		hash = *usuario.PasswordHash
+	}
+	if err := CompararPassword(hash, password); err != nil || usuario.PasswordHash == nil {
+		return nil, ErrCredencialesInvalidas
+	}
+	return usuario, nil
+}
+
 // AutenticarGoogle valida la credencial con Google y luego emite una sesión
 // únicamente para usuarios que ya existen en Mesa CLICK. En el primer acceso
 // vincula el `sub` estable de Google para no depender de cambios futuros de email.

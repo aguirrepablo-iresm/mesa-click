@@ -20,6 +20,7 @@ if (Test-Path $localPsql) {
 
 Write-Host "Seed local aplicado." -ForegroundColor Green
 Write-Host "Usuario local: admin@mesaclick.local" -ForegroundColor Yellow
+Write-Host "Clave local:   MesaClick2026" -ForegroundColor Yellow
 $lanIP = Get-LocalLanIP
 Write-Host "Mesa pública demo PC: http://localhost:3000/mesa/mesa-demo-1" -ForegroundColor Yellow
 Write-Host "Mesa pública demo celular: http://${lanIP}:3000/mesa/mesa-demo-1" -ForegroundColor Yellow

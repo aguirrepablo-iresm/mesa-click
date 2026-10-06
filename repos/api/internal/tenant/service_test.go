@@ -44,8 +44,10 @@ func (m *mockStore) RegistrarSolicitudUpgrade(ctx context.Context, tenantID, not
 }
 
 func TestCrear_Exitoso(t *testing.T) {
+	var inputGuardado tenant.OnboardingInput
 	store := &mockStore{
 		crearFn: func(ctx context.Context, input tenant.OnboardingInput) (*tenant.Tenant, error) {
+			inputGuardado = input
 			return &tenant.Tenant{ID: "t-1", Nombre: input.Nombre, Slug: input.Slug}, nil
 		},
 	}
@@ -55,12 +57,32 @@ func TestCrear_Exitoso(t *testing.T) {
 		Slug:        "mi-bar",
 		EmailAdmin:  "admin@mibar.com",
 		NombreAdmin: "Carlos",
+		Password:    "MesaClick2026",
 	})
 	if err != nil {
 		t.Fatalf("error inesperado: %v", err)
 	}
 	if result.ID != "t-1" {
 		t.Errorf("ID: got %q, want %q", result.ID, "t-1")
+	}
+	if inputGuardado.Password != "" {
+		t.Fatal("la contraseña en texto plano no debe llegar al store")
+	}
+	if inputGuardado.PasswordHash == "" || inputGuardado.PasswordHash == "MesaClick2026" {
+		t.Fatal("se esperaba un hash seguro de la contraseña")
+	}
+}
+
+func TestCrear_PasswordDebil_Error(t *testing.T) {
+	svc := tenant.NuevoService(&mockStore{})
+	_, err := svc.Crear(context.Background(), tenant.OnboardingInput{
+		Nombre:     "Mi Bar",
+		Slug:       "mi-bar",
+		EmailAdmin: "admin@mibar.com",
+		Password:   "solo-letras",
+	})
+	if !errors.Is(err, tenant.ErrValidation) {
+		t.Fatalf("se esperaba ErrValidation, obtenido: %v", err)
 	}
 }
 

@@ -99,6 +99,7 @@ func registrarRutas(mux *http.ServeMux) {
 	// El acceso rápido se conserva siempre en desarrollo local, incluso si el
 	// equipo tiene un proveedor de correo configurado. Nunca se expone en QA o producción.
 	authH := auth.NuevosHandlers(authSvc, esDesarrolloLocal)
+	mux.HandleFunc("POST /auth/password", authH.AutenticarPassword)
 	mux.HandleFunc("POST /auth/google", authH.AutenticarGoogle)
 	mux.HandleFunc("POST /auth/magic-link", authH.SolicitarLink)
 	mux.HandleFunc("GET /auth/verify", authH.VerificarToken)
