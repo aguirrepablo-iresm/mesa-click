@@ -12,6 +12,8 @@ WITH tenant_upsert AS (
     logo_url,
     color_primario,
     estilo_visual,
+    plan,
+    plan_desde,
     datos_fiscales,
     google_review_url
   ) VALUES (
@@ -25,6 +27,8 @@ WITH tenant_upsert AS (
     NULL,
     '#155e75',
     'claro',
+    'pro',
+    NOW(),
     '{}'::jsonb,
     NULL
   )
@@ -36,7 +40,10 @@ WITH tenant_upsert AS (
     email_contacto = EXCLUDED.email_contacto,
     whatsapp = EXCLUDED.whatsapp,
     color_primario = EXCLUDED.color_primario,
-    estilo_visual = EXCLUDED.estilo_visual
+    estilo_visual = EXCLUDED.estilo_visual,
+    plan = 'pro',
+    plan_desde = COALESCE(tenants.plan_desde, NOW()),
+    plan_hasta = NULL
   RETURNING id
 ), tenant_ref AS (
   SELECT id FROM tenant_upsert
@@ -97,18 +104,19 @@ WITH tenant_upsert AS (
     estado = 'activa'
   RETURNING id
 ), categorias_seed AS (
-  INSERT INTO categorias (id, tenant_id, nombre, orden)
-  SELECT v.id::uuid, t.id, v.nombre, v.orden
+  INSERT INTO categorias (id, tenant_id, nombre, orden, icono)
+  SELECT v.id::uuid, t.id, v.nombre, v.orden, v.icono
   FROM tenant_ref t
   CROSS JOIN (VALUES
-    ('30000000-0000-0000-0000-000000000001', 'Entradas', 10),
-    ('30000000-0000-0000-0000-000000000002', 'Principales', 20),
-    ('30000000-0000-0000-0000-000000000003', 'Bebidas', 30)
-  ) AS v(id, nombre, orden)
+    ('30000000-0000-0000-0000-000000000001', 'Entradas', 10, 'tapas'),
+    ('30000000-0000-0000-0000-000000000002', 'Principales', 20, 'lunch_dining'),
+    ('30000000-0000-0000-0000-000000000003', 'Bebidas', 30, 'local_bar')
+  ) AS v(id, nombre, orden, icono)
   ON CONFLICT (id) DO UPDATE SET
     tenant_id = EXCLUDED.tenant_id,
     nombre = EXCLUDED.nombre,
-    orden = EXCLUDED.orden
+    orden = EXCLUDED.orden,
+    icono = EXCLUDED.icono
   RETURNING id, tenant_id, nombre
 )
 INSERT INTO articulos (id, tenant_id, categoria_id, nombre, descripcion, precio, foto_url, activo)

@@ -522,6 +522,115 @@ function guardarAparienciaLocal(storageKey: string, apariencia: AparienciaForm) 
   }
 }
 
+function EditorColorEnVivo({
+  label,
+  detalle,
+  value,
+  pro = false,
+  onChange,
+}: {
+  label: string;
+  detalle: string;
+  value: string;
+  pro?: boolean;
+  onChange: (value: string) => void;
+}) {
+  const colorSeguro = esColorHex(value) ? value : COLOR_DEFAULT;
+
+  return (
+    <div className="w-full rounded-xl border border-concrete bg-canvas-white p-12 shadow-sm">
+      <div className="flex items-center justify-between gap-8">
+        <span className="text-10 font-mono font-semibold uppercase tracking-[0.08em] text-sage-green">
+          {label}
+        </span>
+        {pro && (
+          <span className="rounded-full bg-ash-graphite px-7 py-2 text-9 font-mono font-bold uppercase tracking-wider text-canvas-white">
+            Pro
+          </span>
+        )}
+      </div>
+      <div className="mt-8 flex items-center gap-8">
+        <label
+          className="relative h-40 w-40 shrink-0 cursor-pointer overflow-hidden rounded-lg border border-concrete shadow-inner"
+          style={{ backgroundColor: colorSeguro }}
+          title={`Elegir ${label.toLowerCase()}`}
+        >
+          <input
+            type="color"
+            value={colorSeguro}
+            onChange={(event) => onChange(event.target.value)}
+            className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+            aria-label={`Elegir ${label.toLowerCase()}`}
+          />
+        </label>
+        <input
+          value={value.toUpperCase()}
+          maxLength={7}
+          spellCheck={false}
+          onChange={(event) => onChange(event.target.value)}
+          className="h-40 min-w-0 flex-1 rounded-lg border border-concrete bg-canvas-white px-9 font-mono text-11 font-semibold uppercase text-ash-graphite outline-none focus:border-plain-green"
+          aria-label={`${label} en hexadecimal`}
+        />
+      </div>
+      <p className="mt-7 text-10 leading-relaxed text-sage-green">{detalle}</p>
+    </div>
+  );
+}
+
+function EditorIdentidadEnVivo({
+  nombre,
+  logoUrl,
+  onNombreChange,
+  onLogo,
+  onRemoveLogo,
+}: {
+  nombre: string;
+  logoUrl: string;
+  onNombreChange: (value: string) => void;
+  onLogo: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  onRemoveLogo: () => void;
+}) {
+  return (
+    <div className="w-full rounded-xl border border-concrete bg-canvas-white p-12 shadow-sm">
+      <span className="text-10 font-mono font-semibold uppercase tracking-[0.08em] text-sage-green">
+        Nombre y logo
+      </span>
+      <input
+        value={nombre}
+        onChange={(event) => onNombreChange(event.target.value)}
+        className="mt-8 h-40 w-full rounded-lg border border-concrete bg-canvas-white px-9 text-11 font-semibold text-ash-graphite outline-none focus:border-plain-green"
+        aria-label="Nombre visible del menú"
+      />
+      <div className="mt-8 flex items-center gap-8">
+        <div className="grid h-40 w-40 shrink-0 place-items-center overflow-hidden rounded-lg border border-concrete bg-vanilla-cream">
+          {logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={logoUrl} alt="Logo actual" className="h-full w-full object-cover" />
+          ) : (
+            <span className="material-symbols-outlined text-18 text-stone">image</span>
+          )}
+        </div>
+        <label className="flex h-40 flex-1 cursor-pointer items-center justify-center gap-5 rounded-lg border border-concrete bg-canvas-white px-8 text-10 font-semibold text-ash-graphite transition-colors hover:border-ash-graphite hover:bg-ghost-fog">
+          <span className="material-symbols-outlined text-15">upload</span>
+          {logoUrl ? "Cambiar imagen" : "Subir imagen"}
+          <input type="file" accept="image/png,image/jpeg" onChange={onLogo} className="hidden" />
+        </label>
+        {logoUrl && (
+          <button
+            type="button"
+            onClick={onRemoveLogo}
+            className="grid h-40 w-40 shrink-0 place-items-center rounded-lg border border-concrete text-stone transition-colors hover:border-alert-red hover:text-alert-red"
+            aria-label="Quitar logo"
+            title="Quitar logo"
+          >
+            <span className="material-symbols-outlined text-17">delete</span>
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function AparienciaTab({
   sucursal,
   tenant,
@@ -538,7 +647,6 @@ function AparienciaTab({
   const [apariencia, setApariencia] = useState(() =>
     leerAparienciaGuardada(storageKey, aparienciaDefault(sucursal, tenant)),
   );
-  const [arrastrandoLogo, setArrastrandoLogo] = useState(false);
   const [guardando, setGuardando] = useState(false);
   const [ok, setOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -576,7 +684,16 @@ function AparienciaTab({
   };
 
   const cargarLogo = (file?: File | null) => {
-    if (!file || !file.type.startsWith("image/")) return;
+    if (!file) return;
+    if (!["image/png", "image/jpeg"].includes(file.type)) {
+      setError("Elegí un logo PNG o JPG.");
+      return;
+    }
+    if (file.size > 1024 * 1024) {
+      setError("El logo no puede superar 1 MB.");
+      return;
+    }
+    setError(null);
     const reader = new FileReader();
     reader.onload = () => {
       if (typeof reader.result !== "string") return;
@@ -588,12 +705,7 @@ function AparienciaTab({
 
   const onLogo = (e: React.ChangeEvent<HTMLInputElement>) => {
     cargarLogo(e.target.files?.[0]);
-  };
-
-  const onDropLogo = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    setArrastrandoLogo(false);
-    cargarLogo(e.dataTransfer.files?.[0]);
+    e.target.value = "";
   };
 
   const oscuro = estilo === "oscuro";
@@ -615,77 +727,12 @@ function AparienciaTab({
 
   return (
     <div className="space-y-16">
-      <Card titulo="Apariencia del menú">
-        <Campo label="Nombre visible en el menú">
-          <input
-            className={INPUT}
-            value={nombreVisible}
-            onChange={(e) => {
-              setApariencia((prev) => ({ ...prev, nombreVisible: e.target.value }));
-              setOk(false);
-            }}
-          />
-        </Campo>
-
-        <div className="grid sm:grid-cols-2 gap-12">
-          <Campo label="Logo">
-            <div
-              onDragEnter={(e) => {
-                e.preventDefault();
-                setArrastrandoLogo(true);
-              }}
-              onDragOver={(e) => e.preventDefault()}
-              onDragLeave={() => setArrastrandoLogo(false)}
-              onDrop={onDropLogo}
-              className={`h-72 w-full px-12 rounded-md border border-dashed flex items-center gap-12 cursor-pointer transition-colors ${
-                arrastrandoLogo
-                  ? "border-plain-green bg-ghost-fog"
-                  : "border-concrete bg-canvas-white hover:border-ash-graphite"
-              }`}
-            >
-              <div className="w-48 h-48 rounded-md border border-concrete grid place-items-center overflow-hidden bg-vanilla-cream shrink-0">
-                {logoUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={logoUrl} alt="logo" className="w-full h-full object-cover" />
-                ) : (
-                  <span className="material-symbols-outlined text-20 text-stone">image</span>
-                )}
-              </div>
-              <div className="min-w-0">
-                <span className="block text-12 font-medium text-ash-graphite">Subir logo</span>
-                <span className="block text-10 font-mono uppercase tracking-wider text-stone">PNG / JPG</span>
-              </div>
-              <input type="file" accept="image/*" onChange={onLogo} className="hidden" />
-            </div>
-          </Campo>
-
-          <Campo label="Color principal del menú">
-            <div className="h-72 w-full px-12 rounded-md border border-concrete bg-canvas-white flex items-center gap-12">
-              <div
-                className="relative w-48 h-48 rounded-md border border-concrete overflow-hidden shrink-0"
-                style={{ backgroundColor: colorPrincipal }}
-              >
-                <input
-                  type="color"
-                  value={esColorHex(color) ? color : COLOR_DEFAULT}
-                  aria-label="Elegir color principal del menú"
-                  onChange={(e) => {
-                    setApariencia((prev) => ({ ...prev, color: e.target.value }));
-                    setOk(false);
-                  }}
-                  className="absolute inset-0 h-full w-full opacity-0 cursor-pointer"
-                />
-              </div>
-              <input
-                className="h-48 min-w-0 flex-1 rounded-lg border border-concrete bg-canvas-white px-12 text-13 font-mono outline-none focus:border-system-black"
-                value={color.toUpperCase()}
-                onChange={(e) => {
-                  setApariencia((prev) => ({ ...prev, color: e.target.value }));
-                  setOk(false);
-                }}
-              />
-            </div>
-          </Campo>
+      <Card titulo="Ajustes generales">
+        <div className="rounded-xl border border-concrete bg-ghost-fog/35 px-14 py-12">
+          <p className="text-12 font-semibold text-ash-graphite">Editá la identidad directamente sobre la vista previa</p>
+          <p className="mt-3 text-11 leading-relaxed text-sage-green">
+            El nombre, el logo y los colores se modifican en los controles conectados al teléfono y se actualizan en tiempo real.
+          </p>
         </div>
 
         <Campo label="Estilo visual">
@@ -730,65 +777,6 @@ function AparienciaTab({
                 Desbloquear con Pro
               </button>
             )}
-          </div>
-
-          <div className="grid gap-12 sm:grid-cols-2">
-            {([
-              { key: 'colorCategoria' as const, label: 'Color de categorías', value: colorCategoria, helper: 'Categoría seleccionada y sus íconos.' },
-              { key: 'colorAccion' as const, label: 'Color de acciones', value: colorAccion, helper: 'Botones Agregar y llamados principales.' },
-            ]).map((control) => (
-              <Campo key={control.key} label={control.label}>
-                <div
-                  onClick={!esPro ? () => setModalUpgradeOpen(true) : undefined}
-                  onKeyDown={!esPro ? (event) => {
-                    if (event.key === 'Enter' || event.key === ' ') {
-                      event.preventDefault()
-                      setModalUpgradeOpen(true)
-                    }
-                  } : undefined}
-                  role={!esPro ? 'button' : undefined}
-                  tabIndex={!esPro ? 0 : undefined}
-                  className={`w-full rounded-xl border p-12 text-left transition-colors ${esPro ? 'border-concrete bg-canvas-white' : 'border-concrete/70 bg-ghost-fog/35'}`}
-                >
-                  <span className="flex items-center gap-10">
-                    <span className="relative h-40 w-40 shrink-0 overflow-hidden rounded-lg border border-concrete" style={{ backgroundColor: esColorHex(control.value) ? control.value : COLOR_DEFAULT }}>
-                      {esPro && (
-                        <input
-                          type="color"
-                          value={esColorHex(control.value) ? control.value : COLOR_DEFAULT}
-                          onClick={(event) => event.stopPropagation()}
-                          onChange={(event) => {
-                            setApariencia((prev) => ({ ...prev, [control.key]: event.target.value }));
-                            setOk(false);
-                          }}
-                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-                          aria-label={`Elegir ${control.label.toLowerCase()}`}
-                        />
-                      )}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-center justify-between gap-8">
-                        <span className="font-mono text-12 font-semibold text-ash-graphite">{control.value.toUpperCase()}</span>
-                        {!esPro && <span className="material-symbols-outlined text-16 text-stone">lock</span>}
-                      </span>
-                      <span className="mt-2 block text-10 leading-relaxed text-sage-green">{control.helper}</span>
-                    </span>
-                  </span>
-                  {esPro && (
-                    <input
-                      value={control.value.toUpperCase()}
-                      onClick={(event) => event.stopPropagation()}
-                      onChange={(event) => {
-                        setApariencia((prev) => ({ ...prev, [control.key]: event.target.value }));
-                        setOk(false);
-                      }}
-                      className="mt-10 h-[38px] w-full rounded-lg border border-concrete bg-canvas-white px-10 font-mono text-11 text-ash-graphite outline-none focus:border-plain-green"
-                      aria-label={`${control.label} en hexadecimal`}
-                    />
-                  )}
-                </div>
-              </Campo>
-            ))}
           </div>
 
           <div>
@@ -889,31 +877,47 @@ function AparienciaTab({
         </div>
       </Card>
 
-      <div className="relative flex justify-center overflow-hidden rounded-2xl border border-concrete bg-canvas-white p-20 lg:min-h-[560px] lg:items-center lg:p-28">
-        <div className="absolute left-[6%] top-[18%] hidden w-[210px] items-center gap-8 lg:flex">
-          <span className="rounded-full border border-concrete bg-ghost-fog px-10 py-6 text-10 font-semibold text-ash-graphite">Nombre y logo</span>
-          <span className="h-px flex-1 bg-concrete" />
-          <span className="h-7 w-7 rounded-full bg-ash-graphite" />
+      <div className="overflow-hidden rounded-2xl border border-concrete bg-canvas-white p-16 sm:p-20 lg:p-28">
+        <div className="mb-18 text-center">
+          <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-sage-green">Vista previa del menú</p>
+          <p className="mt-3 text-11 text-stone">Tocá los controles conectados al teléfono para editar en tiempo real.</p>
         </div>
-        <div className="absolute right-[5%] top-[37%] hidden w-[220px] items-center gap-8 lg:flex">
-          <span className="h-7 w-7 rounded-full" style={{ background: colorCategorias }} />
-          <span className="h-px flex-1 bg-concrete" />
-          <span className="rounded-full border border-concrete bg-ghost-fog px-10 py-6 text-10 font-semibold text-ash-graphite">Color de categorías</span>
-        </div>
-        <div className="absolute right-[5%] top-[64%] hidden w-[220px] items-center gap-8 lg:flex">
-          <span className="h-7 w-7 rounded-full" style={{ background: colorBotonAccion }} />
-          <span className="h-px flex-1 bg-concrete" />
-          <span className="rounded-full border border-concrete bg-ghost-fog px-10 py-6 text-10 font-semibold text-ash-graphite">Botón Agregar</span>
-        </div>
-        <div className="absolute bottom-[17%] left-[5%] hidden w-[220px] items-center gap-8 lg:flex">
-          <span className="rounded-full border border-concrete bg-ghost-fog px-10 py-6 text-10 font-semibold text-ash-graphite">Color principal</span>
-          <span className="h-px flex-1 bg-concrete" />
-          <span className="h-7 w-7 rounded-full" style={{ background: colorPrincipal }} />
-        </div>
-        <div className="w-full max-w-[300px]">
-          <p className="mb-12 text-center font-mono text-[12px] uppercase text-sage-green">
-            Vista previa del menú
-          </p>
+
+        <div className="grid items-center gap-18 lg:grid-cols-[minmax(250px,1fr)_300px_minmax(250px,1fr)] lg:gap-12 xl:gap-20">
+          <div className="order-2 space-y-18 lg:order-1">
+            <div className="flex items-center gap-8">
+              <EditorIdentidadEnVivo
+                nombre={nombreVisible}
+                logoUrl={logoUrl}
+                onNombreChange={(value) => {
+                  setApariencia((prev) => ({ ...prev, nombreVisible: value }));
+                  setOk(false);
+                }}
+                onLogo={onLogo}
+                onRemoveLogo={() => {
+                  setApariencia((prev) => ({ ...prev, logoUrl: "" }));
+                  setOk(false);
+                }}
+              />
+              <span className="hidden h-px min-w-16 flex-1 bg-concrete lg:block" />
+              <span className="hidden h-8 w-8 shrink-0 rounded-full bg-ash-graphite lg:block" />
+            </div>
+            <div className="flex items-center gap-8 lg:pt-48">
+              <EditorColorEnVivo
+                label="Color principal"
+                detalle="Carrito y acentos generales."
+                value={color}
+                onChange={(value) => {
+                  setApariencia((prev) => ({ ...prev, color: value }));
+                  setOk(false);
+                }}
+              />
+              <span className="hidden h-px min-w-16 flex-1 bg-concrete lg:block" />
+              <span className="hidden h-8 w-8 shrink-0 rounded-full lg:block" style={{ background: colorPrincipal }} />
+            </div>
+          </div>
+
+          <div className="order-1 mx-auto w-full max-w-[300px] lg:order-2">
           <div className="mx-auto w-full max-w-[260px] rounded-[30px] bg-ash-graphite p-[6px] shadow-lg">
             <div
               className="flex h-[430px] flex-col overflow-hidden rounded-[24px]"
@@ -1032,6 +1036,38 @@ function AparienciaTab({
                 <span className="text-[12px] font-bold leading-none">2 items</span>
                 <span className="text-[13px] font-bold leading-none">$3.700</span>
               </div>
+            </div>
+          </div>
+        </div>
+
+          <div className="order-3 space-y-18">
+            <div className="flex items-center gap-8 lg:pb-28">
+              <span className="hidden h-8 w-8 shrink-0 rounded-full lg:block" style={{ background: colorCategorias }} />
+              <span className="hidden h-px min-w-16 flex-1 bg-concrete lg:block" />
+              <EditorColorEnVivo
+                label="Color de categorías"
+                detalle={esPro ? "Categoría seleccionada e íconos." : "Probalo en vivo. Requiere Pro para guardar."}
+                value={colorCategoria}
+                pro
+                onChange={(value) => {
+                  setApariencia((prev) => ({ ...prev, colorCategoria: value }));
+                  setOk(false);
+                }}
+              />
+            </div>
+            <div className="flex items-center gap-8 lg:pt-28">
+              <span className="hidden h-8 w-8 shrink-0 rounded-full lg:block" style={{ background: colorBotonAccion }} />
+              <span className="hidden h-px min-w-16 flex-1 bg-concrete lg:block" />
+              <EditorColorEnVivo
+                label="Botón Agregar"
+                detalle={esPro ? "Acciones de producto y llamados principales." : "Probalo en vivo. Requiere Pro para guardar."}
+                value={colorAccion}
+                pro
+                onChange={(value) => {
+                  setApariencia((prev) => ({ ...prev, colorAccion: value }));
+                  setOk(false);
+                }}
+              />
             </div>
           </div>
         </div>
