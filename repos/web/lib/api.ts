@@ -622,6 +622,14 @@ export const api = {
     );
   },
 
+  verificarSlugDisponible: async (slug: string) => {
+    return apiFetch<{ disponible: boolean }>(
+      `/tenants/slug-disponible?slug=${encodeURIComponent(slug.trim().toLowerCase())}`,
+      {},
+      30000,
+    );
+  },
+
   obtenerMiTenant: async () => {
     return apiFetch<Tenant>('/tenants/me');
   },

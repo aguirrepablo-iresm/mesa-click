@@ -10,7 +10,7 @@ export default function LandingFinalCta() {
         <p>Probá Mesa CLICK con tu equipo y descubrí una operación más ágil, clara y conectada.</p>
       </div>
       <div>
-        <SessionCta href="/onboarding" label="Probar gratis" className="landing-cta light-button" />
+        <SessionCta href="/registro" label="Probar gratis" className="landing-cta light-button" />
         <small>Plan Free sin tarjeta · Configuración en minutos</small>
       </div>
     </section>

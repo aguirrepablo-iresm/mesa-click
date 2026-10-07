@@ -14,6 +14,7 @@ type mockStore struct {
 	actualizarFn                func(ctx context.Context, id string, input tenant.ActualizarTenantInput) (*tenant.Tenant, error)
 	obtenerEstadoCuotasFn       func(ctx context.Context, tenantID string) (*tenant.EstadoCuotas, error)
 	registrarSolicitudUpgradeFn func(ctx context.Context, tenantID, nota string) (*tenant.Tenant, error)
+	slugEnUsoFn                 func(ctx context.Context, slug string) (bool, error)
 }
 
 func (m *mockStore) Crear(ctx context.Context, input tenant.OnboardingInput) (*tenant.Tenant, error) {
@@ -29,6 +30,12 @@ func (m *mockStore) Actualizar(ctx context.Context, id string, input tenant.Actu
 	return nil, nil
 }
 func (m *mockStore) EmailAdminEnUso(ctx context.Context, email string) (bool, error) {
+	return false, nil
+}
+func (m *mockStore) SlugEnUso(ctx context.Context, slug string) (bool, error) {
+	if m.slugEnUsoFn != nil {
+		return m.slugEnUsoFn(ctx, slug)
+	}
 	return false, nil
 }
 func (m *mockStore) ObtenerEstadoCuotas(ctx context.Context, tenantID string) (*tenant.EstadoCuotas, error) {
@@ -219,5 +226,40 @@ func TestCrear_ConGoogle_SinVerificador_Error(t *testing.T) {
 	})
 	if !errors.Is(err, tenant.ErrValidation) {
 		t.Fatalf("se esperaba ErrValidation, obtenido: %v", err)
+	}
+}
+
+func TestSlugDisponible(t *testing.T) {
+	var consultado string
+	svc := tenant.NuevoService(&mockStore{
+		slugEnUsoFn: func(ctx context.Context, slug string) (bool, error) {
+			consultado = slug
+			return slug == "bajo-limonero", nil
+		},
+	})
+
+	disponible, err := svc.SlugDisponible(context.Background(), "  Bajo-Limonero ")
+	if err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+	if consultado != "bajo-limonero" {
+		t.Errorf("slug consultado: got %q, want %q", consultado, "bajo-limonero")
+	}
+	if disponible {
+		t.Error("un slug en uso no debe figurar como disponible")
+	}
+
+	disponible, err = svc.SlugDisponible(context.Background(), "casa-clara")
+	if err != nil || !disponible {
+		t.Fatalf("se esperaba disponible, obtenido disponible=%v err=%v", disponible, err)
+	}
+}
+
+func TestSlugDisponible_FormatoInvalido(t *testing.T) {
+	svc := tenant.NuevoService(&mockStore{})
+	for _, slug := range []string{"", "con espacios", "-guion", "acentuado-ñ"} {
+		if _, err := svc.SlugDisponible(context.Background(), slug); !errors.Is(err, tenant.ErrValidation) {
+			t.Errorf("slug %q: se esperaba ErrValidation, obtenido %v", slug, err)
+		}
 	}
 }

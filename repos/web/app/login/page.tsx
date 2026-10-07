@@ -1,10 +1,13 @@
 "use client";
+/* eslint-disable @next/next/no-img-element -- imagen de referencia de la maqueta (Unsplash) */
 
 import React, { useCallback, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, getErrorMessage } from "@/lib/api";
-import AuthShell from "@/components/auth/AuthShell";
+import LandingIcon from "@/components/landing/LandingIcon";
+import RegistroBrand from "@/components/registro/RegistroBrand";
+import "@/components/registro/registro.css";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 export default function LoginPage() {
@@ -50,102 +53,87 @@ export default function LoginPage() {
   };
 
   return (
-    <AuthShell
-      image="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1200&q=85"
-      imageAlt="Salón de restaurante moderno"
-      visualTitle="Todo tu servicio, en un solo lugar"
-      visualText="Gestioná sucursales, mesas, carta y pedidos en vivo desde un único panel."
-      cardLabel="Pedido listo"
-      cardTitle="Mesa 12 · Terraza"
-    >
-      <span className="hero-kicker"><i /> Acceso administración</span>
-      <h1>Ingresá a tu cuenta</h1>
-      <p className="auth-sub">Usá el correo registrado y tu contraseña de Mesa CLICK.</p>
+    <div className="registro">
+      <header className="auth-header">
+        <RegistroBrand />
+        <span className="auth-header-link">¿No tenés cuenta? <Link href="/registro">Registrar mi negocio</Link></span>
+      </header>
+      <main className="auth-layout">
+        <section className="auth-form-panel">
+          <div className="auth-form">
+            <span className="auth-eyebrow">Acceso administración</span>
+            <h1>Ingresá a tu cuenta</h1>
+            <p>Usá el correo registrado y tu contraseña de Mesa CLICK, o tu cuenta de Google.</p>
 
-      <form onSubmit={handlePasswordLogin} className="mt-28 space-y-16">
-        <div className="space-y-7">
-          <label htmlFor="email" className="block text-11 font-bold">
-            Correo electrónico
-          </label>
-          <input
-            id="email"
-            type="email"
-            autoComplete="email"
-            required
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="admin@minegocio.com"
-            className="w-full px-16 outline-none"
-          />
-        </div>
+            <div className="google-slot">
+              <GoogleSignInButton
+                clientID={googleClientID}
+                disabled={loading || googleLoading}
+                onCredential={handleGoogleCredential}
+                onError={setError}
+              />
+            </div>
+            <div className="auth-divider"><span>o ingresá con tu correo</span></div>
 
-        <div className="space-y-7">
-          <label htmlFor="password" className="block text-11 font-bold">
-            Contraseña
-          </label>
-          <div className="relative">
-            <input
-              id="password"
-              type={mostrarPassword ? "text" : "password"}
-              autoComplete="current-password"
-              required
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              placeholder="Tu contraseña de Mesa CLICK"
-              className="w-full px-16 pr-52 outline-none"
-            />
-            <button
-              type="button"
-              onClick={() => setMostrarPassword((actual) => !actual)}
-              aria-label={mostrarPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-              className="absolute inset-y-0 right-0 flex w-48 items-center justify-center text-stone hover:text-ash-graphite"
-            >
-              <span className="material-symbols-outlined text-20">
-                {mostrarPassword ? "visibility_off" : "visibility"}
-              </span>
-            </button>
+            <form onSubmit={handlePasswordLogin} noValidate>
+              <label className="auth-field">
+                <span>Correo electrónico</span>
+                <div>
+                  <span className="field-at">@</span>
+                  <input
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(event) => setEmail(event.target.value)}
+                    placeholder="vos@turestaurante.com"
+                  />
+                </div>
+              </label>
+
+              <label className="auth-field">
+                <span>Contraseña</span>
+                <div>
+                  <LandingIcon name="lock" size={18} />
+                  <input
+                    type={mostrarPassword ? "text" : "password"}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="Tu contraseña de Mesa CLICK"
+                  />
+                  <button type="button" onClick={() => setMostrarPassword((actual) => !actual)}>
+                    {mostrarPassword ? "Ocultar" : "Ver"}
+                  </button>
+                </div>
+              </label>
+
+              {error && <div role="alert" className="auth-alert">{error}</div>}
+
+              <button type="submit" className="auth-submit" disabled={loading || googleLoading}>
+                {loading ? "Ingresando…" : "Iniciar sesión"}
+              </button>
+            </form>
+
+            <small className="auth-terms">
+              Mesa CLICK nunca te pedirá la contraseña de tu cuenta de Google. Al ingresar aceptás los{" "}
+              <Link href="/terminos">Términos de uso</Link> y la <Link href="/privacidad">Política de privacidad</Link>.
+            </small>
           </div>
-        </div>
+        </section>
 
-        {error && (
-          <div role="alert" className="p-12 border border-alert-red/30 rounded-xl text-12 text-alert-red">
-            {error}
+        <aside className="auth-story" aria-hidden="true">
+          <img src="https://images.unsplash.com/photo-1485182708500-e8f1f318ba72?auto=format&fit=crop&w=1300&q=86" alt="" />
+          <div className="auth-story-overlay">
+            <span className="story-label"><i /> Todo tu servicio, en un lugar</span>
+            <blockquote>“Gestioná sucursales, mesas, carta y pedidos en vivo desde un único panel.”</blockquote>
+            <div><span className="story-avatar">MC</span><p><strong>Tu operación, conectada</strong><small>Salón · Cocina · Comensales</small></p></div>
           </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={loading || googleLoading}
-          className="landing-cta w-full disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          {loading ? (
-            <span className="material-symbols-outlined animate-spin text-20">progress_activity</span>
-          ) : (
-            "Iniciar sesión"
-          )}
-        </button>
-      </form>
-
-      <div className="my-20 flex items-center gap-12" aria-hidden="true">
-        <span className="h-px flex-1 bg-concrete" />
-        <span className="text-10 font-bold uppercase tracking-wider text-stone">o continuá con</span>
-        <span className="h-px flex-1 bg-concrete" />
-      </div>
-
-      <GoogleSignInButton
-        clientID={googleClientID}
-        disabled={loading || googleLoading}
-        onCredential={handleGoogleCredential}
-        onError={setError}
-      />
-
-      <p className="mt-12 text-11 leading-relaxed text-stone">
-        Mesa CLICK nunca te pedirá la contraseña de tu cuenta de Google.
-      </p>
-
-      <p className="auth-switch">
-        ¿No tenés un negocio registrado? <Link href="/onboarding">Registrar mi negocio</Link>
-      </p>
-    </AuthShell>
+          <div className="story-card">
+            <span><LandingIcon name="bell" /></span>
+            <div><small>Pedido listo</small><strong>Mesa 12 · Terraza</strong></div>
+          </div>
+        </aside>
+      </main>
+    </div>
   );
 }

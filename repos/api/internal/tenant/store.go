@@ -16,6 +16,7 @@ type Store interface {
 	ObtenerPorID(ctx context.Context, id string) (*Tenant, error)
 	Actualizar(ctx context.Context, id string, input ActualizarTenantInput) (*Tenant, error)
 	EmailAdminEnUso(ctx context.Context, email string) (bool, error)
+	SlugEnUso(ctx context.Context, slug string) (bool, error)
 	ObtenerEstadoCuotas(ctx context.Context, tenantID string) (*EstadoCuotas, error)
 	RegistrarSolicitudUpgrade(ctx context.Context, tenantID, nota string) (*Tenant, error)
 }
@@ -265,6 +266,18 @@ func (s *pgStore) Actualizar(ctx context.Context, id string, input ActualizarTen
 		_ = json.Unmarshal(datosFiscalesBytes, &t.DatosFiscales)
 	}
 	return &t, nil
+}
+
+func (s *pgStore) SlugEnUso(ctx context.Context, slug string) (bool, error) {
+	var existe bool
+	err := db.Pool.QueryRow(ctx,
+		`SELECT EXISTS(SELECT 1 FROM tenants WHERE slug = $1)`,
+		slug,
+	).Scan(&existe)
+	if err != nil {
+		return false, fmt.Errorf("error verificando slug: %w", err)
+	}
+	return existe, nil
 }
 
 func (s *pgStore) EmailAdminEnUso(ctx context.Context, email string) (bool, error) {

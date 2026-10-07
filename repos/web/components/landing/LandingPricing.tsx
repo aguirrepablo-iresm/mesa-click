@@ -34,7 +34,7 @@ export default function LandingPricing() {
           <ul>
             {FREE.map((item) => <li key={item}><span><LandingIcon name="check" size={12} /></span>{item}</li>)}
           </ul>
-          <SessionCta href="/onboarding" label="Comenzar gratis" className="landing-cta outline" icon="none" />
+          <SessionCta href="/registro" label="Comenzar gratis" className="landing-cta outline" icon="none" />
         </article>
         <article className="plan-card pro">
           <span className="plan-badge">Recomendado</span>
@@ -44,7 +44,7 @@ export default function LandingPricing() {
           <ul>
             {PRO.map((item) => <li key={item}><span><LandingIcon name="check" size={12} /></span>{item}</li>)}
           </ul>
-          <SessionCta href="/onboarding" label="Probar Pro" className="landing-cta light-button" iconSize={16} />
+          <SessionCta href="/registro" label="Probar Pro" className="landing-cta light-button" iconSize={16} />
         </article>
       </div>
     </section>

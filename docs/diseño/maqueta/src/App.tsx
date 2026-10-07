@@ -153,6 +153,159 @@ const faqs = [
   },
 ];
 
+function AuthBrand() {
+  return <button className="auth-brand" onClick={() => { window.location.href = "/"; }}><span><Icon name="brand" size={21} /></span>Mesa <strong>CLICK</strong></button>;
+}
+
+function RegisterApp() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+  const valid = name.trim().length > 2 && email.includes("@") && password.length >= 8;
+
+  const continueToOnboarding = () => {
+    setSubmitted(true);
+    if (!valid) return;
+    window.localStorage.setItem("mesa-click-owner", name.trim());
+    window.location.href = "/onboarding";
+  };
+
+  const googleContinue = () => {
+    window.localStorage.setItem("mesa-click-owner", "Martina");
+    window.location.href = "/onboarding";
+  };
+
+  return (
+    <div className="auth-page">
+      <header className="auth-header"><AuthBrand /><span>¿Ya tenés una cuenta? <button>Ingresar</button></span></header>
+      <main className="auth-layout">
+        <section className="auth-form-panel">
+          <div className="auth-form">
+            <span className="auth-eyebrow">Empezá gratis</span>
+            <h1>Creá tu cuenta</h1>
+            <p>Primero, tus datos de acceso. La información de tu restaurante la configuramos después, paso a paso.</p>
+            <button className="google-button" onClick={googleContinue}><span className="google-g">G</span><strong>Continuar con Google</strong></button>
+            <div className="auth-divider"><span>o registrate con tu correo</span></div>
+            <label className="auth-field"><span>Nombre y apellido</span><div className={submitted && name.trim().length <= 2 ? "invalid" : ""}><Icon name="users" size={18} /><input value={name} onChange={(event) => setName(event.target.value)} placeholder="Ej: Martina López" autoComplete="name" /></div>{submitted && name.trim().length <= 2 && <small>Ingresá tu nombre completo.</small>}</label>
+            <label className="auth-field"><span>Correo electrónico</span><div className={submitted && !email.includes("@") ? "invalid" : ""}><span className="field-at">@</span><input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="vos@turestaurante.com" type="email" autoComplete="email" /></div>{submitted && !email.includes("@") && <small>Ingresá un correo válido.</small>}</label>
+            <label className="auth-field"><span>Contraseña</span><div className={submitted && password.length < 8 ? "invalid" : ""}><Icon name="settings" size={18} /><input value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Mínimo 8 caracteres" type={showPassword ? "text" : "password"} autoComplete="new-password" /><button type="button" onClick={() => setShowPassword(!showPassword)}>{showPassword ? "Ocultar" : "Ver"}</button></div>{submitted && password.length < 8 ? <small>Usá al menos 8 caracteres.</small> : <em>Usá 8 caracteres o más.</em>}</label>
+            <button className="auth-submit" onClick={continueToOnboarding}>Crear cuenta <Icon name="chevron" /></button>
+            <small className="auth-terms">Al continuar, aceptás nuestros <button>Términos de uso</button> y la <button>Política de privacidad</button>.</small>
+          </div>
+        </section>
+        <aside className="auth-story">
+          <img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1300&q=86" alt="Salón de restaurante preparado para el servicio" />
+          <div className="auth-story-overlay">
+            <span className="story-label"><i /> Configuración simple</span>
+            <blockquote>“En menos de diez minutos tenés tu salón listo para recibir el primer pedido.”</blockquote>
+            <div><span className="story-avatar">MC</span><p><strong>Tu operación, conectada</strong><small>Salón · Cocina · Comensales</small></p></div>
+          </div>
+          <div className="story-card"><span><Icon name="check" /></span><div><small>Siguiente paso</small><strong>Contanos sobre tu negocio</strong></div></div>
+        </aside>
+      </main>
+    </div>
+  );
+}
+
+function OnboardingApp() {
+  const [step, setStep] = useState(1);
+  const [businessName, setBusinessName] = useState("");
+  const [category, setCategory] = useState("Restaurante");
+  const [branchName, setBranchName] = useState("Casa central");
+  const [tables, setTables] = useState(12);
+  const [submitted, setSubmitted] = useState(false);
+  const owner = window.localStorage.getItem("mesa-click-owner") || "Martina";
+  const slug = businessName.trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "tu-negocio";
+
+  const nextStep = () => {
+    setSubmitted(true);
+    if (step === 1 && businessName.trim().length < 2) return;
+    setSubmitted(false);
+    setStep((current) => Math.min(3, current + 1));
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  return (
+    <div className="onboarding-page">
+      <header className="onboarding-header">
+        <AuthBrand />
+        <div className="onboarding-save"><span><i /> Guardado automáticamente</span><button onClick={() => { window.location.href = "/"; }}>Salir</button></div>
+      </header>
+      <div className="onboarding-progress-mobile"><span style={{ width: `${step * 33.33}%` }} /></div>
+      <main className="onboarding-layout">
+        <aside className="onboarding-aside">
+          <div>
+            <span className="onboarding-welcome">Hola, {owner.split(" ")[0]}</span>
+            <h2>Preparemos tu espacio de trabajo</h2>
+            <p>Solo necesitamos lo esencial. Después vas a poder personalizar todo desde Configuración.</p>
+          </div>
+          <nav className="onboarding-steps">
+            {[["Negocio", "Nombre y tipo de local"], ["Primera sucursal", "Datos básicos del local"], ["Todo listo", "Revisá y empezá"]].map(([title, caption], index) => {
+              const number = index + 1;
+              return <button key={title} className={step === number ? "active" : step > number ? "done" : ""} onClick={() => number < step && setStep(number)}><span>{step > number ? <Icon name="check" size={16} /> : number}</span><div><strong>{title}</strong><small>{caption}</small></div></button>;
+            })}
+          </nav>
+          <div className="onboarding-help"><Icon name="help" /><span><strong>¿Te trabaste en algo?</strong><button>Chatear con soporte</button></span></div>
+        </aside>
+
+        <section className="onboarding-main">
+          <div className="onboarding-step-label">Paso {step} de 3</div>
+          {step === 1 && (
+            <div className="onboarding-form">
+              <div className="onboarding-title"><span className="onboarding-icon"><Icon name="brand" /></span><div><h1>Contanos sobre tu negocio</h1><p>Esto es lo que verán tus clientes cuando ingresen a la carta.</p></div></div>
+              <label className="onboarding-field"><span>Nombre del restaurante</span><input className={submitted && businessName.trim().length < 2 ? "invalid" : ""} value={businessName} onChange={(event) => setBusinessName(event.target.value)} placeholder="Ej: Bajo Limonero" autoFocus />{submitted && businessName.trim().length < 2 && <small>Ingresá el nombre de tu negocio.</small>}</label>
+              <fieldset className="business-types"><legend>¿Qué tipo de negocio tenés?</legend><div>{[["Restaurante", "brand"], ["Cafetería", "clock"], ["Bar o cervecería", "card"], ["Otro", "more"]].map(([label, icon]) => <button type="button" key={label} className={category === label ? "active" : ""} onClick={() => setCategory(label)}><span><Icon name={icon as IconName} /></span><strong>{label}</strong>{category === label && <i><Icon name="check" size={14} /></i>}</button>)}</div></fieldset>
+              <div className="slug-preview"><span className="onboarding-icon small"><Icon name="book" size={18} /></span><div><small>Tu carta estará disponible en</small><strong>mesaclick.com/<b>{slug}</b></strong></div><span className="available"><i /> Disponible</span></div>
+            </div>
+          )}
+
+          {step === 2 && (
+            <div className="onboarding-form">
+              <div className="onboarding-title"><span className="onboarding-icon"><Icon name="table" /></span><div><h1>Tu primera sucursal</h1><p>Creá el local desde el que vas a empezar a operar.</p></div></div>
+              <label className="onboarding-field"><span>Nombre de la sucursal</span><input value={branchName} onChange={(event) => setBranchName(event.target.value)} placeholder="Ej: Casa central" autoFocus /></label>
+              <div className="onboarding-field-row"><label className="onboarding-field"><span>WhatsApp <em>Opcional</em></span><input placeholder="+54 9 11 1234 5678" inputMode="tel" /></label><label className="onboarding-field"><span>Correo del local <em>Opcional</em></span><input placeholder="local@turestaurante.com" type="email" /></label></div>
+              <div className="tables-question"><div><span className="onboarding-icon small"><Icon name="table" size={18} /></span><div><strong>¿Cuántas mesas tenés?</strong><p>Vamos a crearlas automáticamente. Podés cambiarlas después.</p></div></div><div className="table-counter"><button onClick={() => setTables(Math.max(1, tables - 1))}>−</button><strong>{tables}</strong><button onClick={() => setTables(tables + 1)}>+</button></div></div>
+              <div className="schedule-choice"><div><span className="onboarding-icon small"><Icon name="clock" size={18} /></span><div><strong>Horarios de atención</strong><p>Podés configurar turnos y días específicos más adelante.</p></div></div><button><Icon name="check" size={16} /> Usar horario estándar <span>12:00 — 00:00</span></button></div>
+            </div>
+          )}
+
+          {step === 3 && (
+            <div className="onboarding-complete">
+              <span className="complete-mark"><Icon name="check" size={32} /></span>
+              <span className="auth-eyebrow">Configuración completa</span>
+              <h1>Todo listo para empezar</h1>
+              <p>Ya creamos la base de <strong>{businessName}</strong>. Ahora podés cargar tu carta y hacer una prueba con la Mesa 1.</p>
+              <div className="setup-summary">
+                <div><span><Icon name="brand" /></span><p><small>Negocio</small><strong>{businessName}</strong><em>{category}</em></p><button onClick={() => setStep(1)}>Editar</button></div>
+                <div><span><Icon name="table" /></span><p><small>Sucursal</small><strong>{branchName || "Casa central"}</strong><em>{tables} mesas creadas</em></p><button onClick={() => setStep(2)}>Editar</button></div>
+                <div><span><Icon name="qr" /></span><p><small>QR de prueba</small><strong>Mesa 1 preparada</strong><em>Listo para escanear</em></p><i><Icon name="check" /></i></div>
+              </div>
+              <button className="onboarding-primary finish" onClick={() => { window.location.href = "/dashboard"; }}>Ir a mi dashboard <Icon name="chevron" /></button>
+              <small>Te guiamos dentro del producto para cargar tu primer plato.</small>
+            </div>
+          )}
+
+          {step < 3 && <footer className="onboarding-actions"><button className="onboarding-back" disabled={step === 1} onClick={() => setStep(step - 1)}>Atrás</button><span>Podés modificar estos datos cuando quieras.</span><button className="onboarding-primary" onClick={nextStep}>Continuar <Icon name="chevron" size={17} /></button></footer>}
+        </section>
+
+        <aside className="onboarding-preview">
+          <div className="preview-orbit one" /><div className="preview-orbit two" />
+          <span className="preview-label">Vista previa</span>
+          <div className="onboarding-phone">
+            <div className="phone-top"><span className="phone-logo">{businessName ? businessName.slice(0, 2).toUpperCase() : "MC"}</span><span><strong>{businessName || "Tu restaurante"}</strong><small>{step >= 2 ? branchName : "Tu primera sucursal"}</small></span><Icon name="menu" size={18} /></div>
+            <div className="phone-hero"><img src={menuItems[0].image} alt="" /><span><small>Bienvenidos</small><strong>{businessName || "Tu restaurante"}</strong></span></div>
+            <div className="phone-categories"><span className="active">Recomendados</span><span>Entradas</span><span>Principales</span></div>
+            <div className="phone-dish"><span><small>Muy pronto</small><strong>Tu carta empieza acá</strong><em>Cargá tus primeros platos</em></span><b>+</b></div>
+          </div>
+          <div className="preview-note"><span><Icon name="spark" /></span><p><strong>Así te verán tus clientes</strong><small>La vista se actualiza mientras completás los datos.</small></p></div>
+        </aside>
+      </main>
+    </div>
+  );
+}
+
 function LandingApp() {
   const [openFaq, setOpenFaq] = useState(0);
   const goTo = (path: string) => { window.location.href = path; };
@@ -170,7 +323,7 @@ function LandingApp() {
         </nav>
         <div className="landing-header-actions">
           <button className="landing-login" onClick={() => goTo("/dashboard")}>Ingresar</button>
-          <button className="landing-cta small" onClick={() => goTo("/dashboard")}>Probar gratis <Icon name="chevron" size={16} /></button>
+          <button className="landing-cta small" onClick={() => goTo("/registro")}>Probar gratis <Icon name="chevron" size={16} /></button>
         </div>
       </header>
 
@@ -181,7 +334,7 @@ function LandingApp() {
             <h1>Más mesas atendidas.<br /><em>Menos esperas.</em></h1>
             <p>Conectá salón, cocina y comensales en un solo lugar. Pedidos por QR, comandas en vivo y cuentas más simples para que tu equipo se enfoque en atender.</p>
             <div className="hero-actions">
-              <button className="landing-cta" onClick={() => goTo("/dashboard")}>Empezar prueba gratis <Icon name="chevron" /></button>
+              <button className="landing-cta" onClick={() => goTo("/registro")}>Empezar prueba gratis <Icon name="chevron" /></button>
               <button className="landing-demo" onClick={() => goTo("/mesa/demo")}><span><Icon name="qr" /></span> Ver experiencia del comensal</button>
             </div>
             <div className="hero-proof">
@@ -305,7 +458,7 @@ function LandingApp() {
             <h2>Tu próximo servicio puede ser más simple</h2>
             <p>Probá Mesa CLICK con tu equipo y descubrí una operación más ágil, clara y conectada.</p>
           </div>
-          <div><button className="landing-cta light-button" onClick={() => goTo("/dashboard")}>Probar gratis por 14 días <Icon name="chevron" /></button><small>Sin tarjeta · Configuración asistida</small></div>
+          <div><button className="landing-cta light-button" onClick={() => goTo("/registro")}>Probar gratis por 14 días <Icon name="chevron" /></button><small>Sin tarjeta · Configuración asistida</small></div>
         </section>
       </main>
 
@@ -1024,6 +1177,8 @@ function DashboardApp() {
 }
 
 function App() {
+  if (window.location.pathname.startsWith("/registro")) return <RegisterApp />;
+  if (window.location.pathname.startsWith("/onboarding")) return <OnboardingApp />;
   if (window.location.pathname.startsWith("/mesa/")) return <CustomerApp />;
   if (window.location.pathname.startsWith("/kds")) return <KitchenApp />;
   if (window.location.pathname.startsWith("/dashboard")) return <DashboardApp />;

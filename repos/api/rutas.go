@@ -110,6 +110,7 @@ func registrarRutas(mux *http.ServeMux) {
 	tenantH := tenant.NuevosHandlers(tenantSvc)
 	mux.Handle("POST /tenants", http.HandlerFunc(tenantH.Crear))
 	mux.Handle("GET /tenants/email-disponible", http.HandlerFunc(tenantH.EmailAdminDisponible))
+	mux.Handle("GET /tenants/slug-disponible", http.HandlerFunc(tenantH.SlugDisponible))
 	mux.Handle("GET /tenants/me", auth.Requerir(http.HandlerFunc(tenantH.ObtenerMe)))
 	mux.Handle("PATCH /tenants/me", auth.Requerir(http.HandlerFunc(tenantH.ActualizarMe)))
 	mux.Handle("GET /tenants/me/plan", auth.Requerir(http.HandlerFunc(tenantH.ObtenerMiPlan)))

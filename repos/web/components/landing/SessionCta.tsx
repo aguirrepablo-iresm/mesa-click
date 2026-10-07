@@ -65,7 +65,7 @@ export function LandingHeaderActions() {
   return (
     <div className="landing-header-actions">
       <Link href="/login" className="landing-login">Ingresar</Link>
-      <Link href="/onboarding" className="landing-cta small">Probar gratis <LandingIcon name="chevron" size={16} /></Link>
+      <Link href="/registro" className="landing-cta small">Probar gratis <LandingIcon name="chevron" size={16} /></Link>
     </div>
   );
 }

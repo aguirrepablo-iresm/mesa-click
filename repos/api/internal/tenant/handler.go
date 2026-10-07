@@ -130,6 +130,24 @@ func (h *Handlers) EmailAdminDisponible(w http.ResponseWriter, r *http.Request) 
 	json.NewEncoder(w).Encode(map[string]bool{"disponible": disponible})
 }
 
+func (h *Handlers) SlugDisponible(w http.ResponseWriter, r *http.Request) {
+	disponible, err := h.svc.SlugDisponible(r.Context(), r.URL.Query().Get("slug"))
+	if err != nil {
+		if errors.Is(err, ErrValidation) {
+			jsonError(w, "Usá solo letras, números y guiones en el nombre en URL.", http.StatusBadRequest)
+			return
+		}
+
+		slog.ErrorContext(r.Context(), "error verificando disponibilidad de slug", "err", err)
+		jsonError(w, "No pudimos validar el nombre en URL.", http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Cache-Control", "no-store")
+	json.NewEncoder(w).Encode(map[string]bool{"disponible": disponible})
+}
+
 func (h *Handlers) ObtenerMiPlan(w http.ResponseWriter, r *http.Request) {
 	claims := auth.ClaimsFromContext(r.Context())
 	if claims == nil {

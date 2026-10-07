@@ -35,7 +35,7 @@ export default function LandingFAQ() {
         <span className="landing-eyebrow">Preguntas frecuentes</span>
         <h2>Todo lo que necesitás saber antes de empezar</h2>
         <p>¿Tenés otra pregunta? Creá tu cuenta gratis y probá Mesa CLICK con tu operación real.</p>
-        <SessionCta href="/onboarding" label="Crear cuenta gratis" className="landing-demo" iconFirst />
+        <SessionCta href="/registro" label="Crear cuenta gratis" className="landing-demo" iconFirst />
       </div>
       <div className="faq-list">
         {FAQS.map((faq, index) => (

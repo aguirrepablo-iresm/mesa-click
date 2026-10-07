@@ -25,6 +25,8 @@ func NuevoService(s Store) *Service { return &Service{store: s} }
 
 var colorHexPattern = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
 
+var slugPattern = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
+
 func NuevoServiceConGoogle(s Store, google VerificadorGoogle) *Service {
 	return &Service{store: s, google: google}
 }
@@ -175,6 +177,21 @@ func (svc *Service) Actualizar(ctx context.Context, id string, input ActualizarT
 	}
 
 	return svc.store.Actualizar(ctx, id, input)
+}
+
+// SlugDisponible indica si el nombre en URL todavía no lo usa otro negocio.
+// La creación vuelve a validarlo por la restricción única de la base.
+func (svc *Service) SlugDisponible(ctx context.Context, slug string) (bool, error) {
+	slug = strings.ToLower(strings.TrimSpace(slug))
+	if !slugPattern.MatchString(slug) {
+		return false, fmt.Errorf("%w: nombre en URL inválido", ErrValidation)
+	}
+
+	enUso, err := svc.store.SlugEnUso(ctx, slug)
+	if err != nil {
+		return false, err
+	}
+	return !enUso, nil
 }
 
 func (svc *Service) EmailAdminDisponible(ctx context.Context, email string) (bool, error) {
