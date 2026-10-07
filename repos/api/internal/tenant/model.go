@@ -52,6 +52,9 @@ type OnboardingInput struct {
 	NombreAdmin    string         `json:"nombre_admin"`
 	Password       string         `json:"password"`
 	PasswordHash   string         `json:"-"`
+	// Alternativa a Password: registro con la cuenta de Google del admin.
+	GoogleCredential string `json:"google_credential"`
+	GoogleSub        string `json:"-"`
 	SucursalNombre string         `json:"sucursal_nombre"`
 	Whatsapp       string         `json:"whatsapp"`
 	EmailSucursal  string         `json:"email_sucursal"`

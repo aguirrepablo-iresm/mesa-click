@@ -49,7 +49,7 @@ export default function OnboardingLayout({
 
       {onBack && (
         <button type="button" onClick={onBack} className="auth-step-back">
-          ← Volver al paso anterior
+          Volver al paso anterior
         </button>
       )}
       <div className="auth-content">{children}</div>

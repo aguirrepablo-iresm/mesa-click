@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import OnboardingLayout from "@/components/onboarding/OnboardingLayout";
 import AuthShell from "@/components/auth/AuthShell";
 import LandingIcon from "@/components/landing/LandingIcon";
@@ -26,6 +27,8 @@ type OnboardingFormData = {
   emailAdmin: string;
   password: string;
   confirmarPassword: string;
+  // Registro con Google: reemplaza a la contraseña.
+  googleCredential: string;
   nombreNegocio: string;
   nombreFantasia: string;
   slug: string;
@@ -64,6 +67,19 @@ function pasoParaCampo(campo: keyof OnboardingFormData) {
   return 3;
 }
 
+// Lee nombre y correo del ID token de Google solo para precompletar el formulario;
+// el backend vuelve a verificar la credencial y usa el correo verificado.
+function leerIdentidadGoogle(credential: string): { email: string; nombre: string } {
+  try {
+    const base64 = credential.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+    const payload = JSON.parse(new TextDecoder().decode(bytes));
+    return { email: String(payload.email ?? ""), nombre: String(payload.name ?? "") };
+  } catch {
+    return { email: "", nombre: "" };
+  }
+}
+
 function puedeOmitirPrevalidacionEmail(err: unknown) {
   // La creación final vuelve a validar el correo de forma autoritativa. Si el
   // chequeo previo no está disponible o el servidor está despertando, no
@@ -77,6 +93,8 @@ function puedeOmitirPrevalidacionEmail(err: unknown) {
 }
 
 export default function OnboardingPage() {
+  const router = useRouter();
+  const googleClientID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [validandoEmail, setValidandoEmail] = useState(false);
@@ -89,6 +107,7 @@ export default function OnboardingPage() {
     emailAdmin: "",
     password: "",
     confirmarPassword: "",
+    googleCredential: "",
     nombreNegocio: "",
     nombreFantasia: "",
     slug: "",
@@ -123,6 +142,16 @@ export default function OnboardingPage() {
     if (!formData.nombreAdmin.trim()) {
       errors.nombreAdmin = "Ingresá el nombre del responsable.";
     }
+    if (formData.googleCredential) {
+      // El correo de Google ya se prevalidó al conectarlo.
+      if (errors.nombreAdmin) {
+        setFieldErrors(errors);
+        setError("Revisá los campos marcados para continuar.");
+        return;
+      }
+      handleNext();
+      return;
+    }
     if (!formData.emailAdmin.trim()) {
       errors.emailAdmin = "Ingresá el correo de acceso.";
     } else if (!emailValido(formData.emailAdmin)) {
@@ -143,25 +172,27 @@ export default function OnboardingPage() {
       return;
     }
 
+    if (await emailAdminDisponible(formData.emailAdmin)) handleNext();
+  };
+
+  // Prevalida que el correo no tenga ya un negocio; si no se puede verificar,
+  // deja continuar porque POST /tenants vuelve a validarlo.
+  const emailAdminDisponible = async (email: string): Promise<boolean> => {
     setValidandoEmail(true);
     setError("");
 
     try {
-      const res = await api.verificarEmailAdminDisponible(formData.emailAdmin);
+      const res = await api.verificarEmailAdminDisponible(email);
       if (!res.disponible) {
         const mensaje =
           "Ese correo de acceso ya está asociado a un negocio. Usá otro correo o iniciá sesión.";
         setFieldErrors({ emailAdmin: mensaje });
         setError(mensaje);
-        return;
+        return false;
       }
-
-      handleNext();
+      return true;
     } catch (err: unknown) {
-      if (puedeOmitirPrevalidacionEmail(err)) {
-        handleNext();
-        return;
-      }
+      if (puedeOmitirPrevalidacionEmail(err)) return true;
 
       const mensaje = getErrorMessage(
         err,
@@ -169,10 +200,36 @@ export default function OnboardingPage() {
       );
       setFieldErrors({ emailAdmin: mensaje });
       setError(mensaje);
+      return false;
     } finally {
       setValidandoEmail(false);
     }
   };
+
+  const handleGoogleCredential = async (credential: string) => {
+    const identidad = leerIdentidadGoogle(credential);
+    if (!identidad.email) {
+      setError("No pudimos leer tu cuenta de Google. Intentá nuevamente.");
+      return;
+    }
+    if (!(await emailAdminDisponible(identidad.email))) return;
+
+    const nombreAdmin = formData.nombreAdmin.trim() || identidad.nombre;
+    handleUpdate({
+      googleCredential: credential,
+      emailAdmin: identidad.email,
+      nombreAdmin,
+      password: "",
+      confirmarPassword: "",
+    });
+    if (nombreAdmin.trim()) handleNext();
+  };
+
+  const handleUsarCorreo = () => {
+    handleUpdate({ googleCredential: "", emailAdmin: "" });
+  };
+
+  const handleGoogleError = useCallback((message: string) => setError(message), []);
 
   const handleBack = () => {
     setError("");
@@ -190,13 +247,15 @@ export default function OnboardingPage() {
     } else if (!emailValido(formData.emailAdmin)) {
       errors.emailAdmin = "Ingresá un correo de acceso válido.";
     }
-    if (formData.password.length < 10) {
-      errors.password = "Usá al menos 10 caracteres.";
-    } else if (!/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(formData.password) || !/\d/.test(formData.password)) {
-      errors.password = "Incluí al menos una letra y un número.";
-    }
-    if (formData.confirmarPassword !== formData.password) {
-      errors.confirmarPassword = "Las contraseñas no coinciden.";
+    if (!formData.googleCredential) {
+      if (formData.password.length < 10) {
+        errors.password = "Usá al menos 10 caracteres.";
+      } else if (!/[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]/.test(formData.password) || !/\d/.test(formData.password)) {
+        errors.password = "Incluí al menos una letra y un número.";
+      }
+      if (formData.confirmarPassword !== formData.password) {
+        errors.confirmarPassword = "Las contraseñas no coinciden.";
+      }
     }
     if (!formData.nombreNegocio.trim()) {
       errors.nombreNegocio = "Ingresá el nombre del negocio.";
@@ -257,13 +316,25 @@ export default function OnboardingPage() {
         rubro: formData.rubro,
         email_admin: formData.emailAdmin,
         nombre_admin: formData.nombreAdmin,
-        password: formData.password,
+        password: formData.googleCredential ? undefined : formData.password,
+        google_credential: formData.googleCredential || undefined,
         sucursal_nombre: formData.sucursalNombre,
         email_sucursal: formData.emailSucursal,
         whatsapp: formData.whatsapp,
         horarios: formData.horarios,
       });
 
+      if (formData.googleCredential) {
+        // Con Google se entra directo al panel; si la credencial ya venció,
+        // se muestra la pantalla de éxito para ingresar desde el login.
+        try {
+          await api.autenticarConGoogle(formData.googleCredential);
+          router.replace("/dashboard");
+          return;
+        } catch {
+          // continúa a la pantalla de éxito
+        }
+      }
       setCompletado(true);
     } catch (err: unknown) {
       mostrarErrorDeCreacion(err);
@@ -290,11 +361,16 @@ export default function OnboardingPage() {
         <div className="auth-note">
           <span><LandingIcon name="check" size={14} /></span>
           <p>
-            <strong>Tu acceso ya está listo.</strong> Ingresá con <strong className="font-mono">{formData.emailAdmin}</strong> y la contraseña que acabás de crear, o utilizá Google con ese mismo correo.
+            <strong>Tu acceso ya está listo.</strong>{" "}
+            {formData.googleCredential ? (
+              <>Ingresá con Google usando <strong className="font-mono">{formData.emailAdmin}</strong>.</>
+            ) : (
+              <>Ingresá con <strong className="font-mono">{formData.emailAdmin}</strong> y la contraseña que acabás de crear, o utilizá Google con ese mismo correo.</>
+            )}
           </p>
         </div>
         <Link href="/login" className="landing-cta">
-          Ir a iniciar sesión <LandingIcon name="chevron" size={18} />
+          Ir a iniciar sesión
         </Link>
       </AuthShell>
     );
@@ -320,6 +396,14 @@ export default function OnboardingPage() {
             loading={validandoEmail}
             onChange={handleUpdate}
             onNext={handleAccountNext}
+            google={{
+              clientID: googleClientID,
+              email: formData.googleCredential ? formData.emailAdmin : undefined,
+              disabled: validandoEmail,
+              onCredential: handleGoogleCredential,
+              onUsarCorreo: handleUsarCorreo,
+              onError: handleGoogleError,
+            }}
           />
         );
       case 2:

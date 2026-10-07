@@ -3,6 +3,8 @@
 import Script from "next/script";
 import { useCallback, useEffect, useRef } from "react";
 
+type GoogleButtonText = "continue_with" | "signup_with";
+
 type GoogleCredentialResponse = {
   credential?: string;
 };
@@ -21,7 +23,7 @@ type GoogleIdentityServices = {
           type: "standard";
           theme: "outline";
           size: "large";
-          text: "continue_with";
+          text: GoogleButtonText;
           shape: "pill";
           logo_alignment: "left";
           width: number;
@@ -43,9 +45,10 @@ type Props = {
   disabled?: boolean;
   onCredential: (credential: string) => void;
   onError: (message: string) => void;
+  text?: GoogleButtonText;
 };
 
-export default function GoogleSignInButton({ clientID, disabled = false, onCredential, onError }: Props) {
+export default function GoogleSignInButton({ clientID, disabled = false, onCredential, onError, text = "continue_with" }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const onCredentialRef = useRef(onCredential);
   const onErrorRef = useRef(onError);
@@ -76,13 +79,13 @@ export default function GoogleSignInButton({ clientID, disabled = false, onCrede
       type: "standard",
       theme: "outline",
       size: "large",
-      text: "continue_with",
+      text,
       shape: "pill",
       logo_alignment: "left",
       width: Math.min(container.clientWidth || 400, 400),
       locale: "es",
     });
-  }, [clientID]);
+  }, [clientID, text]);
 
   useEffect(() => {
     renderButton();

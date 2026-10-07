@@ -106,7 +106,7 @@ func registrarRutas(mux *http.ServeMux) {
 
 	// Tenant
 	tenantStore := tenant.NuevoStore()
-	tenantSvc := tenant.NuevoService(tenantStore)
+	tenantSvc := tenant.NuevoServiceConGoogle(tenantStore, authSvc)
 	tenantH := tenant.NuevosHandlers(tenantSvc)
 	mux.Handle("POST /tenants", http.HandlerFunc(tenantH.Crear))
 	mux.Handle("GET /tenants/email-disponible", http.HandlerFunc(tenantH.EmailAdminDisponible))

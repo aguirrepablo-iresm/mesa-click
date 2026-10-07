@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, getErrorMessage } from "@/lib/api";
 import AuthShell from "@/components/auth/AuthShell";
-import LandingIcon from "@/components/landing/LandingIcon";
 import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
 
 export default function LoginPage() {
@@ -122,7 +121,7 @@ export default function LoginPage() {
           {loading ? (
             <span className="material-symbols-outlined animate-spin text-20">progress_activity</span>
           ) : (
-            <>Iniciar sesión <LandingIcon name="chevron" size={18} /></>
+            "Iniciar sesión"
           )}
         </button>
       </form>

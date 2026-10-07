@@ -132,7 +132,7 @@ function TimeField({
 }) {
   return (
     <div className="space-y-3 text-center min-w-0">
-      <label className="block text-10 font-mono text-sage-green uppercase tracking-wider px-1">
+      <label className="block text-11 font-bold">
         {label}
       </label>
       <input
@@ -291,7 +291,7 @@ export default function StepBranch({
 
           <div className="space-y-14">
             <div className="space-y-6">
-              <label className="text-11 font-mono text-sage-green uppercase tracking-wider px-1">
+              <label className="block text-11 font-bold">
                 Nombre de la Sucursal
               </label>
               <input
@@ -312,7 +312,7 @@ export default function StepBranch({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
               <div className="space-y-6">
-                <label className="text-11 font-mono text-sage-green uppercase tracking-wider px-1">
+                <label className="block text-11 font-bold">
                   WhatsApp de Contacto (Opcional)
                 </label>
                 <input
@@ -325,7 +325,7 @@ export default function StepBranch({
               </div>
 
               <div className="space-y-6">
-                <label className="text-11 font-mono text-sage-green uppercase tracking-wider px-1">
+                <label className="block text-11 font-bold">
                   Email de Sucursal (Opcional)
                 </label>
                 <input
@@ -367,7 +367,7 @@ export default function StepBranch({
           </div>
 
           <div className="space-y-8 text-center">
-            <span className="block text-10 font-mono text-sage-green uppercase tracking-wider px-1">
+            <span className="block text-11 font-bold">
               Días abiertos
             </span>
             <div className="grid grid-cols-7 gap-6">
@@ -583,15 +583,12 @@ export default function StepBranch({
         <button
           type="submit"
           disabled={loading || diasAbiertos.length === 0 || !aceptaLegal}
-          className="w-full h-52 rounded-full bg-plain-green text-canvas-white text-12 font-bold uppercase tracking-wide hover:bg-plain-green-muted active:scale-95 transition-all shadow-lg shadow-plain-green/10 flex items-center justify-center gap-8 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="landing-cta w-full disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading ? (
             <span className="animate-spin material-symbols-outlined text-20">progress_activity</span>
           ) : (
-            <>
-              Finalizar y Crear Negocio
-              <span className="material-symbols-outlined text-18">check_circle</span>
-            </>
+            "Finalizar y crear negocio"
           )}
         </button>
       </form>

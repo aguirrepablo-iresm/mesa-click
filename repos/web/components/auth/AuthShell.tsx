@@ -22,7 +22,7 @@ export default function AuthShell({ children, image, imageAlt, visualTitle, visu
       <main className="auth-main">
         <div className="auth-top">
           <LandingBrand />
-          <Link href="/" className="auth-back">← Volver al inicio</Link>
+          <Link href="/" className="auth-back">Volver al inicio</Link>
         </div>
         <div className="auth-body">
           <div className="auth-card">{children}</div>

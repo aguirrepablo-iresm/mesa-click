@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import GoogleSignInButton from "@/components/auth/GoogleSignInButton";
+import LandingIcon from "@/components/landing/LandingIcon";
 
 interface StepAccountProps {
   data: {
@@ -16,6 +18,15 @@ interface StepAccountProps {
     confirmarPassword: string;
   }>) => void;
   onNext: () => void | Promise<void>;
+  google: {
+    clientID: string;
+    // Correo de la cuenta de Google conectada; si está, no se pide contraseña.
+    email?: string;
+    disabled?: boolean;
+    onCredential: (credential: string) => void;
+    onUsarCorreo: () => void;
+    onError: (message: string) => void;
+  };
 }
 
 export default function StepAccount({
@@ -24,22 +35,54 @@ export default function StepAccount({
   loading = false,
   onChange,
   onNext,
+  google,
 }: StepAccountProps) {
   const [mostrarPassword, setMostrarPassword] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!data.emailAdmin.trim() || !data.nombreAdmin.trim() || !data.password || !data.confirmarPassword) return;
+    if (google.email) {
+      if (!data.nombreAdmin.trim()) return;
+    } else if (!data.emailAdmin.trim() || !data.nombreAdmin.trim() || !data.password || !data.confirmarPassword) {
+      return;
+    }
     void onNext();
   };
 
   return (
     <div className="space-y-24 font-inter">
+      {google.email ? (
+        <div className="auth-note">
+          <span><LandingIcon name="check" size={14} /></span>
+          <p>
+            <strong>Cuenta de Google conectada.</strong> Vas a ingresar con <strong className="font-mono">{google.email}</strong>, sin contraseña.{" "}
+            <button type="button" onClick={google.onUsarCorreo} className="font-bold text-ash-graphite underline underline-offset-4">
+              Usar correo y contraseña
+            </button>
+          </p>
+        </div>
+      ) : (
+        <div>
+          <GoogleSignInButton
+            clientID={google.clientID}
+            disabled={google.disabled || loading}
+            onCredential={google.onCredential}
+            onError={google.onError}
+            text="signup_with"
+          />
+          <div className="mt-20 flex items-center gap-12" aria-hidden="true">
+            <span className="h-px flex-1 bg-concrete" />
+            <span className="text-10 font-bold uppercase tracking-wider text-stone">o con tu correo</span>
+            <span className="h-px flex-1 bg-concrete" />
+          </div>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-20">
         <div className="space-y-8">
           <label
             htmlFor="nombreAdmin"
-            className="text-11 font-mono text-sage-green uppercase tracking-wider px-1"
+            className="block text-11 font-bold"
           >
             Nombre completo del responsable
           </label>
@@ -60,10 +103,12 @@ export default function StepAccount({
           )}
         </div>
 
+        {!google.email && (
+          <>
         <div className="space-y-8">
           <label
             htmlFor="emailAdmin"
-            className="text-11 font-mono text-sage-green uppercase tracking-wider px-1"
+            className="block text-11 font-bold"
           >
             Email de acceso
           </label>
@@ -88,7 +133,7 @@ export default function StepAccount({
           <div className="space-y-8">
             <label
               htmlFor="password"
-              className="text-11 font-mono text-sage-green uppercase tracking-wider px-1"
+              className="block text-11 font-bold"
             >
               Contraseña
             </label>
@@ -123,7 +168,7 @@ export default function StepAccount({
           <div className="space-y-8">
             <label
               htmlFor="confirmarPassword"
-              className="text-11 font-mono text-sage-green uppercase tracking-wider px-1"
+              className="block text-11 font-bold"
             >
               Confirmar contraseña
             </label>
@@ -155,11 +200,13 @@ export default function StepAccount({
             Creá una contraseña exclusiva para Mesa CLICK. También vas a poder ingresar con Google usando este mismo correo.
           </p>
         </div>
+          </>
+        )}
 
         <button
           type="submit"
           disabled={loading}
-          className="w-full h-52 rounded-full bg-plain-green text-canvas-white text-12 font-bold uppercase tracking-wide hover:bg-plain-green-muted transition-all flex items-center justify-center gap-8 mt-24 disabled:opacity-60 disabled:cursor-not-allowed"
+          className="landing-cta mt-24 w-full disabled:cursor-not-allowed disabled:opacity-40"
         >
           {loading ? (
             <>
@@ -169,10 +216,7 @@ export default function StepAccount({
               </span>
             </>
           ) : (
-            <>
-              Continuar
-              <span className="material-symbols-outlined text-16">arrow_forward</span>
-            </>
+            "Continuar"
           )}
         </button>
       </form>

@@ -79,7 +79,7 @@ export default function StepBusiness({ data, errors = {}, onChange, onNext }: St
 
           <div className="space-y-14">
             <div className="space-y-6">
-              <label className="text-11 font-mono text-sage-green uppercase tracking-wider px-1">
+              <label className="block text-11 font-bold">
                 Nombre de la Empresa o Negocio
               </label>
               <input
@@ -99,7 +99,7 @@ export default function StepBusiness({ data, errors = {}, onChange, onNext }: St
             </div>
 
             <div className="space-y-6">
-              <label className="text-11 font-mono text-sage-green uppercase tracking-wider px-1">
+              <label className="block text-11 font-bold">
                 Link público del negocio
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_minmax(160px,220px)] gap-8 min-w-0">
@@ -137,7 +137,7 @@ export default function StepBusiness({ data, errors = {}, onChange, onNext }: St
             </div>
 
             <div className="space-y-6">
-              <label className="text-11 font-mono text-sage-green uppercase tracking-wider px-1">
+              <label className="block text-11 font-bold">
                 Rubro Principal
               </label>
               <select 
@@ -162,7 +162,7 @@ export default function StepBusiness({ data, errors = {}, onChange, onNext }: St
         </div>
 
         <div className="bg-vanilla-cream p-20 rounded-lg border border-system-black shadow-sm space-y-8">
-          <label className="text-11 font-mono text-sage-green uppercase tracking-wider px-1">
+          <label className="block text-11 font-bold">
             Descripción o Slogan (Opcional)
           </label>
           <textarea
@@ -176,10 +176,9 @@ export default function StepBusiness({ data, errors = {}, onChange, onNext }: St
 
         <button
           type="submit"
-          className="w-full h-52 rounded-full bg-plain-green text-canvas-white text-12 font-bold uppercase tracking-wide hover:bg-plain-green-muted transition-all flex items-center justify-center gap-8 mt-24"
+          className="landing-cta mt-24 w-full disabled:cursor-not-allowed disabled:opacity-40"
         >
           Continuar
-          <span className="material-symbols-outlined text-16">arrow_forward</span>
         </button>
       </form>
     </div>

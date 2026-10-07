@@ -45,12 +45,13 @@ func (s *pgStore) Crear(ctx context.Context, input OnboardingInput) (*Tenant, er
 	}
 
 	_, err = tx.Exec(ctx,
-		`INSERT INTO usuarios (tenant_id, email, nombre, rol, password_hash)
-		 VALUES ($1, $2, $3, 'admin', $4)`,
-		t.ID, input.EmailAdmin, input.NombreAdmin, input.PasswordHash,
+		`INSERT INTO usuarios (tenant_id, email, nombre, rol, password_hash, google_sub)
+		 VALUES ($1, $2, $3, 'admin', NULLIF($4, ''), NULLIF($5, ''))`,
+		t.ID, input.EmailAdmin, input.NombreAdmin, input.PasswordHash, input.GoogleSub,
 	)
 	if err != nil {
-		if isUniqueConstraint(err, "usuarios_email_key") || isUniqueConstraint(err, "idx_usuarios_email_lower") {
+		if isUniqueConstraint(err, "usuarios_email_key") || isUniqueConstraint(err, "idx_usuarios_email_lower") ||
+			isUniqueConstraint(err, "idx_usuarios_google_sub") {
 			return nil, ErrEmailAdminConflict
 		}
 		return nil, fmt.Errorf("error creando usuario admin: %w", err)

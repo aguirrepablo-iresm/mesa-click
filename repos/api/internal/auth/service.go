@@ -60,10 +60,10 @@ func (svc *Service) AutenticarPassword(ctx context.Context, email, password stri
 	return usuario, nil
 }
 
-// AutenticarGoogle valida la credencial con Google y luego emite una sesión
-// únicamente para usuarios que ya existen en Mesa CLICK. En el primer acceso
-// vincula el `sub` estable de Google para no depender de cambios futuros de email.
-func (svc *Service) AutenticarGoogle(ctx context.Context, credencial string) (*UsuarioAuth, error) {
+// VerificarIdentidadGoogle valida la credencial con Google y devuelve la
+// identidad con email normalizado y verificado. La usa también el registro
+// de negocios para crear el admin vinculado a su cuenta de Google.
+func (svc *Service) VerificarIdentidadGoogle(ctx context.Context, credencial string) (*IdentidadGoogle, error) {
 	if svc.googleClientID == "" || svc.googleVerifier == nil {
 		return nil, ErrGoogleNoConfigurado
 	}
@@ -83,6 +83,17 @@ func (svc *Service) AutenticarGoogle(ctx context.Context, credencial string) (*U
 	}
 	if !identidad.EmailVerificado {
 		return nil, ErrEmailGoogleNoVerificado
+	}
+	return identidad, nil
+}
+
+// AutenticarGoogle valida la credencial con Google y luego emite una sesión
+// únicamente para usuarios que ya existen en Mesa CLICK. En el primer acceso
+// vincula el `sub` estable de Google para no depender de cambios futuros de email.
+func (svc *Service) AutenticarGoogle(ctx context.Context, credencial string) (*UsuarioAuth, error) {
+	identidad, err := svc.VerificarIdentidadGoogle(ctx, credencial)
+	if err != nil {
+		return nil, err
 	}
 
 	usuario, err := svc.store.ObtenerUsuarioPorGoogleSub(ctx, identidad.Subject)

@@ -288,7 +288,9 @@ export interface OnboardingInput {
   slug: string;
   email_admin: string;
   nombre_admin: string;
-  password: string;
+  password?: string;
+  // Alternativa a password: registro con la cuenta de Google del admin.
+  google_credential?: string;
   sucursal_nombre?: string;
   email_sucursal?: string;
   direccion?: string;

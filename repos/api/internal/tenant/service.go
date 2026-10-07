@@ -2,6 +2,7 @@ package tenant
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"regexp"
 	"strings"
@@ -10,27 +11,44 @@ import (
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/auth"
 )
 
+// VerificadorGoogle valida la credencial de Google usada para registrarse.
+type VerificadorGoogle interface {
+	VerificarIdentidadGoogle(ctx context.Context, credencial string) (*auth.IdentidadGoogle, error)
+}
+
 type Service struct {
-	store Store
+	store  Store
+	google VerificadorGoogle
 }
 
 func NuevoService(s Store) *Service { return &Service{store: s} }
 
 var colorHexPattern = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
 
+func NuevoServiceConGoogle(s Store, google VerificadorGoogle) *Service {
+	return &Service{store: s, google: google}
+}
+
 func (svc *Service) Crear(ctx context.Context, input OnboardingInput) (*Tenant, error) {
 	if input.Slug == "" {
 		return nil, fmt.Errorf("%w: slug requerido", ErrValidation)
 	}
-	if input.EmailAdmin == "" {
-		return nil, fmt.Errorf("%w: email del admin requerido", ErrValidation)
+	if strings.TrimSpace(input.GoogleCredential) != "" {
+		if err := svc.aplicarIdentidadGoogle(ctx, &input); err != nil {
+			return nil, err
+		}
+	} else {
+		if input.EmailAdmin == "" {
+			return nil, fmt.Errorf("%w: email del admin requerido", ErrValidation)
+		}
+		passwordHash, err := auth.HashPassword(input.Password)
+		if err != nil {
+			return nil, fmt.Errorf("%w: %v", ErrValidation, err)
+		}
+		input.PasswordHash = passwordHash
 	}
-	passwordHash, err := auth.HashPassword(input.Password)
-	if err != nil {
-		return nil, fmt.Errorf("%w: %v", ErrValidation, err)
-	}
-	input.PasswordHash = passwordHash
 	input.Password = ""
+	input.GoogleCredential = ""
 	input.Rubro = normalizarRubro(input.Rubro)
 	// Los métodos de acceso buscan al usuario por email; guardarlo siempre en
 	// minúsculas evita que un registro con mayúsculas quede inaccesible.
@@ -45,6 +63,28 @@ func (svc *Service) Crear(ctx context.Context, input OnboardingInput) (*Tenant, 
 		input.Horarios = make(map[string]any)
 	}
 	return svc.store.Crear(ctx, input)
+}
+
+// aplicarIdentidadGoogle reemplaza el email del admin por el verificado por
+// Google y vincula su `sub`; el admin queda sin contraseña local.
+func (svc *Service) aplicarIdentidadGoogle(ctx context.Context, input *OnboardingInput) error {
+	if svc.google == nil {
+		return fmt.Errorf("%w: el registro con Google no está disponible", ErrValidation)
+	}
+	identidad, err := svc.google.VerificarIdentidadGoogle(ctx, input.GoogleCredential)
+	if err != nil {
+		if errors.Is(err, auth.ErrGoogleNoConfigurado) ||
+			errors.Is(err, auth.ErrCredencialGoogleInvalida) ||
+			errors.Is(err, auth.ErrEmailGoogleNoVerificado) ||
+			errors.Is(err, auth.ErrIdentidadGoogleIncompleta) {
+			return fmt.Errorf("%w: no pudimos validar tu cuenta de Google, volvé a intentarlo", ErrValidation)
+		}
+		return err
+	}
+	input.EmailAdmin = identidad.Email
+	input.GoogleSub = identidad.Subject
+	input.PasswordHash = ""
+	return nil
 }
 
 func (svc *Service) ObtenerPorID(ctx context.Context, id string) (*Tenant, error) {

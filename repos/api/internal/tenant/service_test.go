@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/auth"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/tenant"
 )
 
@@ -152,5 +153,71 @@ func TestActualizar_PersonalizacionAvanzadaPro(t *testing.T) {
 	resultado, err := svc.Actualizar(context.Background(), "t-1", tenant.ActualizarTenantInput{ColorCategoria: &color})
 	if err != nil || resultado.ColorCategoria == nil || *resultado.ColorCategoria != color {
 		t.Fatalf("se esperaba personalización Pro persistida, resultado=%+v error=%v", resultado, err)
+	}
+}
+
+type verificadorGoogleFake struct {
+	identidad *auth.IdentidadGoogle
+	err       error
+}
+
+func (v verificadorGoogleFake) VerificarIdentidadGoogle(ctx context.Context, credencial string) (*auth.IdentidadGoogle, error) {
+	return v.identidad, v.err
+}
+
+func TestCrear_ConGoogle_UsaIdentidadVerificada(t *testing.T) {
+	var inputGuardado tenant.OnboardingInput
+	store := &mockStore{
+		crearFn: func(ctx context.Context, input tenant.OnboardingInput) (*tenant.Tenant, error) {
+			inputGuardado = input
+			return &tenant.Tenant{ID: "t-1"}, nil
+		},
+	}
+	svc := tenant.NuevoServiceConGoogle(store, verificadorGoogleFake{
+		identidad: &auth.IdentidadGoogle{Subject: "google-sub-1", Email: "admin@mibar.com", EmailVerificado: true},
+	})
+
+	_, err := svc.Crear(context.Background(), tenant.OnboardingInput{
+		Nombre:           "Mi Bar",
+		Slug:             "mi-bar",
+		EmailAdmin:       "otro@correo.com",
+		NombreAdmin:      "Carlos",
+		GoogleCredential: "credencial-google",
+	})
+	if err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+	if inputGuardado.EmailAdmin != "admin@mibar.com" {
+		t.Errorf("EmailAdmin: got %q, want el email verificado por Google", inputGuardado.EmailAdmin)
+	}
+	if inputGuardado.GoogleSub != "google-sub-1" {
+		t.Errorf("GoogleSub: got %q, want %q", inputGuardado.GoogleSub, "google-sub-1")
+	}
+	if inputGuardado.PasswordHash != "" || inputGuardado.GoogleCredential != "" {
+		t.Fatal("el registro con Google no debe guardar contraseña ni la credencial")
+	}
+}
+
+func TestCrear_ConGoogle_CredencialInvalida_Error(t *testing.T) {
+	svc := tenant.NuevoServiceConGoogle(&mockStore{}, verificadorGoogleFake{err: auth.ErrCredencialGoogleInvalida})
+	_, err := svc.Crear(context.Background(), tenant.OnboardingInput{
+		Nombre:           "Mi Bar",
+		Slug:             "mi-bar",
+		GoogleCredential: "credencial-vencida",
+	})
+	if !errors.Is(err, tenant.ErrValidation) {
+		t.Fatalf("se esperaba ErrValidation, obtenido: %v", err)
+	}
+}
+
+func TestCrear_ConGoogle_SinVerificador_Error(t *testing.T) {
+	svc := tenant.NuevoService(&mockStore{})
+	_, err := svc.Crear(context.Background(), tenant.OnboardingInput{
+		Nombre:           "Mi Bar",
+		Slug:             "mi-bar",
+		GoogleCredential: "credencial-google",
+	})
+	if !errors.Is(err, tenant.ErrValidation) {
+		t.Fatalf("se esperaba ErrValidation, obtenido: %v", err)
 	}
 }
