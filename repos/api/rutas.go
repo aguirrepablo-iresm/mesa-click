@@ -18,6 +18,7 @@ import (
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/metrica"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/notificacion"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/pedido"
+	"github.com/aguirrepablo-iresm/mesa-click/api/internal/resenia"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/sucursal"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/tenant"
 	"github.com/aguirrepablo-iresm/mesa-click/api/internal/usuario"
@@ -199,6 +200,12 @@ func registrarRutas(mux *http.ServeMux) {
 	metricaH := metrica.NuevosHandlers(metricaSvc)
 	mux.Handle("GET /metricas/resumen", auth.Requerir(http.HandlerFunc(metricaH.Resumen)))
 
+	// Reseñas y reputación (admin — protegidas y comensal — públicas)
+	reseniaStore := resenia.NuevoStore()
+	reseniaSvc := resenia.NuevoService(reseniaStore)
+	reseniaH := resenia.NuevosHandlers(reseniaSvc)
+	mux.Handle("GET /resenias/resumen", auth.Requerir(http.HandlerFunc(reseniaH.Resumen)))
+
 	// Notificaciones / SSE
 	notificacionH := notificacion.NuevosHandlers()
 	mux.Handle("GET /sucursales/{sucursal_id}/eventos", auth.Requerir(http.HandlerFunc(notificacionH.EventosSucursal)))
@@ -210,6 +217,8 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.HandleFunc("GET /publica/mesas/{qr_token}", mesaH.MesaPorQR)
 	mux.HandleFunc("GET /publica/mesas/{qr_token}/pedidos", pedidoH.ListarCuentaActual)
 	mux.HandleFunc("POST /publica/mesas/{qr_token}/cuenta", mesaH.SolicitarCuenta)
+	mux.HandleFunc("POST /publica/mesas/{qr_token}/resena", reseniaH.Crear)
+	mux.HandleFunc("PATCH /publica/mesas/{qr_token}/resena/google-click", reseniaH.RegistrarClickGoogle)
 
 	// Mercado Pago (Sandbox / Producción)
 	mpAccessToken := os.Getenv("MERCADOPAGO_ACCESS_TOKEN")

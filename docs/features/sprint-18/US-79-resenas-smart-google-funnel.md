@@ -3,9 +3,9 @@
 > **Sprint**: Sprint 18 (26/10 – 01/11/2026)  
 > **Épica**: Business Analytics, Reputación & Exportación  
 > **Tipo**: `Integración`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
-> **Rama de trabajo**: `feat/US-79-smart-google-funnel`  
+> **Estado**: ✅ **Resuelta**  
+> **Asignado a**: Martín Oviedo / Mateo Silvestrin / Pablo Aguirre  
+> **Rama de trabajo**: `feat/US-79-80-resenias-google`  
 
 ---
 
@@ -17,20 +17,20 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Al cerrarse o completarse el pedido, la pantalla de seguimiento muestra tarjeta de calificación.
-- [ ] Selector táctil interactivo de 1 a 5 estrellas con campo de comentario breve opcional.
-- [ ] Lógica de Smart Funneling: si 4 o 5★, botón destacado 'Recomendanos en Google' abriendo el enlace/Place ID configurado.
-- [ ] Si 1, 2 o 3★, mensaje agradeciendo el feedback sincero y notificación inmediata al dashboard de administración.
-- [ ] Endpoint backend `POST /publica/pedidos/{id}/resena` para almacenar la valoración.
+- [x] Al cerrarse o completarse el pedido, la pantalla de seguimiento muestra tarjeta de calificación.
+- [x] Selector táctil interactivo de 1 a 5 estrellas con campo de comentario breve opcional.
+- [x] Lógica de Smart Funneling: si 4 o 5★, botón destacado 'Recomendanos en Google' abriendo el enlace/Place ID configurado.
+- [x] Si 1, 2 o 3★, mensaje agradeciendo el feedback sincero y notificación inmediata al dashboard de administración.
+- [x] Endpoint backend `POST /publica/mesas/{qr_token}/resena` para almacenar la valoración.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Migración SQL para tabla `resenas` (estrellas, comentario, pedido_id, tenant_id, created_at).
-- [ ] Endpoint en Go para guardar reseña post-consumo.
-- [ ] Componente en frontend comensal con animación de estrellas y derivación a Google Maps.
-- [ ] Conectar con la URL configurada en US-50/US-51.
+- [x] Migración SQL para tabla `resenas` (estrellas, comentario, mesa_id, cuenta_version, tenant_id, created_at).
+- [x] Endpoint en Go para guardar reseña post-consumo.
+- [x] Componente en frontend comensal con animación de estrellas y derivación a Google Maps.
+- [x] Conectar con la URL configurada en US-50/US-51.
 
 ---
 

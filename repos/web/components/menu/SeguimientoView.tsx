@@ -23,6 +23,8 @@ interface Props {
   pagandoMP?: boolean;
   pagoExitoso?: boolean;
   pagoError?: boolean;
+  yaCalificado?: boolean;
+  onCalificar?: () => void;
 }
 
 const PASOS: EstadoPedido[] = ['recibido', 'preparando', 'listo'];
@@ -59,6 +61,8 @@ export default function SeguimientoView({
   pagandoMP = false,
   pagoExitoso = false,
   pagoError = false,
+  yaCalificado = false,
+  onCalificar,
 }: Props) {
   const [mostrarConfirmacion, setMostrarConfirmacion] = useState(false);
   const [solicitandoCuenta, setSolicitandoCuenta] = useState(false);
@@ -143,9 +147,23 @@ export default function SeguimientoView({
         </div>
 
         {todosListos && (
-          <div className="mesa-primary-soft mesa-border rounded-lg border px-16 py-14 text-center shadow-xs">
-            <p className="mesa-primary text-14 font-semibold">✓ No hay pedidos pendientes</p>
-            <p className="mesa-muted mt-2 text-12">Todos los pedidos de esta mesa están listos.</p>
+          <div className="mesa-primary-soft mesa-border rounded-lg border px-16 py-14 text-center shadow-xs space-y-10">
+            <div>
+              <p className="mesa-primary text-14 font-semibold">✓ No hay pedidos pendientes</p>
+              <p className="mesa-muted mt-2 text-12">Todos los pedidos de esta mesa están listos.</p>
+            </div>
+            {!yaCalificado && onCalificar && (
+              <div className="pt-8 border-t mesa-border flex justify-center">
+                <button
+                  type="button"
+                  onClick={onCalificar}
+                  className="mesa-surface mesa-text mesa-border border hover:border-[var(--mesa-primary)] inline-flex items-center justify-center gap-8 rounded-lg px-16 py-8 text-13 font-semibold shadow-2xs transition-all active:scale-98"
+                >
+                  <span className="material-symbols-outlined text-18 text-amber-500 fill-1">star</span>
+                  <span>⭐ Calificar tu experiencia</span>
+                </button>
+              </div>
+            )}
           </div>
         )}
 

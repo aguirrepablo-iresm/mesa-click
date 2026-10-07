@@ -117,8 +117,8 @@
 |---|---|---|---|---|---|
 | **US-74** | `Frontend` | Gráficos de Ventas por Categoría y Mapa de Calor por Horario | 📋 Pendiente | Por asignar | [Ver detalle](sprint-18/US-74-graficos-ventas-mapa-calor.md) |
 | **US-75** | `Integración` | Filtros Temporales y Exportación de Reportes a PDF y Excel | 📋 Pendiente | Por asignar | [Ver detalle](sprint-18/US-75-filtros-exportacion-pdf-excel.md) |
-| **US-79** | `Integración` | Calificación Post-Consumo y Smart Google Review Funnel | 📋 Pendiente | Por asignar | [Ver detalle](sprint-18/US-79-resenas-smart-google-funnel.md) |
-| **US-80** | `Frontend` | Dashboard de Reseñas y Reputación con CSAT y Alertas de Servicio | 📋 Pendiente | Por asignar | [Ver detalle](sprint-18/US-80-dashboard-resenas-reputacion.md) |
+| **US-79** | `Integración` | Calificación Post-Consumo y Smart Google Review Funnel | ✅ Resuelta | Martín Oviedo + Antigravity (AI Agent) | [Ver detalle](sprint-18/US-79-resenas-smart-google-funnel.md) |
+| **US-80** | `Frontend` | Dashboard de Reseñas y Reputación con CSAT y Alertas de Servicio | ✅ Resuelta | Martín Oviedo + Antigravity (AI Agent) | [Ver detalle](sprint-18/US-80-dashboard-resenas-reputacion.md) |
 
 ### 📌 Sprint 19: QA E2E, Load Testing, Polish Final & Presentación (02/11 – 08/11/2026)
 

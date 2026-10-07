@@ -11,6 +11,7 @@ import {
   type ComensalIdentity,
 } from "@/lib/comensal";
 import ModalNombreComensal from "@/components/comensal/ModalNombreComensal";
+import ModalResena from "@/components/menu/ModalResena";
 import ModalPersonalizacion from "@/components/menu/ModalPersonalizacion";
 import CategoriaNav from "@/components/menu/CategoriaNav";
 import ItemCard from "@/components/menu/ItemCard";
@@ -408,8 +409,31 @@ export default function MesaPage() {
   const [pagandoMP, setPagandoMP] = useState(false);
   const [pagoExitoso, setPagoExitoso] = useState(false);
   const [pagoError, setPagoError] = useState(false);
+  const [modalResenaAbierto, setModalResenaAbierto] = useState(false);
+  const [resenaCalificadaCuenta, setResenaCalificadaCuenta] = useState<number | null>(null);
 
   const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
+
+  const resenaYaEnviada = useMemo(() => {
+    if (resenaCalificadaCuenta === state.cuentaVersion) return true;
+    if (typeof window === 'undefined' || !token) return false;
+    try {
+      return window.localStorage.getItem(`mesa_click_resena_${token}_${state.cuentaVersion}`) === 'true';
+    } catch {
+      return false;
+    }
+  }, [resenaCalificadaCuenta, token, state.cuentaVersion]);
+
+  const handleResenaEnviada = useCallback(() => {
+    if (typeof window !== 'undefined' && token) {
+      try {
+        window.localStorage.setItem(`mesa_click_resena_${token}_${state.cuentaVersion}`, 'true');
+      } catch {
+        // localStorage fallback
+      }
+    }
+    setResenaCalificadaCuenta(state.cuentaVersion);
+  }, [token, state.cuentaVersion]);
   const skipNextPersistRef = useRef(false);
   const hydratedTokenRef = useRef<string | null>(null);
 
@@ -1141,8 +1165,19 @@ export default function MesaPage() {
           pagandoMP={pagandoMP}
           pagoExitoso={pagoExitoso}
           pagoError={pagoError}
+          yaCalificado={resenaYaEnviada}
+          onCalificar={() => setModalResenaAbierto(true)}
         />
         {modalNombreComensal}
+        {token && (
+          <ModalResena
+            isOpen={modalResenaAbierto}
+            onClose={() => setModalResenaAbierto(false)}
+            qrToken={token}
+            googleReviewUrl={mesa.google_review_url}
+            onResenaEnviada={handleResenaEnviada}
+          />
+        )}
       </div>
     );
   }
@@ -1306,6 +1341,15 @@ export default function MesaPage() {
       )}
 
       {modalNombreComensal}
+      {token && (
+        <ModalResena
+          isOpen={modalResenaAbierto}
+          onClose={() => setModalResenaAbierto(false)}
+          qrToken={token}
+          googleReviewUrl={mesa.google_review_url}
+          onResenaEnviada={handleResenaEnviada}
+        />
+      )}
     </div>
   );
 }

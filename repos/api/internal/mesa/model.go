@@ -55,4 +55,5 @@ type MesaPublica struct {
 	ColorCategoria        *string `json:"color_categoria,omitempty"`
 	ColorAccion           *string `json:"color_accion,omitempty"`
 	TipoFuente            *string `json:"tipo_fuente,omitempty"`
+	GoogleReviewURL       *string `json:"google_review_url,omitempty"`
 }

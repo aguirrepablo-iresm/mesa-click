@@ -7,17 +7,19 @@ import MesasSection from "@/components/dashboard/MesasSection";
 import RecepcionistaSection from "@/components/dashboard/RecepcionistaSection";
 import ConfiguracionSection from "@/components/dashboard/ConfiguracionSection";
 import MetricasSection from "@/components/dashboard/MetricasSection";
+import ReputacionSection from "@/components/dashboard/ReputacionSection";
 import Logo from "@/components/brand/Logo";
 import { api, cerrarSesion, estaAutenticado, Tenant } from "@/lib/api";
 import { ToastProvider, ConfirmProvider } from "@/components/ui";
 import OnboardingTour from "@/components/dashboard/OnboardingTour";
 
-type Section = 'carta' | 'mesas' | 'recepcionista' | 'metricas' | 'configuracion';
+type Section = 'carta' | 'mesas' | 'recepcionista' | 'metricas' | 'resenas' | 'configuracion';
 
 const SECTIONS: { id: Section; icon: string; label: string }[] = [
   { id: 'carta', icon: 'restaurant_menu', label: 'Carta' },
   { id: 'mesas', icon: 'table_restaurant', label: 'Mesas & QR' },
   { id: 'recepcionista', icon: 'receipt_long', label: 'Recepcionista' },
+  { id: 'resenas', icon: 'star_rate', label: 'Reseñas' },
 ];
 
 function renderSection(
@@ -30,6 +32,7 @@ function renderSection(
     case 'mesas': return <MesasSection />;
     case 'recepcionista': return <RecepcionistaSection />;
     case 'metricas': return <MetricasSection />;
+    case 'resenas': return <ReputacionSection />;
     case 'configuracion': return <ConfiguracionSection initialTab={configuracionTab} onTenantUpdate={onTenantUpdate} />;
   }
 }

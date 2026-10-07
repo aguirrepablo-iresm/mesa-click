@@ -423,6 +423,31 @@ export interface MesaPublica {
   color_categoria?: string | null;
   color_accion?: string | null;
   tipo_fuente?: string | null;
+  google_review_url?: string | null;
+}
+
+export interface Resena {
+  id: string;
+  mesa_id: string;
+  mesa_numero?: number;
+  sucursal_id: string;
+  sucursal_nombre?: string;
+  cuenta_version: number;
+  estrellas: number;
+  comentario?: string | null;
+  google_cliqueado: boolean;
+  created_at: string;
+}
+
+export type ResenaItem = Resena;
+
+export interface ResenaResumen {
+  promedio: number;
+  total: number;
+  csat: number;
+  distribucion: Record<number, number>;
+  clics_google: number;
+  resenas: Resena[];
 }
 
 export interface ArticuloPublico {
@@ -1019,6 +1044,29 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ payment_id: paymentId }),
     });
+  },
+
+  // 12. Reseñas y Reputación (US-79 / US-80)
+  crearResena: async (qrToken: string, input: { estrellas: number; comentario?: string }) => {
+    return apiFetch<Resena>(`/publica/mesas/${encodeURIComponent(qrToken)}/resena`, {
+      method: 'POST',
+      body: JSON.stringify(input),
+    });
+  },
+
+  registrarClickGoogle: async (qrToken: string) => {
+    return apiFetch<{ ok: boolean }>(`/publica/mesas/${encodeURIComponent(qrToken)}/resena/google-click`, {
+      method: 'PATCH',
+    });
+  },
+
+  obtenerResumenResenas: async (sucursalId?: string, desde?: string, hasta?: string) => {
+    const params = new URLSearchParams();
+    if (sucursalId) params.set('sucursal_id', sucursalId);
+    if (desde) params.set('desde', desde);
+    if (hasta) params.set('hasta', hasta);
+    const query = params.toString();
+    return apiFetch<ResenaResumen>(`/resenias/resumen${query ? `?${query}` : ''}`);
   },
 };
 

@@ -3,9 +3,9 @@
 > **Sprint**: Sprint 18 (26/10 – 01/11/2026)  
 > **Épica**: Business Analytics, Reputación & Exportación  
 > **Tipo**: `Frontend`  
-> **Estado**: 📋 **Pendiente**  
-> **Asignado a**: Por asignar  
-> **Rama de trabajo**: `feat/US-80-dashboard-reputacion`  
+> **Estado**: ✅ **Resuelta**  
+> **Asignado a**: Martín Oviedo / Mateo Silvestrin / Pablo Aguirre  
+> **Rama de trabajo**: `feat/US-79-80-resenias-google`  
 
 ---
 
@@ -17,19 +17,19 @@
 
 ## 2. Criterios de Aceptación (Definition of Done)
 
-- [ ] Tarjeta de Índice de Satisfacción del Cliente (CSAT) calculado como % de reseñas 4 y 5 estrellas.
-- [ ] Gráfico de barras con la distribución de calificaciones de 1 a 5 estrellas.
-- [ ] Muro de comentarios recibidos con fecha, número de mesa, mozo que atendió y comentario.
-- [ ] Banner de alerta destacado en tiempo real si ingresa una calificación de 1 a 3★ para que el encargado pueda intervenir antes de que el cliente se retire.
+- [x] Tarjeta de Índice de Satisfacción del Cliente (CSAT) calculado como % de reseñas 4 y 5 estrellas.
+- [x] Gráfico de barras con la distribución de calificaciones de 1 a 5 estrellas.
+- [x] Muro de comentarios recibidos con fecha, número de mesa, sucursal, estrellas y comentario (sin mozo).
+- [x] Banner de alerta destacado en tiempo real si ingresa una calificación de 1 a 3★ para que el encargado pueda intervenir antes de que el cliente se retire.
 
 ---
 
 ## 3. Checklist de Tareas Técnicas
 
-- [ ] Crear sección `ReputacionSection.tsx` en el dashboard.
-- [ ] Endpoint `GET /resenas?sucursal_id=...` para listar valoraciones.
-- [ ] Cálculo de CSAT y métricas de reputación.
-- [ ] Alerta visual destacada para ratings bajos.
+- [x] Crear sección `ReputacionSection.tsx` en el dashboard.
+- [x] Endpoint `GET /resenias/resumen?sucursal_id=...` para listar valoraciones y métricas.
+- [x] Cálculo de CSAT y métricas de reputación con GROUP BY en SQL e índices.
+- [x] Alerta visual destacada en tiempo real vía SSE para ratings bajos (1-3★).
 
 ---
 
