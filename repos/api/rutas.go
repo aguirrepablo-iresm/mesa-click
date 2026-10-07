@@ -149,6 +149,7 @@ func registrarRutas(mux *http.ServeMux) {
 	mux.Handle("GET /carta/categorias", auth.Requerir(http.HandlerFunc(cartaH.ListarCategorias)))
 	mux.Handle("POST /carta/categorias", auth.Requerir(http.HandlerFunc(cartaH.CrearCategoria)))
 	mux.Handle("PATCH /carta/categorias/{id}/franja-horaria", auth.Requerir(http.HandlerFunc(cartaH.AsignarFranjaCategoria)))
+	mux.Handle("PATCH /carta/categorias/{id}/icono", protegido(tenant.RecursoPersonalizacion, cartaH.AsignarIconoCategoria))
 	mux.Handle("DELETE /carta/categorias/{id}", auth.Requerir(http.HandlerFunc(cartaH.EliminarCategoria)))
 	mux.Handle("GET /carta/articulos", auth.Requerir(http.HandlerFunc(cartaH.ListarArticulos)))
 	mux.Handle("POST /carta/articulos", protegido(tenant.RecursoProductos, cartaH.CrearArticulo))

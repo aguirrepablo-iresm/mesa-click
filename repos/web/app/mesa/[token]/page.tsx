@@ -369,12 +369,14 @@ function readStoredSession(raw: string): State | null {
 interface MenuCategoryView {
   id: string;
   nombre: string;
+  icono?: string;
   disponible: boolean;
   disponibleDesde?: string;
   items: Array<{
     id: string;
     nombre: string;
     descripcion?: string;
+    foto_url?: string;
     precio: number;
     disponible: boolean;
     variantes?: VariantePublica[];
@@ -389,6 +391,7 @@ export default function MesaPage() {
   const [mesa, setMesa] = useState<MesaPublica | null>(null);
   const [menu, setMenu] = useState<MenuCategoryView[]>([]);
   const [categoriaActiva, setCategoriaActiva] = useState<string>('');
+  const [busqueda, setBusqueda] = useState('');
   const [carritoAbierto, setCarritoAbierto] = useState(false);
   const [itemParaPersonalizar, setItemParaPersonalizar] = useState<{
     id: string;
@@ -447,6 +450,15 @@ export default function MesaPage() {
       window.clearTimeout(manualScrollTimeoutRef.current);
     }
 
+    if (catId === 'todos') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      scrollNavButtonIntoView('todos');
+      manualScrollTimeoutRef.current = window.setTimeout(() => {
+        isManualScrollRef.current = false;
+      }, 900);
+      return;
+    }
+
     const target = document.getElementById(`categoria-${catId}`);
     if (target) {
       const STICKY_HEADER_OFFSET = 136; // BrandHeader (68px) + CategoriaNav (68px)
@@ -500,7 +512,7 @@ export default function MesaPage() {
 
       // 1. Al inicio de la página, fijar primera categoría
       if (window.scrollY < 60) {
-        const firstCatId = menu[0].id;
+        const firstCatId = 'todos';
         setCategoriaActiva(current => {
           if (current !== firstCatId) {
             scrollNavButtonIntoView(firstCatId);
@@ -744,12 +756,14 @@ export default function MesaPage() {
             const formateadas: MenuCategoryView[] = cartaResp.categorias.map((c: CategoriaPublica) => ({
               id: c.id,
               nombre: c.nombre,
+              icono: c.icono,
               disponible: c.disponible,
               disponibleDesde: c.disponible_desde,
               items: (c.articulos || []).map((a: ArticuloPublico) => ({
                 id: a.id,
                 nombre: a.nombre,
                 descripcion: a.descripcion,
+                foto_url: a.foto_url,
                 precio: a.precio,
                 disponible: a.disponible !== false && a.activo !== false,
                 variantes: a.variantes,
@@ -758,7 +772,7 @@ export default function MesaPage() {
 
             if (isMounted) {
               setMenu(formateadas);
-              setCategoriaActiva(formateadas[0]?.id || '');
+              setCategoriaActiva('todos');
             }
             return;
           }
@@ -1155,6 +1169,17 @@ export default function MesaPage() {
         : state.estadoPedido;
   const todosLosPedidosListos = state.pedidos.length > 0
     && state.pedidos.every(pedido => pedido.estado === 'listo' || pedido.estado === 'cerrado');
+  const terminoBusqueda = busqueda.trim().toLocaleLowerCase('es');
+  const menuVisible = terminoBusqueda
+    ? menu
+        .map((categoria) => ({
+          ...categoria,
+          items: categoria.items.filter((item) =>
+            `${item.nombre} ${item.descripcion || ''}`.toLocaleLowerCase('es').includes(terminoBusqueda),
+          ),
+        }))
+        .filter((categoria) => categoria.items.length > 0)
+    : menu;
   const modalNombreComensal = identidadLista && !state.cuentaSolicitada && (!comensal || editandoComensal) ? (
     <ModalNombreComensal
       nombreInicial={comensal?.nombre}
@@ -1219,14 +1244,39 @@ export default function MesaPage() {
       />
 
       <div className="max-w-lg mx-auto">
+        <div className="px-16 pb-4 pt-18">
+          <div className="mb-12 flex items-end justify-between gap-12">
+            <div>
+              <p className="mesa-primary text-10 font-semibold uppercase tracking-[0.14em]">Menú digital</p>
+              <h1 className="mesa-text mt-3 text-24 font-semibold tracking-[-0.03em]">¿Qué te gustaría pedir?</h1>
+            </div>
+            <span className="mesa-muted hidden text-11 sm:block">{menu.reduce((total, categoria) => total + categoria.items.length, 0)} opciones</span>
+          </div>
+          <label className="mesa-surface mesa-border flex h-50 items-center gap-10 rounded-xl border px-14 shadow-2xs focus-within:border-[var(--mesa-primary)]">
+            <span className="material-symbols-outlined mesa-muted text-22">search</span>
+            <input
+              type="search"
+              value={busqueda}
+              onChange={(event) => setBusqueda(event.target.value)}
+              placeholder="Buscar platos o bebidas"
+              className="mesa-text h-full min-w-0 flex-1 bg-transparent text-13 outline-none placeholder:text-[var(--mesa-muted)]"
+              aria-label="Buscar en la carta"
+            />
+            {busqueda && (
+              <button type="button" onClick={() => setBusqueda('')} className="mesa-muted flex h-36 w-36 items-center justify-center rounded-full hover:bg-[var(--mesa-subtle-surface)]" aria-label="Limpiar búsqueda">
+                <span className="material-symbols-outlined text-18">close</span>
+              </button>
+            )}
+          </label>
+        </div>
         <CategoriaNav
           categorias={menu}
-          activa={categoriaActiva || menu[0]?.id || ''}
+          activa={categoriaActiva || 'todos'}
           onSelect={handleSeleccionarCategoria}
         />
         <div className="space-y-28 px-16 pt-16 pb-40">
           {mesa.mostrar_marca_agua !== false && <MarcaAgua className="mb-8" />}
-          {menu.map(cat => (
+          {menuVisible.map(cat => (
             <section
               key={cat.id}
               id={`categoria-${cat.id}`}
@@ -1240,6 +1290,7 @@ export default function MesaPage() {
                   <ItemCard
                     key={item.id}
                     item={item}
+                    categoriaIcono={cat.icono}
                     cantidad={state.items.filter(i => i.articuloId === item.id).reduce((sum, i) => sum + i.cantidad, 0)}
                     onAgregar={() => handleIntentarAgregarItem(item)}
                   />
@@ -1268,6 +1319,13 @@ export default function MesaPage() {
           {menu.length === 0 && (
             <div className="mesa-subtle-text py-40 text-center text-13">
               No hay categorías cargadas en la carta.
+            </div>
+          )}
+          {menu.length > 0 && menuVisible.length === 0 && (
+            <div className="mesa-surface mesa-border rounded-xl border px-20 py-32 text-center shadow-2xs">
+              <span className="material-symbols-outlined mesa-muted text-32">search_off</span>
+              <p className="mesa-text mt-8 text-14 font-semibold">No encontramos coincidencias</p>
+              <p className="mesa-muted mt-4 text-11">Probá con otro nombre o limpiá la búsqueda.</p>
             </div>
           )}
         </div>

@@ -123,3 +123,34 @@ func TestActualizar_Exitoso(t *testing.T) {
 		t.Errorf("got %s, want Bar Nuevo", res.Nombre)
 	}
 }
+
+func TestActualizar_PersonalizacionAvanzadaRequierePro(t *testing.T) {
+	color := "#12AB34"
+	store := &mockStore{
+		obtenerEstadoCuotasFn: func(ctx context.Context, tenantID string) (*tenant.EstadoCuotas, error) {
+			return &tenant.EstadoCuotas{Plan: tenant.PlanFree}, nil
+		},
+	}
+	svc := tenant.NuevoService(store)
+	_, err := svc.Actualizar(context.Background(), "t-1", tenant.ActualizarTenantInput{ColorCategoria: &color})
+	if !errors.Is(err, tenant.ErrPlanRequired) {
+		t.Fatalf("se esperaba ErrPlanRequired, obtenido %v", err)
+	}
+}
+
+func TestActualizar_PersonalizacionAvanzadaPro(t *testing.T) {
+	color := "#12AB34"
+	store := &mockStore{
+		obtenerEstadoCuotasFn: func(ctx context.Context, tenantID string) (*tenant.EstadoCuotas, error) {
+			return &tenant.EstadoCuotas{Plan: tenant.PlanPro}, nil
+		},
+		actualizarFn: func(ctx context.Context, id string, input tenant.ActualizarTenantInput) (*tenant.Tenant, error) {
+			return &tenant.Tenant{ID: id, ColorCategoria: input.ColorCategoria}, nil
+		},
+	}
+	svc := tenant.NuevoService(store)
+	resultado, err := svc.Actualizar(context.Background(), "t-1", tenant.ActualizarTenantInput{ColorCategoria: &color})
+	if err != nil || resultado.ColorCategoria == nil || *resultado.ColorCategoria != color {
+		t.Fatalf("se esperaba personalización Pro persistida, resultado=%+v error=%v", resultado, err)
+	}
+}

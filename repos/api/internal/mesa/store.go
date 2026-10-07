@@ -198,8 +198,10 @@ func (s *pgStore) ObtenerPorQRToken(ctx context.Context, token string) (*MesaPub
 		            THEN COALESCE(t.mostrar_marca_agua, true)
 		            ELSE true
 		        END AS mostrar_marca_agua,
-		        t.color_secundario,
-		        t.tipo_fuente
+		        CASE WHEN COALESCE(t.plan, 'free') = 'pro' AND (t.plan_hasta IS NULL OR t.plan_hasta > NOW()) THEN t.color_secundario END,
+		        CASE WHEN COALESCE(t.plan, 'free') = 'pro' AND (t.plan_hasta IS NULL OR t.plan_hasta > NOW()) THEN t.color_categoria END,
+		        CASE WHEN COALESCE(t.plan, 'free') = 'pro' AND (t.plan_hasta IS NULL OR t.plan_hasta > NOW()) THEN t.color_accion END,
+		        CASE WHEN COALESCE(t.plan, 'free') = 'pro' AND (t.plan_hasta IS NULL OR t.plan_hasta > NOW()) THEN t.tipo_fuente END
 		 FROM mesas m
 		 JOIN sucursales su ON su.id = m.sucursal_id
 		 JOIN tenants t ON t.id = su.tenant_id
@@ -207,7 +209,7 @@ func (s *pgStore) ObtenerPorQRToken(ctx context.Context, token string) (*MesaPub
 	).Scan(&mp.ID, &mp.Numero, &mp.SucursalID, &mp.TenantID, &mp.Estado,
 		&mp.CuentaSolicitada, &mp.PagoHabilitado, &mp.CuentaVersion,
 		&mp.Nombre, &mp.LogoURL, &mp.ColorPrimario, &mp.EstiloVisual, &mp.MercadoPagoHabilitado,
-		&mp.Plan, &mp.MostrarMarcaAgua, &mp.ColorSecundario, &mp.TipoFuente)
+		&mp.Plan, &mp.MostrarMarcaAgua, &mp.ColorSecundario, &mp.ColorCategoria, &mp.ColorAccion, &mp.TipoFuente)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrNotFound

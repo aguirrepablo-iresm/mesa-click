@@ -10,11 +10,11 @@ import (
 )
 
 type mockStore struct {
-	categorias         []carta.Categoria
-	articulos          []carta.Articulo
-	ajustarPreciosFn   func(ctx context.Context, tenantID string, input carta.AjustePreciosInput) (*carta.AjustePreciosResultado, error)
-	actualizarDispFn   func(ctx context.Context, id, tenantID string, disponible bool) (*carta.Articulo, error)
-	reponerTodosFn     func(ctx context.Context, tenantID string) (int, error)
+	categorias       []carta.Categoria
+	articulos        []carta.Articulo
+	ajustarPreciosFn func(ctx context.Context, tenantID string, input carta.AjustePreciosInput) (*carta.AjustePreciosResultado, error)
+	actualizarDispFn func(ctx context.Context, id, tenantID string, disponible bool) (*carta.Articulo, error)
+	reponerTodosFn   func(ctx context.Context, tenantID string) (int, error)
 }
 
 func (m *mockStore) ListarCategorias(ctx context.Context, tenantID string) ([]carta.Categoria, error) {
@@ -46,8 +46,36 @@ func (m *mockStore) ListarArticulos(ctx context.Context, tenantID string) ([]car
 	return m.articulos, nil
 }
 func (m *mockStore) CrearArticulo(ctx context.Context, tenantID string, input carta.ArticuloInput) (*carta.Articulo, error) {
-	a := carta.Articulo{ID: "art-1", TenantID: tenantID, CategoriaID: input.CategoriaID, Nombre: input.Nombre, Precio: input.Precio, Activo: true}
+	a := carta.Articulo{ID: "art-1", TenantID: tenantID, CategoriaID: input.CategoriaID, Nombre: input.Nombre, Precio: input.Precio, FotoURL: input.FotoURL, Activo: true}
 	return &a, nil
+}
+
+func TestAsignarIconoCategoria_ValidaCatalogo(t *testing.T) {
+	svc := carta.NuevoService(&mockStore{})
+	valido := "local_cafe"
+	cat, err := svc.AsignarIconoCategoria(context.Background(), "cat-1", "t-1", &valido)
+	if err != nil || cat.Icono == nil || *cat.Icono != valido {
+		t.Fatalf("se esperaba icono válido, categoría=%+v error=%v", cat, err)
+	}
+
+	invalido := "<svg>"
+	_, err = svc.AsignarIconoCategoria(context.Background(), "cat-1", "t-1", &invalido)
+	if !errors.Is(err, carta.ErrValidation) {
+		t.Fatalf("se esperaba ErrValidation para icono arbitrario, obtenido %v", err)
+	}
+}
+
+func TestCrearArticulo_RechazaFotoNoRaster(t *testing.T) {
+	svc := carta.NuevoService(&mockStore{})
+	_, err := svc.CrearArticulo(context.Background(), "t-1", carta.ArticuloInput{
+		CategoriaID: "cat-1",
+		Nombre:      "Producto",
+		Precio:      100,
+		FotoURL:     "data:image/svg+xml;base64,PHN2Zz4=",
+	})
+	if !errors.Is(err, carta.ErrValidation) {
+		t.Fatalf("se esperaba ErrValidation para SVG, obtenido %v", err)
+	}
 }
 func (m *mockStore) ActualizarArticulo(ctx context.Context, id, tenantID string, u carta.ArticuloUpdate) (*carta.Articulo, error) {
 	return &carta.Articulo{ID: id}, nil
@@ -101,6 +129,9 @@ func (m *mockStore) EliminarFranjaHoraria(ctx context.Context, id, tenantID stri
 }
 func (m *mockStore) AsignarFranjaCategoria(ctx context.Context, id, tenantID string, franjaID *string) (*carta.Categoria, error) {
 	return &carta.Categoria{ID: id, TenantID: tenantID, FranjaHorariaID: franjaID}, nil
+}
+func (m *mockStore) AsignarIconoCategoria(ctx context.Context, id, tenantID string, icono *string) (*carta.Categoria, error) {
+	return &carta.Categoria{ID: id, TenantID: tenantID, Icono: icono}, nil
 }
 func (m *mockStore) AsignarFranjaArticulo(ctx context.Context, id, tenantID string, franjaID *string) (*carta.Articulo, error) {
 	return &carta.Articulo{ID: id, TenantID: tenantID, FranjaHorariaID: franjaID}, nil

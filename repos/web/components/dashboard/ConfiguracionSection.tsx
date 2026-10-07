@@ -464,6 +464,8 @@ type EstiloVisual = "claro" | "oscuro";
 type AparienciaForm = {
   nombreVisible: string;
   color: string;
+  colorCategoria: string;
+  colorAccion: string;
   estilo: EstiloVisual;
   logoUrl: string;
   tipoFuente: string;
@@ -481,6 +483,8 @@ function aparienciaDefault(sucursal: Sucursal | null, tenant: Tenant | null): Ap
   return {
     nombreVisible: sucursal ? `${base} - ${sucursal.nombre}` : base,
     color: tenant?.color_primario && esColorHex(tenant.color_primario) ? tenant.color_primario : COLOR_DEFAULT,
+    colorCategoria: tenant?.color_categoria && esColorHex(tenant.color_categoria) ? tenant.color_categoria : COLOR_DEFAULT,
+    colorAccion: tenant?.color_accion && esColorHex(tenant.color_accion) ? tenant.color_accion : COLOR_DEFAULT,
     estilo: tenant?.estilo_visual === "claro" || tenant?.estilo_visual === "oscuro" ? tenant.estilo_visual : "oscuro",
     logoUrl: tenant?.logo_url ?? "",
     tipoFuente: tenant?.tipo_fuente ?? "Inter",
@@ -497,6 +501,8 @@ function leerAparienciaGuardada(storageKey: string, fallback: AparienciaForm): A
     return {
       nombreVisible: typeof data.nombreVisible === "string" ? data.nombreVisible : fallback.nombreVisible,
       color: typeof data.color === "string" && esColorHex(data.color) ? data.color : fallback.color,
+      colorCategoria: typeof data.colorCategoria === "string" && esColorHex(data.colorCategoria) ? data.colorCategoria : fallback.colorCategoria,
+      colorAccion: typeof data.colorAccion === "string" && esColorHex(data.colorAccion) ? data.colorAccion : fallback.colorAccion,
       estilo: data.estilo === "claro" || data.estilo === "oscuro" ? data.estilo : fallback.estilo,
       logoUrl: typeof data.logoUrl === "string" ? data.logoUrl : fallback.logoUrl,
       tipoFuente: typeof data.tipoFuente === "string" ? data.tipoFuente : fallback.tipoFuente,
@@ -536,7 +542,7 @@ function AparienciaTab({
   const [guardando, setGuardando] = useState(false);
   const [ok, setOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { nombreVisible, color, estilo, logoUrl, tipoFuente, mostrarMarcaAgua } = apariencia;
+  const { nombreVisible, color, colorCategoria, colorAccion, estilo, logoUrl, tipoFuente, mostrarMarcaAgua } = apariencia;
 
   useEffect(() => {
     guardarAparienciaLocal(storageKey, apariencia);
@@ -552,6 +558,8 @@ function AparienciaTab({
         const actualizado = await api.actualizarMiTenant({
           nombre_fantasia: nombreVisible.trim() || undefined,
           color_primario: esColorHex(color) ? color : undefined,
+          color_categoria: esPro && esColorHex(colorCategoria) ? colorCategoria : undefined,
+          color_accion: esPro && esColorHex(colorAccion) ? colorAccion : undefined,
           estilo_visual: estilo,
           logo_url: logoUrl || undefined,
           tipo_fuente: esPro ? tipoFuente : undefined,
@@ -590,6 +598,8 @@ function AparienciaTab({
 
   const oscuro = estilo === "oscuro";
   const colorPrincipal = esColorHex(color) ? color : COLOR_DEFAULT;
+  const colorCategorias = esColorHex(colorCategoria) ? colorCategoria : colorPrincipal;
+  const colorBotonAccion = esColorHex(colorAccion) ? colorAccion : colorPrincipal;
   const phoneScreenBg = oscuro ? "#111611" : "#f7f7f7";
   const phonePanelBg = oscuro ? "#18201b" : "#ffffff";
   const phoneHeaderBg = oscuro ? "#0c100d" : "#ffffff";
@@ -604,7 +614,7 @@ function AparienciaTab({
       : "inherit";
 
   return (
-    <div className="grid lg:grid-cols-[1fr_300px] gap-16 items-start">
+    <div className="space-y-16">
       <Card titulo="Apariencia del menú">
         <Campo label="Nombre visible en el menú">
           <input
@@ -722,6 +732,65 @@ function AparienciaTab({
             )}
           </div>
 
+          <div className="grid gap-12 sm:grid-cols-2">
+            {([
+              { key: 'colorCategoria' as const, label: 'Color de categorías', value: colorCategoria, helper: 'Categoría seleccionada y sus íconos.' },
+              { key: 'colorAccion' as const, label: 'Color de acciones', value: colorAccion, helper: 'Botones Agregar y llamados principales.' },
+            ]).map((control) => (
+              <Campo key={control.key} label={control.label}>
+                <div
+                  onClick={!esPro ? () => setModalUpgradeOpen(true) : undefined}
+                  onKeyDown={!esPro ? (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault()
+                      setModalUpgradeOpen(true)
+                    }
+                  } : undefined}
+                  role={!esPro ? 'button' : undefined}
+                  tabIndex={!esPro ? 0 : undefined}
+                  className={`w-full rounded-xl border p-12 text-left transition-colors ${esPro ? 'border-concrete bg-canvas-white' : 'border-concrete/70 bg-ghost-fog/35'}`}
+                >
+                  <span className="flex items-center gap-10">
+                    <span className="relative h-40 w-40 shrink-0 overflow-hidden rounded-lg border border-concrete" style={{ backgroundColor: esColorHex(control.value) ? control.value : COLOR_DEFAULT }}>
+                      {esPro && (
+                        <input
+                          type="color"
+                          value={esColorHex(control.value) ? control.value : COLOR_DEFAULT}
+                          onClick={(event) => event.stopPropagation()}
+                          onChange={(event) => {
+                            setApariencia((prev) => ({ ...prev, [control.key]: event.target.value }));
+                            setOk(false);
+                          }}
+                          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+                          aria-label={`Elegir ${control.label.toLowerCase()}`}
+                        />
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-center justify-between gap-8">
+                        <span className="font-mono text-12 font-semibold text-ash-graphite">{control.value.toUpperCase()}</span>
+                        {!esPro && <span className="material-symbols-outlined text-16 text-stone">lock</span>}
+                      </span>
+                      <span className="mt-2 block text-10 leading-relaxed text-sage-green">{control.helper}</span>
+                    </span>
+                  </span>
+                  {esPro && (
+                    <input
+                      value={control.value.toUpperCase()}
+                      onClick={(event) => event.stopPropagation()}
+                      onChange={(event) => {
+                        setApariencia((prev) => ({ ...prev, [control.key]: event.target.value }));
+                        setOk(false);
+                      }}
+                      className="mt-10 h-[38px] w-full rounded-lg border border-concrete bg-canvas-white px-10 font-mono text-11 text-ash-graphite outline-none focus:border-plain-green"
+                      aria-label={`${control.label} en hexadecimal`}
+                    />
+                  )}
+                </div>
+              </Campo>
+            ))}
+          </div>
+
           <div>
             {/* Tipografía de la carta */}
             <Campo label="Tipografía de la carta digital">
@@ -820,7 +889,27 @@ function AparienciaTab({
         </div>
       </Card>
 
-      <div className="flex justify-center rounded-xl border border-concrete bg-canvas-white p-16 lg:justify-end lg:p-20">
+      <div className="relative flex justify-center overflow-hidden rounded-2xl border border-concrete bg-canvas-white p-20 lg:min-h-[560px] lg:items-center lg:p-28">
+        <div className="absolute left-[6%] top-[18%] hidden w-[210px] items-center gap-8 lg:flex">
+          <span className="rounded-full border border-concrete bg-ghost-fog px-10 py-6 text-10 font-semibold text-ash-graphite">Nombre y logo</span>
+          <span className="h-px flex-1 bg-concrete" />
+          <span className="h-7 w-7 rounded-full bg-ash-graphite" />
+        </div>
+        <div className="absolute right-[5%] top-[37%] hidden w-[220px] items-center gap-8 lg:flex">
+          <span className="h-7 w-7 rounded-full" style={{ background: colorCategorias }} />
+          <span className="h-px flex-1 bg-concrete" />
+          <span className="rounded-full border border-concrete bg-ghost-fog px-10 py-6 text-10 font-semibold text-ash-graphite">Color de categorías</span>
+        </div>
+        <div className="absolute right-[5%] top-[64%] hidden w-[220px] items-center gap-8 lg:flex">
+          <span className="h-7 w-7 rounded-full" style={{ background: colorBotonAccion }} />
+          <span className="h-px flex-1 bg-concrete" />
+          <span className="rounded-full border border-concrete bg-ghost-fog px-10 py-6 text-10 font-semibold text-ash-graphite">Botón Agregar</span>
+        </div>
+        <div className="absolute bottom-[17%] left-[5%] hidden w-[220px] items-center gap-8 lg:flex">
+          <span className="rounded-full border border-concrete bg-ghost-fog px-10 py-6 text-10 font-semibold text-ash-graphite">Color principal</span>
+          <span className="h-px flex-1 bg-concrete" />
+          <span className="h-7 w-7 rounded-full" style={{ background: colorPrincipal }} />
+        </div>
         <div className="w-full max-w-[300px]">
           <p className="mb-12 text-center font-mono text-[12px] uppercase text-sage-green">
             Vista previa del menú
@@ -879,7 +968,7 @@ function AparienciaTab({
                 <div className="mb-[10px] flex gap-[6px] overflow-hidden">
                   <span
                     className="grid h-[38px] shrink-0 place-items-center rounded-full px-[10px] text-[12px] font-bold leading-none text-white"
-                    style={{ background: colorPrincipal }}
+                    style={{ background: colorCategorias }}
                   >
                     Cafés
                   </span>
@@ -908,9 +997,15 @@ function AparienciaTab({
                   ].map(([titulo, descripcion, precio]) => (
                     <div
                       key={titulo}
-                      className="flex min-h-[78px] items-center gap-[8px] rounded-lg border p-[10px]"
+                      className="flex min-h-[78px] items-center gap-[8px] rounded-lg border p-[7px]"
                       style={{ background: phonePanelBg, borderColor: phoneBorder }}
                     >
+                      <div
+                        className="grid h-[58px] w-[58px] shrink-0 place-items-center overflow-hidden rounded-md"
+                        style={{ background: `linear-gradient(145deg, ${colorPrincipal}35, ${phoneHeaderBg})` }}
+                      >
+                        <span className="material-symbols-outlined text-[22px]" style={{ color: colorPrincipal }}>restaurant</span>
+                      </div>
                       <div className="min-w-0 flex-1">
                         <p className="truncate text-[13px] font-bold leading-[16px]">{titulo}</p>
                         <p className="mt-[3px] truncate text-[11px] leading-[14px]" style={{ color: phoneMutedText }}>
@@ -920,7 +1015,7 @@ function AparienciaTab({
                       </div>
                       <button
                         className="grid h-[36px] w-[36px] shrink-0 place-items-center rounded-full text-[18px] font-medium leading-none text-white"
-                        style={{ background: colorPrincipal }}
+                        style={{ background: colorBotonAccion }}
                         aria-label={`Agregar ${titulo}`}
                       >
                         +

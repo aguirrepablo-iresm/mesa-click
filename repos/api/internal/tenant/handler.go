@@ -93,6 +93,14 @@ func (h *Handlers) ActualizarMe(w http.ResponseWriter, r *http.Request) {
 			jsonError(w, err.Error(), http.StatusBadRequest)
 			return
 		}
+		if errors.Is(err, ErrPlanRequired) {
+			jsonError(w, err.Error(), http.StatusForbidden, "PLAN_LIMIT_REACHED", map[string]any{
+				"recurso": "personalizacion",
+				"limite":  0,
+				"actual":  0,
+			})
+			return
+		}
 		slog.ErrorContext(r.Context(), "error actualizando tenant", "err", err)
 		jsonError(w, "error actualizando negocio", http.StatusInternalServerError)
 		return

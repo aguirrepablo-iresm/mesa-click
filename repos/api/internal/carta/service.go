@@ -47,6 +47,13 @@ func (svc *Service) CrearArticulo(ctx context.Context, tenantID string, input Ar
 	if input.CategoriaID == "" {
 		return nil, fmt.Errorf("categoria_id requerido: %w", ErrValidation)
 	}
+	input.Nombre = strings.TrimSpace(input.Nombre)
+	input.Descripcion = strings.TrimSpace(input.Descripcion)
+	foto, err := normalizarFotoURL(input.FotoURL)
+	if err != nil {
+		return nil, err
+	}
+	input.FotoURL = foto
 	return svc.store.CrearArticulo(ctx, tenantID, input)
 }
 
@@ -54,7 +61,66 @@ func (svc *Service) ActualizarArticulo(ctx context.Context, id, tenantID string,
 	if u.Precio != nil && *u.Precio < 0 {
 		return nil, fmt.Errorf("precio no puede ser negativo: %w", ErrValidation)
 	}
+	if u.FotoURL != nil {
+		foto, err := normalizarFotoURL(*u.FotoURL)
+		if err != nil {
+			return nil, err
+		}
+		u.FotoURL = &foto
+	}
+	if u.Nombre != nil {
+		nombre := strings.TrimSpace(*u.Nombre)
+		if nombre == "" {
+			return nil, fmt.Errorf("nombre requerido: %w", ErrValidation)
+		}
+		u.Nombre = &nombre
+	}
+	if u.Descripcion != nil {
+		descripcion := strings.TrimSpace(*u.Descripcion)
+		u.Descripcion = &descripcion
+	}
 	return svc.store.ActualizarArticulo(ctx, id, tenantID, u)
+}
+
+const maxFotoURLBytes = 380_000
+
+func normalizarFotoURL(valor string) (string, error) {
+	valor = strings.TrimSpace(valor)
+	if valor == "" {
+		return "", nil
+	}
+	if len(valor) > maxFotoURLBytes {
+		return "", fmt.Errorf("la imagen supera el tamaño permitido: %w", ErrValidation)
+	}
+	valido := strings.HasPrefix(valor, "data:image/jpeg;base64,") ||
+		strings.HasPrefix(valor, "data:image/png;base64,") ||
+		strings.HasPrefix(valor, "data:image/webp;base64,") ||
+		strings.HasPrefix(valor, "https://") || strings.HasPrefix(valor, "http://")
+	if !valido {
+		return "", fmt.Errorf("foto_url debe ser una imagen PNG/JPG/WebP válida: %w", ErrValidation)
+	}
+	return valor, nil
+}
+
+var iconosCategoriaPermitidos = map[string]struct{}{
+	"restaurant": {}, "lunch_dining": {}, "ramen_dining": {}, "local_pizza": {},
+	"breakfast_dining": {}, "bakery_dining": {}, "tapas": {}, "soup_kitchen": {},
+	"set_meal": {}, "cake": {}, "icecream": {}, "local_cafe": {},
+	"local_bar": {}, "liquor": {}, "emoji_food_beverage": {},
+}
+
+func (svc *Service) AsignarIconoCategoria(ctx context.Context, id, tenantID string, icono *string) (*Categoria, error) {
+	if strings.TrimSpace(id) == "" {
+		return nil, fmt.Errorf("id requerido: %w", ErrValidation)
+	}
+	if icono == nil || strings.TrimSpace(*icono) == "" {
+		return svc.store.AsignarIconoCategoria(ctx, id, tenantID, nil)
+	}
+	normalizado := strings.TrimSpace(*icono)
+	if _, ok := iconosCategoriaPermitidos[normalizado]; !ok {
+		return nil, fmt.Errorf("icono de categoría no permitido: %w", ErrValidation)
+	}
+	return svc.store.AsignarIconoCategoria(ctx, id, tenantID, &normalizado)
 }
 
 func (svc *Service) ActualizarDisponibilidad(ctx context.Context, id, tenantID string, disponible bool) (*Articulo, error) {

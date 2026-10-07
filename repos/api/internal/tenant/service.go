@@ -3,6 +3,7 @@ package tenant
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -14,6 +15,8 @@ type Service struct {
 }
 
 func NuevoService(s Store) *Service { return &Service{store: s} }
+
+var colorHexPattern = regexp.MustCompile(`^#[0-9a-fA-F]{6}$`)
 
 func (svc *Service) Crear(ctx context.Context, input OnboardingInput) (*Tenant, error) {
 	if input.Slug == "" {
@@ -89,7 +92,39 @@ func (svc *Service) Actualizar(ctx context.Context, id string, input ActualizarT
 	}
 	if input.ColorPrimario != nil {
 		trimmed := strings.TrimSpace(*input.ColorPrimario)
+		if !colorHexPattern.MatchString(trimmed) {
+			return nil, fmt.Errorf("%w: color_primario debe usar formato #RRGGBB", ErrValidation)
+		}
 		input.ColorPrimario = &trimmed
+	}
+	coloresAvanzados := []*string{input.ColorSecundario, input.ColorCategoria, input.ColorAccion}
+	for _, color := range coloresAvanzados {
+		if color != nil && !colorHexPattern.MatchString(strings.TrimSpace(*color)) {
+			return nil, fmt.Errorf("%w: los colores deben usar formato #RRGGBB", ErrValidation)
+		}
+	}
+	if input.ColorSecundario != nil {
+		valor := strings.TrimSpace(*input.ColorSecundario)
+		input.ColorSecundario = &valor
+	}
+	if input.ColorCategoria != nil {
+		valor := strings.TrimSpace(*input.ColorCategoria)
+		input.ColorCategoria = &valor
+	}
+	if input.ColorAccion != nil {
+		valor := strings.TrimSpace(*input.ColorAccion)
+		input.ColorAccion = &valor
+	}
+	personalizacionPro := input.ColorSecundario != nil || input.ColorCategoria != nil || input.ColorAccion != nil ||
+		input.TipoFuente != nil || input.MostrarMarcaAgua != nil
+	if personalizacionPro {
+		cuotas, err := svc.store.ObtenerEstadoCuotas(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		if cuotas.PlanEfectivo(time.Now()) != PlanPro {
+			return nil, ErrPlanRequired
+		}
 	}
 	if input.EstiloVisual != nil {
 		trimmed := strings.ToLower(strings.TrimSpace(*input.EstiloVisual))

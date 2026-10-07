@@ -13,6 +13,7 @@ type Categoria struct {
 	TenantID        string  `json:"tenant_id,omitempty"`
 	Nombre          string  `json:"nombre"`
 	Orden           int     `json:"orden"`
+	Icono           *string `json:"icono,omitempty"`
 	FranjaHorariaID *string `json:"franja_horaria_id,omitempty"`
 }
 
@@ -50,6 +51,10 @@ type FranjaHorariaInput struct {
 
 type AsignarFranjaInput struct {
 	FranjaHorariaID *string `json:"franja_horaria_id"`
+}
+
+type AsignarIconoInput struct {
+	Icono *string `json:"icono"`
 }
 
 type Variante struct {
@@ -92,8 +97,11 @@ type ArticuloInput struct {
 }
 
 type ArticuloUpdate struct {
+	CategoriaID        *string  `json:"categoria_id"`
 	Nombre             *string  `json:"nombre"`
+	Descripcion        *string  `json:"descripcion"`
 	Precio             *float64 `json:"precio"`
+	FotoURL            *string  `json:"foto_url"`
 	Activo             *bool    `json:"activo"`
 	Disponible         *bool    `json:"disponible"`
 	ReponerDiariamente *bool    `json:"reponer_diariamente"`

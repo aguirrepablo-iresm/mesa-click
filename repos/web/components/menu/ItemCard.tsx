@@ -5,6 +5,7 @@ export interface ItemCardData {
   nombre: string;
   precio: number;
   descripcion?: string;
+  foto_url?: string;
   disponible?: boolean;
   activo?: boolean;
   variantes?: VariantePublica[];
@@ -13,24 +14,37 @@ export interface ItemCardData {
 interface Props {
   item: ItemCardData;
   cantidad: number;
+  categoriaIcono?: string;
   onAgregar: () => void;
 }
 
-export default function ItemCard({ item, cantidad, onAgregar }: Props) {
+export default function ItemCard({ item, cantidad, categoriaIcono = 'restaurant', onAgregar }: Props) {
   const tieneVariantes = Boolean(item.variantes && item.variantes.length > 0);
   const agotado = item.disponible === false;
 
   return (
     <div
-      className={`mesa-surface mesa-border flex w-full min-w-0 items-start justify-between gap-12 rounded-lg border p-16 shadow-2xs transition-colors ${
+      className={`mesa-surface mesa-border flex w-full min-w-0 items-stretch gap-12 overflow-hidden rounded-xl border p-10 shadow-2xs transition-all ${
         agotado
           ? "opacity-60 bg-ghost-fog/40 border-concrete"
-          : "hover:border-[var(--mesa-primary)]"
+          : "hover:-translate-y-px hover:border-[var(--mesa-primary)] hover:shadow-sm"
       }`}
     >
-      <div className="min-w-0 flex-1">
+      <div className="mesa-subtle-surface mesa-border relative h-[104px] w-[112px] shrink-0 overflow-hidden rounded-lg border">
+        {item.foto_url ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={item.foto_url} alt={`Foto de ${item.nombre}`} className={`h-full w-full object-cover ${agotado ? 'grayscale' : ''}`} />
+        ) : (
+          <div className="flex h-full w-full flex-col items-center justify-center gap-4 mesa-muted">
+            <span className="material-symbols-outlined text-30" aria-hidden="true">{categoriaIcono}</span>
+            <span className="text-9 font-medium uppercase tracking-[0.08em]">Sin foto</span>
+          </div>
+        )}
+      </div>
+
+      <div className="min-w-0 flex-1 py-4">
         <div className="flex items-center gap-6 flex-wrap">
-          <h3 className={`break-words text-14 font-medium ${agotado ? "text-stone line-through" : "mesa-text"}`}>
+          <h3 className={`break-words text-15 font-semibold leading-tight ${agotado ? "text-stone line-through" : "mesa-text"}`}>
             {item.nombre}
           </h3>
           {agotado ? (
@@ -46,33 +60,32 @@ export default function ItemCard({ item, cantidad, onAgregar }: Props) {
           )}
         </div>
         {item.descripcion && (
-          <p className="mesa-muted mt-2 max-w-full break-words whitespace-normal text-12 leading-relaxed [overflow-wrap:anywhere]">
+          <p className="mesa-muted mt-4 line-clamp-2 max-w-full break-words text-11 leading-relaxed [overflow-wrap:anywhere]">
             {item.descripcion}
           </p>
         )}
-        <p className={`mt-8 text-14 font-mono font-medium ${agotado ? "text-stone" : "mesa-primary"}`}>
-          ${item.precio.toLocaleString()}
+        <p className={`mt-8 text-15 font-mono font-semibold ${agotado ? "text-stone" : "mesa-text"}`}>
+          ${item.precio.toLocaleString('es-AR')}
         </p>
       </div>
 
       {agotado ? (
-        <button
-          disabled
-          aria-label={`${item.nombre} agotado`}
-          title="Este producto se encuentra agotado momentáneamente"
-          className="flex h-48 w-48 flex-shrink-0 items-center justify-center rounded-full border border-concrete bg-ghost-fog text-stone text-12 font-medium cursor-not-allowed opacity-60"
-        >
-          ✕
-        </button>
+        <div className="flex w-58 shrink-0 flex-col items-center justify-center gap-4 text-stone" title="Este producto se encuentra agotado momentáneamente">
+          <span className="flex h-44 w-44 items-center justify-center rounded-full border border-concrete bg-ghost-fog text-14">✕</span>
+          <span className="text-9 font-semibold">Agotado</span>
+        </div>
       ) : (
         <button
           onClick={onAgregar}
           aria-label={`Agregar ${item.nombre}`}
-          className={`mesa-primary-bg flex h-48 w-48 flex-shrink-0 items-center justify-center rounded-full border border-transparent text-16 font-semibold transition-all active:scale-90 ${
-            cantidad > 0 ? 'shadow-sm' : 'hover:brightness-95'
+          className={`group flex w-58 shrink-0 flex-col items-center justify-center gap-5 rounded-lg transition-all active:scale-95 ${
+            cantidad > 0 ? 'shadow-sm' : 'hover:bg-[var(--mesa-primary-soft)]'
           }`}
         >
-          {cantidad > 0 ? cantidad : '+'}
+          <span className="flex h-46 w-46 items-center justify-center rounded-full bg-[var(--mesa-action)] text-[var(--mesa-action-contrast)] text-24 font-medium leading-none shadow-sm transition-transform group-hover:scale-105">
+            {cantidad > 0 ? cantidad : '+'}
+          </span>
+          <span className="text-10 font-semibold text-[var(--mesa-action)]">Agregar</span>
         </button>
       )}
     </div>

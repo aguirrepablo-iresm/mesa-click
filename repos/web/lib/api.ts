@@ -250,6 +250,8 @@ export interface Tenant {
   upgrade_nota?: string | null;
   mostrar_marca_agua?: boolean;
   color_secundario?: string;
+  color_categoria?: string;
+  color_accion?: string;
   tipo_fuente?: string;
   slug: string;
   activo?: boolean;
@@ -274,6 +276,8 @@ export interface ActualizarTenantInput {
   mp_activo?: boolean;
   mostrar_marca_agua?: boolean;
   color_secundario?: string;
+  color_categoria?: string;
+  color_accion?: string;
   tipo_fuente?: string;
 }
 
@@ -322,6 +326,7 @@ export interface CategoriaAPI {
   tenant_id: string;
   nombre: string;
   orden: number;
+  icono?: string;
   franja_horaria_id?: string;
   activa: boolean;
   created_at: string;
@@ -413,6 +418,8 @@ export interface MesaPublica {
   plan?: PlanTenant;
   mostrar_marca_agua?: boolean;
   color_secundario?: string | null;
+  color_categoria?: string | null;
+  color_accion?: string | null;
   tipo_fuente?: string | null;
 }
 
@@ -431,6 +438,7 @@ export interface CategoriaPublica {
   id: string;
   nombre: string;
   orden: number;
+  icono?: string;
   articulos: ArticuloPublico[];
   disponible: boolean;
   disponible_desde?: string;
@@ -686,6 +694,13 @@ export const api = {
     return apiFetch<CategoriaAPI>(`/carta/categorias/${id}/franja-horaria`, {
       method: 'PATCH',
       body: JSON.stringify({ franja_horaria_id: franjaHorariaId }),
+    });
+  },
+
+  asignarIconoCategoria: async (id: string, icono: string | null) => {
+    return apiFetch<CategoriaAPI>(`/carta/categorias/${id}/icono`, {
+      method: 'PATCH',
+      body: JSON.stringify({ icono }),
     });
   },
 

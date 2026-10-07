@@ -7,10 +7,11 @@ import (
 type Recurso string
 
 const (
-	RecursoMesas       Recurso = "mesas"
-	RecursoProductos   Recurso = "productos"
-	RecursoSucursales  Recurso = "sucursales"
-	RecursoCargaMasiva Recurso = "carga_masiva" // Pro only
+	RecursoMesas           Recurso = "mesas"
+	RecursoProductos       Recurso = "productos"
+	RecursoSucursales      Recurso = "sucursales"
+	RecursoCargaMasiva     Recurso = "carga_masiva"    // Pro only
+	RecursoPersonalizacion Recurso = "personalizacion" // Pro only
 )
 
 const (
@@ -28,7 +29,8 @@ var limitesFree = map[Recurso]int{
 }
 
 var recursosPro = map[Recurso]bool{
-	RecursoCargaMasiva: true,
+	RecursoCargaMasiva:     true,
+	RecursoPersonalizacion: true,
 }
 
 type EstadoCuotas struct {
@@ -111,6 +113,8 @@ func NombreRecurso(rec Recurso) string {
 		return "sucursales"
 	case RecursoCargaMasiva:
 		return "carga masiva"
+	case RecursoPersonalizacion:
+		return "personalización visual"
 	default:
 		return string(rec)
 	}

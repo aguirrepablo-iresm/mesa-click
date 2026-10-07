@@ -243,6 +243,30 @@ func (h *Handlers) AsignarFranjaCategoria(w http.ResponseWriter, r *http.Request
 	jsonOK(w, categoria)
 }
 
+func (h *Handlers) AsignarIconoCategoria(w http.ResponseWriter, r *http.Request) {
+	claims := auth.ClaimsFromContext(r.Context())
+	var input AsignarIconoInput
+	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+		jsonError(w, "body inválido", http.StatusBadRequest)
+		return
+	}
+	categoria, err := h.svc.AsignarIconoCategoria(r.Context(), r.PathValue("id"), claims.TenantID, input.Icono)
+	if err != nil {
+		if errors.Is(err, ErrNotFound) {
+			jsonError(w, "categoría no encontrada", http.StatusNotFound)
+			return
+		}
+		if errors.Is(err, ErrValidation) {
+			jsonError(w, err.Error(), http.StatusBadRequest)
+			return
+		}
+		slog.ErrorContext(r.Context(), "error actualizando ícono de categoría", "err", err)
+		jsonError(w, "error interno", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, categoria)
+}
+
 func (h *Handlers) AsignarFranjaArticulo(w http.ResponseWriter, r *http.Request) {
 	claims := auth.ClaimsFromContext(r.Context())
 	var input AsignarFranjaInput

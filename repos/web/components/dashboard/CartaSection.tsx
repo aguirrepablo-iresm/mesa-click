@@ -6,13 +6,20 @@ import ImportarCartaModal from "@/components/dashboard/ImportarCartaModal";
 import AjustePreciosModal from "./AjustePreciosModal";
 import FranjasHorariasModal from "./FranjasHorariasModal";
 import UpgradeModal from "./UpgradeModal";
+import { prepararImagenProducto } from "@/lib/product-image";
 
 export interface CategoriaConItems extends CategoriaAPI {
   items: ArticuloAPI[];
 }
 
-type NuevoItemForm = { nombre: string; descripcion: string; precio: string };
+type NuevoItemForm = { nombre: string; descripcion: string; precio: string; fotoUrl: string };
 type NuevoItemErrors = Partial<Record<"nombre" | "precio", string>>;
+
+const ICONOS_CATEGORIA = [
+  'restaurant', 'lunch_dining', 'ramen_dining', 'local_pizza', 'breakfast_dining',
+  'bakery_dining', 'tapas', 'soup_kitchen', 'set_meal', 'cake', 'icecream',
+  'local_cafe', 'local_bar', 'liquor', 'emoji_food_beverage',
+] as const;
 
 type SelectorFranjaCategoriaProps = {
   categoria: CategoriaConItems;
@@ -143,7 +150,7 @@ export default function CartaSection() {
   const [nuevaCatNombre, setNuevaCatNombre] = useState('');
   const [mostrarFormCat, setMostrarFormCat] = useState(false);
   const [mostrarFormItem, setMostrarFormItem] = useState<string | null>(null);
-  const [nuevoItem, setNuevoItem] = useState<NuevoItemForm>({ nombre: '', descripcion: '', precio: '' });
+  const [nuevoItem, setNuevoItem] = useState<NuevoItemForm>({ nombre: '', descripcion: '', precio: '', fotoUrl: '' });
   const [nuevoItemErrors, setNuevoItemErrors] = useState<NuevoItemErrors>({});
   const [errorMsg, setErrorMsg] = useState('');
   const [articuloVariantesAbierto, setArticuloVariantesAbierto] = useState<string | null>(null);
@@ -165,10 +172,13 @@ export default function CartaSection() {
   const [guardandoHorarioId, setGuardandoHorarioId] = useState<string | null>(null);
   const [menuHorarioCategoriaAbierto, setMenuHorarioCategoriaAbierto] = useState<string | null>(null);
   const [menuItemAbierto, setMenuItemAbierto] = useState<string | null>(null);
+  const [menuIconoCategoriaAbierto, setMenuIconoCategoriaAbierto] = useState<string | null>(null);
+  const [procesandoImagen, setProcesandoImagen] = useState(false);
+  const [actualizandoFotoId, setActualizandoFotoId] = useState<string | null>(null);
 
   const [estadoPlan, setEstadoPlan] = useState<EstadoPlan | null>(null);
   const [modalUpgradeOpen, setModalUpgradeOpen] = useState(false);
-  const [modalUpgradeRecurso, setModalUpgradeRecurso] = useState<"productos" | "carga_masiva">("productos");
+  const [modalUpgradeRecurso, setModalUpgradeRecurso] = useState<"productos" | "carga_masiva" | "personalizacion">("productos");
   const [modalLimiteInfo, setModalLimiteInfo] = useState<{ limite?: number; uso?: number }>({});
 
   const cargarPlan = useCallback(async () => {
@@ -223,6 +233,7 @@ export default function CartaSection() {
     const cerrarMenus = () => {
       setMenuHorarioCategoriaAbierto(null);
       setMenuItemAbierto(null);
+      setMenuIconoCategoriaAbierto(null);
     };
     window.addEventListener("click", cerrarMenus);
     return () => window.removeEventListener("click", cerrarMenus);
@@ -294,13 +305,14 @@ export default function CartaSection() {
         nombre: nuevoItem.nombre.trim(),
         descripcion: nuevoItem.descripcion.trim(),
         precio: precioNum,
+        foto_url: nuevoItem.fotoUrl || undefined,
         activo: true,
       });
 
       setCategorias(prev =>
         prev.map(c => c.id === catId ? { ...c, items: [...c.items, creado] } : c)
       );
-      setNuevoItem({ nombre: '', descripcion: '', precio: '' });
+      setNuevoItem({ nombre: '', descripcion: '', precio: '', fotoUrl: '' });
       setMostrarFormItem(null);
       toast.success('Ítem agregado a la carta.');
       void cargarPlan();
@@ -432,6 +444,79 @@ export default function CartaSection() {
     }
   };
 
+  const asignarIconoCategoria = async (categoriaId: string, icono: string) => {
+    if (estadoPlan?.plan !== 'pro') {
+      setModalUpgradeRecurso('personalizacion');
+      setModalUpgradeOpen(true);
+      return;
+    }
+    try {
+      setGuardandoHorarioId(categoriaId);
+      const actualizada = await api.asignarIconoCategoria(categoriaId, icono);
+      setCategorias(prev => prev.map(categoria => categoria.id === categoriaId
+        ? { ...categoria, icono: actualizada.icono }
+        : categoria));
+      setMenuIconoCategoriaAbierto(null);
+      toast.success('Ícono de categoría actualizado.');
+    } catch (error: unknown) {
+      if (esPlanLimitReached(error)) {
+        setModalUpgradeRecurso('personalizacion');
+        setModalUpgradeOpen(true);
+        return;
+      }
+      toast.error(getErrorMessage(error, 'No se pudo actualizar el ícono.'));
+    } finally {
+      setGuardandoHorarioId(null);
+    }
+  };
+
+  const cargarImagenNueva = async (file?: File | null) => {
+    if (!file) return;
+    try {
+      setProcesandoImagen(true);
+      const fotoUrl = await prepararImagenProducto(file);
+      setNuevoItem(prev => ({ ...prev, fotoUrl }));
+      toast.success('Imagen preparada y lista para guardar.');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'No se pudo procesar la imagen.'));
+    } finally {
+      setProcesandoImagen(false);
+    }
+  };
+
+  const actualizarFotoArticulo = async (catId: string, item: ArticuloAPI, file?: File | null) => {
+    if (!file) return;
+    try {
+      setActualizandoFotoId(item.id);
+      const fotoUrl = await prepararImagenProducto(file);
+      const actualizado = await api.actualizarArticulo(item.id, { foto_url: fotoUrl });
+      setCategorias(prev => prev.map(categoria => categoria.id === catId
+        ? { ...categoria, items: categoria.items.map(actual => actual.id === item.id ? { ...actual, foto_url: actualizado.foto_url } : actual) }
+        : categoria));
+      toast.success(`Foto de ${item.nombre} actualizada.`);
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'No se pudo actualizar la foto.'));
+    } finally {
+      setActualizandoFotoId(null);
+    }
+  };
+
+  const quitarFotoArticulo = async (catId: string, item: ArticuloAPI) => {
+    try {
+      setActualizandoFotoId(item.id);
+      await api.actualizarArticulo(item.id, { foto_url: '' });
+      setCategorias(prev => prev.map(categoria => categoria.id === catId
+        ? { ...categoria, items: categoria.items.map(actual => actual.id === item.id ? { ...actual, foto_url: undefined } : actual) }
+        : categoria));
+      setMenuItemAbierto(null);
+      toast.success('Foto eliminada. Se mostrará el ícono de la categoría.');
+    } catch (error: unknown) {
+      toast.error(getErrorMessage(error, 'No se pudo quitar la foto.'));
+    } finally {
+      setActualizandoFotoId(null);
+    }
+  };
+
   const asignarFranjaArticulo = async (categoriaId: string, articuloId: string, franjaId: string) => {
     try {
       setGuardandoHorarioId(articuloId);
@@ -559,7 +644,7 @@ export default function CartaSection() {
       return;
     }
     setMostrarFormItem(catId || categorias[0].id);
-    setNuevoItem({ nombre: '', descripcion: '', precio: '' });
+    setNuevoItem({ nombre: '', descripcion: '', precio: '', fotoUrl: '' });
     setNuevoItemErrors({});
   };
 
@@ -731,10 +816,51 @@ export default function CartaSection() {
             </button>
           </div>
 
-          {totalItems > 0 && (
+          {categorias.length > 0 && (
             <div className="divide-y divide-ghost-fog rounded-lg border border-concrete">
               {categorias.map(categoria => (
                 <div key={categoria.id} className="flex flex-col gap-10 px-12 py-10 sm:flex-row sm:items-center">
+                  <div className="relative" onClick={(event) => event.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (estadoPlan?.plan !== 'pro') {
+                          setModalUpgradeRecurso('personalizacion');
+                          setModalUpgradeOpen(true);
+                          return;
+                        }
+                        setMenuIconoCategoriaAbierto(actual => actual === categoria.id ? null : categoria.id);
+                        setMenuHorarioCategoriaAbierto(null);
+                      }}
+                      className="relative flex h-44 w-44 shrink-0 items-center justify-center rounded-lg border border-concrete bg-ghost-fog text-ash-graphite transition-colors hover:border-stone hover:bg-canvas-white"
+                      title={estadoPlan?.plan === 'pro' ? 'Elegir ícono de categoría' : 'Íconos de categoría disponibles con Pro'}
+                      aria-label={`Elegir ícono para ${categoria.nombre}`}
+                    >
+                      <span className="material-symbols-outlined text-21">{categoria.icono || 'restaurant'}</span>
+                      {estadoPlan?.plan !== 'pro' && (
+                        <span className="material-symbols-outlined absolute -bottom-4 -right-4 rounded-full bg-ash-graphite p-2 text-9 text-canvas-white">lock</span>
+                      )}
+                    </button>
+                    {menuIconoCategoriaAbierto === categoria.id && (
+                      <div className="absolute left-0 top-[50px] z-50 w-[250px] rounded-xl border border-concrete bg-canvas-white p-12 shadow-xl sm:left-auto sm:right-0">
+                        <p className="mb-8 text-10 font-semibold uppercase tracking-[0.08em] text-sage-green">Ícono de la categoría</p>
+                        <div className="grid grid-cols-5 gap-6">
+                          {ICONOS_CATEGORIA.map(icono => (
+                            <button
+                              key={icono}
+                              type="button"
+                              disabled={guardandoHorarioId === categoria.id}
+                              onClick={() => void asignarIconoCategoria(categoria.id, icono)}
+                              className={`flex h-40 w-40 items-center justify-center rounded-lg border transition-colors ${categoria.icono === icono ? 'border-plain-green bg-plain-green/10 text-plain-green' : 'border-concrete text-sage-green hover:border-stone hover:text-ash-graphite'}`}
+                              aria-label={`Usar ícono ${icono}`}
+                            >
+                              <span className="material-symbols-outlined text-20">{icono}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-12 font-semibold text-ash-graphite">{categoria.nombre}</p>
                     <p className="mt-2 text-10 text-sage-green">
@@ -750,6 +876,7 @@ export default function CartaSection() {
                       onToggle={() => {
                         setMenuHorarioCategoriaAbierto(actual => actual === categoria.id ? null : categoria.id);
                         setMenuItemAbierto(null);
+                        setMenuIconoCategoriaAbierto(null);
                       }}
                       onSelect={franjaId => void asignarFranjaCategoria(categoria.id, franjaId)}
                     />
@@ -846,6 +973,31 @@ export default function CartaSection() {
             value={nuevoItem.descripcion}
             onChange={e => setNuevoItem(p => ({ ...p, descripcion: e.target.value }))}
           />
+          <div className="flex flex-col gap-10 rounded-xl border border-dashed border-concrete bg-ghost-fog/35 p-12 sm:flex-row sm:items-center">
+            <div className="flex h-[88px] w-full shrink-0 items-center justify-center overflow-hidden rounded-lg border border-concrete bg-canvas-white sm:w-[116px]">
+              {nuevoItem.fotoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={nuevoItem.fotoUrl} alt="Vista previa del plato" className="h-full w-full object-cover" />
+              ) : (
+                <span className="material-symbols-outlined text-28 text-sage-green">add_photo_alternate</span>
+              )}
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-12 font-semibold text-ash-graphite">Foto del plato</p>
+              <p className="mt-2 text-10 leading-relaxed text-sage-green">PNG o JPG, hasta 5 MB. La recortamos automáticamente para que todas las tarjetas mantengan la misma proporción.</p>
+            </div>
+            <label className="flex h-44 shrink-0 cursor-pointer items-center justify-center gap-6 rounded-lg border border-concrete bg-canvas-white px-14 text-11 font-semibold text-ash-graphite hover:border-stone">
+              <span className="material-symbols-outlined text-17">upload</span>
+              {procesandoImagen ? 'Procesando...' : nuevoItem.fotoUrl ? 'Cambiar foto' : 'Subir foto'}
+              <input
+                type="file"
+                accept="image/png,image/jpeg"
+                disabled={procesandoImagen}
+                onChange={(event) => void cargarImagenNueva(event.target.files?.[0])}
+                className="sr-only"
+              />
+            </label>
+          </div>
           <div className="flex items-center justify-end gap-8">
             <button
               type="button"
@@ -912,16 +1064,32 @@ export default function CartaSection() {
                   <div key={item.id} className="border-b border-ghost-fog last:border-b-0">
                     <div className={`relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-14 gap-y-12 px-16 py-14 transition-colors hover:bg-ghost-fog/35 sm:px-20 lg:grid-cols-[minmax(260px,2.2fr)_minmax(120px,0.85fr)_100px_minmax(150px,1fr)_minmax(125px,0.85fr)_44px] lg:gap-16 ${!visible || !disponible ? 'bg-ghost-fog/15' : ''}`}>
                       <div className="col-span-2 flex min-w-0 items-center gap-12 pr-44 lg:col-span-1 lg:pr-0">
-                        <div
+                        <label
                           role={item.foto_url ? 'img' : undefined}
                           aria-label={item.foto_url ? `Foto de ${item.nombre}` : undefined}
-                          className={`flex h-52 w-52 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-concrete bg-ghost-fog bg-cover bg-center text-sage-green ${!visible || !disponible ? 'grayscale' : ''}`}
+                          className={`group/photo relative flex h-52 w-52 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-xl border border-concrete bg-ghost-fog bg-cover bg-center text-sage-green ${!visible || !disponible ? 'grayscale' : ''}`}
                           style={item.foto_url ? { backgroundImage: `url(${item.foto_url})` } : undefined}
+                          title="Subir o reemplazar foto"
                         >
                           {!item.foto_url && (
-                            <span className="material-symbols-outlined text-22">restaurant</span>
+                            <span className="material-symbols-outlined text-22">{cat.icono || 'restaurant'}</span>
                           )}
-                        </div>
+                          <span className="absolute inset-0 flex items-center justify-center bg-system-black/55 text-canvas-white opacity-0 transition-opacity group-hover/photo:opacity-100">
+                            <span className="material-symbols-outlined text-19">photo_camera</span>
+                          </span>
+                          {actualizandoFotoId === item.id && (
+                            <span className="absolute inset-0 flex items-center justify-center bg-canvas-white/80">
+                              <span className="material-symbols-outlined animate-spin text-19 text-plain-green">progress_activity</span>
+                            </span>
+                          )}
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg"
+                            disabled={actualizandoFotoId === item.id}
+                            onChange={(event) => void actualizarFotoArticulo(cat.id, item, event.target.files?.[0])}
+                            className="sr-only"
+                          />
+                        </label>
                         <div className="min-w-0">
                           <div className="flex min-w-0 items-center gap-6">
                             <span className="truncate text-14 font-semibold text-ash-graphite sm:text-15">{item.nombre}</span>
@@ -1020,6 +1188,16 @@ export default function CartaSection() {
                                 <span className="material-symbols-outlined text-18">{visible ? 'visibility_off' : 'visibility'}</span>
                                 {visible ? 'Ocultar de la carta' : 'Mostrar en la carta'}
                               </button>
+                              {item.foto_url && (
+                                <button
+                                  type="button"
+                                  onClick={() => void quitarFotoArticulo(cat.id, item)}
+                                  className="flex min-h-44 w-full items-center gap-8 rounded-md px-10 text-left text-12 font-medium text-ash-graphite transition-colors hover:bg-ghost-fog"
+                                >
+                                  <span className="material-symbols-outlined text-18">hide_image</span>
+                                  Quitar foto
+                                </button>
+                              )}
                               <div className="my-4 border-t border-ghost-fog" />
                               <div className="px-6 pb-8 pt-6">
                                 <p className="px-4 text-10 font-semibold uppercase tracking-[0.08em] text-sage-green">
@@ -1233,8 +1411,8 @@ export default function CartaSection() {
         isOpen={modalUpgradeOpen}
         onClose={() => setModalUpgradeOpen(false)}
         recurso={modalUpgradeRecurso}
-        limite={modalLimiteInfo.limite ?? (modalUpgradeRecurso === "carga_masiva" ? 0 : (estadoPlan?.limites?.productos ?? 30))}
-        uso={modalLimiteInfo.uso ?? (modalUpgradeRecurso === "carga_masiva" ? 0 : (estadoPlan?.uso?.productos ?? totalItems))}
+        limite={modalLimiteInfo.limite ?? (modalUpgradeRecurso === "productos" ? (estadoPlan?.limites?.productos ?? 30) : 0)}
+        uso={modalLimiteInfo.uso ?? (modalUpgradeRecurso === "productos" ? (estadoPlan?.uso?.productos ?? totalItems) : 0)}
         onUpgradeSolicitado={() => void cargarPlan()}
       />
     </div>

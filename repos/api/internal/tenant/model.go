@@ -10,6 +10,7 @@ var (
 	ErrValidation         = errors.New("error de validación")
 	ErrSlugConflict       = errors.New("nombre de url ya utilizado")
 	ErrEmailAdminConflict = errors.New("correo de acceso ya registrado")
+	ErrPlanRequired       = errors.New("función exclusiva del plan Pro")
 )
 
 type Tenant struct {
@@ -35,6 +36,8 @@ type Tenant struct {
 	UpgradeNota         *string        `json:"upgrade_nota,omitempty"`
 	MostrarMarcaAgua    bool           `json:"mostrar_marca_agua"`
 	ColorSecundario     *string        `json:"color_secundario,omitempty"`
+	ColorCategoria      *string        `json:"color_categoria,omitempty"`
+	ColorAccion         *string        `json:"color_accion,omitempty"`
 	TipoFuente          *string        `json:"tipo_fuente,omitempty"`
 	Slug                string         `json:"slug"`
 	CreatedAt           time.Time      `json:"created_at"`
@@ -72,5 +75,7 @@ type ActualizarTenantInput struct {
 	MPActivo         *bool          `json:"mp_activo,omitempty"`
 	MostrarMarcaAgua *bool          `json:"mostrar_marca_agua,omitempty"`
 	ColorSecundario  *string        `json:"color_secundario,omitempty"`
+	ColorCategoria   *string        `json:"color_categoria,omitempty"`
+	ColorAccion      *string        `json:"color_accion,omitempty"`
 	TipoFuente       *string        `json:"tipo_fuente,omitempty"`
 }

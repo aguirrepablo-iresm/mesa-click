@@ -52,5 +52,7 @@ type MesaPublica struct {
 	Plan                  string  `json:"plan"`
 	MostrarMarcaAgua      bool    `json:"mostrar_marca_agua"`
 	ColorSecundario       *string `json:"color_secundario,omitempty"`
+	ColorCategoria        *string `json:"color_categoria,omitempty"`
+	ColorAccion           *string `json:"color_accion,omitempty"`
 	TipoFuente            *string `json:"tipo_fuente,omitempty"`
 }

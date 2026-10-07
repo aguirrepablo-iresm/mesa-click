@@ -6,6 +6,8 @@ export interface MesaBranding {
   nombre: string;
   logo_url?: string | null;
   color_primario?: string | null;
+  color_categoria?: string | null;
+  color_accion?: string | null;
   estilo_visual?: string | null;
   plan?: string | null;
   tipo_fuente?: string | null;
@@ -49,12 +51,18 @@ export function buildMesaTheme(branding: MesaBranding): MesaTheme {
     : DEFAULT_MESA_PRIMARY;
   const visualStyle = branding.estilo_visual === "claro" ? "claro" : "oscuro";
   const { r, g, b } = hexToRgb(primaryColor);
+  const categoryColor = isHexColor(branding.color_categoria) ? branding.color_categoria : primaryColor;
+  const actionColor = isHexColor(branding.color_accion) ? branding.color_accion : primaryColor;
   const dark = visualStyle === "oscuro";
 
   const styleObj: Record<string, string> = {
     "--mesa-primary": primaryColor,
     "--mesa-primary-contrast": getContrastColor(primaryColor),
     "--mesa-primary-soft": `rgba(${r}, ${g}, ${b}, 0.14)`,
+    "--mesa-category": categoryColor,
+    "--mesa-category-contrast": getContrastColor(categoryColor),
+    "--mesa-action": actionColor,
+    "--mesa-action-contrast": getContrastColor(actionColor),
     // Mantener estos valores alineados con la vista previa de Configuración.
     "--mesa-background": dark ? "#111611" : "#f7f7f7",
     "--mesa-header": dark ? "#0c100d" : "#ffffff",
