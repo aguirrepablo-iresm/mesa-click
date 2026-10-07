@@ -427,7 +427,6 @@ export default function MesaPage() {
 
   const isManualScrollRef = useRef(false);
   const manualScrollTimeoutRef = useRef<number | null>(null);
-  const intersectingCategoriesRef = useRef<Map<string, boolean>>(new Map());
 
   const scrollNavButtonIntoView = useCallback((catId: string) => {
     const navBtn = document.getElementById(`nav-cat-${catId}`);
@@ -459,16 +458,18 @@ export default function MesaPage() {
       return;
     }
 
-    const target = document.getElementById(`categoria-${catId}`);
-    if (target) {
-      const STICKY_HEADER_OFFSET = 136; // BrandHeader (68px) + CategoriaNav (68px)
+    // La selección filtra la lista y el nodo de destino aparece en el siguiente render.
+    window.setTimeout(() => {
+      const target = document.getElementById(`categoria-${catId}`);
+      if (!target) return;
+      const STICKY_HEADER_OFFSET = 138; // BrandHeader (84px) + CategoriaNav (54px)
       const elementPosition = target.getBoundingClientRect().top;
       const offsetPosition = elementPosition + window.pageYOffset - STICKY_HEADER_OFFSET;
       window.scrollTo({
         top: Math.max(0, offsetPosition),
         behavior: 'smooth',
       });
-    }
+    }, 0);
 
     scrollNavButtonIntoView(catId);
 
@@ -501,112 +502,7 @@ export default function MesaPage() {
     };
   }, []);
 
-  // Scroll-spy: resalta automáticamente la categoría visible según el scroll vertical
-  useEffect(() => {
-    if (menu.length === 0) return;
-
-    const STICKY_HEADER_OFFSET = 136;
-
-    const updateActiveCategory = () => {
-      if (isManualScrollRef.current || menu.length === 0) return;
-
-      // 1. Al inicio de la página, fijar primera categoría
-      if (window.scrollY < 60) {
-        const firstCatId = 'todos';
-        setCategoriaActiva(current => {
-          if (current !== firstCatId) {
-            scrollNavButtonIntoView(firstCatId);
-            return firstCatId;
-          }
-          return current;
-        });
-        return;
-      }
-
-      // 2. Al llegar al final de la página, fijar última categoría
-      const isAtBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 40;
-      if (isAtBottom) {
-        const lastCatId = menu[menu.length - 1].id;
-        setCategoriaActiva(current => {
-          if (current !== lastCatId) {
-            scrollNavButtonIntoView(lastCatId);
-            return lastCatId;
-          }
-          return current;
-        });
-        return;
-      }
-
-      // 3. Buscar la categoría que intersecta y cuya sección cubre la línea de cabecera
-      let candidateId = '';
-      for (const cat of menu) {
-        const el = document.getElementById(`categoria-${cat.id}`);
-        if (!el) continue;
-        const rect = el.getBoundingClientRect();
-        if (rect.top <= STICKY_HEADER_OFFSET + 40 && rect.bottom > STICKY_HEADER_OFFSET) {
-          candidateId = cat.id;
-          break;
-        }
-      }
-
-      // Fallback a categorías con intersección activa
-      if (!candidateId) {
-        for (const cat of menu) {
-          if (intersectingCategoriesRef.current.get(cat.id)) {
-            candidateId = cat.id;
-            break;
-          }
-        }
-      }
-
-      if (candidateId) {
-        setCategoriaActiva(current => {
-          if (current !== candidateId) {
-            scrollNavButtonIntoView(candidateId);
-            return candidateId;
-          }
-          return current;
-        });
-      }
-    };
-
-    const observer = new IntersectionObserver(
-      entries => {
-        for (const entry of entries) {
-          const catId = entry.target.id.replace('categoria-', '');
-          intersectingCategoriesRef.current.set(catId, entry.isIntersecting);
-        }
-        updateActiveCategory();
-      },
-      {
-        rootMargin: '-136px 0px -40% 0px',
-        threshold: [0, 0.2, 0.5],
-      }
-    );
-
-    menu.forEach(cat => {
-      const el = document.getElementById(`categoria-${cat.id}`);
-      if (el) observer.observe(el);
-    });
-
-    let ticking = false;
-    const handleScroll = () => {
-      if (!ticking) {
-        window.requestAnimationFrame(() => {
-          updateActiveCategory();
-          ticking = false;
-        });
-        ticking = true;
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [menu, scrollNavButtonIntoView]);
+  // El filtro de categoría es explícito: desplazarse por "Todos" no cambia la selección.
 
   const sincronizarPedidosMesa = useCallback(async () => {
     if (!token) return;
@@ -1180,6 +1076,23 @@ export default function MesaPage() {
         }))
         .filter((categoria) => categoria.items.length > 0)
     : menu;
+  const categoriaSeleccionada = categoriaActiva || 'todos';
+  const categoriasRenderizadas = categoriaSeleccionada === 'todos'
+    ? []
+    : menuVisible.filter((categoria) => categoria.id === categoriaSeleccionada);
+  const itemsTodos = menuVisible.flatMap((categoria) =>
+    categoria.items.map((item) => ({ item, categoriaIcono: categoria.icono })),
+  );
+  const hayArticulosVisibles = itemsTodos.length > 0 || categoriasRenderizadas.some((categoria) => categoria.items.length > 0);
+  const renderItemCard = (item: MenuCategoryView['items'][number], categoriaIcono?: string) => (
+    <ItemCard
+      key={item.id}
+      item={item}
+      categoriaIcono={categoriaIcono}
+      cantidad={state.items.filter(i => i.articuloId === item.id).reduce((sum, i) => sum + i.cantidad, 0)}
+      onAgregar={() => handleIntentarAgregarItem(item)}
+    />
+  );
   const modalNombreComensal = identidadLista && !state.cuentaSolicitada && (!comensal || editandoComensal) ? (
     <ModalNombreComensal
       nombreInicial={comensal?.nombre}
@@ -1239,27 +1152,29 @@ export default function MesaPage() {
       <BrandHeader
         branding={branding}
         mesa={mesa.numero}
+        title="Buena comida, mejores momentos"
         comensalNombre={comensal?.nombre}
         onCambiarComensal={state.cuentaSolicitada ? undefined : () => setEditandoComensal(true)}
       />
 
       <div className="max-w-lg mx-auto">
-        <div className="px-16 pb-4 pt-18">
-          <div className="mb-12 flex items-end justify-between gap-12">
+        <div className="px-16 pb-4 pt-12">
+          <div className="mb-8 flex items-end justify-between gap-12">
             <div>
               <p className="mesa-primary text-10 font-semibold uppercase tracking-[0.14em]">Menú digital</p>
-              <h1 className="mesa-text mt-3 text-24 font-semibold tracking-[-0.03em]">¿Qué te gustaría pedir?</h1>
+              <h1 className="mesa-text mt-2 text-20 font-semibold tracking-[-0.03em]">Elegí tus favoritos</h1>
             </div>
             <span className="mesa-muted hidden text-11 sm:block">{menu.reduce((total, categoria) => total + categoria.items.length, 0)} opciones</span>
           </div>
-          <label className="mesa-surface mesa-border flex h-50 items-center gap-10 rounded-xl border px-14 shadow-2xs focus-within:border-[var(--mesa-primary)]">
-            <span className="material-symbols-outlined mesa-muted text-22">search</span>
+          <label className="mesa-surface mesa-border flex h-48 items-center gap-10 rounded-xl border px-12 shadow-2xs focus-within:border-[var(--mesa-primary)] focus-within:ring-2 focus-within:ring-[var(--mesa-primary-soft)]">
+            <span className="material-symbols-outlined mesa-muted text-20">search</span>
             <input
               type="search"
               value={busqueda}
               onChange={(event) => setBusqueda(event.target.value)}
-              placeholder="Buscar platos o bebidas"
+              placeholder="Buscar platos, bebidas o postres"
               className="mesa-text h-full min-w-0 flex-1 bg-transparent text-13 outline-none placeholder:text-[var(--mesa-muted)]"
+              style={{ backgroundColor: 'var(--mesa-surface)', borderColor: 'var(--mesa-border)', color: 'var(--mesa-text)' }}
               aria-label="Buscar en la carta"
             />
             {busqueda && (
@@ -1271,57 +1186,55 @@ export default function MesaPage() {
         </div>
         <CategoriaNav
           categorias={menu}
-          activa={categoriaActiva || 'todos'}
+          activa={categoriaSeleccionada}
           onSelect={handleSeleccionarCategoria}
         />
-        <div className="space-y-28 px-16 pt-16 pb-40">
+        <div className="space-y-20 px-16 pt-12 pb-32">
           {mesa.mostrar_marca_agua !== false && <MarcaAgua className="mb-8" />}
-          {menuVisible.map(cat => (
-            <section
-              key={cat.id}
-              id={`categoria-${cat.id}`}
-              className="scroll-mt-[140px] space-y-12"
-            >
-              <div className="border-b mesa-border pb-6">
-                <h2 className="mesa-text text-16 font-semibold tracking-tight">{cat.nombre}</h2>
-              </div>
-              <div className="space-y-12">
-                {cat.items.map(item => (
-                  <ItemCard
-                    key={item.id}
-                    item={item}
-                    categoriaIcono={cat.icono}
-                    cantidad={state.items.filter(i => i.articuloId === item.id).reduce((sum, i) => sum + i.cantidad, 0)}
-                    onAgregar={() => handleIntentarAgregarItem(item)}
-                  />
-                ))}
-                {cat.items.length === 0 && (
-                  cat.disponibleDesde ? (
-                    <div className="mesa-surface mesa-border flex items-center gap-12 rounded-xl border px-14 py-14 shadow-2xs">
-                      <span className="mesa-primary material-symbols-outlined flex h-40 w-40 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--mesa-primary)_12%,transparent)] text-20">
-                        schedule
-                      </span>
-                      <div className="min-w-0">
-                        <p className="mesa-text text-13 font-semibold">Disponible desde las {cat.disponibleDesde}</p>
-                        <p className="mesa-muted mt-2 text-11 leading-relaxed">Esta categoría se habilita automáticamente cuando comienza su horario.</p>
+          {categoriaSeleccionada === 'todos' ? (
+            <div className="space-y-8">
+              {itemsTodos.map(({ item, categoriaIcono }) => renderItemCard(item, categoriaIcono))}
+            </div>
+          ) : (
+            categoriasRenderizadas.map(cat => (
+              <section
+                key={cat.id}
+                id={`categoria-${cat.id}`}
+                className="scroll-mt-[146px] space-y-8"
+              >
+                <div className="border-b mesa-border pb-4">
+                  <h2 className="mesa-text text-14 font-semibold tracking-tight">{cat.nombre}</h2>
+                </div>
+                <div className="space-y-8">
+                  {cat.items.map(item => renderItemCard(item, cat.icono))}
+                  {cat.items.length === 0 && (
+                    cat.disponibleDesde ? (
+                      <div className="mesa-surface mesa-border flex items-center gap-12 rounded-xl border px-14 py-14 shadow-2xs">
+                        <span className="mesa-primary material-symbols-outlined flex h-40 w-40 shrink-0 items-center justify-center rounded-full bg-[color-mix(in_srgb,var(--mesa-primary)_12%,transparent)] text-20">
+                          schedule
+                        </span>
+                        <div className="min-w-0">
+                          <p className="mesa-text text-13 font-semibold">Disponible desde las {cat.disponibleDesde}</p>
+                          <p className="mesa-muted mt-2 text-11 leading-relaxed">Esta categoría se habilita automáticamente cuando comienza su horario.</p>
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="mesa-subtle-text py-16 text-center text-12">
-                      No hay artículos en esta categoría.
-                    </div>
-                  )
-                )}
-              </div>
-            </section>
-          ))}
+                    ) : (
+                      <div className="mesa-subtle-text py-16 text-center text-12">
+                        No hay artículos en esta categoría.
+                      </div>
+                    )
+                  )}
+                </div>
+              </section>
+            ))
+          )}
 
           {menu.length === 0 && (
             <div className="mesa-subtle-text py-40 text-center text-13">
               No hay categorías cargadas en la carta.
             </div>
           )}
-          {menu.length > 0 && menuVisible.length === 0 && (
+          {menu.length > 0 && !hayArticulosVisibles && (terminoBusqueda || categoriasRenderizadas.length === 0) && (
             <div className="mesa-surface mesa-border rounded-xl border px-20 py-32 text-center shadow-2xs">
               <span className="material-symbols-outlined mesa-muted text-32">search_off</span>
               <p className="mesa-text mt-8 text-14 font-semibold">No encontramos coincidencias</p>
@@ -1332,7 +1245,7 @@ export default function MesaPage() {
       </div>
 
       {(totalItems > 0 || state.pedidos.length > 0) && (
-        <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-20 p-16">
+        <div className="pointer-events-none fixed bottom-0 left-0 right-0 z-20 p-8">
           <div className="pointer-events-auto mx-auto max-w-lg">
             <button
               onClick={() => {
@@ -1343,25 +1256,25 @@ export default function MesaPage() {
                 }
               }}
               disabled={enviandoPedido || state.cuentaSolicitada}
-              className="mesa-primary-bg flex min-h-64 w-full items-center rounded-xl px-20 py-12 font-medium shadow-xl transition-all active:scale-[0.98] disabled:opacity-50"
+              className="mesa-surface mesa-border flex min-h-[60px] w-full items-center rounded-xl border p-6 font-medium shadow-xl transition-all active:scale-[0.98] disabled:opacity-50"
             >
-              <div className="grid w-full min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-10">
-                <span className="text-16" aria-hidden="true">🛒</span>
-                <div className="min-w-0 text-left leading-tight">
-                  <span className="block truncate text-14 font-semibold">
-                    {totalItems > 0 ? 'Ver carrito' : 'Ver pedido de la mesa'}
+              <div className="flex w-full min-w-0 items-center gap-8">
+                <span className="mesa-primary flex h-[36px] w-[36px] shrink-0 items-center justify-center rounded-full bg-[var(--mesa-primary-soft)]" aria-hidden="true">
+                  <span className="material-symbols-outlined text-18">shopping_cart</span>
+                </span>
+                <div className="min-w-0 flex-1 text-left leading-tight">
+                  <span className="block truncate text-12 font-semibold">
+                    {totalItems > 0 ? 'Pedido en curso' : 'Pedido de la mesa'}
                   </span>
-                  <span className="mt-2 block truncate text-11 opacity-80">
+                  <span className="mesa-muted mt-2 block truncate text-10">
                     {totalItems > 0
-                      ? `Pedido actual: ${totalItems} ${totalItems === 1 ? 'ítem' : 'ítems'}`
-                      : `Total: ${totalItemsPedido} ítems`}
+                      ? `${totalItems} ${totalItems === 1 ? 'producto' : 'productos'} · $${totalPrecio.toLocaleString('es-AR')}`
+                      : `${totalItemsPedido} ${totalItemsPedido === 1 ? 'producto' : 'productos'} · $${totalPrecioPedido.toLocaleString('es-AR')}`}
                   </span>
                 </div>
-                <div className="flex shrink-0 items-center gap-8 text-right">
-                  <span className="text-14 font-mono font-semibold">
-                    ${totalItems > 0 ? totalPrecio.toLocaleString() : totalPrecioPedido.toLocaleString()}
-                  </span>
-                  <span className="text-18" aria-hidden="true">→</span>
+                <div className="flex min-h-44 shrink-0 items-center gap-5 rounded-lg bg-[var(--mesa-action)] px-10 text-12 font-semibold text-[var(--mesa-action-contrast)] shadow-sm">
+                  <span>Ver pedido</span>
+                  <span className="material-symbols-outlined text-17" aria-hidden="true">arrow_forward</span>
                 </div>
               </div>
             </button>

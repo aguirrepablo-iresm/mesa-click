@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { api, Tenant, Sucursal, getErrorMessage, getApiBaseUrl } from "@/lib/api";
 import { DEFAULT_MESA_PRIMARY } from "@/components/menu/BrandHeader";
 import EquipoSection from "./EquipoSection";
@@ -117,7 +117,6 @@ export default function ConfiguracionSection({
       )}
       {tab === "apariencia" && (
         <AparienciaTab
-          key={`${tenant?.id ?? "sin-tenant"}-${sucursalSel?.id ?? "sin-sucursal"}`}
           sucursal={sucursalSel}
           tenant={tenant}
           onTenantUpdate={(actualizado) => {
@@ -650,9 +649,25 @@ function AparienciaTab({
   const [guardando, setGuardando] = useState(false);
   const [ok, setOk] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const aparienciaHidratadaKey = useRef<string | null>(null);
+  const saltarGuardadoInicial = useRef(false);
   const { nombreVisible, color, colorCategoria, colorAccion, estilo, logoUrl, tipoFuente, mostrarMarcaAgua } = apariencia;
 
   useEffect(() => {
+    const fallback = aparienciaDefault(sucursal, tenant);
+    const guardada = leerAparienciaGuardada(storageKey, fallback);
+    aparienciaHidratadaKey.current = storageKey;
+    saltarGuardadoInicial.current = true;
+    setApariencia(guardada);
+    setOk(false);
+    setError(null);
+  }, [storageKey, sucursal?.id, tenant?.id]);
+
+  useEffect(() => {
+    if (aparienciaHidratadaKey.current !== storageKey || saltarGuardadoInicial.current) {
+      saltarGuardadoInicial.current = false;
+      return;
+    }
     guardarAparienciaLocal(storageKey, apariencia);
   }, [storageKey, apariencia]);
 
@@ -729,34 +744,6 @@ function AparienciaTab({
     <div className="flex flex-col space-y-16">
       <div className="order-2">
         <Card titulo="Ajustes generales">
-        <div className="rounded-xl border border-concrete bg-ghost-fog/35 px-14 py-12">
-          <p className="text-12 font-semibold text-ash-graphite">Editá la identidad directamente sobre la vista previa</p>
-          <p className="mt-3 text-11 leading-relaxed text-sage-green">
-            El nombre, el logo y los colores se modifican en los controles conectados al teléfono y se actualizan en tiempo real.
-          </p>
-        </div>
-
-        <Campo label="Estilo visual">
-          <div className="flex gap-8">
-            {(["claro", "oscuro"] as const).map((op) => (
-              <button
-                key={op}
-                onClick={() => {
-                  setApariencia((prev) => ({ ...prev, estilo: op }));
-                  setOk(false);
-                }}
-                className={`h-44 rounded-lg border px-14 text-12 font-semibold capitalize ${
-                  estilo === op
-                    ? "bg-ash-graphite text-canvas-white border-ash-graphite"
-                    : "border-concrete text-ash-graphite hover:border-ash-graphite"
-                }`}
-              >
-                {op}
-              </button>
-            ))}
-          </div>
-        </Campo>
-
         {/* ─── Personalización Avanzada Pro (US-71) ─── */}
         <div className="pt-16 border-t border-concrete space-y-14">
           <div className="flex items-center justify-between">
@@ -876,6 +863,14 @@ function AparienciaTab({
           </PillPrimaria>
           <Guardado visible={ok} />
         </div>
+
+        <div className="mt-16 rounded-xl border border-concrete bg-ghost-fog/35 px-14 py-12">
+          <p className="text-12 font-semibold text-ash-graphite">Editá la identidad directamente sobre la vista previa</p>
+          <p className="mt-3 text-11 leading-relaxed text-sage-green">
+            El nombre, el logo y los colores se modifican en los controles conectados al teléfono y se actualizan en tiempo real.
+          </p>
+        </div>
+
         </Card>
       </div>
 
@@ -904,7 +899,7 @@ function AparienciaTab({
               <span className="hidden h-px min-w-16 flex-1 bg-concrete lg:block" />
               <span className="hidden h-8 w-8 shrink-0 rounded-full bg-ash-graphite lg:block" />
             </div>
-            <div className="flex items-center gap-8 lg:pt-48">
+            <div className="flex items-center gap-8 lg:pt-8">
               <EditorColorEnVivo
                 label="Color principal"
                 detalle="Carrito y acentos generales."
@@ -920,9 +915,29 @@ function AparienciaTab({
           </div>
 
           <div className="order-1 mx-auto w-full max-w-[300px] lg:order-2">
+          <div className="mb-10 flex items-center justify-center gap-8">
+            <span className="mr-2 text-10 font-mono uppercase tracking-[0.08em] text-sage-green">Estilo</span>
+            {(["claro", "oscuro"] as const).map((op) => (
+              <button
+                key={op}
+                type="button"
+                onClick={() => {
+                  setApariencia((prev) => ({ ...prev, estilo: op }));
+                  setOk(false);
+                }}
+                className={`h-40 rounded-lg border px-12 text-11 font-semibold capitalize transition-colors ${
+                  estilo === op
+                    ? "border-ash-graphite bg-ash-graphite text-canvas-white"
+                    : "border-concrete bg-canvas-white text-ash-graphite hover:border-ash-graphite"
+                }`}
+              >
+                {op}
+              </button>
+            ))}
+          </div>
           <div className="mx-auto w-full max-w-[260px] rounded-[30px] bg-ash-graphite p-[6px] shadow-lg">
             <div
-              className="flex h-[430px] flex-col overflow-hidden rounded-[24px]"
+              className="flex h-[380px] flex-col overflow-hidden rounded-[24px]"
               style={{ background: phoneScreenBg, color: phoneText, fontFamily: previewFont }}
             >
               <div className="relative flex h-[32px] shrink-0 items-start justify-between px-[16px] pt-[9px] text-[10px] font-bold leading-none font-sans">
@@ -973,13 +988,13 @@ function AparienciaTab({
               <div className="min-h-0 flex-1 overflow-hidden px-[12px] py-[12px]">
                 <div className="mb-[10px] flex gap-[6px] overflow-hidden">
                   <span
-                    className="grid h-[38px] shrink-0 place-items-center rounded-full px-[10px] text-[12px] font-bold leading-none text-white"
+                    className="grid h-[32px] shrink-0 place-items-center rounded-full px-[9px] text-[11px] font-bold leading-none text-white"
                     style={{ background: colorCategorias }}
                   >
                     Cafés
                   </span>
                   <span
-                    className="grid h-[38px] shrink-0 place-items-center rounded-full border px-[10px] text-[12px] font-medium leading-none"
+                    className="grid h-[32px] shrink-0 place-items-center rounded-full border px-[9px] text-[11px] font-medium leading-none"
                     style={{
                       color: phoneMutedText,
                       borderColor: phoneBorder,
@@ -989,7 +1004,7 @@ function AparienciaTab({
                     Dulces
                   </span>
                   <span
-                    className="grid h-[38px] shrink-0 place-items-center rounded-full border px-[10px] text-[12px] font-medium leading-none"
+                    className="grid h-[32px] shrink-0 place-items-center rounded-full border px-[9px] text-[11px] font-medium leading-none"
                     style={{ color: phoneMutedText, borderColor: phoneBorder, background: phonePanelBg }}
                   >
                     Bebidas
@@ -1003,24 +1018,24 @@ function AparienciaTab({
                   ].map(([titulo, descripcion, precio]) => (
                     <div
                       key={titulo}
-                      className="flex min-h-[78px] items-center gap-[8px] rounded-lg border p-[7px]"
+                      className="flex min-h-[64px] items-center gap-[7px] rounded-lg border p-[6px]"
                       style={{ background: phonePanelBg, borderColor: phoneBorder }}
                     >
                       <div
-                        className="grid h-[58px] w-[58px] shrink-0 place-items-center overflow-hidden rounded-md"
+                        className="grid h-[46px] w-[46px] shrink-0 place-items-center overflow-hidden rounded-md"
                         style={{ background: `linear-gradient(145deg, ${colorPrincipal}35, ${phoneHeaderBg})` }}
                       >
-                        <span className="material-symbols-outlined text-[22px]" style={{ color: colorPrincipal }}>restaurant</span>
+                        <span className="material-symbols-outlined text-[18px]" style={{ color: colorPrincipal }}>restaurant</span>
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="truncate text-[13px] font-bold leading-[16px]">{titulo}</p>
-                        <p className="mt-[3px] truncate text-[11px] leading-[14px]" style={{ color: phoneMutedText }}>
+                        <p className="truncate text-[11px] font-bold leading-[14px]">{titulo}</p>
+                        <p className="mt-[2px] truncate text-[9px] leading-[11px]" style={{ color: phoneMutedText }}>
                           {descripcion}
                         </p>
-                        <p className="mt-[6px] text-[12px] font-bold leading-[14px]">{precio}</p>
+                        <p className="mt-[3px] text-[11px] font-bold leading-[13px]">{precio}</p>
                       </div>
                       <button
-                        className="grid h-[36px] w-[36px] shrink-0 place-items-center rounded-full text-[18px] font-medium leading-none text-white"
+                        className="grid h-[30px] w-[30px] shrink-0 place-items-center rounded-full text-[15px] font-medium leading-none text-white"
                         style={{ background: colorBotonAccion }}
                         aria-label={`Agregar ${titulo}`}
                       >
@@ -1032,18 +1047,18 @@ function AparienciaTab({
               </div>
 
               <div
-                className="mx-[12px] mb-[12px] flex h-[42px] shrink-0 items-center justify-between rounded-full px-[14px] text-white"
+                className="mx-[12px] mb-[10px] flex h-[36px] shrink-0 items-center justify-between rounded-full px-[12px] text-white"
                 style={{ background: colorPrincipal }}
               >
-                <span className="text-[12px] font-bold leading-none">2 items</span>
-                <span className="text-[13px] font-bold leading-none">$3.700</span>
+                <span className="text-[11px] font-bold leading-none">2 items</span>
+                <span className="text-[12px] font-bold leading-none">$3.700</span>
               </div>
             </div>
           </div>
         </div>
 
           <div className="order-3 space-y-18">
-            <div className="flex items-center gap-8 lg:pb-28">
+            <div className="flex items-center gap-8 lg:pb-8">
               <span className="hidden h-8 w-8 shrink-0 rounded-full lg:block" style={{ background: colorCategorias }} />
               <span className="hidden h-px min-w-16 flex-1 bg-concrete lg:block" />
               <EditorColorEnVivo
@@ -1057,7 +1072,7 @@ function AparienciaTab({
                 }}
               />
             </div>
-            <div className="flex items-center gap-8 lg:pt-28">
+            <div className="flex items-center gap-8 lg:pt-8">
               <span className="hidden h-8 w-8 shrink-0 rounded-full lg:block" style={{ background: colorBotonAccion }} />
               <span className="hidden h-px min-w-16 flex-1 bg-concrete lg:block" />
               <EditorColorEnVivo

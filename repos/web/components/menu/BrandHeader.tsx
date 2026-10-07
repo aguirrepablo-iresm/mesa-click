@@ -140,37 +140,40 @@ export default function BrandHeader({
 }: BrandHeaderProps) {
   const nombre = branding.nombre.trim() || "Tu negocio";
   const aliasComensal = comensalNombre?.trim() || "";
-  const comensalControlClassName = "mesa-muted mesa-border flex min-h-44 w-[96px] shrink-0 flex-col items-center justify-center overflow-hidden rounded-lg border px-8 py-6 text-center text-11";
+  const mesaLabel = `Mesa ${mesa}`;
+  const comensalControlClassName = "mesa-muted mesa-border flex min-h-44 max-w-[138px] shrink-0 items-center gap-6 overflow-hidden rounded-full border px-10 py-5 text-10 transition-colors enabled:hover:border-[var(--mesa-primary)] disabled:cursor-not-allowed";
 
   return (
-    <header className={`${sticky ? "sticky top-0 z-20" : ""} mesa-header mesa-border min-h-[68px] border-b px-16 py-12`}>
-      <div className="mx-auto flex max-w-lg items-center justify-between gap-12">
-        <div className="flex min-w-0 items-center gap-12">
-          <BrandMark branding={{ ...branding, nombre }} />
-          <div className="min-w-0">
-            <p className="mesa-text truncate text-14 font-bold leading-tight">{nombre}</p>
-            {title && <h1 className="mesa-text truncate text-13 font-medium leading-tight">{title}</h1>}
-            <p className="mesa-muted mt-2 text-12">Mesa {mesa}</p>
+    <header className={`${sticky ? "sticky top-0 z-20" : ""} mesa-header mesa-border border-b px-16 py-12`}>
+      <div className="mx-auto max-w-lg">
+        <div className="flex items-center justify-between gap-12">
+          <div className="flex min-w-0 items-center gap-12">
+            <BrandMark branding={{ ...branding, nombre }} className="h-44 w-44 rounded-xl" />
+            <div className="min-w-0">
+              <p className="mesa-primary text-9 font-semibold uppercase tracking-[0.15em]">Carta digital</p>
+              <p className="mesa-text mt-2 truncate text-16 font-semibold leading-tight">{nombre}</p>
+              {title && <p className="mesa-muted mt-2 truncate text-10 leading-tight">{title}</p>}
+            </div>
           </div>
+          {(comensalNombre !== undefined || onCambiarComensal !== undefined) && (
+            <button
+              type="button"
+              onClick={onCambiarComensal}
+              disabled={!onCambiarComensal}
+              className={comensalControlClassName}
+              aria-label={onCambiarComensal
+                ? (aliasComensal ? `Comensal ${aliasComensal}. Cambiar nombre` : "Ingresar alias")
+                : `Comensal ${aliasComensal || "sin alias"}. No se puede cambiar el nombre porque la cuenta ya fue solicitada`}
+              title={`${aliasComensal || "Ingresar alias"} · ${mesaLabel}`}
+            >
+              <span className="material-symbols-outlined text-16" aria-hidden="true">person</span>
+              <span className="flex min-w-0 flex-col items-start leading-tight">
+                <span className="w-full truncate font-medium">{aliasComensal || "Ingresar alias"}</span>
+                <span className="mesa-primary mt-2 text-9">{onCambiarComensal ? "Cambiar" : "Cuenta cerrada"}</span>
+              </span>
+            </button>
+          )}
         </div>
-        {comensalNombre !== undefined && (
-          <button
-            type="button"
-            onClick={onCambiarComensal}
-            disabled={!onCambiarComensal}
-            className={`${comensalControlClassName} transition-colors enabled:hover:border-[var(--mesa-primary)] disabled:cursor-not-allowed`}
-            aria-label={onCambiarComensal
-              ? (aliasComensal ? `Comensal ${aliasComensal}. Cambiar nombre` : "Ingresar nombre")
-              : `Comensal ${aliasComensal || "sin alias"}. No se puede cambiar el nombre porque la cuenta ya fue solicitada`}
-            title={aliasComensal || "Ingresar nombre"}
-          >
-            {aliasComensal && <span className="block w-full truncate font-medium">{aliasComensal}</span>}
-            {!aliasComensal && !onCambiarComensal && <span className="block w-full truncate font-medium">Sin alias</span>}
-            <span className="mesa-primary block">
-              {onCambiarComensal ? (aliasComensal ? "Cambiar" : "Ingresar nombre") : "Cuenta Cerrada"}
-            </span>
-          </button>
-        )}
       </div>
     </header>
   );
