@@ -726,8 +726,9 @@ function AparienciaTab({
       : "inherit";
 
   return (
-    <div className="space-y-16">
-      <Card titulo="Ajustes generales">
+    <div className="flex flex-col space-y-16">
+      <div className="order-2">
+        <Card titulo="Ajustes generales">
         <div className="rounded-xl border border-concrete bg-ghost-fog/35 px-14 py-12">
           <p className="text-12 font-semibold text-ash-graphite">Editá la identidad directamente sobre la vista previa</p>
           <p className="mt-3 text-11 leading-relaxed text-sage-green">
@@ -875,9 +876,10 @@ function AparienciaTab({
           </PillPrimaria>
           <Guardado visible={ok} />
         </div>
-      </Card>
+        </Card>
+      </div>
 
-      <div className="overflow-hidden rounded-2xl border border-concrete bg-canvas-white p-16 sm:p-20 lg:p-28">
+      <div className="order-1 overflow-hidden rounded-2xl border border-concrete bg-canvas-white p-16 sm:p-20 lg:p-28">
         <div className="mb-18 text-center">
           <p className="font-mono text-[12px] uppercase tracking-[0.08em] text-sage-green">Vista previa del menú</p>
           <p className="mt-3 text-11 text-stone">Tocá los controles conectados al teléfono para editar en tiempo real.</p>
