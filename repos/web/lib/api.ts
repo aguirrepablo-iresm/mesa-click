@@ -424,6 +424,8 @@ export interface MesaPublica {
   color_accion?: string | null;
   tipo_fuente?: string | null;
   google_review_url?: string | null;
+  sector?: string;
+  nombre_fantasia?: string;
 }
 
 export interface Resena {
