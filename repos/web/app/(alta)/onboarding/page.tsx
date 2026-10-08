@@ -51,6 +51,7 @@ export default function OnboardingPage() {
   const [emailSucursal, setEmailSucursal] = useState("");
   const [mesas, setMesas] = useState(MAX_MESAS_FREE);
   const [creando, setCreando] = useState("");
+  const [magicLinkEnviado, setMagicLinkEnviado] = useState<{ email: string; devLink?: string } | null>(null);
   const [error, setError] = useState("");
 
   // Sin datos de cuenta (recarga o acceso directo) no se puede crear el negocio.
@@ -121,7 +122,7 @@ export default function OnboardingPage() {
         rubro,
         email_admin: cuenta.email,
         nombre_admin: cuenta.nombre,
-        password: cuenta.googleCredential ? undefined : cuenta.password,
+        password: cuenta.usarMagicLink || cuenta.googleCredential ? undefined : cuenta.password,
         google_credential: cuenta.googleCredential || undefined,
         sucursal_nombre: nombreSucursal.trim(),
         whatsapp: whatsapp.trim(),
@@ -147,13 +148,28 @@ export default function OnboardingPage() {
       return;
     }
 
-    // El negocio ya existe: se inicia la sesión y se crean las mesas.
+    // Si el usuario eligió enlace mágico, se solicita el link y se muestra pantalla de confirmación.
+    if (cuenta.usarMagicLink) {
+      setCreando("Enviando enlace de acceso…");
+      try {
+        const res = await api.solicitarMagicLink(cuenta.email);
+        setCreando("");
+        setMagicLinkEnviado({ email: cuenta.email, devLink: res.magic_link_dev });
+        return;
+      } catch (err: unknown) {
+        setCreando("");
+        setError(getErrorMessage(err, "El negocio fue creado pero ocurrió un error al enviar el enlace mágico. Podés solicitarlo desde el inicio de sesión."));
+        return;
+      }
+    }
+
+    // El negocio ya existe con contraseña o Google: se inicia la sesión y se crean las mesas.
     setCreando("Preparando tus mesas…");
     try {
       if (cuenta.googleCredential) {
         await api.autenticarConGoogle(cuenta.googleCredential);
       } else {
-        await api.autenticarConPassword(cuenta.email, cuenta.password);
+        await api.autenticarConPassword(cuenta.email, cuenta.password || "");
       }
     } catch {
       setCuenta(null);
@@ -342,39 +358,86 @@ export default function OnboardingPage() {
           )}
 
           {paso === 3 && (
-            <div className="onboarding-complete">
-              <span className="complete-mark"><LandingIcon name="check" size={32} /></span>
-              <span className="auth-eyebrow">Último paso</span>
-              <h1>Todo listo para empezar</h1>
-              <p>Revisá los datos de <strong>{nombreNegocio.trim()}</strong>. Al confirmar creamos tu negocio, tu sucursal y tus mesas con su QR.</p>
-              <div className="setup-summary">
-                <div>
-                  <span><LandingIcon name="brand" /></span>
-                  <p><small>Negocio</small><strong>{nombreNegocio.trim()}</strong><em>{rubroActual.label} · /{slug}</em></p>
-                  <button type="button" onClick={() => irAPaso(1)} disabled={Boolean(creando)}>Editar</button>
+            <>
+              {magicLinkEnviado ? (
+                <div className="onboarding-complete">
+                  <span className="complete-mark">
+                    <LandingIcon name="check" size={32} />
+                  </span>
+                  <span className="auth-eyebrow">¡Negocio creado con éxito!</span>
+                  <h1>Revisá tu correo</h1>
+                  <p>
+                    Te enviamos un enlace de acceso seguro a <strong>{magicLinkEnviado.email}</strong> para entrar al panel de administración de <strong>{nombreNegocio.trim()}</strong>.
+                  </p>
+
+                  {magicLinkEnviado.devLink && (
+                    <div style={{ marginTop: "20px" }}>
+                      <a
+                        href={magicLinkEnviado.devLink}
+                        className="onboarding-primary"
+                        style={{ textDecoration: "none", display: "inline-flex", justifyContent: "center", width: "100%" }}
+                      >
+                        Ingresar al panel (modo desarrollo)
+                      </a>
+                    </div>
+                  )}
+
+                  <div style={{ marginTop: "16px" }}>
+                    <Link
+                      href="/login"
+                      className="onboarding-back"
+                      style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", justifyContent: "center", width: "100%" }}
+                    >
+                      Ir al inicio de sesión
+                    </Link>
+                  </div>
                 </div>
-                <div>
-                  <span><LandingIcon name="table" /></span>
-                  <p><small>Sucursal</small><strong>{nombreSucursal.trim()}</strong><em>{mesas} {mesas === 1 ? "mesa" : "mesas"} · 12:00 — 00:00</em></p>
-                  <button type="button" onClick={() => irAPaso(2)} disabled={Boolean(creando)}>Editar</button>
-                </div>
-                <div>
-                  <span><LandingIcon name="qr" /></span>
-                  <p><small>Acceso</small><strong>{cuenta.email}</strong><em>{cuenta.googleCredential ? "Con tu cuenta de Google" : "Con correo y contraseña"}</em></p>
-                  <i><LandingIcon name="check" size={14} /></i>
-                </div>
-              </div>
-              {error && (
-                <div role="alert" className="auth-alert">
-                  {error}
-                  {(error.includes("correo") || error.includes("Google")) && <> <Link href="/registro">Volver a crear la cuenta</Link></>}
+              ) : (
+                <div className="onboarding-complete">
+                  <span className="complete-mark"><LandingIcon name="check" size={32} /></span>
+                  <span className="auth-eyebrow">Último paso</span>
+                  <h1>Todo listo para empezar</h1>
+                  <p>Revisá los datos de <strong>{nombreNegocio.trim()}</strong>. Al confirmar creamos tu negocio, tu sucursal y tus mesas con su QR.</p>
+                  <div className="setup-summary">
+                    <div>
+                      <span><LandingIcon name="brand" /></span>
+                      <p><small>Negocio</small><strong>{nombreNegocio.trim()}</strong><em>{rubroActual.label} · /{slug}</em></p>
+                      <button type="button" onClick={() => irAPaso(1)} disabled={Boolean(creando)}>Editar</button>
+                    </div>
+                    <div>
+                      <span><LandingIcon name="table" /></span>
+                      <p><small>Sucursal</small><strong>{nombreSucursal.trim()}</strong><em>{mesas} {mesas === 1 ? "mesa" : "mesas"} · 12:00 — 00:00</em></p>
+                      <button type="button" onClick={() => irAPaso(2)} disabled={Boolean(creando)}>Editar</button>
+                    </div>
+                    <div>
+                      <span><LandingIcon name="qr" /></span>
+                      <p>
+                        <small>Acceso</small>
+                        <strong>{cuenta.email}</strong>
+                        <em>
+                          {cuenta.googleCredential
+                            ? "Con tu cuenta de Google"
+                            : cuenta.usarMagicLink
+                              ? "Con enlace mágico (sin contraseña)"
+                              : "Con correo y contraseña"}
+                        </em>
+                      </p>
+                      <i><LandingIcon name="check" size={14} /></i>
+                    </div>
+                  </div>
+                  {error && (
+                    <div role="alert" className="auth-alert">
+                      {error}
+                      {(error.includes("correo") || error.includes("Google")) && <> <Link href="/registro">Volver a crear la cuenta</Link></>}
+                    </div>
+                  )}
+                  <button type="button" className="onboarding-primary finish" onClick={crearNegocio} disabled={Boolean(creando)}>
+                    {creando || "Crear mi negocio"}
+                  </button>
+                  <small>Después te guiamos dentro del panel para cargar tu primer plato.</small>
                 </div>
               )}
-              <button type="button" className="onboarding-primary finish" onClick={crearNegocio} disabled={Boolean(creando)}>
-                {creando || "Crear mi negocio"}
-              </button>
-              <small>Después te guiamos dentro del panel para cargar tu primer plato.</small>
-            </div>
+            </>
           )}
 
           {paso < TOTAL_PASOS && (

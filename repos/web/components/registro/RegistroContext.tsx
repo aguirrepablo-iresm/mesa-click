@@ -5,9 +5,9 @@ import React, { createContext, useContext, useMemo, useState } from "react";
 export type CuentaRegistro = {
   nombre: string;
   email: string;
-  // Solo una de las dos credenciales: contraseña propia o registro con Google.
-  password: string;
-  googleCredential: string;
+  password?: string;
+  googleCredential?: string;
+  usarMagicLink?: boolean;
 };
 
 type RegistroContextValue = {
