@@ -205,6 +205,21 @@
 .registro .onboarding-complete > small { margin-top: 12px; display: block; color: var(--r-soft); font-size: 12px; }
 .registro .onboarding-complete .auth-alert { text-align: left; }
 
+/* Métodos de autenticación y enlace mágico */
+.registro .auth-method-tabs { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 4px; border: 1px solid var(--r-line); border-radius: 12px; background: var(--r-fog); }
+.registro .auth-tab-btn { height: 38px; display: flex; align-items: center; justify-content: center; gap: 6px; color: var(--r-muted); font-size: 13px; font-weight: 700; border: 0; border-radius: 9px; background: transparent; cursor: pointer; transition: all .15s ease; }
+.registro .auth-tab-btn:hover { color: var(--r-ink); }
+.registro .auth-tab-btn.active { color: var(--r-ink); background: white; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+.registro .auth-magic-info { margin-top: 14px; padding: 12px 14px; display: flex; align-items: flex-start; gap: 10px; color: var(--r-ink-2); font-size: 13px; line-height: 1.5; border: 1px solid var(--r-green-line); border-radius: 12px; background: var(--r-green-soft); }
+.registro .auth-magic-info span { flex: 1; }
+.registro .auth-magic-success { margin-top: 18px; padding: 24px 18px; text-align: center; border: 1px solid var(--r-line); border-radius: 16px; background: white; }
+.registro .auth-magic-icon { width: 50px; height: 50px; margin: 0 auto 14px; display: grid; place-items: center; color: var(--r-ink); border-radius: 50%; background: var(--r-green); box-shadow: 0 0 0 8px var(--r-green-soft); }
+.registro .auth-magic-success h3 { font-size: 18px; font-weight: 700; color: var(--r-ink); }
+.registro .auth-magic-success p { margin-top: 8px; color: var(--r-muted); font-size: 13px; line-height: 1.55; }
+.registro .auth-link-btn { margin-top: 16px; display: inline-block; color: var(--r-ink); font-size: 13px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; border: 0; background: transparent; cursor: pointer; }
+.registro .auth-switch-method { margin-top: 16px; text-align: center; color: var(--r-muted); font-size: 13px; }
+.registro .auth-switch-method button { padding: 0; margin-left: 4px; color: var(--r-ink); font-size: 13px; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; border: 0; background: transparent; cursor: pointer; }
+
 @media (max-width: 1080px) {
   .registro .onboarding-layout { grid-template-columns: 230px minmax(460px,1fr); }
   .registro .onboarding-preview { display: none; }

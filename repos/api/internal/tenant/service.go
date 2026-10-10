@@ -39,7 +39,7 @@ func (svc *Service) Crear(ctx context.Context, input OnboardingInput) (*Tenant, 
 		if err := svc.aplicarIdentidadGoogle(ctx, &input); err != nil {
 			return nil, err
 		}
-	} else {
+	} else if strings.TrimSpace(input.Password) != "" {
 		if input.EmailAdmin == "" {
 			return nil, fmt.Errorf("%w: email del admin requerido", ErrValidation)
 		}
@@ -48,6 +48,11 @@ func (svc *Service) Crear(ctx context.Context, input OnboardingInput) (*Tenant, 
 			return nil, fmt.Errorf("%w: %v", ErrValidation, err)
 		}
 		input.PasswordHash = passwordHash
+	} else {
+		if input.EmailAdmin == "" {
+			return nil, fmt.Errorf("%w: email del admin requerido", ErrValidation)
+		}
+		input.PasswordHash = ""
 	}
 	input.Password = ""
 	input.GoogleCredential = ""

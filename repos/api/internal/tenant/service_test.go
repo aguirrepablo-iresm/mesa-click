@@ -81,6 +81,32 @@ func TestCrear_Exitoso(t *testing.T) {
 	}
 }
 
+func TestCrear_SinPassword_MagicLink(t *testing.T) {
+	var inputGuardado tenant.OnboardingInput
+	store := &mockStore{
+		crearFn: func(ctx context.Context, input tenant.OnboardingInput) (*tenant.Tenant, error) {
+			inputGuardado = input
+			return &tenant.Tenant{ID: "t-2", Nombre: input.Nombre, Slug: input.Slug}, nil
+		},
+	}
+	svc := tenant.NuevoService(store)
+	result, err := svc.Crear(context.Background(), tenant.OnboardingInput{
+		Nombre:      "Mi Bar Magic",
+		Slug:        "mi-bar-magic",
+		EmailAdmin:  "admin@magic.com",
+		NombreAdmin: "Carlos",
+	})
+	if err != nil {
+		t.Fatalf("error inesperado: %v", err)
+	}
+	if result.ID != "t-2" {
+		t.Errorf("ID: got %q, want %q", result.ID, "t-2")
+	}
+	if inputGuardado.PasswordHash != "" {
+		t.Fatalf("se esperaba PasswordHash vacío para registro magic link, got: %q", inputGuardado.PasswordHash)
+	}
+}
+
 func TestCrear_PasswordDebil_Error(t *testing.T) {
 	svc := tenant.NuevoService(&mockStore{})
 	_, err := svc.Crear(context.Background(), tenant.OnboardingInput{

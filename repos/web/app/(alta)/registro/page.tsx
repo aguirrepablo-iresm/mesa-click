@@ -18,7 +18,8 @@ export default function RegistroPage() {
   const { cuenta, setCuenta } = useRegistro();
   const googleClientID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? "";
 
-  // Si vuelve desde /onboarding con correo y contraseña, se precompleta lo cargado.
+  // Si vuelve desde /onboarding con correo y contraseña o magic link, se precompleta lo cargado.
+  const [metodo, setMetodo] = useState<"password" | "magic">(cuenta?.usarMagicLink ? "magic" : "password");
   const [nombre, setNombre] = useState(cuenta?.nombre ?? "");
   const [email, setEmail] = useState(cuenta && !cuenta.googleCredential ? cuenta.email : "");
   const [password, setPassword] = useState(cuenta?.password ?? "");
@@ -53,8 +54,10 @@ export default function RegistroPage() {
     const nuevosErrores: Errores = {};
     if (nombre.trim().length < 3) nuevosErrores.nombre = "Ingresá tu nombre completo.";
     if (!emailValido(email)) nuevosErrores.email = "Ingresá un correo válido.";
-    const errPassword = errorPassword(password);
-    if (errPassword) nuevosErrores.password = errPassword;
+    if (metodo === "password") {
+      const errPassword = errorPassword(password);
+      if (errPassword) nuevosErrores.password = errPassword;
+    }
     setErrores(nuevosErrores);
     if (Object.keys(nuevosErrores).length > 0) return;
 
@@ -63,7 +66,13 @@ export default function RegistroPage() {
     setValidando(false);
     if (!disponible) return;
 
-    setCuenta({ nombre: nombre.trim(), email: email.trim().toLowerCase(), password, googleCredential: "" });
+    setCuenta({
+      nombre: nombre.trim(),
+      email: email.trim().toLowerCase(),
+      password: metodo === "password" ? password : "",
+      googleCredential: "",
+      usarMagicLink: metodo === "magic",
+    });
     router.push("/onboarding");
   };
 
@@ -116,6 +125,33 @@ export default function RegistroPage() {
             </div>
             <div className="auth-divider"><span>o registrate con tu correo</span></div>
 
+            <div className="auth-method-tabs" role="tablist" aria-label="Modalidad de registro">
+              <button
+                type="button"
+                role="tab"
+                aria-selected={metodo === "password"}
+                className={`auth-tab-btn ${metodo === "password" ? "active" : ""}`}
+                onClick={() => {
+                  setMetodo("password");
+                  setErrores({});
+                }}
+              >
+                Con contraseña
+              </button>
+              <button
+                type="button"
+                role="tab"
+                aria-selected={metodo === "magic"}
+                className={`auth-tab-btn ${metodo === "magic" ? "active" : ""}`}
+                onClick={() => {
+                  setMetodo("magic");
+                  setErrores({});
+                }}
+              >
+                Enlace mágico (sin clave)
+              </button>
+            </div>
+
             <form onSubmit={handleSubmit} noValidate>
               <label className="auth-field">
                 <span>Nombre y apellido</span>
@@ -141,23 +177,30 @@ export default function RegistroPage() {
                 {errores.email && <small>{errores.email}</small>}
               </label>
 
-              <label className="auth-field">
-                <span>Contraseña</span>
-                <div className={errores.password ? "invalid" : ""}>
-                  <LandingIcon name="lock" size={18} />
-                  <input
-                    value={password}
-                    onChange={(event) => setPassword(event.target.value)}
-                    placeholder="Mínimo 10 caracteres"
-                    type={mostrarPassword ? "text" : "password"}
-                    autoComplete="new-password"
-                  />
-                  <button type="button" onClick={() => setMostrarPassword(!mostrarPassword)}>
-                    {mostrarPassword ? "Ocultar" : "Ver"}
-                  </button>
+              {metodo === "password" ? (
+                <label className="auth-field">
+                  <span>Contraseña</span>
+                  <div className={errores.password ? "invalid" : ""}>
+                    <LandingIcon name="lock" size={18} />
+                    <input
+                      value={password}
+                      onChange={(event) => setPassword(event.target.value)}
+                      placeholder="Mínimo 10 caracteres"
+                      type={mostrarPassword ? "text" : "password"}
+                      autoComplete="new-password"
+                    />
+                    <button type="button" onClick={() => setMostrarPassword(!mostrarPassword)}>
+                      {mostrarPassword ? "Ocultar" : "Ver"}
+                    </button>
+                  </div>
+                  {errores.password ? <small>{errores.password}</small> : <em>Usá 10 caracteres o más, con letras y números.</em>}
+                </label>
+              ) : (
+                <div className="auth-magic-info">
+                  <LandingIcon name="spark" size={16} />
+                  <span>Sin contraseñas para memorizar. Te enviaremos un enlace de acceso seguro a tu correo para ingresar cada vez.</span>
                 </div>
-                {errores.password ? <small>{errores.password}</small> : <em>Usá 10 caracteres o más, con letras y números.</em>}
-              </label>
+              )}
 
               {error && (
                 <div role="alert" className="auth-alert">
